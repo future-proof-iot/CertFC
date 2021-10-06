@@ -33,3 +33,4 @@ Definition step (ins:instruction) (next_ins: option int64) : MrBPF unit :=
       upd_reg dst (Val.addl dst64 (Val.longofint (Vint i)))
   | BPF_RET => default_MrBPF
   end.
+Close Scope monad_scope.
