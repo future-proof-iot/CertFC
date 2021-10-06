@@ -43,7 +43,7 @@ Lemma bpf_flag_eq: forall (x y: bpf_flag), {x=y} + {x<>y}.
 Proof.
 decide equality. Defined.
 
-Definition get_opcode (i:int64):Z := (Int64.unsigned (Int64.and i (Int64.repr 0xff))).
+Definition get_opcode (i:int64):nat := Z.to_nat (Int64.unsigned (Int64.and i (Int64.repr 0xff))).
 Definition get_dst (i:int64):nat := Z.to_nat (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr 0xfff)) (Int64.repr 8))).
 Definition get_src (i:int64):nat := Z.to_nat (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr 0xffff)) (Int64.repr 12))).
 Definition get_offset (i:int64):int16 := Int16.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr 32)) (Int64.repr 48))).
