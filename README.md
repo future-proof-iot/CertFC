@@ -2,6 +2,10 @@
 
 A testing project for using dx to transform exam_rbpf in Coq to C
 
+# Test example
+
+Just replacing dx's 'tests/Tests.v' with the 'Tests.v' of this repo.
+
 # Overview
 
 The toy project is to use [dx](https://gitlab.univ-lille.fr/samuel.hym/dx) to generate C code from our toy rBPF interpreter (in Coq).
