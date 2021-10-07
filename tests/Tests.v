@@ -19,15 +19,15 @@ From Coq Require Import Numbers.AltBinNotations.
 Import List.ListNotations.
 
 From compcert.cfrontend Require Csyntax Ctypes.
-From compcert.common Require Errors.
+From compcert.common Require Errors Values.
 From compcert.lib Require Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
-From dx.Type Require Bool Nat MyList.
+From dx.Type Require Bool Nat.
 
 Open Scope string.
 
-Definition state := nat.
+Definition state := Integers.int64.
 
 Definition M (A: Type) := state -> option (A * state).
 
@@ -52,131 +52,141 @@ Notation "'do' x <- a ; b" :=
 
 Open Scope monad_scope.
 
-Definition ready : M bool :=
-  do s <- get ;
-     returnM (even s).
+Module MyList1.
 
-Definition getReady : M unit :=
-  do s <- get ;
-     if even s
-     then returnM tt
-     else do _ <- put (S s) ;
-             returnM tt.
+  Definition t := list state.
+  Definition get (l: t) (idx: state): state := 
+    List.nth (Z.to_nat (Integers.Int64.unsigned idx)) l (Integers.Int64.zero).
 
-Definition id (b : bool) : M bool := returnM b.
+  (*Definition get (l: t) (idx: state): M state := 
+    match List.nth_error l (Z.to_nat (Integers.Int64.unsigned idx)) with
+    | Some res => returnM res
+    | None => emptyM
+    end.*)
 
-Definition neg (b : bool) : M bool := if b then returnM false else returnM true.
+End MyList1.
+
+Definition MyListType := MyList1.t.
+Definition MyListGet := MyList1.get.
+
+(*
+Module MyList2.
+
+  Definition t := list state.
+  Definition get (l: t) (idx: state): M (Values.val) := 
+    match List.nth_error l (Z.to_nat (Integers.Int64.unsigned idx)) with
+    | Some res => returnM (Values.Vlong res)
+    | None => emptyM
+    end.
+
+End MyList2.
+*)
 
 Definition emptyUnitM := @emptyM unit.
 
-Fixpoint prepare recBound : M unit :=
-  match recBound with
-  | O   => emptyUnitM
-  | S b => do r <- ready ;
-              if r
-              then returnM tt
-              else do _ <- getReady ;
-                      prepare b
+(*
+Definition sum (a b: state): M state :=
+  returnM (Integers.Int64.add a b).*)
+
+Definition MySum (a b: state): state := Integers.Int64.add a b.
+
+Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}: M unit :=
+  match fuel with
+  | O => emptyUnitM
+  | S fuel' =>
+    (*do i <- MyListGet l idx;
+    do s <- sum init (MyListGet l idx);*)
+    let s := MySum init (MyListGet l idx) in
+      interpreter1 fuel' s (Integers.Int64.sub idx Integers.Int64.one) l
   end.
 
-Module ModTest.
-Definition testId (b : bool) : M bool := returnM b.
-End ModTest.
+(** "target C":
+uint64_t interpreter1 (unsigned int fuel, uint64_t init, uint64_t idx, uint64_t *l){
+  unsigned int b_i;
+  uint64_t b_j, b_k, b_r;
+  if (fuel == 0U) {
+    emptyUnitM();
+    return;
+  }
+  else {
+    b_i = fuel - 1U;
+    b_j = get(l, idx);
+    b_k = sum(init, b_j);
+    b_r = interpreter1 (b_i, b_k, (idx-1) l);
+    return b_r;
+  }
+}
+ *)
 
-Definition boolToBoolType := MkCompilableSymbolType [Bool.boolCompilableType] (Some Bool.boolCompilableType).
-Definition derivableId := MkDerivableSymbol M "id" true boolToBoolType id false.
+(** "Mapping relations from Coq to C":
+  Coq:          -> C:
+  l:list state  -> uint64_t *l
+  get l idx     -> *(l+idx)
+ *)
+Definition C_U64 := Ctypes.Tlong Ctypes.Unsigned Ctypes.noattr.
+
+Definition Cpointer := Ctypes.Tpointer C_U64 Ctypes.noattr.
+
+Definition get_index (x idx: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Eindex x idx C_U64.
+
+(** Coq2C: state -> uint64_t *)
+Definition MyStateCompilableType :=
+  MkCompilableType state C_U64.
+
+(** Coq2C: l:list state  -> uint64_t *l *)
+Definition MyList1CompilableType :=
+  MkCompilableType MyListType Cpointer.
+
+(** Type for MyList.t -> MyList.t *)
+Definition MyListToMyListCompilableSymbolType :=
+  MkCompilableSymbolType [MyList1CompilableType] (Some MyList1CompilableType).
+
+(** Type for MyList.t -> state -> state *)
+Definition MyListToStateToStateCompilableSymbolType :=
+  MkCompilableSymbolType [MyList1CompilableType; MyStateCompilableType] (Some MyStateCompilableType).
+
+(** Type for state -> state -> state *)
+Definition StateToStateToStateCompilableSymbolType :=
+  MkCompilableSymbolType [MyStateCompilableType; MyStateCompilableType] (Some MyStateCompilableType).
+
+(** Coq2C: get l idx -> *(l+idx) *)
+Definition myList1GetPrimitive := 
+  MkPrimitive MyListToStateToStateCompilableSymbolType 
+              MyListGet
+              (fun es => match es with
+                         | [e1; e2] => Ok (get_index e1 e2)
+                         | _   => Err PrimitiveEncodingFailed
+                         end).
+
+(** Coq2C: MySum a b -> a + b *)
+Definition myList1SumPrimitive := 
+  MkPrimitive StateToStateToStateCompilableSymbolType 
+              MySum
+              (fun es => match es with
+                         | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oadd e1 e2 C_U64)
+                         | _   => Err PrimitiveEncodingFailed
+                         end).
+
+(*
+(** Q: Why do we need this axiom? *)
+Axiom axiom : nat.
+*)
 
 Definition externEmptyUnitM := MkDerivableSymbol M "emptyUnitM" true (MkCompilableSymbolType [] None) emptyUnitM true.
-Definition externReady := MkDerivableSymbol M "ready" true Bool.boolSymbolType ready true.
-Definition externGetReady := MkDerivableSymbol M "getReady" true (MkCompilableSymbolType [] None) getReady true.
-
-Definition derivableNeg := MkDerivableSymbol M "neg" true boolToBoolType neg false.
-
-Axiom axiom : nat.
 
 Close Scope monad_scope.
 
 (***************************************)
 
-(*
 
 GenerateIntermediateRepresentation SymbolIRs
   M bindM returnM
-  Bool.Exports
   Nat.Exports
-  derivableId
-  axiom
+  myList1GetPrimitive
+  myList1SumPrimitive
   __
-  neg
-  ModTest
   externEmptyUnitM
-  externReady
-  externGetReady
-  prepare.
-*)
-
-Definition State := nat.
-
-Definition Error := string.
-Definition M1 (A: Type) := State -> (State*A) + Error.
-Definition returnM1 {A: Type} (a: A) : M1 A := fun s => inl (s, a).
-Definition runM1 {A: Type} (x: M1 A) (s: state) := x s.
-Definition bindM1 {A B: Type} (x: M1 A) (f: A -> M1 B) : M1 B :=
-  fun s =>
-    match (runM1 x s) with
-    | inl s => runM1 (f (snd s)) (fst s)
-    | inr e => inr e
-    end.
-
-Declare Scope monad_scope.
-Notation "'do1' x <- a ; b" :=
-  (bindM1 a (fun x => b))
-    (at level 200, x name, a at level 100, b at level 200)
-  : monad_scope.
-
-Open Scope monad_scope.
-
-Definition returnZero: M1 nat := returnM1 0%nat.
-Definition returnN (n:nat): M1 nat := returnM1 n.
-
-Fixpoint interpreter (fuel: nat) (l: list Integers.int64): M1 nat :=
-  match fuel with
-  | O => returnZero
-  | S n => match l with
-          | nil => returnN n
-          | hd :: tl => do1 res <- interpreter n tl; returnN res
-          end
-  end.
-
-Close Scope monad_scope.
-
-GenerateIntermediateRepresentation SymbolIRs
-  M1 bindM1 returnM1
-  Bool.Exports
-  Nat.Exports
-  MyList.Exports
-  
-  __
-  interpreter.
-
-(*
-Cannot convert, skipping: MyList.Exports.listCompilableType [dx.inconvertible,dx]
-Cannot convert, skipping: MyList.Exports.list_null [dx.inconvertible,dx]
-Cannot convert, skipping: interpreter [dx.inconvertible,dx]
- *)
-(**
-int interpreter (int fuel, int *p){ //int64
-  printf("fuel = %d, p = %d\n", fuel, *p);
-  int res;
-  if (fuel == 0){
-    return 0;
-  }
-  else {
-    p++;
-    res = interpreter((fuel-1), p) + 1;
-    return res;
-  }
-}
- *)
+  interpreter1.
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.
