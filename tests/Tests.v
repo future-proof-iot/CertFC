@@ -184,6 +184,7 @@ GenerateIntermediateRepresentation SymbolIRs
   Nat.Exports
   myList1GetPrimitive
   myList1SumPrimitive
+  MyStateCompilableType
   __
   externEmptyUnitM
   interpreter1.
