@@ -84,9 +84,9 @@ End MyList2.
 
 Definition emptyUnitM := @emptyM unit.
 
-(*
+
 Definition sum (a b: state): M state :=
-  returnM (Integers.Int64.add a b).*)
+  returnM (Integers.Int64.add a b).
 
 Definition MySum (a b: state): state := Integers.Int64.add a b.
 
@@ -94,9 +94,8 @@ Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}
   match fuel with
   | O => emptyUnitM
   | S fuel' =>
-    (*do i <- MyListGet l idx;
-    do s <- sum init (MyListGet l idx);*)
-    let s := MySum init (MyListGet l idx) in
+    do i <- returnM (MyListGet l idx);
+    do s <- sum init i;
       interpreter1 fuel' s (Integers.Int64.sub idx Integers.Int64.one) l
   end.
 
