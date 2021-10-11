@@ -52,12 +52,13 @@ Notation "'do' x <- a ; b" :=
 
 Open Scope monad_scope.
 
-(*
-Definition testincr (a: state): M state := 
-  returnM (MyInt64.C_U64_add a MyInt64.C_U64_one).*)
 
+Definition testincr (a: state): M state := 
+  returnM (MyInt64.C_U64_add a MyInt64.C_U64_one).
+
+(*
 Definition testincr (a: Integers.int64): M Integers.int64 := 
-  returnM (Integers.Int64.add a Integers.Int64.one).
+  returnM (Integers.Int64.add a Integers.Int64.one).*)
 
 Close Scope monad_scope.
 
