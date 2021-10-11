@@ -21,7 +21,7 @@ Definition testincr (a: Integers.int64): M Integers.int64 :=
 ```
 The generated C:
 
-```C
+```c
 extern unsigned long long testincr(unsigned long long);
 
 unsigned long long testincr(unsigned long long a)
@@ -40,7 +40,7 @@ Definition testget (fuel: nat) (init idx: state) (l: MyList.MyListType): M state
 ```
 
 The generated C code:
-```C
+```c
 extern unsigned long long testget(unsigned int, unsigned long long, unsigned long long, unsigned long long *);
 
 unsigned long long testget(unsigned int fuel, unsigned long long init, unsigned long long idx, unsigned long long *l)
@@ -63,7 +63,7 @@ Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}
   end.
 ```
 The expected C:
-```
+```c
 uint64_t interpreter1 (unsigned int fuel, uint64_t init, uint64_t idx, uint64_t *l){
   unsigned int b_i;
   uint64_t b_j, b_k, b_r;
