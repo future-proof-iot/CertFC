@@ -67,6 +67,7 @@ Definition int64Sub :=
                            end).
 
 Module Exports.
+  Definition int64CompilableType := int64CompilableType.
   Definition int64_zero := int64_zero.
   Definition int64_one := int64_one.
   Definition int64Add := int64Add.
