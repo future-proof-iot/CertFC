@@ -10,7 +10,7 @@ BTW, just commit the L157 line of makefile of dx for testing.
 
 # testInt64
 - src/Type/MyInt64.v: define the mapping relation (from Coq to C): 
-    - `Integers.int64 -> uint64\_t`; 
+    - `Integers.int64 -> uint64_t`; 
     - `Integer.Int64.zero/one -> 0/1`;
     - `Integer.Int64.add/sub -> +/-`.
 - tests/Tests.v:
@@ -19,13 +19,36 @@ The Coq code:
 Definition testincr (a: Integers.int64): M Integers.int64 :=
   returnM (Integers.Int64.add a Integers.Int64.one).
 ```
-The expected C:
+The generated C:
 
+```C
+extern unsigned long long testincr(unsigned long long);
+
+unsigned long long testincr(unsigned long long a)
+{
+  return a + 1LLU;
+}
 ```
-uint64_t testincr (uint64_t a){ 
-  return a+1;
-} 
+# testListGet
+- src/Type/MyInt64.v & MyList.v: `int64_t -> uint64_t` and `MyList -> Cpointer`
+- tests/Tests.v: testing the `get` function!
+
+The Coq code:
 ```
+Definition testget (fuel: nat) (init idx: state) (l: MyList.MyListType): M state :=
+  returnM (MyList.MyListGet l idx).
+```
+
+The generated C code:
+```C
+extern unsigned long long testget(unsigned int, unsigned long long, unsigned long long, unsigned long long *);
+
+unsigned long long testget(unsigned int fuel, unsigned long long init, unsigned long long idx, unsigned long long *l)
+{
+  return *(l + idx);
+}
+```
+
 # testList
 - tests/Tests.v:
 The Coq code:
