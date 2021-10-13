@@ -21,7 +21,7 @@ _NB: we modify the makefile of the source project_, to run this repo
 ```shell
 $ git clone https://gitlab.inria.fr/syuan/rbpf-dx.git
 $ cd rbpf-dx
-./configure ...
+$ ./configure ...
 $ make
 $ make test
 ```
