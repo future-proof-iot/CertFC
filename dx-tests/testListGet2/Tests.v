@@ -1,19 +1,3 @@
-(**************************************************************************)
-(*  This file is part of dx, a tool to derive C from monadic Gallina.     *)
-(*                                                                        *)
-(*  Copyright (C) 2021 Université de Lille & CNRS                         *)
-(*                                                                        *)
-(*  This program is free software; you can redistribute it and/or modify  *)
-(*  it under the terms of the GNU General Public License as published by  *)
-(*  the Free Software Foundation; either version 2 of the License, or     *)
-(*  (at your option) any later version.                                   *)
-(*                                                                        *)
-(*  This program is distributed in the hope that it will be useful,       *)
-(*  but WITHOUT ANY WARRANTY; without even the implied warranty of        *)
-(*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *)
-(*  GNU General Public License for more details.                          *)
-(**************************************************************************)
-
 From Coq Require Import BinNums List Ascii String Nat ZArith.
 From Coq Require Import Numbers.AltBinNotations.
 Import List.ListNotations.
@@ -24,7 +8,9 @@ From compcert.lib Require Integers.
 
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
-From dx.Type Require Bool Nat MyInt64 MyList.
+From dx.Type Require Bool Nat.
+
+Require MyInt64 MyList.
 
 Open Scope string.
 

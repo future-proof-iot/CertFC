@@ -1,0 +1,99 @@
+#!/bin/sh
+##########################################################################
+#  This file is part of dx, a tool to derive C from monadic Gallina.     #
+#                                                                        #
+#  Copyright (C) 2021 Université de Lille & CNRS                         #
+#                                                                        #
+#  This program is free software; you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation; either version 2 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+#  GNU General Public License for more details.                          #
+##########################################################################
+
+usage='Usage: ./configure [option] ...
+Use the option "--help" to list the available options.
+'
+
+help='Usage: ./configure [option] ...
+
+Available options:
+
+  --coqdevdir=DIR             set the directory in which the Coq development
+                              (ie the *.vo) will be installed
+                              defaults to the dx subdirectory of user-contrib of
+                              your Coq library
+
+  --cprinterdir=DIR           set the directory in which the OCaml code needed
+                              to print the derived C code will be installed; if
+                              left undefined, that part of dx will be skipped
+
+  --compcertdir=DIR           set the directory containing the sources for the
+                              CompCert compiler; note that it must be compiled
+                              before compiling dx;
+                              if you installed CompCert with
+                                  "opam install -b coq-compcert"
+                              it will default to the directory in which opam
+                              built it
+
+  --install-compcert-printer  ask to install the required built modules from
+                              CompCert in some subdirectory; by using this, the
+                              directory in which CompCert sources are (as set
+                              with "--compcertdir") can be modified or removed
+                              without breaking dx installation
+
+  --help                      show this help
+'
+
+while : ; do
+    case "$1" in
+        --coqdevdir=*)
+            coqdevdir="${1#*=}" ;;
+        -coqdevdir|--coqdevdir)
+            coqdevdir="$2" ; shift ;;
+        --cprinterdir=*)
+            cprinterdir="${1#*=}" ;;
+        -cprinterdir|--cprinterdir)
+            cprinterdir="$2" ; shift ;;
+        --compcertdir=*)
+            compcertdir="${1#*=}" ;;
+        -compcertdir|--compcertdir)
+            compcertdir="$2" ; shift ;;
+        -install-compcert-printer|--install-compcert-printer)
+            installcompcertprinter="true" ;;
+        "")
+            # End of arguments
+            break ;;
+        -help|--help)
+            echo "$help" ; exit 0 ;;
+        -*)
+            echo "Unknown option: $1" ; echo "$usage" ; exit 1 ;;
+    esac
+    shift
+done
+
+# Set default values
+if [ -z "$coqdevdir" ] ; then
+    coqdevdir=`coqc -config | sed -e '/^COQLIB=/!d' -e 's/^COQLIB=//'`/user-contrib/dx
+fi
+if [ -z "$compcertdir" ] && which opam > /dev/null ; then
+    try_compcertdir=`opam var coq-compcert:build 2> /dev/null`
+    if [ -x "$try_compcertdir/tools/modorder" ] ; then
+        compcertdir="$try_compcertdir"
+    fi
+fi
+
+cat > Makefile.config << EOF
+COQDEVDIR := $coqdevdir
+CPRINTERDIR := $cprinterdir
+COMPCERTSRCDIR := $compcertdir
+INSTALLCOMPCERTCPRINTER := $installcompcertprinter
+EOF
+
+echo "The following configuration was saved in Makefile.config:"
+echo
+cat Makefile.config

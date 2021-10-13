@@ -1,0 +1,10 @@
+All the files installed in this directory are compiled from the
+CompCert compiler [1] and are thus covered by its licence [2].
+
+The sources used for those files are `cfrontend/PrintCsyntax.ml` and
+its dependencies. While `PrintCsyntax` is dual-licensed, some of its
+dependencies are licensed under the INRIA Non-Commercial License
+Agreement only.
+
+[1]: https://compcert.org/
+[2]: https://compcert.org/doc/LICENSE.txt

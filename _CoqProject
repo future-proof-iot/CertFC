@@ -1,0 +1,3 @@
+-R src dx
+-R tests dx.tests
+-R lib dx.lib

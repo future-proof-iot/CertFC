@@ -6,7 +6,8 @@ From compcert.common Require Values.
 From compcert.lib Require Integers.
 
 From dx Require Import ResultMonad IR.
-From dx.Type Require MyInt64.
+
+Require MyInt64.
 
 Definition state := MyInt64.int64_t.
 
