@@ -9,11 +9,11 @@ From compcert.lib Require Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-From dx.lib Require MyInt64 MyList.
+Require Import CoqIntegers DxIntegers DxList64.
 
 Open Scope string.
 
-Definition state := MyInt64.int64_t.
+Definition state := int64_t. (*This one must be int_64 defined in DxIntegers *)
 
 Definition M (A: Type) := state -> option (A * state).
 
@@ -38,29 +38,30 @@ Notation "'do' x <- a ; b" :=
 
 Open Scope monad_scope.
 
-Definition emptyUnitM := @emptyM unit.
+Definition testadd (a b: state): M state :=
+  returnM (int64_add a b).
 
-Definition sum (a b: state): M state :=
-  returnM (MyInt64.C_U64_add a b).
-
-Definition testget (fuel: nat) (init idx: state) (l: MyList.MyListType): M state :=
-  (* returnM (MyList.MyListGet l idx) *)
+Definition testget (fuel: nat) (init idx: state) (l: MyListType): M state :=
   match fuel with
-  | O => do i <- returnM (MyInt64.C_U64_add init idx);
-          returnM i
-  | S nfuel => returnM (MyList.MyListGet l idx)
+  | O => do i <- testadd init idx;
+          returnM (int64_add i Integers.Int64.one)
+  | S nfuel => returnM (MyListGet l idx)
   end.
 
-(*
-Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyList.MyListType){struct fuel}: M state :=
+Definition list_get (l: MyListType) (idx: state): M state :=
+  returnM (MyListGet l idx).
+
+Definition mysum (a b: state): M state :=
+  returnM (int64_add a b).
+
+Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}: M state :=
   match fuel with
-  | O => returnM (MyInt64.C_U64_one)
+  | O => returnM init
   | S nfuel =>
-    (*do i <- returnM (MyList.MyListGet l idx);
-    do s <- returnM (MyInt64.C_U64_add init i);
-    do nidx <- sum idx MyInt64.C_U64_one;*)
-      interpreter1 nfuel idx (MyList.MyListGet l idx) l
-  end.*)
+    do i <- list_get l idx;
+    do s <- mysum init i;
+      interpreter1 nfuel s i l
+  end.
 
 Close Scope monad_scope.
 
@@ -71,9 +72,14 @@ GenerateIntermediateRepresentation SymbolIRs
   M bindM returnM
   Bool.Exports
   Nat.Exports
-  MyInt64.Exports
-  MyList.Exports
+  DxIntegers.Exports
+  DxList64.Exports
   __
-  testget.
+  testadd
+  testget
+  list_get
+  mysum
+  interpreter1
+.
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.
