@@ -9,7 +9,7 @@ From compcert.lib Require Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-Require Import CoqIntegers DxIntegers DxList64.
+Require Import CoqIntegers DxIntegers DxList64 DxValues DxRegs.
 
 Open Scope string.
 
@@ -39,12 +39,12 @@ Notation "'do' x <- a ; b" :=
 Open Scope monad_scope.
 
 Definition testadd (a b: state): M state :=
-  returnM (int64_add a b).
+  returnM (Integers.Int64.add a b).
 
 Definition testget (fuel: nat) (init idx: state) (l: MyListType): M state :=
   match fuel with
   | O => do i <- testadd init idx;
-          returnM (int64_add i Integers.Int64.one)
+          returnM (Integers.Int64.add i int64_two)
   | S nfuel => returnM (MyListGet l idx)
   end.
 
@@ -52,7 +52,7 @@ Definition list_get (l: MyListType) (idx: state): M state :=
   returnM (MyListGet l idx).
 
 Definition mysum (a b: state): M state :=
-  returnM (int64_add a b).
+  returnM (Integers.Int64.add a b).
 
 Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}: M state :=
   match fuel with
@@ -62,6 +62,19 @@ Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}
     do s <- mysum init i;
       interpreter1 nfuel s i l
   end.
+
+(** Coq2C: pc -> unsigned int pc := 0; as global variable!
+  *)
+(* I guess we should know how to use `SymbolIRs`
+Definition pc: int32_t := Integers.Int.one.*)
+
+Definition testreg (r:reg): M reg := returnM r.
+
+Definition test_reg_eval (r: reg) (regs: regmap): M val_t :=
+  returnM (eval_regmap r regs).
+
+Definition test_reg_upd (r: reg) (v: val_t) (regs: regmap): M regmap :=
+  returnM (upd_regmap r v regs).
 
 Close Scope monad_scope.
 
@@ -74,12 +87,17 @@ GenerateIntermediateRepresentation SymbolIRs
   Nat.Exports
   DxIntegers.Exports
   DxList64.Exports
+  DxValues.Exports
+  DxRegs.Exports
   __
   testadd
   testget
   list_get
   mysum
   interpreter1
+  testreg
+  test_reg_eval
+  test_reg_upd
 .
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.
