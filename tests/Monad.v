@@ -8,6 +8,13 @@ Record regs_state: Type := make_rst{
   regs  : regmap;
 }.
 
+(** C: 
+struct regs_state {
+  unsigned int pc;
+  unsigned long long regs[11];
+}
+ *)
+
 Inductive ErrorUndef :=
   | ErrorL: bpf_flag -> ErrorUndef
   | UndefR: bpf_flag -> ErrorUndef.
