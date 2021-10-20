@@ -5,7 +5,7 @@ From compcert.lib Require Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Bool Nat.
 
-Require Import IdentDef CoqIntegers DxIntegers DxValues.
+Require Import IdentDef CoqIntegers DxIntegers DxValues DxZ.
 
 From Coq Require Import List ZArith.
 Import ListNotations.
@@ -321,6 +321,42 @@ Definition regMatchableType :=
       | R10 => whenR10
       end).
 
+Definition z_to_reg (z:Z): reg :=
+  if (Z.eqb z 0%Z) then
+    R0
+  else if (Z.eqb z 1%Z) then
+    R1
+  else if (Z.eqb z 2%Z) then
+    R2
+  else if (Z.eqb z 3%Z) then
+    R3
+  else if (Z.eqb z 4%Z) then
+    R4
+  else if (Z.eqb z 5%Z) then
+    R5
+  else if (Z.eqb z 6%Z) then
+    R6
+  else if (Z.eqb z 7%Z) then
+    R7
+  else if (Z.eqb z 8%Z) then
+    R8
+  else if (Z.eqb z 9%Z) then
+    R9
+  else
+    R10.
+
+Definition zToregSymbolType :=
+  MkCompilableSymbolType [ZCompilableType] (Some regCompilableType).
+
+Definition Const_z_to_reg :=
+  MkPrimitive zToregSymbolType
+                z_to_reg
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+
 (** Coq2C: regmap -> unsigned long long int regmap[11];
   *)
 Definition C_regmap: Ctypes.type := Ctypes.Tarray C_U64 11%Z Ctypes.noattr.
@@ -384,6 +420,7 @@ Module Exports.
   Definition Const_R8  := Const_R8.
   Definition Const_R9  := Const_R9.
   Definition Const_R10 := Const_R10.
+  Definition Const_z_to_reg := Const_z_to_reg.
   Definition regmapCompilableType := regmapCompilableType.
   Definition Const_eval_regmap := Const_eval_regmap.
   Definition Const_upd_regmap  := Const_upd_regmap.
