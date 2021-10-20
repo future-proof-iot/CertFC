@@ -11,7 +11,7 @@ Require Import CoqIntegers Int16 DxZ.
 
 (******************** UInt16 *******************)
 
-Definition uint16_t := Int16.int16.
+Definition uint16_t := int16.
 
 Definition C_U16_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_U16.
@@ -31,16 +31,16 @@ Definition uint16CompilableType :=
 Definition uint16SymbolType :=
   MkCompilableSymbolType nil (Some uint16CompilableType).
 
-Definition Const_uint16_zero := constant uint16SymbolType Int16.Int16.zero C_U16_zero.
+Definition Const_uint16_zero := constant uint16SymbolType Int16.zero C_U16_zero.
 
-Definition Const_uint16_one := constant uint16SymbolType Int16.Int16.one C_U16_one.
+Definition Const_uint16_one := constant uint16SymbolType Int16.one C_U16_one.
 
 Definition uint16Touint16Touint16SymbolType :=
   MkCompilableSymbolType [uint16CompilableType; uint16CompilableType] (Some uint16CompilableType).
 
 Definition Const_uint16_add :=
   MkPrimitive uint16Touint16Touint16SymbolType
-                Int16.Int16.add
+                Int16.add
                 (fun es => match es with
                            | [e1;e2] => Ok (C_U16_add e1 e2)
                            | _       => Err PrimitiveEncodingFailed
@@ -48,7 +48,7 @@ Definition Const_uint16_add :=
 
 Definition Const_uint16_sub :=
   MkPrimitive uint16Touint16Touint16SymbolType
-                Int16.Int16.sub
+                Int16.sub
                 (fun es => match es with
                            | [e1;e2] => Ok (C_U16_sub e1 e2)
                            | _       => Err PrimitiveEncodingFailed
@@ -57,7 +57,7 @@ Definition Const_uint16_sub :=
 
 (******************** SInt16 *******************)
 
-Definition sint16_t := Int16.int16.
+Definition sint16_t := int16.
 
 Definition C_S16_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_S16.
@@ -77,16 +77,16 @@ Definition sint16CompilableType :=
 Definition sint16SymbolType :=
   MkCompilableSymbolType nil (Some sint16CompilableType).
 
-Definition Const_sint16_zero := constant sint16SymbolType Int16.Int16.zero C_S16_zero.
+Definition Const_sint16_zero := constant sint16SymbolType Int16.zero C_S16_zero.
 
-Definition Const_sint16_one := constant sint16SymbolType Int16.Int16.one C_S16_one.
+Definition Const_sint16_one := constant sint16SymbolType Int16.one C_S16_one.
 
 Definition sint16Tosint16Tosint16SymbolType :=
   MkCompilableSymbolType [sint16CompilableType; sint16CompilableType] (Some sint16CompilableType).
 
 Definition Const_sint16_add :=
   MkPrimitive sint16Tosint16Tosint16SymbolType
-                Int16.Int16.add
+                Int16.add
                 (fun es => match es with
                            | [e1;e2] => Ok (C_S16_add e1 e2)
                            | _       => Err PrimitiveEncodingFailed
@@ -94,9 +94,55 @@ Definition Const_sint16_add :=
 
 Definition Const_sint16_sub :=
   MkPrimitive sint16Tosint16Tosint16SymbolType
-                Int16.Int16.sub
+                Int16.sub
                 (fun es => match es with
                            | [e1;e2] => Ok (C_S16_sub e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(******************** Int16 Type Casting *******************)
+
+(** Int16.signed: uint16_t -> sint16_t
+  *)
+(*
+Definition int16_signedSymbolType :=
+  MkCompilableSymbolType [sint16CompilableType] (Some ZCompilableType).
+
+Definition Const_int64_signed :=
+  MkPrimitive int64_signedSymbolType
+                Int64.signed
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(** Int64.unsigned: uint64_t -> uint64_t (do nothing)
+  *)
+
+Definition int64_unsignedSymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some ZCompilableType).
+
+Definition Const_int64_unsigned :=
+  MkPrimitive int64_unsignedSymbolType
+                Int64.unsigned
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+*)
+(** TODO: ZCompilableType is S64 while here is type casting U64 -> S64??? *)
+
+(** Int16.repr: sint64_t -> uint16_t
+  *)
+
+Definition int16_reprSymbolType :=
+  MkCompilableSymbolType [ZCompilableType] (Some sint16CompilableType).
+
+Definition Const_int16_repr :=
+  MkPrimitive int16_reprSymbolType
+                Int16.repr
+                (fun es => match es with
+                           | [e1] => Ok e1
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -325,6 +371,20 @@ Definition Const_sint32_sub :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+(** Int16.repr: sint64_t -> uint16_t
+  *)
+
+Definition int32_reprSymbolType :=
+  MkCompilableSymbolType [ZCompilableType] (Some sint32CompilableType).
+
+Definition Const_int_repr :=
+  MkPrimitive int32_reprSymbolType
+                Int.repr
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 (******************** Int64 *******************)
 
 Definition int64_t := int64.
@@ -356,6 +416,12 @@ Definition C_U64_sub (x y: Csyntax.expr) : Csyntax.expr :=
 
 Definition C_U64_and (x y: Csyntax.expr) : Csyntax.expr :=
   Csyntax.Ebinop Cop.Oand x y C_U64.
+
+Definition C_U64_shl (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oshl x y C_U64.
+
+Definition C_U64_shr (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oshr x y C_U64.
 
 Definition int64CompilableType :=
   MkCompilableType int64_t C_U64.
@@ -408,6 +474,31 @@ Definition Const_int64_and :=
                            | [e1;e2] => Ok (C_U64_and e1 e2)
                            | _       => Err PrimitiveEncodingFailed
                            end).
+
+Definition Const_int64_shr :=
+  MkPrimitive int64Toint64Toint64SymbolType
+                Int64.shr
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U64_shr (Csyntax.Ecast  e1 C_S64) e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_int64_shru :=
+  MkPrimitive int64Toint64Toint64SymbolType
+                Int64.shru
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U64_shr e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_int64_shl :=
+  MkPrimitive int64Toint64Toint64SymbolType
+                Int64.shl
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U64_shl e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 
 (******************** Int64 Type Casting *******************)
 
@@ -467,6 +558,7 @@ Module Exports.
   Definition Const_sint16_one := Const_sint16_one.
   Definition Const_sint16_add := Const_sint16_add.
   Definition Const_sint16_sub := Const_sint16_sub.
+  Definition Const_int16_repr := Const_int16_repr.
   Definition uint32CompilableType := uint32CompilableType.
   Definition Const_uint32_zero := Const_uint32_zero.
   Definition Const_uint32_one := Const_uint32_one.
@@ -497,6 +589,7 @@ Module Exports.
   Definition Const_sint32_neg := Const_sint32_neg.
   Definition Const_sint32_add := Const_sint32_add.
   Definition Const_sint32_sub := Const_sint32_sub.
+  Definition Const_int_repr   := Const_int_repr.
   Definition int64CompilableType := int64CompilableType.
   Definition Const_int64_zero := Const_int64_zero.
   Definition Const_int64_one := Const_int64_one.
@@ -509,4 +602,7 @@ Module Exports.
   Definition Const_int64_signed := Const_int64_signed.
   Definition Const_int64_unsigned := Const_int64_unsigned.
   Definition Const_int64_repr := Const_int64_repr.
+  Definition Const_int64_shr := Const_int64_shr.
+  Definition Const_int64_shru := Const_int64_shru.
+  Definition Const_int64_shl := Const_int64_shl.
 End Exports.
