@@ -28,8 +28,6 @@ Inductive opcode: Type :=
   | op_BPF_ERROR_INS
 .
 
-Definition get_opcode (i:int64_t):Z := Int64.unsigned (Int64.and i (Int64.repr z_0xff)).
-
 Definition z_to_opcode (z:Z): opcode := 
   if (Z.eqb z opcode_BPF_ADD64i) then
     op_BPF_ADD64i
