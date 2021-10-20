@@ -4,12 +4,12 @@ Import List.ListNotations.
 
 From compcert.cfrontend Require Csyntax Ctypes.
 From compcert.common Require Errors Values.
-From compcert.lib Require Integers.
+From compcert.lib Require Import Integers.
 
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-Require Import CoqIntegers DxIntegers DxList64 DxValues DxRegs DxZ DxOpcode.
+Require Import Int16 CoqIntegers DxIntegers DxList64 DxValues DxRegs DxZ DxOpcode.
 
 Open Scope string.
 
@@ -70,6 +70,8 @@ Definition pc: uint32_t := Integers.Int.one.
 
 Definition regs: regmap := init_regmap.
 
+Definition default_regs := returnM regs.
+
 Definition regs_st: regs_state := init_regs_state.
 
 Definition testreg (r:reg): M reg := returnM r.
@@ -106,9 +108,46 @@ Definition test_match_nat (n: nat): M state :=
 
 Definition test_Z: M Z := returnM (z_0x07).
 
-Definition my_get_opcode (i:int64_t):M int64_t := returnM (Integers.Int64.and i (Integers.Int64.repr z_0xff)).
+Definition get_opcode (i:int64_t):M Z := returnM (Int64.unsigned (Int64.and i (Int64.repr z_0xff))).
+Definition get_dst (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xfff)) (Int64.repr z_8))).
+Definition get_src (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xffff)) (Int64.repr z_12))).
+Definition get_offset (i:int64_t ):M sint16_t := returnM (Int16.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr z_32)) (Int64.repr z_48)))).
+Definition get_immediate (i:int64_t):M sint32_t := returnM (Int.repr (Int64.unsigned (Int64.shru i (Int64.repr z_32)))).
 
-Definition test_z_to_opcode (i:int64_t): M opcode := returnM (z_to_opcode (get_opcode i)).
+Definition test_int_shift (i j:int64_t): M int64_t := returnM (Integers.Int64.shr i j).
+
+Definition ins_to_opcode (ins: int64_t): M opcode :=
+  do op_z <- get_opcode ins;
+    returnM (z_to_opcode op_z).
+
+Definition ins_to_dst_reg (ins: int64_t): M reg :=
+  do dst_z <- get_dst ins;
+    returnM (z_to_reg dst_z).
+
+Definition ins_to_src_reg (ins: int64_t): M reg :=
+  do src_z <- get_src ins;
+    returnM (z_to_reg src_z).
+
+(** show loc < List.length l *)
+Definition step (l: MyListType) (loc: int64_t) (st: regmap): M regmap :=
+  do ins <- list_get l loc;
+  do op <- ins_to_opcode ins;
+  do dst <- ins_to_dst_reg ins;
+  do src <- ins_to_src_reg ins;
+  do ofs <- get_offset ins;
+  do imm <- get_immediate ins;
+  match op with
+  | op_BPF_NEG32 => 
+      do dst64 <- test_reg_eval dst st;
+      test_reg_upd dst (Values.Val.longofintu (Values.Val.neg (val_intoflongu (dst64)))) st
+  | op_BPF_NEG64 => default_regs
+  | op_BPF_ADD32r => default_regs
+  | op_BPF_ADD32i => default_regs
+  | op_BPF_ADD64r => default_regs
+  | op_BPF_ADD64i => default_regs
+  | op_BPF_RET => default_regs
+  | op_BPF_ERROR_INS => default_regs
+  end.
 
 Close Scope monad_scope.
 
@@ -128,13 +167,14 @@ GenerateIntermediateRepresentation SymbolIRs
   pc
   regs
   init_regs_state
+  default_regs
   __
-  testadd
-  testget
-  list_get
+  (*testadd
+  testget*)
+  list_get(*
   mysum
   interpreter1
-  testreg
+  testreg*)
   return0
   return1
   return4
@@ -144,8 +184,16 @@ GenerateIntermediateRepresentation SymbolIRs
   test_reg_upd
   test_match_nat
   test_Z
-  my_get_opcode
-  test_z_to_opcode
+  get_opcode
+  get_dst
+  get_src
+  get_offset
+  get_immediate
+  test_int_shift
+  ins_to_opcode
+  ins_to_dst_reg
+  ins_to_src_reg
+  step
 .
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.
