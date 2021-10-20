@@ -17,14 +17,16 @@ The toy Coq interpreter consists of:
     - TestMain.v, ExtraMain.v: the existing files of dx
     - Tests.v: we will reuse this file and add our interpreter information!
 
-_NB: we modify the makefile of the source project_, to run this repo
+_NB: we modify the makefile of the source project_, to run this repo:
 ```shell
 $ git clone https://gitlab.inria.fr/syuan/rbpf-dx.git
 $ cd rbpf-dx
 $ ./configure ...
+$ ./configure --install-compcert-printer
 $ make
 $ make test
 ```
+Remember, we must config the compcert-printer function!!!
 
 
 #   dx
