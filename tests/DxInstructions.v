@@ -2,7 +2,7 @@ From compcert Require Import Integers Values.
 
 From dx.Type Require Import Bool Nat.
 
-Require Import DxIntegers DxList64 DxRegs DxState DxValues DxOpcode.
+Require Import Int16 DxIntegers DxList64 DxRegs DxState DxValues DxOpcode DxZ DxState.
 
 From Coq Require Import ZArith.
 
@@ -83,9 +83,47 @@ Definition step (ins:instruction) (next_ins: option int64) (st: state) : MrBPF s
   | BPF_RET => default_MrBPF
   end.
 
+Definition get_opcode (i:int64_t):MrBPF Z := returnM (Int64.unsigned (Int64.and i (Int64.repr z_0xff))).
+Definition get_dst (i:int64_t):MrBPF Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xfff)) (Int64.repr z_8))).
+Definition get_src (i:int64_t):MrBPF Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xffff)) (Int64.repr z_12))).
+Definition get_offset (i:int64_t ):MrBPF sint16_t := returnM (Int16.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr z_32)) (Int64.repr z_48)))).
+Definition get_immediate (i:int64_t):MrBPF sint32_t := returnM (Int.repr (Int64.unsigned (Int64.shru i (Int64.repr z_32)))).
+
+Definition list_get (l: MyListType) (idx: int64_t): MrBPF int64_t :=
+  returnM (MyListIndex l idx).
+
+Definition ins_to_opcode (ins: int64_t): MrBPF opcode :=
+  do op_z <- get_opcode ins;
+    returnM (z_to_opcode op_z).
+
+Definition ins_to_dst_reg (ins: int64_t): MrBPF reg :=
+  do dst_z <- get_dst ins;
+    returnM (z_to_reg dst_z).
+
+Definition ins_to_src_reg (ins: int64_t): MrBPF reg :=
+  do src_z <- get_src ins;
+    returnM (z_to_reg src_z).
+
 (** show loc < List.length l *)
-Definition step (l: MyListType) (loc: nat) (st: state): MrBPF state :=
-  match op
+Definition stepM (l: MyListType) (loc: int64_t) (st: state): MrBPF state :=
+  do ins <- list_get l loc;
+  do op <- ins_to_opcode ins;
+  do dst <- ins_to_dst_reg ins;
+  do src <- ins_to_src_reg ins;
+  do ofs <- get_offset ins;
+  do imm <- get_immediate ins;
+  match op with
+  | op_BPF_NEG32     => 
+    do dst64 <- eval_reg dst st;
+      upd_reg dst (Val.longofintu (Val.neg (val_intoflongu (dst64)))) st
+  | op_BPF_NEG64     => default_MrBPF
+  | op_BPF_ADD32r    => default_MrBPF
+  | op_BPF_ADD32i    => default_MrBPF
+  | op_BPF_ADD64r    => default_MrBPF
+  | op_BPF_ADD64i    => default_MrBPF
+  | op_BPF_RET       => default_MrBPF
+  | op_BPF_ERROR_INS => default_MrBPF
+  end.
 
 Close Scope monad_scope.
 
