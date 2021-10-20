@@ -1,11 +1,7 @@
 From compcert Require Import Coqlib Integers AST Values Memory Ctypes.
 From dx.tests Require Import Asm Monad Int16.
 
-Definition vlong_to_vint (v: val): val :=
-  match v with
-  | Vlong n    => Vint (Int.repr (Int64.unsigned n))
-  | _          => Vundef
-  end.
+
 
 Open Scope monad_scope.
 

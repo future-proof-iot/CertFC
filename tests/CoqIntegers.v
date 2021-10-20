@@ -9,6 +9,14 @@ Definition C_U32 := Ctypes.Tint Ctypes.I32 Ctypes.Unsigned Ctypes.noattr.
 
 Definition C_U64 := Ctypes.Tlong Ctypes.Unsigned Ctypes.noattr.
 
+Definition C_S8  := Ctypes.Tint Ctypes.I8  Ctypes.Signed Ctypes.noattr.
+
+Definition C_S16 := Ctypes.Tint Ctypes.I16 Ctypes.Signed Ctypes.noattr.
+
+Definition C_S32 := Ctypes.Tint Ctypes.I32 Ctypes.Signed Ctypes.noattr.
+
+Definition C_S64 := Ctypes.Tlong Ctypes.Signed Ctypes.noattr.
+
 Definition C_U8_pointer  := Ctypes.Tpointer C_U8  Ctypes.noattr.
 
 Definition C_U16_pointer := Ctypes.Tpointer C_U16 Ctypes.noattr.
@@ -16,3 +24,11 @@ Definition C_U16_pointer := Ctypes.Tpointer C_U16 Ctypes.noattr.
 Definition C_U32_pointer := Ctypes.Tpointer C_U32 Ctypes.noattr.
 
 Definition C_U64_pointer := Ctypes.Tpointer C_U64 Ctypes.noattr.
+
+Definition C_S8_pointer  := Ctypes.Tpointer C_S8  Ctypes.noattr.
+
+Definition C_S16_pointer := Ctypes.Tpointer C_S16 Ctypes.noattr.
+
+Definition C_S32_pointer := Ctypes.Tpointer C_S32 Ctypes.noattr.
+
+Definition C_S64_pointer := Ctypes.Tpointer C_S64 Ctypes.noattr.

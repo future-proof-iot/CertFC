@@ -44,12 +44,12 @@ Definition testadd (a b: state): M state :=
 Definition testget (fuel: nat) (init idx: state) (l: MyListType): M state :=
   match fuel with
   | O => do i <- testadd init idx;
-          returnM (Integers.Int64.add i int64_two)
-  | S nfuel => returnM (MyListGet l idx)
+          returnM (Integers.Int64.add i int64_2)
+  | S nfuel => returnM (MyListIndex l idx)
   end.
 
 Definition list_get (l: MyListType) (idx: state): M state :=
-  returnM (MyListGet l idx).
+  returnM (MyListIndex l idx).
 
 Definition mysum (a b: state): M state :=
   returnM (Integers.Int64.add a b).
@@ -65,10 +65,27 @@ Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}
 
 (** Coq2C: pc -> unsigned int pc := 0; as global variable!
   *)
-(* I guess we should know how to use `SymbolIRs`
-Definition pc: int32_t := Integers.Int.one.*)
+(* I guess we should know how to use `SymbolIRs`*)
+Definition pc: uint32_t := Integers.Int.one.
+
+Definition regs: regmap := init_regmap.
+
+Definition regs_st: regs_state := init_regs_state.
 
 Definition testreg (r:reg): M reg := returnM r.
+
+Definition return0 : M state := returnM Integers.Int64.zero.
+
+Definition return1 : M state := returnM Integers.Int64.one.
+
+Definition return10 : M state := returnM Integers.Int64.zero.
+
+Definition test_match_reg (r: reg): M state :=
+  match r with
+  | R0 => return0
+  | R1 => return1
+  | _ =>  return10
+  end.
 
 Definition test_reg_eval (r: reg) (regs: regmap): M val_t :=
   returnM (eval_regmap r regs).
@@ -89,6 +106,9 @@ GenerateIntermediateRepresentation SymbolIRs
   DxList64.Exports
   DxValues.Exports
   DxRegs.Exports
+  pc
+  regs
+  init_regs_state
   __
   testadd
   testget
@@ -96,6 +116,10 @@ GenerateIntermediateRepresentation SymbolIRs
   mysum
   interpreter1
   testreg
+  return0
+  return1
+  return10
+  test_match_reg
   test_reg_eval
   test_reg_upd
 .

@@ -209,20 +209,18 @@ Definition upd_regmap (r:reg) (v:Values.val) (regs:regmap): regmap :=
     |} 
   end.
 
-Definition VLzero: Values.val := Values.Vlong Integers.Int64.zero.
-
 Definition init_regmap: regmap := {|
-  r0_val  := VLzero;
-  r1_val  := VLzero;
-  r2_val  := VLzero;
-  r3_val  := VLzero;
-  r4_val  := VLzero;
-  r5_val  := VLzero;
-  r6_val  := VLzero;
-  r7_val  := VLzero;
-  r8_val  := VLzero;
-  r9_val  := VLzero;
-  r10_val := VLzero;
+  r0_val  := val64_zero;
+  r1_val  := val64_zero;
+  r2_val  := val64_zero;
+  r3_val  := val64_zero;
+  r4_val  := val64_zero;
+  r5_val  := val64_zero;
+  r6_val  := val64_zero;
+  r7_val  := val64_zero;
+  r8_val  := val64_zero;
+  r9_val  := val64_zero;
+  r10_val := val64_zero;
 |}.
 
 Record regs_state: Type := make_rst{
@@ -231,6 +229,13 @@ Record regs_state: Type := make_rst{
 }.
 
 Definition state: Type := Memory.mem * regs_state.
+
+Definition init_mem: Memory.mem := Memory.Mem.empty.
+
+Definition init_regs_state := {| pc := 0; regs := init_regmap;|}.
+
+Definition init_state: state := 
+  (init_mem, init_regs_state).
 
 (******************** Dx Related *******************)
 
@@ -248,23 +253,70 @@ Definition Const_R0 := constant regSymbolType R0 C_U32_zero.
 
 Definition Const_R1 := constant regSymbolType R1 C_U32_one.
 
-Definition Const_R2 := constant regSymbolType R2 C_U32_two.
+Definition Const_R2 := constant regSymbolType R2 C_U32_2.
 
-Definition Const_R3 := constant regSymbolType R3 C_U32_three.
+Definition Const_R3 := constant regSymbolType R3 C_U32_3.
 
-Definition Const_R4 := constant regSymbolType R4 C_U32_four.
+Definition Const_R4 := constant regSymbolType R4 C_U32_4.
 
-Definition Const_R5 := constant regSymbolType R5 C_U32_five.
+Definition Const_R5 := constant regSymbolType R5 C_U32_5.
 
-Definition Const_R6 := constant regSymbolType R6 C_U32_six.
+Definition Const_R6 := constant regSymbolType R6 C_U32_6.
 
-Definition Const_R7 := constant regSymbolType R7 C_U32_seven.
+Definition Const_R7 := constant regSymbolType R7 C_U32_7.
 
-Definition Const_R8 := constant regSymbolType R8 C_U32_eight.
+Definition Const_R8 := constant regSymbolType R8 C_U32_8.
 
-Definition Const_R9 := constant regSymbolType R9 C_U32_nine.
+Definition Const_R9 := constant regSymbolType R9 C_U32_9.
 
-Definition Const_R10 := constant regSymbolType R10 C_U32_ten.
+Definition Const_R10 := constant regSymbolType R10 C_U32_10.
+
+(** So, the compcert switch_case only supports case based on Some Z? and None corresponds to default!!!
+
+(Csyntax.Sswitch x
+              (Csyntax.LScons (Some 0%Z) r0
+                (Csyntax.LScons None r1
+                  Csyntax.LSnil))
+            )
+where x:Csyntax.expr, (Some 0%Z) <=> expr1, ... None <=> default, r0:Csyntax.statement <=> statement1
+===>
+
+switch (expression) {
+  case expr1: statement1
+  case expr2: statement2
+  ...
+  default: ...
+}
+
+  *)
+Definition regMatchableType :=
+  MkMatchableType regCompilableType
+    (fun x cases =>
+      match cases with
+      | [r0; r1; r2; r3; r4; r5; r6; r7; r8; r9; r10] =>
+        Ok (Csyntax.Sswitch x
+              (Csyntax.LScons (Some 0%Z) r0
+                (Csyntax.LScons (Some 1%Z) r1
+                  Csyntax.LSnil))
+            )
+      | _ => Err MatchEncodingFailed
+      end)
+    [[]; []; []; []; []; []; []; []; []; []; []]
+    [[]; []; []; []; []; []; []; []; []; []; []]
+    (fun m A r whenR0 whenR1 whenR2 whenR3 whenR4 whenR5 whenR6 whenR7 whenR8 whenR9 whenR10 =>
+      match r with
+      | R0 => whenR0
+      | R1 => whenR1
+      | R2 => whenR2
+      | R3 => whenR3
+      | R4 => whenR4
+      | R5 => whenR5
+      | R6 => whenR6
+      | R7 => whenR7
+      | R8 => whenR8
+      | R9 => whenR9
+      | R10 => whenR10
+      end).
 
 (** Coq2C: regmap -> unsigned long long int regmap[11];
   *)
@@ -314,8 +366,10 @@ Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noat
 Definition state_struct_def: Ctypes.composite_definition := 
   Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_U32); (regmaps_id, C_regmap)] Ctypes.noattr.
 
+Definition regsMatchableType := MkCompilableType regs_state state_struct_type.
+
 Module Exports.
-  Definition regCompilableType := regCompilableType.
+  Definition regMatchableType := regMatchableType.
   Definition Const_R0  := Const_R0.
   Definition Const_R1  := Const_R1.
   Definition Const_R2  := Const_R2.
@@ -330,4 +384,5 @@ Module Exports.
   Definition regmapCompilableType := regmapCompilableType.
   Definition Const_eval_regmap := Const_eval_regmap.
   Definition Const_upd_regmap  := Const_upd_regmap.
+  Definition regsMatchableType := regsMatchableType.
 End Exports.

@@ -6,24 +6,26 @@ From compcert.common Require Values.
 From compcert.lib Require Integers.
 
 From dx Require Import ResultMonad IR.
+From dx.Type Require Import Nat.
 
 Require Import CoqIntegers DxIntegers.
 
-Definition u64_t := Integers.int64.
 
 Module MyList.
 
-  Definition t := list u64_t.
-  Definition get (l: t) (idx: u64_t): u64_t := 
+  Definition t := list int64_t.
+  Definition index (l: t) (idx: int64_t): int64_t := 
     List.nth (Z.to_nat (Integers.Int64.unsigned idx)) l (Integers.Int64.zero).
 
 End MyList.
 
+(** length of MyList should be a extern variable? *)
+
 Definition MyListType := MyList.t.
-Definition MyListGet := MyList.get.
+Definition MyListIndex := MyList.index.
 
 
-Definition MySum (a b: u64_t): u64_t := Integers.Int64.add a b.
+Definition MySum (a b: int64_t): int64_t := Integers.Int64.add a b.
 
 (** "Mapping relations from Coq to C":
   Coq:          -> C:
@@ -47,9 +49,9 @@ Definition MyListToStateToStateCompilableSymbolType :=
   MkCompilableSymbolType [MyListCompilableType; DxIntegers.int64CompilableType] (Some DxIntegers.int64CompilableType).
 
 (** Coq2C: get l idx -> *(l+idx) *)
-Definition myListGetPrimitive := 
+Definition myListIndexPrimitive := 
   MkPrimitive MyListToStateToStateCompilableSymbolType 
-              MyListGet
+              MyListIndex
               (fun es => match es with
                          | [e1; e2] => Ok (get_index e1 e2)
                          | _   => Err PrimitiveEncodingFailed
@@ -57,5 +59,5 @@ Definition myListGetPrimitive :=
 
 Module Exports.
   Definition MyListCompilableType := MyListCompilableType.
-  Definition myListGetPrimitive := myListGetPrimitive.
+  Definition myListIndexPrimitive := myListIndexPrimitive.
 End Exports.
