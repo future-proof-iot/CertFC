@@ -9,7 +9,7 @@ From compcert.lib Require Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-Require Import CoqIntegers DxIntegers DxList64 DxValues DxRegs.
+Require Import CoqIntegers DxIntegers DxList64 DxValues DxRegs DxZ DxOpcode.
 
 Open Scope string.
 
@@ -78,12 +78,15 @@ Definition return0 : M state := returnM Integers.Int64.zero.
 
 Definition return1 : M state := returnM Integers.Int64.one.
 
+Definition return4 : M state := returnM int64_64.
+
 Definition return10 : M state := returnM Integers.Int64.zero.
 
 Definition test_match_reg (r: reg): M state :=
   match r with
   | R0 => return0
   | R1 => return1
+  | R4 => return4
   | _ =>  return10
   end.
 
@@ -92,6 +95,20 @@ Definition test_reg_eval (r: reg) (regs: regmap): M val_t :=
 
 Definition test_reg_upd (r: reg) (v: val_t) (regs: regmap): M regmap :=
   returnM (upd_regmap r v regs).
+
+Definition test_match_nat (n: nat): M state :=
+  match n with
+  | O => return0
+  | 1%nat => return1
+  | 2%nat => return10
+  | _ => return0
+  end.
+
+Definition test_Z: M Z := returnM (z_0x07).
+
+Definition my_get_opcode (i:int64_t):M int64_t := returnM (Integers.Int64.and i (Integers.Int64.repr z_0xff)).
+
+Definition test_z_to_opcode (i:int64_t): M opcode := returnM (z_to_opcode (get_opcode i)).
 
 Close Scope monad_scope.
 
@@ -106,6 +123,8 @@ GenerateIntermediateRepresentation SymbolIRs
   DxList64.Exports
   DxValues.Exports
   DxRegs.Exports
+  DxZ.Exports
+  DxOpcode.Exports
   pc
   regs
   init_regs_state
@@ -118,10 +137,15 @@ GenerateIntermediateRepresentation SymbolIRs
   testreg
   return0
   return1
+  return4
   return10
   test_match_reg
   test_reg_eval
   test_reg_upd
+  test_match_nat
+  test_Z
+  my_get_opcode
+  test_z_to_opcode
 .
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.

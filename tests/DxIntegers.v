@@ -7,7 +7,7 @@ From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR.
 
-Require Import CoqIntegers Int16.
+Require Import CoqIntegers Int16 DxZ.
 
 (******************** UInt16 *******************)
 
@@ -354,6 +354,9 @@ Definition C_U64_add (x y: Csyntax.expr) : Csyntax.expr :=
 Definition C_U64_sub (x y: Csyntax.expr) : Csyntax.expr :=
   Csyntax.Ebinop Cop.Osub x y C_U64.
 
+Definition C_U64_and (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oand x y C_U64.
+
 Definition int64CompilableType :=
   MkCompilableType int64_t C_U64.
 
@@ -365,6 +368,8 @@ Definition Const_int64_zero := constant int64SymbolType Int64.zero C_U64_zero.
 Definition Const_int64_one := constant int64SymbolType Int64.one C_U64_one.
 
 Definition Const_int64_2 := constant int64SymbolType int64_2 C_U64_2.
+
+Definition Const_int64_64 := constant int64SymbolType int64_64 C_U64_64.
 
 Definition int64Toint64SymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some int64CompilableType).
@@ -395,6 +400,61 @@ Definition Const_int64_sub :=
                            | [e1;e2] => Ok (C_U64_sub e1 e2)
                            | _       => Err PrimitiveEncodingFailed
                            end).
+
+Definition Const_int64_and :=
+  MkPrimitive int64Toint64Toint64SymbolType
+                Int64.and
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U64_and e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(******************** Int64 Type Casting *******************)
+
+(** Int64.signed: uint64_t -> sint64_t
+  *)
+
+Definition int64_signedSymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some ZCompilableType).
+
+Definition Const_int64_signed :=
+  MkPrimitive int64_signedSymbolType
+                Int64.signed
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(** Int64.unsigned: uint64_t -> uint64_t (do nothing)
+  *)
+
+Definition int64_unsignedSymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some ZCompilableType).
+
+Definition Const_int64_unsigned :=
+  MkPrimitive int64_unsignedSymbolType
+                Int64.unsigned
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(** TODO: ZCompilableType is S64 while here is type casting U64 -> S64??? *)
+
+(** Int64.repr: sint64_t -> uint64_t
+  *)
+
+Definition int64_reprSymbolType :=
+  MkCompilableSymbolType [ZCompilableType] (Some int64CompilableType).
+
+Definition Const_int64_repr :=
+  MkPrimitive int64_reprSymbolType
+                Int64.repr
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 
 Module Exports.
   Definition uint16CompilableType := uint16CompilableType.
@@ -441,7 +501,12 @@ Module Exports.
   Definition Const_int64_zero := Const_int64_zero.
   Definition Const_int64_one := Const_int64_one.
   Definition Const_int64_2 := Const_int64_2.
+  Definition Const_int64_64 := Const_int64_64.
   Definition Const_int64_neg := Const_int64_neg.
   Definition Const_int64_add := Const_int64_add.
   Definition Const_int64_sub := Const_int64_sub.
+  Definition Const_int64_and := Const_int64_and.
+  Definition Const_int64_signed := Const_int64_signed.
+  Definition Const_int64_unsigned := Const_int64_unsigned.
+  Definition Const_int64_repr := Const_int64_repr.
 End Exports.

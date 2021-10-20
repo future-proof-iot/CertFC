@@ -2,30 +2,12 @@ From compcert Require Import Integers Values.
 
 From dx.Type Require Import Bool Nat.
 
-Require Import DxIntegers DxList64 DxRegs DxState DxValues.
+Require Import DxIntegers DxList64 DxRegs DxState DxValues DxOpcode.
 
 From Coq Require Import ZArith.
 
 Definition imm := sint32_t.
 Definition off := sint16_t.
-
-Definition opcode_BPF_ADD64i := 0x07%nat.
-Definition opcode_BPF_ADD64r := 0x0f%nat.
-Definition opcode_BPF_NEG64  := 0x87%nat.
-Definition opcode_BPF_ADD32i := 0x04%nat.
-Definition opcode_BPF_ADD32r := 0x0c%nat.
-Definition opcode_BPF_NEG32  := 0x84%nat.
-Definition opcode_BPF_RET    := 0x95%nat.
-
-(*
-Inductive opcode: Type :=
-  | op_BPF_NEG32
-  | op_BPF_NEG64
-  | op_BPF_ADD32r
-  | op_BPF_ADD32i
-  | op_BPF_ADD64r
-  | op_BPF_ADD64i
-  | op_BPF_RET *)
 
 Inductive instruction: Type :=
   | BPF_NEG32    : reg -> instruction
@@ -101,10 +83,9 @@ Definition step (ins:instruction) (next_ins: option int64) (st: state) : MrBPF s
   | BPF_RET => default_MrBPF
   end.
 
-
 (** show loc < List.length l *)
 Definition step (l: MyListType) (loc: nat) (st: state): MrBPF state :=
-  match 
+  match op
 
 Close Scope monad_scope.
 

@@ -297,7 +297,10 @@ Definition regMatchableType :=
         Ok (Csyntax.Sswitch x
               (Csyntax.LScons (Some 0%Z) r0
                 (Csyntax.LScons (Some 1%Z) r1
-                  Csyntax.LSnil))
+                  (Csyntax.LScons (Some 2%Z) r2
+                    (Csyntax.LScons (Some 3%Z) r3
+                      (Csyntax.LScons (Some 4%Z) r4
+                          Csyntax.LSnil)))))
             )
       | _ => Err MatchEncodingFailed
       end)
