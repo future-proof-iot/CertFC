@@ -97,11 +97,11 @@ Definition test_match_reg (r: reg): M state :=
   | _ =>  return10
   end.
 
-Definition eval_reg (r: reg): M val_t :=
+Definition eval_reg (r: reg): M val64_t :=
   returnM (eval_regmap r regs).
 
 
-Definition upd_reg (r: reg) (v: val_t): M regmap :=
+Definition upd_reg (r: reg) (v: val64_t): M regmap :=
   returnM (upd_regmap r v regs).
 
 Definition test_match_nat (n: nat): M state :=
@@ -118,7 +118,7 @@ Definition get_opcode (i:int64_t):M Z := returnM (Int64.unsigned (Int64.and i (I
 Definition get_dst (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xfff)) (Int64.repr z_8))).
 Definition get_src (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xffff)) (Int64.repr z_12))).
 Definition get_offset (i:int64_t ):M sint16_t := returnM (Int16.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr z_32)) (Int64.repr z_48)))).
-Definition get_immediate (i:int64_t):M val_t := returnM (sint_to_vint (Int.repr (Int64.unsigned (Int64.shru i (Int64.repr z_32))))).
+Definition get_immediate (i:int64_t):M vals32_t := returnM (val_intsoflongu (int64_to_vlong (Int64.shru i (Int64.repr z_32)))).
 
 Definition test_int_shift (i j:int64_t): M int64_t := returnM (Integers.Int64.shr i j).
 
@@ -146,39 +146,81 @@ Definition step (l: MyListType): M regmap :=
   do src64 <- eval_reg src;
   match op with
   (** ALU64 *)
-  | op_BPF_ADD64i   => upd_reg dst (Val.addl  dst64 (Val.longofintu imm))
-  | op_BPF_ADD64r   => upd_reg dst (Val.addl  dst64 src64)
-  | op_BPF_SUB64i   => upd_reg dst (Val.subl  dst64 (Val.longofintu imm))
-  | op_BPF_SUB64r   => upd_reg dst (Val.subl  dst64 src64) (*
-  | op_BPF_MUL64i
-  | op_BPF_MUL64r
-  | op_BPF_DIV64i
-  | op_BPF_DIV64r
-  | op_BPF_OR64i
-  | op_BPF_OR64r
-  | op_BPF_AND64i
-  | op_BPF_AND64r
-  | op_BPF_LSH64i
-  | op_BPF_LSH64r
-  | op_BPF_RSH64i
-  | op_BPF_RSH64r
-  | op_BPF_NEG64
-  | op_BPF_MOD64i
-  | op_BPF_MOD64r
-  | op_BPF_XOR64i
-  | op_BPF_XOR64r
-  | op_BPF_MOV64i
-  | op_BPF_MOV64r
-  | op_BPF_ARSH64i
-  | op_BPF_ARSH64r *)
-  | op_BPF_NEG32     =>
-      upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64))))
-  | op_BPF_NEG64     =>
-      upd_reg dst (Val.negl (dst64))
-  | op_BPF_ADD32r    =>
-      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64)))
-  | op_BPF_ADD32i    =>
+  | op_BPF_ADD64i   => upd_reg dst (Val.addl    dst64 (Val.longofintu imm))
+  | op_BPF_ADD64r   => upd_reg dst (Val.addl    dst64 src64)
+  | op_BPF_SUB64i   => upd_reg dst (Val.subl    dst64 (Val.longofintu imm))
+  | op_BPF_SUB64r   => upd_reg dst (Val.subl    dst64 src64)
+  | op_BPF_MUL64i   => upd_reg dst (Val.mull    dst64 (Val.longofintu imm))
+  | op_BPF_MUL64r   => upd_reg dst (Val.mull    dst64 src64)
+  (**r how to generate exit or printf function ? *)
+  | op_BPF_DIV64i   => upd_reg dst (val64_divlu dst64 (Val.longofintu imm))
+  | op_BPF_DIV64r   => upd_reg dst (val64_divlu dst64 src64)
+  | op_BPF_OR64i    => upd_reg dst (Val.orl     dst64 (Val.longofintu imm))
+  | op_BPF_OR64r    => upd_reg dst (Val.orl     dst64 src64)
+  | op_BPF_AND64i   => upd_reg dst (Val.andl    dst64 (Val.longofintu imm))
+  | op_BPF_AND64r   => upd_reg dst (Val.andl    dst64 src64)
+  | op_BPF_LSH64i   => upd_reg dst (Val.shll    dst64 (Val.longofintu imm))
+  | op_BPF_LSH64r   => upd_reg dst (Val.shll    dst64 src64)
+  | op_BPF_RSH64i   => upd_reg dst (Val.shrlu   dst64 (Val.longofintu imm))
+  | op_BPF_RSH64r   => upd_reg dst (Val.shrlu   dst64 src64)
+  | op_BPF_NEG64    => upd_reg dst (Val.negl    dst64)
+  | op_BPF_MOD64i   => upd_reg dst (val64_modlu dst64 (Val.longofintu imm))
+  | op_BPF_MOD64r   => upd_reg dst (val64_modlu dst64 src64) (**r same *)
+  | op_BPF_XOR64i   => upd_reg dst (Val.xorl    dst64 (Val.longofintu imm))
+  | op_BPF_XOR64r   => upd_reg dst (Val.xorl    dst64 src64)
+  | op_BPF_MOV64i   => upd_reg dst (Val.longofintu imm)
+  | op_BPF_MOV64r   => upd_reg dst src64
+  | op_BPF_ARSH64i  => upd_reg dst (Val.shrl    dst64 (Val.longofintu imm))
+  | op_BPF_ARSH64r  => upd_reg dst (Val.shrl    dst64 src64)
+  (*ALU32*)
+  | op_BPF_ADD32i   =>
       upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) imm))
+  | op_BPF_ADD32r   =>
+      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_SUB32i   =>
+      upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) imm))
+  | op_BPF_SUB32r   =>
+      upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_MUL32i   =>
+      upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) imm))
+  | op_BPF_MUL32r   =>
+      upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_DIV32i   =>
+      upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) imm))
+  | op_BPF_DIV32r   =>
+      upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_OR32i   =>
+      upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) imm))
+  | op_BPF_OR32r   =>
+      upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_AND32i   =>
+      upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) imm))
+  | op_BPF_AND32r   =>
+      upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_LSH32i   =>
+      upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) imm))
+  | op_BPF_LSH32r   =>
+      upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_RSH32i   =>
+      upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) imm))
+  | op_BPF_RSH32r   =>
+      upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_NEG32    =>
+      upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64))))
+  | op_BPF_MOD32i   =>
+      upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) imm))
+  | op_BPF_MOD32r   =>
+      upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_XOR32i   =>
+      upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) imm))
+  | op_BPF_XOR32r   =>
+      upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_MOV32i   => upd_reg dst imm
+  | op_BPF_MOV32r   => upd_reg dst (val_intuoflongu src64)
+  | op_BPF_ARSH32i   =>
+      upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) imm))
+  | op_BPF_ARSH32r   =>
+      upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) (val_intuoflongu src64)))
   | _ => default_regs
   end.
 
@@ -203,8 +245,7 @@ GenerateIntermediateRepresentation SymbolIRs
   default_regs
   __
   (*testadd
-  testget*)
-  list_get(*
+  testget*)(*
   mysum
   interpreter1
   testreg
@@ -212,17 +253,18 @@ GenerateIntermediateRepresentation SymbolIRs
   return1
   return4
   return10
-  test_match_reg*)
-  eval_reg
-  upd_reg(*
+  test_match_reg
+  test_int_shift
   test_match_nat
   test_Z*)
+  list_get
+  eval_reg
+  upd_reg
   get_opcode
   get_dst
   get_src
   get_offset
   get_immediate
-  test_int_shift
   ins_to_opcode
   ins_to_dst_reg
   ins_to_src_reg
