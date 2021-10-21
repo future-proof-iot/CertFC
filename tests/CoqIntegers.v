@@ -33,6 +33,59 @@ Definition C_S32_pointer := Ctypes.Tpointer C_S32 Ctypes.noattr.
 
 Definition C_S64_pointer := Ctypes.Tpointer C_S64 Ctypes.noattr.
 
+(******************** C_U32 operations *******************)
+
+Definition C_U32_neg (x: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Eunop Cop.Oneg x C_U32.
+
+Definition C_U32_add (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oadd x y C_U32.
+
+Definition C_U32_sub (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Osub x y C_U32.
+
+Definition C_U32_mul (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Omul x y C_U32.
+
+Definition C_U32_div (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Odiv x y C_U32.
+
+Definition C_U32_mod (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Omod x y C_U32.
+
+Definition C_U32_and (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oand x y C_U32.
+
+Definition C_U32_or (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oor x y C_U32.
+
+Definition C_U32_xor (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oxor x y C_U32.
+
+Definition C_U32_shl (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oshl x y C_U32.
+
+Definition C_U32_shr (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oshr x y C_U32.
+
+Definition C_U32_eq (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oeq x y C_U32.
+
+Definition C_U32_ne (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.One x y C_U32.
+
+Definition C_U32_lt (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Olt x y C_U32.
+
+Definition C_U32_gt (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Ogt x y C_U32.
+
+Definition C_U32_le (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Ole x y C_U32.
+
+Definition C_U32_ge (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oge x y C_U32.
+
 (******************** C_U64 operations *******************)
 
 Definition C_U64_neg (x: Csyntax.expr) : Csyntax.expr :=
@@ -58,6 +111,9 @@ Definition C_U64_and (x y: Csyntax.expr) : Csyntax.expr :=
 
 Definition C_U64_or (x y: Csyntax.expr) : Csyntax.expr :=
   Csyntax.Ebinop Cop.Oor x y C_U64.
+
+Definition C_U64_xor (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oxor x y C_U64.
 
 Definition C_U64_shl (x y: Csyntax.expr) : Csyntax.expr :=
   Csyntax.Ebinop Cop.Oshl x y C_U64.
