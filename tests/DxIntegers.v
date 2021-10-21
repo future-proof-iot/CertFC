@@ -405,24 +405,6 @@ Definition C_U64_2: Csyntax.expr :=
 Definition C_U64_64: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_64) C_U64.
 
-Definition C_U64_neg (x: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Eunop Cop.Oneg x C_U64.
-
-Definition C_U64_add (x y: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Ebinop Cop.Oadd x y C_U64.
-
-Definition C_U64_sub (x y: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Ebinop Cop.Osub x y C_U64.
-
-Definition C_U64_and (x y: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Ebinop Cop.Oand x y C_U64.
-
-Definition C_U64_shl (x y: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Ebinop Cop.Oshl x y C_U64.
-
-Definition C_U64_shr (x y: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Ebinop Cop.Oshr x y C_U64.
-
 Definition int64CompilableType :=
   MkCompilableType int64_t C_U64.
 
@@ -545,7 +527,6 @@ Definition Const_int64_repr :=
                            | [e1] => Ok e1
                            | _       => Err PrimitiveEncodingFailed
                            end).
-
 
 Module Exports.
   Definition uint16CompilableType := uint16CompilableType.
