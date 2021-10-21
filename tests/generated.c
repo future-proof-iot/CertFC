@@ -6,23 +6,9 @@ extern struct $101 const init_regs_state;
 
 extern unsigned long long list_get(unsigned long long *, unsigned long long);
 
-extern unsigned long long return0(void);
+extern unsigned long long eval_reg(unsigned int, unsigned long long [11]);
 
-extern unsigned long long return1(void);
-
-extern unsigned long long return4(void);
-
-extern unsigned long long return10(void);
-
-extern unsigned long long test_match_reg(unsigned int);
-
-extern unsigned long long test_reg_eval(unsigned int, unsigned long long [11]);
-
-extern unsigned long long test_reg_upd(unsigned int, unsigned long long, unsigned long long [11])[11];
-
-extern unsigned long long test_match_nat(unsigned int);
-
-extern long long test_Z(void);
+extern unsigned long long upd_reg(unsigned int, unsigned long long, unsigned long long [11])[11];
 
 extern long long get_opcode(unsigned long long);
 
@@ -32,7 +18,7 @@ extern long long get_src(unsigned long long);
 
 extern short get_offset(unsigned long long);
 
-extern int get_immediate(unsigned long long);
+extern unsigned long long get_immediate(unsigned long long);
 
 extern unsigned long long test_int_shift(unsigned long long, unsigned long long);
 
@@ -52,82 +38,19 @@ extern struct $101 const init_regs_state;
 
 extern unsigned long long default_regs(void)[11];
 
-unsigned long long list_get(unsigned long long *l, unsigned long long idx)
+unsigned long long list_get(unsigned long long *li, unsigned long long idx)
 {
-  return *(l + idx);
+  return *(li + idx);
 }
 
-unsigned long long return0(void)
+unsigned long long eval_reg(unsigned int r, unsigned long long regs[11])
 {
-  return 0LLU;
+  return *(regs + r);
 }
 
-unsigned long long return1(void)
+unsigned long long upd_reg(unsigned int r$22, unsigned long long v, unsigned long long regs$24[11])[11]
 {
-  return 1LLU;
-}
-
-unsigned long long return4(void)
-{
-  return 64LLU;
-}
-
-unsigned long long return10(void)
-{
-  return 0LLU;
-}
-
-unsigned long long test_match_reg(unsigned int r)
-{
-  switch (r) {
-    case 0:
-      return return0();
-    case 1:
-      return return1();
-    case 2:
-      return return10();
-    case 3:
-      return return10();
-    case 4:
-      return return4();
-    
-  }
-}
-
-unsigned long long test_reg_eval(unsigned int r$28, unsigned long long regs[11])
-{
-  return *(regs + r$28);
-}
-
-unsigned long long test_reg_upd(unsigned int r$30, unsigned long long v, unsigned long long regs$32[11])[11]
-{
-  return *(regs$32 + r$30) = v;
-}
-
-unsigned long long test_match_nat(unsigned int n)
-{
-  unsigned int n0;
-  unsigned int n1;
-  if (n == 0U) {
-    return return0();
-  } else {
-    n0 = n - 1U;
-    if (n0 == 0U) {
-      return return1();
-    } else {
-      n1 = n0 - 1U;
-      if (n1 == 0U) {
-        return return10();
-      } else {
-        return return0();
-      }
-    }
-  }
-}
-
-long long test_Z(void)
-{
-  return 7LL;
+  return *(regs$24 + r$22) = v;
 }
 
 long long get_opcode(unsigned long long i)
@@ -135,78 +58,245 @@ long long get_opcode(unsigned long long i)
   return i & 255LL;
 }
 
-long long get_dst(unsigned long long i$38)
+long long get_dst(unsigned long long i$26)
 {
-  return (i$38 & 4095LL) >> 8LL;
+  return (i$26 & 4095LL) >> 8LL;
 }
 
-long long get_src(unsigned long long i$39)
+long long get_src(unsigned long long i$27)
 {
-  return (i$39 & 65535LL) >> 12LL;
+  return (i$27 & 65535LL) >> 12LL;
 }
 
-short get_offset(unsigned long long i$40)
+short get_offset(unsigned long long i$28)
 {
-  return i$40 << 32LL >> 48LL;
+  return i$28 << 32LL >> 48LL;
 }
 
-int get_immediate(unsigned long long i$41)
+unsigned long long get_immediate(unsigned long long i$29)
 {
-  return i$41 >> 32LL;
+  return i$29 >> 32LL;
 }
 
-unsigned long long test_int_shift(unsigned long long i$42, unsigned long long j)
+unsigned long long test_int_shift(unsigned long long i$30, unsigned long long j)
 {
-  return (long long) i$42 >> j;
+  return (long long) i$30 >> j;
 }
 
-unsigned int ins_to_opcode(unsigned long long ins)
+unsigned int ins_to_opcode(unsigned long long i$32)
 {
   long long op_z;
-  op_z = get_opcode(ins);
+  op_z = get_opcode(i$32);
   return op_z;
 }
 
-unsigned int ins_to_dst_reg(unsigned long long ins$46)
+unsigned int ins_to_dst_reg(unsigned long long i$34)
 {
   long long dst_z;
-  dst_z = get_dst(ins$46);
+  dst_z = get_dst(i$34);
   return dst_z;
 }
 
-unsigned int ins_to_src_reg(unsigned long long ins$48)
+unsigned int ins_to_src_reg(unsigned long long i$36)
 {
   long long src_z;
-  src_z = get_src(ins$48);
+  src_z = get_src(i$36);
   return src_z;
 }
 
-unsigned long long step(unsigned long long *l$50, unsigned long long loc, unsigned long long st[11])[11]
+unsigned long long step(unsigned long long *l, unsigned long long loc, unsigned long long st[11])[11]
 {
-  unsigned long long ins$53;
+  unsigned long long ins;
   unsigned int op;
   unsigned int dst;
+  unsigned int src;
+  unsigned long long imm;
   unsigned long long dst64;
-  ins$53 = list_get(l$50, loc);
-  op = ins_to_opcode(ins$53);
-  dst = ins_to_dst_reg(ins$53);
-  ins_to_src_reg(ins$53);
-  get_offset(ins$53);
-  get_immediate(ins$53);
+  unsigned long long src64;
+  ins = list_get(l, loc);
+  op = ins_to_opcode(ins);
+  dst = ins_to_dst_reg(ins);
+  src = ins_to_src_reg(ins);
+  get_offset(ins);
+  imm = get_immediate(ins);
+  dst64 = eval_reg(dst, st);
+  src64 = eval_reg(src, st);
   switch (op) {
-    case 132:
-      dst64 = test_reg_eval(dst, st);
-      return test_reg_upd(dst, (unsigned long long) -((unsigned int) dst64),
-                          st);
-    case 135:
-      return default_regs();
-    case 12:
-      return default_regs();
-    case 4:
+    case 7:
       return default_regs();
     case 15:
       return default_regs();
-    case 7:
+    case 23:
+      return default_regs();
+    case 31:
+      return default_regs();
+    case 39:
+      return default_regs();
+    case 47:
+      return default_regs();
+    case 55:
+      return default_regs();
+    case 63:
+      return default_regs();
+    case 71:
+      return default_regs();
+    case 79:
+      return default_regs();
+    case 87:
+      return default_regs();
+    case 95:
+      return default_regs();
+    case 103:
+      return default_regs();
+    case 111:
+      return default_regs();
+    case 119:
+      return default_regs();
+    case 127:
+      return default_regs();
+    case 135:
+      return upd_reg(dst, -dst64, st);
+    case 151:
+      return default_regs();
+    case 159:
+      return default_regs();
+    case 167:
+      return default_regs();
+    case 175:
+      return default_regs();
+    case 183:
+      return default_regs();
+    case 191:
+      return default_regs();
+    case 199:
+      return default_regs();
+    case 207:
+      return default_regs();
+    case 4:
+      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 + imm),
+                     st);
+    case 12:
+      return upd_reg(dst,
+                     (unsigned long long) ((unsigned int) dst64
+                                            + (unsigned int) src64), 
+                     st);
+    case 20:
+      return default_regs();
+    case 28:
+      return default_regs();
+    case 36:
+      return default_regs();
+    case 44:
+      return default_regs();
+    case 52:
+      return default_regs();
+    case 60:
+      return default_regs();
+    case 68:
+      return default_regs();
+    case 76:
+      return default_regs();
+    case 84:
+      return default_regs();
+    case 92:
+      return default_regs();
+    case 100:
+      return default_regs();
+    case 108:
+      return default_regs();
+    case 116:
+      return default_regs();
+    case 124:
+      return default_regs();
+    case 132:
+      return upd_reg(dst, (unsigned long long) -((unsigned int) dst64), st);
+    case 148:
+      return default_regs();
+    case 156:
+      return default_regs();
+    case 164:
+      return default_regs();
+    case 172:
+      return default_regs();
+    case 180:
+      return default_regs();
+    case 188:
+      return default_regs();
+    case 196:
+      return default_regs();
+    case 204:
+      return default_regs();
+    case 5:
+      return default_regs();
+    case 21:
+      return default_regs();
+    case 29:
+      return default_regs();
+    case 37:
+      return default_regs();
+    case 45:
+      return default_regs();
+    case 53:
+      return default_regs();
+    case 61:
+      return default_regs();
+    case 165:
+      return default_regs();
+    case 173:
+      return default_regs();
+    case 181:
+      return default_regs();
+    case 189:
+      return default_regs();
+    case 69:
+      return default_regs();
+    case 77:
+      return default_regs();
+    case 85:
+      return default_regs();
+    case 93:
+      return default_regs();
+    case 101:
+      return default_regs();
+    case 109:
+      return default_regs();
+    case 117:
+      return default_regs();
+    case 125:
+      return default_regs();
+    case 197:
+      return default_regs();
+    case 205:
+      return default_regs();
+    case 213:
+      return default_regs();
+    case 221:
+      return default_regs();
+    case 24:
+      return default_regs();
+    case 97:
+      return default_regs();
+    case 105:
+      return default_regs();
+    case 113:
+      return default_regs();
+    case 121:
+      return default_regs();
+    case 98:
+      return default_regs();
+    case 106:
+      return default_regs();
+    case 114:
+      return default_regs();
+    case 122:
+      return default_regs();
+    case 99:
+      return default_regs();
+    case 107:
+      return default_regs();
+    case 115:
+      return default_regs();
+    case 123:
       return default_regs();
     case 149:
       return default_regs();
