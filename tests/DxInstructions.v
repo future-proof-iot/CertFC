@@ -62,17 +62,17 @@ Definition step (ins:instruction) (next_ins: option int64) (st: state) : MrBPF s
   match ins with
   | BPF_NEG32 dst     =>
     do dst64 <- (eval_reg dst st) ;
-      upd_reg dst (Val.longofintu (Val.neg (val_intoflongu (dst64)))) st
+      upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64)))) st
   | BPF_NEG64 dst     =>
     do dst64 <- (eval_reg dst st) ;
       upd_reg dst (Val.negl (dst64)) st
   | BPF_ADD32r dst src =>
     do dst64 <- eval_reg dst st;
     do src64 <- eval_reg src st;
-      upd_reg dst (Val.longofintu (Val.add (val_intoflongu dst64) (val_intoflongu src64))) st
+      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64))) st
   | BPF_ADD32i dst i   => 
     do dst64 <- eval_reg dst st;
-      upd_reg dst (Val.longofintu (Val.add (val_intoflongu dst64) (Vint i))) st
+      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (Vint i))) st
   | BPF_ADD64r dst src => 
     do dst64 <- eval_reg dst st;
     do src64 <- eval_reg src st;
@@ -87,7 +87,7 @@ Definition get_opcode (i:int64_t):MrBPF Z := returnM (Int64.unsigned (Int64.and 
 Definition get_dst (i:int64_t):MrBPF Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xfff)) (Int64.repr z_8))).
 Definition get_src (i:int64_t):MrBPF Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xffff)) (Int64.repr z_12))).
 Definition get_offset (i:int64_t ):MrBPF sint16_t := returnM (Int16.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr z_32)) (Int64.repr z_48)))).
-Definition get_immediate (i:int64_t):MrBPF sint32_t := returnM (Int.repr (Int64.unsigned (Int64.shru i (Int64.repr z_32)))).
+Definition get_immediate (i:int64_t):MrBPF val_t := returnM (sint_to_vint (Int.repr (Int64.unsigned (Int64.shru i (Int64.repr z_32))))).
 
 Definition list_get (l: MyListType) (idx: int64_t): MrBPF int64_t :=
   returnM (MyListIndex l idx).
@@ -110,19 +110,48 @@ Definition stepM (l: MyListType) (loc: int64_t) (st: state): MrBPF state :=
   do op <- ins_to_opcode ins;
   do dst <- ins_to_dst_reg ins;
   do src <- ins_to_src_reg ins;
-  do ofs <- get_offset ins;
+  do dst64 <- eval_reg dst st;
+  do src64 <- eval_reg src st;
+  do ofs <- get_offset ins; (* optiomiz...**)
   do imm <- get_immediate ins;
   match op with
-  | op_BPF_NEG32     => 
-    do dst64 <- eval_reg dst st;
-      upd_reg dst (Val.longofintu (Val.neg (val_intoflongu (dst64)))) st
-  | op_BPF_NEG64     => default_MrBPF
-  | op_BPF_ADD32r    => default_MrBPF
-  | op_BPF_ADD32i    => default_MrBPF
-  | op_BPF_ADD64r    => default_MrBPF
-  | op_BPF_ADD64i    => default_MrBPF
+  (** ALU64 *)
+  | op_BPF_ADD64i   => upd_reg dst (Val.addl  dst64 (Val.longofintu imm)) st
+  | op_BPF_ADD64r   => upd_reg dst (Val.addl  dst64 src64) st
+  | op_BPF_SUB64i   => upd_reg dst (Val.subl  dst64 (Val.longofintu imm)) st
+  | op_BPF_SUB64r   => upd_reg dst (Val.subl  dst64 src64) st (*
+  | op_BPF_MUL64i
+  | op_BPF_MUL64r
+  | op_BPF_DIV64i
+  | op_BPF_DIV64r
+  | op_BPF_OR64i
+  | op_BPF_OR64r
+  | op_BPF_AND64i
+  | op_BPF_AND64r
+  | op_BPF_LSH64i
+  | op_BPF_LSH64r
+  | op_BPF_RSH64i
+  | op_BPF_RSH64r
+  | op_BPF_NEG64
+  | op_BPF_MOD64i
+  | op_BPF_MOD64r
+  | op_BPF_XOR64i
+  | op_BPF_XOR64r
+  | op_BPF_MOV64i
+  | op_BPF_MOV64r
+  | op_BPF_ARSH64i
+  | op_BPF_ARSH64r *)
+  | op_BPF_NEG32     =>
+      upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64)))) st
+  | op_BPF_NEG64     =>
+      upd_reg dst (Val.negl (dst64)) st
+  | op_BPF_ADD32r    =>
+      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64))) st
+  | op_BPF_ADD32i    =>
+      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) imm)) st
+
   | op_BPF_RET       => default_MrBPF
-  | op_BPF_ERROR_INS => default_MrBPF
+  | _ => default_MrBPF
   end.
 
 Close Scope monad_scope.

@@ -3,7 +3,7 @@ From Coq Require Import Numbers.AltBinNotations.
 Import List.ListNotations.
 
 From compcert.cfrontend Require Csyntax Ctypes.
-From compcert.common Require Errors Values.
+From compcert.common Require Import Errors Values.
 From compcert.lib Require Import Integers.
 
 
@@ -48,8 +48,8 @@ Definition testget (fuel: nat) (init idx: state) (l: MyListType): M state :=
   | S nfuel => returnM (MyListIndex l idx)
   end.
 
-Definition list_get (l: MyListType) (idx: state): M state :=
-  returnM (MyListIndex l idx).
+Definition list_get (li: MyListType) (idx: state): M state :=
+  returnM (MyListIndex li idx).
 
 Definition mysum (a b: state): M state :=
   returnM (Integers.Int64.add a b).
@@ -66,11 +66,16 @@ Fixpoint interpreter1 (fuel: nat) (init idx: state) (l: MyListType){struct fuel}
 (** Coq2C: pc -> unsigned int pc := 0; as global variable!
   *)
 (* I guess we should know how to use `SymbolIRs`*)
-Definition pc: uint32_t := Integers.Int.one.
+(*
+Definition pc: uint32_t := Integers.Int.one.*)
 
-Definition regs: regmap := init_regmap.
+(*
+Definition regs: regmap := init_regmap.*)
 
-Definition default_regs := returnM regs.
+Axiom pc: int64_t.
+Axiom regs: regmap.
+
+Definition default_regs := returnM init_regmap.
 
 Definition regs_st: regs_state := init_regs_state.
 
@@ -92,10 +97,11 @@ Definition test_match_reg (r: reg): M state :=
   | _ =>  return10
   end.
 
-Definition test_reg_eval (r: reg) (regs: regmap): M val_t :=
+Definition eval_reg (r: reg): M val_t :=
   returnM (eval_regmap r regs).
 
-Definition test_reg_upd (r: reg) (v: val_t) (regs: regmap): M regmap :=
+
+Definition upd_reg (r: reg) (v: val_t): M regmap :=
   returnM (upd_regmap r v regs).
 
 Definition test_match_nat (n: nat): M state :=
@@ -112,41 +118,68 @@ Definition get_opcode (i:int64_t):M Z := returnM (Int64.unsigned (Int64.and i (I
 Definition get_dst (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xfff)) (Int64.repr z_8))).
 Definition get_src (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xffff)) (Int64.repr z_12))).
 Definition get_offset (i:int64_t ):M sint16_t := returnM (Int16.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr z_32)) (Int64.repr z_48)))).
-Definition get_immediate (i:int64_t):M sint32_t := returnM (Int.repr (Int64.unsigned (Int64.shru i (Int64.repr z_32)))).
+Definition get_immediate (i:int64_t):M val_t := returnM (sint_to_vint (Int.repr (Int64.unsigned (Int64.shru i (Int64.repr z_32))))).
 
 Definition test_int_shift (i j:int64_t): M int64_t := returnM (Integers.Int64.shr i j).
 
-Definition ins_to_opcode (ins: int64_t): M opcode :=
-  do op_z <- get_opcode ins;
+Definition ins_to_opcode (i: int64_t): M opcode :=
+  do op_z <- get_opcode i;
     returnM (z_to_opcode op_z).
 
-Definition ins_to_dst_reg (ins: int64_t): M reg :=
-  do dst_z <- get_dst ins;
+Definition ins_to_dst_reg (i: int64_t): M reg :=
+  do dst_z <- get_dst i;
     returnM (z_to_reg dst_z).
 
-Definition ins_to_src_reg (ins: int64_t): M reg :=
-  do src_z <- get_src ins;
+Definition ins_to_src_reg (i: int64_t): M reg :=
+  do src_z <- get_src i;
     returnM (z_to_reg src_z).
 
 (** show loc < List.length l *)
-Definition step (l: MyListType) (loc: int64_t) (st: regmap): M regmap :=
-  do ins <- list_get l loc;
+Definition step (l: MyListType): M regmap :=
+  do ins <- list_get l pc;
   do op <- ins_to_opcode ins;
   do dst <- ins_to_dst_reg ins;
   do src <- ins_to_src_reg ins;
   do ofs <- get_offset ins;
   do imm <- get_immediate ins;
+  do dst64 <- eval_reg dst;
+  do src64 <- eval_reg src;
   match op with
-  | op_BPF_NEG32 => 
-      do dst64 <- test_reg_eval dst st;
-      test_reg_upd dst (Values.Val.longofintu (Values.Val.neg (val_intoflongu (dst64)))) st
-  | op_BPF_NEG64 => default_regs
-  | op_BPF_ADD32r => default_regs
-  | op_BPF_ADD32i => default_regs
-  | op_BPF_ADD64r => default_regs
-  | op_BPF_ADD64i => default_regs
-  | op_BPF_RET => default_regs
-  | op_BPF_ERROR_INS => default_regs
+  (** ALU64 *)
+  | op_BPF_ADD64i   => upd_reg dst (Val.addl  dst64 (Val.longofintu imm))
+  | op_BPF_ADD64r   => upd_reg dst (Val.addl  dst64 src64)
+  | op_BPF_SUB64i   => upd_reg dst (Val.subl  dst64 (Val.longofintu imm))
+  | op_BPF_SUB64r   => upd_reg dst (Val.subl  dst64 src64) (*
+  | op_BPF_MUL64i
+  | op_BPF_MUL64r
+  | op_BPF_DIV64i
+  | op_BPF_DIV64r
+  | op_BPF_OR64i
+  | op_BPF_OR64r
+  | op_BPF_AND64i
+  | op_BPF_AND64r
+  | op_BPF_LSH64i
+  | op_BPF_LSH64r
+  | op_BPF_RSH64i
+  | op_BPF_RSH64r
+  | op_BPF_NEG64
+  | op_BPF_MOD64i
+  | op_BPF_MOD64r
+  | op_BPF_XOR64i
+  | op_BPF_XOR64r
+  | op_BPF_MOV64i
+  | op_BPF_MOV64r
+  | op_BPF_ARSH64i
+  | op_BPF_ARSH64r *)
+  | op_BPF_NEG32     =>
+      upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64))))
+  | op_BPF_NEG64     =>
+      upd_reg dst (Val.negl (dst64))
+  | op_BPF_ADD32r    =>
+      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64)))
+  | op_BPF_ADD32i    =>
+      upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) imm))
+  | _ => default_regs
   end.
 
 Close Scope monad_scope.
@@ -174,16 +207,16 @@ GenerateIntermediateRepresentation SymbolIRs
   list_get(*
   mysum
   interpreter1
-  testreg*)
+  testreg
   return0
   return1
   return4
   return10
-  test_match_reg
-  test_reg_eval
-  test_reg_upd
+  test_match_reg*)
+  eval_reg
+  upd_reg(*
   test_match_nat
-  test_Z
+  test_Z*)
   get_opcode
   get_dst
   get_src

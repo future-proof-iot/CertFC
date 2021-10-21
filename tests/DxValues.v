@@ -17,16 +17,16 @@ Definition val_t := val.
 
 (******************** Val2U32 *******************)
 
-Definition val32CompilableType :=
+Definition valU32CompilableType :=
   MkCompilableType val_t C_U32.
 
 (** Type signature: val -> val
   *)
-Definition val32Toval32SymbolType :=
-  MkCompilableSymbolType [val32CompilableType] (Some val32CompilableType).
+Definition valU32TovalU32SymbolType :=
+  MkCompilableSymbolType [valU32CompilableType] (Some valU32CompilableType).
 
-Definition Const_val32_neg :=
-  MkPrimitive val32Toval32SymbolType
+Definition Const_valU32_neg :=
+  MkPrimitive valU32TovalU32SymbolType
                 Val.neg
                 (fun es => match es with
                            | [e1] => Ok (C_U32_neg e1)
@@ -35,14 +35,45 @@ Definition Const_val32_neg :=
 
 (** Type signature: val -> val -> val
   *)
-Definition val32Toval32Toval32SymbolType :=
-  MkCompilableSymbolType [val32CompilableType; val32CompilableType] (Some val32CompilableType).
+Definition valU32TovalU32TovalU32SymbolType :=
+  MkCompilableSymbolType [valU32CompilableType; valU32CompilableType] (Some valU32CompilableType).
 
-Definition Const_val32_add :=
-  MkPrimitive val32Toval32Toval32SymbolType
+Definition Const_valU32_add :=
+  MkPrimitive valU32TovalU32TovalU32SymbolType
                 Val.add
                 (fun es => match es with
                            | [e1; e2] => Ok (C_U32_add e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(******************** Val2S32 *******************)
+
+Definition valS32CompilableType :=
+  MkCompilableType val_t C_S32.
+
+(** Type signature: val -> val
+  *)
+Definition valS32TovalS32SymbolType :=
+  MkCompilableSymbolType [valS32CompilableType] (Some valS32CompilableType).
+
+Definition Const_valS32_neg :=
+  MkPrimitive valS32TovalS32SymbolType
+                Val.neg
+                (fun es => match es with
+                           | [e1] => Ok (C_S32_neg e1) (** Csyntax.Eunop Cop.Oneg x C_S32. *)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(** Type signature: val -> val -> val
+  *)
+Definition valS32TovalS32TovalS32SymbolType :=
+  MkCompilableSymbolType [valS32CompilableType; valS32CompilableType] (Some valS32CompilableType).
+
+Definition Const_valS32_add :=
+  MkPrimitive valS32TovalS32TovalS32SymbolType
+                Val.add
+                (fun es => match es with
+                           | [e1; e2] => Ok (C_S32_add e1 e2)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -85,43 +116,79 @@ Definition Const_val64_add :=
                            end).
 
 
+
 (******************** Val Type Casting *******************)
 
 (** _to_u32 : vlong_to_vint <==> val_intoflongu
   *)
 
-Definition val_intoflongu (v: val): val :=
+Definition val_intuoflongu (v: val): val :=
   match v with
   | Vlong n    => Vint (Int.repr (Int64.unsigned n))
   | _          => Vundef
   end.
 
-Definition val64Toval32SymbolType :=
-  MkCompilableSymbolType [val64CompilableType] (Some val32CompilableType).
+Definition val64TovalU32SymbolType :=
+  MkCompilableSymbolType [val64CompilableType] (Some valU32CompilableType).
 
-Definition Const_val64Toval32 :=
-  MkPrimitive val64Toval32SymbolType
-                val_intoflongu
+Definition Const_val64TovalU32 :=
+  MkPrimitive val64TovalU32SymbolType
+                val_intuoflongu
                 (fun es => match es with
                            | [e1] => Ok (Csyntax.Ecast e1 C_U32)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+(** _to_S32 : vlong_to_vint <==> val_intsoflongu
+  *)
+
+Definition val_intsoflongu (v: val): val :=
+  match v with
+  | Vlong n    => Vint (Int.repr (Int64.unsigned n))
+  | _          => Vundef
+  end.
+
+Definition val64TovalS32SymbolType :=
+  MkCompilableSymbolType [val64CompilableType] (Some valS32CompilableType).
+
+Definition Const_val64TovalS32 :=
+  MkPrimitive val64TovalS32SymbolType
+                val_intsoflongu
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(** int_to_vint: int -> Vint
+  *)
+Definition sint_to_vint (v: int): val := Vint v.
+
+Definition sint32TovalS32SymbolType :=
+  MkCompilableSymbolType [sint32CompilableType] (Some valS32CompilableType).
+
+Definition Const_sint_to_vint:=
+  MkPrimitive sint32TovalS32SymbolType
+                sint_to_vint
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 (** _to_U64: Val.longofintu
   *)
-Definition val32Toval64SymbolType :=
-  MkCompilableSymbolType [val32CompilableType] (Some val64CompilableType).
+Definition valU32Toval64SymbolType :=
+  MkCompilableSymbolType [valU32CompilableType] (Some val64CompilableType).
 
-Definition Const_val32Toval64 :=
-  MkPrimitive val32Toval64SymbolType
+Definition Const_valU32Toval64 :=
+  MkPrimitive valU32Toval64SymbolType
                 Val.longofint
                 (fun es => match es with
                            | [e1] => Ok (Csyntax.Ecast e1 C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-Definition Const_val32Toval64_u :=
-  MkPrimitive val32Toval64SymbolType
+Definition Const_valU32Toval64_u :=
+  MkPrimitive valU32Toval64SymbolType
                 Val.longofintu
                 (fun es => match es with
                            | [e1] => Ok (Csyntax.Ecast e1 C_U64)
@@ -159,12 +226,12 @@ Definition div32_checking (v: val): bool :=
   | _ => false
   end.
 
-Definition val32ToboolSymbolType :=
-  MkCompilableSymbolType [val32CompilableType] (Some boolCompilableType).
+Definition valU32ToboolSymbolType :=
+  MkCompilableSymbolType [valU32CompilableType] (Some boolCompilableType).
 (** TODO: maybe we should give the compilableType of val. But it is hard because var is compilable with uint64/uint32/uint16... a union type?
 *)
 Definition Const_div32_checking :=
-  MkPrimitive val32ToboolSymbolType
+  MkPrimitive valU32ToboolSymbolType
                 div32_checking
                 (fun es => match es with
                            | [v] => Ok (Csyntax.Econdition
@@ -218,7 +285,7 @@ Definition shift32_checking (v: val): bool :=
   end.
 
 Definition Const_shift32_checking :=
-  MkPrimitive val32ToboolSymbolType
+  MkPrimitive valU32ToboolSymbolType
                 shift32_checking
                 (fun es => match es with
                            | [v] => Ok (Csyntax.Econdition
@@ -231,16 +298,21 @@ Definition Const_shift32_checking :=
                            end).
 
 Module Exports.
-  Definition val32CompilableType := val32CompilableType.
-  Definition Const_val32_neg := Const_val32_neg.
-  Definition Const_val32_add := Const_val32_add.
+  Definition valU32CompilableType := valU32CompilableType.
+  Definition Const_valU32_neg := Const_valU32_neg.
+  Definition Const_valU32_add := Const_valU32_add.
+  Definition valS32CompilableType := valS32CompilableType.
+  Definition Const_valS32_neg := Const_valS32_neg.
+  Definition Const_valS32_add := Const_valS32_add.
   Definition val64CompilableType := val64CompilableType.
   Definition Const_val64_zero := Const_val64_zero.
   Definition Const_val64_neg := Const_val64_neg.
   Definition Const_val64_add := Const_val64_add.
-  Definition Const_val64Toval32 := Const_val64Toval32.
-  Definition Const_val32Toval64 := Const_val32Toval64.
-  Definition Const_val32Toval64_u := Const_val32Toval64_u.
+  Definition Const_val64TovalU32 := Const_val64TovalU32.
+  Definition Const_val64TovalS32 := Const_val64TovalS32.
+  Definition Const_sint_to_vint := Const_sint_to_vint.
+  Definition Const_valU32Toval64 := Const_valU32Toval64.
+  Definition Const_valU32Toval64_u := Const_valU32Toval64_u.
   Definition Const_div64_checking := Const_div64_checking.
   Definition Const_div32_checking := Const_div32_checking.
   Definition Const_shift64_checking := Const_shift64_checking.
