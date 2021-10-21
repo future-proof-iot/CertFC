@@ -198,15 +198,6 @@ Definition C_U32_10: Csyntax.expr :=
 Definition C_U32_32: Csyntax.expr :=
   Csyntax.Eval (Vint int32_32) C_U32.
 
-Definition C_U32_neg (x: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Eunop Cop.Oneg x C_U32.
-
-Definition C_U32_add (x y: Csyntax.expr): Csyntax.expr :=
-  Csyntax.Ebinop Cop.Oadd x y C_U32.
-
-Definition C_U32_sub (x y: Csyntax.expr): Csyntax.expr :=
-  Csyntax.Ebinop Cop.Osub x y C_U32.
-
 Definition uint32CompilableType :=
   MkCompilableType uint32_t C_U32.
 
