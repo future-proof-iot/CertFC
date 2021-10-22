@@ -5,7 +5,7 @@ From compcert Require Import Integers.
 
 From dx Require Import ResultMonad IR.
 
-Require Import CoqIntegers DxZ DxIntegers.
+Require Import CoqIntegers DxZ DxIntegers InfComp.
 
 Open Scope Z_scope.
 
@@ -104,6 +104,7 @@ Inductive opcode: Type :=
   | op_BPF_RET
   | op_BPF_ERROR_INS
 .
+
 
 Definition z_to_opcode (z:Z): opcode := 
   match z with
@@ -211,6 +212,18 @@ Definition opcodeCompilableType :=
 Definition zToopcodeSymbolType :=
   MkCompilableSymbolType [ZCompilableType] (Some opcodeCompilableType).
 
+
+Instance CINT : CType Z := mkCType _ (cType ZCompilableType).
+Instance COP : CType opcode := mkCType _ (cType opcodeCompilableType).
+
+Definition Const_z_to_opcode :=
+  ltac: (mkprimitive z_to_opcode
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end)).
+
+(*
 Definition Const_z_to_opcode :=
   MkPrimitive zToopcodeSymbolType
                 z_to_opcode
@@ -218,6 +231,7 @@ Definition Const_z_to_opcode :=
                            | [e1] => Ok e1
                            | _       => Err PrimitiveEncodingFailed
                            end).
+*)
 
 Definition opcodeMatchableType :=
   MkMatchableType opcodeCompilableType

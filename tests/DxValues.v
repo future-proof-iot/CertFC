@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-Require Import CoqIntegers DxIntegers.
+Require Import CoqIntegers DxIntegers InfComp.
 
 (** Coq2C: Values.val -> unsigned long long or unsigned int
   *)
@@ -38,29 +38,7 @@ Definition Const_valU32_neg :=
 Definition valU32TovalU32TovalU32SymbolType :=
   MkCompilableSymbolType [valU32CompilableType; valU32CompilableType] (Some valU32CompilableType).
 
-Definition Const_valU32_add :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.add
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_add e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32_sub :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.sub
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_sub e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32_mul :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.mul
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_mul e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
+Instance C_valu32 : CType valu32_t := mkCType _ (cType valU32CompilableType).
 
 (** Type signature: val -> val -> option val
     we use `val32_divu` to replace `Val.divu`
@@ -72,45 +50,6 @@ Definition val32_divu (x y: val): val :=
   | None => Vundef
   end.
 
-Definition Const_valU32_div :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                val32_divu
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_div e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32_or :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.or
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_or e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32_and :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.and
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_and e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32_shl :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.shl
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_shl e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32_shr :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.shru
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_shr e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
 (** Type signature: val -> val -> option val
     we use `val32_modu` to replace `Val.modu`
   *)
@@ -121,21 +60,16 @@ Definition val32_modu (x y: val): val :=
   | None => Vundef
   end.
 
-Definition Const_valU32_mod :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                val32_modu
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_mod e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32_xor :=
-  MkPrimitive valU32TovalU32TovalU32SymbolType
-                Val.xor
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U32_xor e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
+Definition Const_valU32_add := ltac: (mkprimitive Val.add (binop_expr Cop.Oadd C_U32)).
+Definition Const_valU32_sub := ltac: (mkprimitive Val.sub (binop_expr Cop.Osub C_U32)).
+Definition Const_valU32_mul := ltac: (mkprimitive Val.mul (binop_expr Cop.Omul C_U32)).
+Definition Const_valU32_div := ltac: (mkprimitive val32_divu (binop_expr Cop.Odiv C_U32)).
+Definition Const_valU32_or  := ltac: (mkprimitive Val.or  (binop_expr Cop.Oor  C_U32)).
+Definition Const_valU32_and := ltac: (mkprimitive Val.and (binop_expr Cop.Oand C_U32)).
+Definition Const_valU32_shl := ltac: (mkprimitive Val.shl (binop_expr Cop.Oshl C_U32)).
+Definition Const_valU32_shr := ltac: (mkprimitive Val.shru (binop_expr Cop.Oshr C_U32)).
+Definition Const_valU32_mod := ltac: (mkprimitive val32_modu (binop_expr Cop.Omod C_U32)).
+Definition Const_valU32_xor := ltac: (mkprimitive Val.xor (binop_expr Cop.Oxor C_U32)).
 
 Definition Const_valU32_shrs :=
   MkPrimitive valU32TovalU32TovalU32SymbolType
@@ -205,34 +139,8 @@ Definition Const_val64_neg :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-(** Type signature: val -> val -> val
-  *)
-Definition val64Toval64Toval64SymbolType :=
-  MkCompilableSymbolType [val64CompilableType; val64CompilableType] (Some val64CompilableType).
 
-Definition Const_val64_add :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.addl
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_add e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64_sub :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.subl
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_sub e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64_mul :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.mull
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_mul e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
+Instance C_val64 : CType val64_t := mkCType _ (cType val64CompilableType).
 
 (** Type signature: val -> val -> option val
     we use `val64_divlu` to replace `Val.divlu`
@@ -244,47 +152,8 @@ Definition val64_divlu (x y: val): val :=
   | None => Vundef
   end.
 
-Definition Const_val64_div :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                val64_divlu
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_div e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64_or :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.orl
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_or e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64_and :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.andl
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_and e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64_shl :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.shll
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_shl e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64_shr :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.shrlu
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_shr e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
 (** Type signature: val -> val -> option val
-    we use `val64_modlu` to replace `Val.modlu`
+    we use `val32_modlu` to replace `Val.modlu`
   *)
 
 Definition val64_modlu (x y: val): val :=
@@ -293,21 +162,21 @@ Definition val64_modlu (x y: val): val :=
   | None => Vundef
   end.
 
-Definition Const_val64_mod :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                val64_modlu
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_mod e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
+Definition Const_val64_add := ltac: (mkprimitive Val.addl (binop_expr Cop.Oadd C_U64)).
+Definition Const_val64_sub := ltac: (mkprimitive Val.subl (binop_expr Cop.Osub C_U64)).
+Definition Const_val64_mul := ltac: (mkprimitive Val.mull (binop_expr Cop.Omul C_U64)).
+Definition Const_val64_div := ltac: (mkprimitive val64_divlu (binop_expr Cop.Odiv C_U64)).
+Definition Const_val64_or  := ltac: (mkprimitive Val.orl  (binop_expr Cop.Oor  C_U64)).
+Definition Const_val64_and := ltac: (mkprimitive Val.andl (binop_expr Cop.Oand C_U64)).
+Definition Const_val64_shl := ltac: (mkprimitive Val.shll (binop_expr Cop.Oshl C_U64)).
+Definition Const_val64_shr := ltac: (mkprimitive Val.shrlu (binop_expr Cop.Oshr C_U64)).
+Definition Const_val64_mod := ltac: (mkprimitive val64_modlu (binop_expr Cop.Omod C_U64)).
+Definition Const_val64_xor := ltac: (mkprimitive Val.xorl (binop_expr Cop.Oxor C_U64)).
 
-Definition Const_val64_xor :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.xorl
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_xor e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
+(** Type signature: val -> val -> val
+  *)
+Definition val64Toval64Toval64SymbolType :=
+  MkCompilableSymbolType [val64CompilableType; val64CompilableType] (Some val64CompilableType).
 
 Definition Const_val64_shrs :=
   MkPrimitive val64Toval64Toval64SymbolType

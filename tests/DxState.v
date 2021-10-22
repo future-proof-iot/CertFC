@@ -1,27 +1,32 @@
-From compcert Require Import Memory Values.
+From compcert Require Import Memory Integers.
 
-Require Import DxRegs DxFlag.
+Require Import DxIntegers DxRegs DxFlag DxValues.
 
 (******************** no-monadic function: *_tot *******************)
 
 Definition ErrUnd: Type := ErrorUndef.
 
-Definition eval_pc_tot (st: state): nat := pc (snd st).
+Definition eval_pc_tot (st: state): int64_t := pc_loc (snd st).
 
-Definition upd_pc_tot (p:nat) (st:state): state := 
+Definition upd_pc_tot (p: int64_t) (st:state): state := 
   let m  := fst st in
   let rs := snd st in
-  let next_rs := {| pc := Nat.add p 1; regs := regs rs; |} in
+  let next_rs := {| pc_loc := Int64.add p Int64.one; regs_st := regs_st rs; |} in
     (m, next_rs).
 
-Definition eval_reg_tot (r: reg) (st:state): val :=
-  eval_regmap r (regs (snd st)).
+Definition eval_reg_tot (r: reg) (st:state): val64_t :=
+  eval_regmap r (regs_st (snd st)).
 
-Definition upd_reg_tot (r:reg) (v:val) (st:state): state :=
+Definition upd_reg_tot (r:reg) (v:val64_t) (st:state): state :=
   let m  := fst st in
   let rs := snd st in
-  let next_rs := {| pc := Nat.add (pc rs) 1; regs := upd_regmap r v (regs rs); |} in
+  let next_rs := {| pc_loc := Int64.add (pc_loc rs) Int64.one; regs_st := upd_regmap r v (regs_st rs); |} in
     (m, next_rs).
+
+(******************** dx related *******************)
+
+
+
 
 (*
 Definition default_mem: mem := Mem.empty.
@@ -56,13 +61,13 @@ Notation "'do' x <- a ; b" :=
 
 Open Scope monad_scope.
 
-Definition eval_pc (st: state): MrBPF nat := returnM (eval_pc_tot st).
+Definition eval_pc (st: state): MrBPF int64_t := returnM (eval_pc_tot st).
 
-Definition upd_pc (p: nat) (st: state): MrBPF state := returnM (upd_pc_tot p st).
+Definition upd_pc (p: int64_t) (st: state): MrBPF state := returnM (upd_pc_tot p st).
 
-Definition eval_reg (r: reg) (st: state): MrBPF val :=  returnM (eval_reg_tot r st).
+Definition eval_reg (r: reg) (st: state): MrBPF val64_t :=  returnM (eval_reg_tot r st).
 
-Definition upd_reg (r: reg) (v: val) (st: state): MrBPF state := returnM (upd_reg_tot r v st).
+Definition upd_reg (r: reg) (v: val64_t) (st: state): MrBPF state := returnM (upd_reg_tot r v st).
 
 (*
 Definition upd_errorundef (eu: ErrorUndef) (st: state): MrBPF state := returnM (upd_errorundef_tot eu st).

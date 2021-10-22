@@ -36,7 +36,7 @@ Record regmap: Type := make_regmap{
   r10_val : Values.val;
 }.
 
-Definition eval_regmap (r:reg) (regs:regmap): Values.val := 
+Definition eval_regmap (r:reg) (regs:regmap): val64_t := 
   match r with
   | R0  => r0_val regs
   | R1  => r1_val regs
@@ -51,7 +51,7 @@ Definition eval_regmap (r:reg) (regs:regmap): Values.val :=
   | R10 => r10_val regs
   end.
 
-Definition upd_regmap (r:reg) (v:Values.val) (regs:regmap): regmap :=
+Definition upd_regmap (r:reg) (v:val64_t) (regs:regmap): regmap :=
   match r with
   | R0  => 
     {|
@@ -224,15 +224,15 @@ Definition init_regmap: regmap := {|
 |}.
 
 Record regs_state: Type := make_rst{
-  pc    : nat;
-  regs  : regmap;
+  pc_loc  : int64_t;
+  regs_st : regmap;
 }.
 
 Definition state: Type := Memory.mem * regs_state.
 
 Definition init_mem: Memory.mem := Memory.Mem.empty.
 
-Definition init_regs_state := {| pc := 0; regs := init_regmap;|}.
+Definition init_regs_state := {| pc_loc := Integers.Int64.zero; regs_st := init_regmap;|}.
 
 Definition init_state: state := 
   (init_mem, init_regs_state).
@@ -407,6 +407,8 @@ Definition state_struct_def: Ctypes.composite_definition :=
 
 Definition regsMatchableType := MkCompilableType regs_state state_struct_type.
 
+Definition stateMatchableType := MkCompilableType state Ctypes.Tvoid.
+
 Module Exports.
   Definition regMatchableType := regMatchableType.
   Definition Const_R0  := Const_R0.
@@ -425,4 +427,5 @@ Module Exports.
   Definition Const_eval_regmap := Const_eval_regmap.
   Definition Const_upd_regmap  := Const_upd_regmap.
   Definition regsMatchableType := regsMatchableType.
+  Definition stateMatchableType := stateMatchableType.
 End Exports.
