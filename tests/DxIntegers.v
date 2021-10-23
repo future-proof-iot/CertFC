@@ -6,6 +6,7 @@ From compcert.common Require Import Values.
 From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR.
+From dx.Type Require Import Bool.
 
 Require Import CoqIntegers Int16 DxZ InfComp.
 
@@ -549,9 +550,53 @@ Definition Const_int64_shl :=
                            | [e1;e2] => Ok (C_U64_shl e1 e2)
                            | _       => Err PrimitiveEncodingFailed
                            end).
+(** Type signature: int64 -> int64 -> bool
+  *)
+Definition int64Toint64ToboolSymbolType :=
+  MkCompilableSymbolType [int64CompilableType; int64CompilableType] (Some boolCompilableType).
 
+Definition Const_int64_eq :=
+  MkPrimitive int64Toint64ToboolSymbolType
+                Int64.eq
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oeq e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_int64_lt :=
+  MkPrimitive int64Toint64ToboolSymbolType
+                Int64.lt
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_int64_ltu :=
+  MkPrimitive int64Toint64ToboolSymbolType
+                Int64.ltu
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
 
 (******************** Int64 Type Casting *******************)
+
+(** sint16_to_uint64: sint16_t -> uint64_t
+  *)
+
+Definition sint16_to_int64 (x: sint16_t): int64_t := Int64.repr (Int16.signed x).
+
+Definition sint16Toint64SymbolType :=
+  MkCompilableSymbolType [sint16CompilableType] (Some int64CompilableType).
+
+Definition Const_sint16_to_int64 :=
+  MkPrimitive sint16Toint64SymbolType
+                sint16_to_int64
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 
 (** Int64.signed: uint64_t -> sint64_t
   *)
@@ -598,72 +643,77 @@ Definition Const_int64_repr :=
                            end).
 
 Module Exports.
-  Definition uint16CompilableType := uint16CompilableType.
-  Definition Const_uint16_zero := Const_uint16_zero.
-  Definition Const_uint16_one := Const_uint16_one.
-  Definition Const_uint16_add := Const_uint16_add.
-  Definition Const_uint16_sub := Const_uint16_sub.
-  Definition sint16CompilableType := sint16CompilableType.
-  Definition Const_sint16_zero := Const_sint16_zero.
-  Definition Const_sint16_one := Const_sint16_one.
-  Definition Const_sint16_add := Const_sint16_add.
-  Definition Const_sint16_sub := Const_sint16_sub.
-  Definition Const_int16_repr := Const_int16_repr.
-  Definition uint32CompilableType := uint32CompilableType.
-  Definition Const_uint32_zero := Const_uint32_zero.
-  Definition Const_uint32_one := Const_uint32_one.
-  Definition Const_uint32_2 := Const_uint32_2.
-  Definition Const_uint32_3 := Const_uint32_3.
-  Definition Const_uint32_4 := Const_uint32_4.
-  Definition Const_uint32_5 := Const_uint32_5.
-  Definition Const_uint32_6 := Const_uint32_6.
-  Definition Const_uint32_7 := Const_uint32_7.
-  Definition Const_uint32_8 := Const_uint32_8.
-  Definition Const_uint32_9 := Const_uint32_9.
-  Definition Const_uint32_10 := Const_uint32_10.
-  Definition Const_uint32_neg := Const_uint32_neg.
-  Definition Const_uint32_add := Const_uint32_add.
-  Definition Const_uint32_sub := Const_uint32_sub.
-  Definition sint32CompilableType := sint32CompilableType.
-  Definition Const_sint32_zero := Const_sint32_zero.
-  Definition Const_sint32_one := Const_sint32_one.
-  Definition Const_sint32_2 := Const_sint32_2.
-  Definition Const_sint32_3 := Const_sint32_3.
-  Definition Const_sint32_4 := Const_sint32_4.
-  Definition Const_sint32_5 := Const_sint32_5.
-  Definition Const_sint32_6 := Const_sint32_6.
-  Definition Const_sint32_7 := Const_sint32_7.
-  Definition Const_sint32_8 := Const_sint32_8.
-  Definition Const_sint32_9 := Const_sint32_9.
-  Definition Const_sint32_10 := Const_sint32_10.
-  Definition Const_sint32_mone := Const_sint32_mone.
-  Definition Const_sint32_m2 := Const_sint32_m2.
-  Definition Const_sint32_m3 := Const_sint32_m3.
-  Definition Const_sint32_m4 := Const_sint32_m4.
-  Definition Const_sint32_m5 := Const_sint32_m5.
-  Definition Const_sint32_m6 := Const_sint32_m6.
-  Definition Const_sint32_m7 := Const_sint32_m7.
-  Definition Const_sint32_m8 := Const_sint32_m8.
-  Definition Const_sint32_m9 := Const_sint32_m9.
-  Definition Const_sint32_m10 := Const_sint32_m10.
-  Definition Const_sint32_m11 := Const_sint32_m11.
-  Definition Const_sint32_neg := Const_sint32_neg.
-  Definition Const_sint32_add := Const_sint32_add.
-  Definition Const_sint32_sub := Const_sint32_sub.
-  Definition Const_int_repr   := Const_int_repr.
-  Definition int64CompilableType := int64CompilableType.
-  Definition Const_int64_zero := Const_int64_zero.
-  Definition Const_int64_one := Const_int64_one.
-  Definition Const_int64_2 := Const_int64_2.
-  Definition Const_int64_64 := Const_int64_64.
-  Definition Const_int64_neg := Const_int64_neg.
-  Definition Const_int64_add := Const_int64_add.
-  Definition Const_int64_sub := Const_int64_sub.
-  Definition Const_int64_and := Const_int64_and.
-  Definition Const_int64_signed := Const_int64_signed.
-  Definition Const_int64_unsigned := Const_int64_unsigned.
-  Definition Const_int64_repr := Const_int64_repr.
-  Definition Const_int64_shr := Const_int64_shr.
-  Definition Const_int64_shru := Const_int64_shru.
-  Definition Const_int64_shl := Const_int64_shl.
+  Definition uint16CompilableType  := uint16CompilableType.
+  Definition Const_uint16_zero     := Const_uint16_zero.
+  Definition Const_uint16_one      := Const_uint16_one.
+  Definition Const_uint16_add      := Const_uint16_add.
+  Definition Const_uint16_sub      := Const_uint16_sub.
+  Definition sint16CompilableType  := sint16CompilableType.
+  Definition Const_sint16_zero     := Const_sint16_zero.
+  Definition Const_sint16_one      := Const_sint16_one.
+  Definition Const_sint16_add      := Const_sint16_add.
+  Definition Const_sint16_sub      := Const_sint16_sub.
+  Definition Const_int16_repr      := Const_int16_repr.
+  Definition uint32CompilableType  := uint32CompilableType.
+  Definition Const_uint32_zero     := Const_uint32_zero.
+  Definition Const_uint32_one      := Const_uint32_one.
+  Definition Const_uint32_2        := Const_uint32_2.
+  Definition Const_uint32_3        := Const_uint32_3.
+  Definition Const_uint32_4        := Const_uint32_4.
+  Definition Const_uint32_5        := Const_uint32_5.
+  Definition Const_uint32_6        := Const_uint32_6.
+  Definition Const_uint32_7        := Const_uint32_7.
+  Definition Const_uint32_8        := Const_uint32_8.
+  Definition Const_uint32_9        := Const_uint32_9.
+  Definition Const_uint32_10       := Const_uint32_10.
+  Definition Const_uint32_neg      := Const_uint32_neg.
+  Definition Const_uint32_add      := Const_uint32_add.
+  Definition Const_uint32_sub      := Const_uint32_sub.
+  Definition sint32CompilableType  := sint32CompilableType.
+  Definition Const_sint32_zero     := Const_sint32_zero.
+  Definition Const_sint32_one      := Const_sint32_one.
+  Definition Const_sint32_2        := Const_sint32_2.
+  Definition Const_sint32_3        := Const_sint32_3.
+  Definition Const_sint32_4        := Const_sint32_4.
+  Definition Const_sint32_5        := Const_sint32_5.
+  Definition Const_sint32_6        := Const_sint32_6.
+  Definition Const_sint32_7        := Const_sint32_7.
+  Definition Const_sint32_8        := Const_sint32_8.
+  Definition Const_sint32_9        := Const_sint32_9.
+  Definition Const_sint32_10       := Const_sint32_10.
+  Definition Const_sint32_mone     := Const_sint32_mone.
+  Definition Const_sint32_m2       := Const_sint32_m2.
+  Definition Const_sint32_m3       := Const_sint32_m3.
+  Definition Const_sint32_m4       := Const_sint32_m4.
+  Definition Const_sint32_m5       := Const_sint32_m5.
+  Definition Const_sint32_m6       := Const_sint32_m6.
+  Definition Const_sint32_m7       := Const_sint32_m7.
+  Definition Const_sint32_m8       := Const_sint32_m8.
+  Definition Const_sint32_m9       := Const_sint32_m9.
+  Definition Const_sint32_m10      := Const_sint32_m10.
+  Definition Const_sint32_m11      := Const_sint32_m11.
+  Definition Const_sint32_neg      := Const_sint32_neg.
+  Definition Const_sint32_add      := Const_sint32_add.
+  Definition Const_sint32_sub      := Const_sint32_sub.
+  Definition Const_int_repr        := Const_int_repr.
+  Definition int64CompilableType   := int64CompilableType.
+  Definition Const_int64_zero      := Const_int64_zero.
+  Definition Const_int64_one       := Const_int64_one.
+  Definition Const_int64_2         := Const_int64_2.
+  Definition Const_int64_64        := Const_int64_64.
+  Definition Const_int64_neg       := Const_int64_neg.
+  Definition Const_int64_add       := Const_int64_add.
+  Definition Const_int64_sub       := Const_int64_sub.
+  Definition Const_int64_and       := Const_int64_and.
+  Definition Const_int64_eq        := Const_int64_eq.
+  Definition Const_int64_lt        := Const_int64_lt.
+  Definition Const_int64_ltu       := Const_int64_ltu.
+
+  Definition Const_sint16_to_int64 := Const_sint16_to_int64.
+  Definition Const_int64_signed    := Const_int64_signed.
+  Definition Const_int64_unsigned  := Const_int64_unsigned.
+  Definition Const_int64_repr      := Const_int64_repr.
+  Definition Const_int64_shr       := Const_int64_shr.
+  Definition Const_int64_shru      := Const_int64_shru.
+  Definition Const_int64_shl       := Const_int64_shl.
 End Exports.

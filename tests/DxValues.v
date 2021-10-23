@@ -186,6 +186,158 @@ Definition Const_val64_shrs :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+(** To avoid defining the matchableType of comparison in dx, we define unique comparison functions *)
+
+Definition compl_eq (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => Int64.eq n1 n2
+  | _, _ => false
+  end.
+Definition compl_ne (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => negb (Int64.eq n1 n2)
+  | _, _ => false
+  end.
+Definition compl_lt (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => Int64.lt n1 n2
+  | _, _ => false
+  end.
+Definition compl_le (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => negb (Int64.lt n2 n1)
+  | _, _ => false
+  end.
+Definition compl_gt (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => Int64.lt n2 n1
+  | _, _ => false
+  end.
+Definition compl_ge (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => negb (Int64.lt n1 n2)
+  | _, _ => false
+  end.
+Definition complu_lt (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => Int64.ltu n1 n2
+  | _, _ => false
+  end.
+Definition complu_le (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => negb (Int64.ltu n2 n1)
+  | _, _ => false
+  end.
+Definition complu_gt (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => Int64.ltu n2 n1
+  | _, _ => false
+  end.
+Definition complu_ge (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => negb (Int64.ltu n1 n2)
+  | _, _ => false
+  end.
+Definition complu_set (x y: val64_t): bool :=
+  match x, y with
+  | Vlong n1, Vlong n2 => negb (Int64.eq (Int64.and n1 n2) Int64.zero)
+  | _, _ => false
+  end.
+
+Definition val64Toval64ToboolSymbolType :=
+  MkCompilableSymbolType [val64CompilableType; val64CompilableType] (Some boolCompilableType).
+
+Definition Const_val64_eq :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                compl_eq
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oeq e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64_ne :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                compl_ne
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.One e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64s_lt :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                compl_lt
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64s_le :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                compl_le
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ole (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64s_gt :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                compl_gt
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ogt (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64s_ge :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                compl_ge
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oge (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64u_lt :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                complu_lt
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64u_le :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                complu_le
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ole e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64u_gt :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                complu_gt
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ogt e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_val64u_ge :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                complu_ge
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oge e1 e2 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_complu_set :=
+  MkPrimitive val64Toval64ToboolSymbolType
+                complu_set
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.One
+                                              (Csyntax.Ebinop Cop.Oand e1 e2 C_U64)
+                                               C_U64_zero  C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+
 (******************** Val Type Casting *******************)
 
 (** _to_u32 : vlong_to_vint <==> val_intoflongu
@@ -241,11 +393,28 @@ Definition Const_int64_to_vlong :=
                            | [e1] => Ok e1
                            | _       => Err PrimitiveEncodingFailed
                            end).
-
-(*
-(** int_to_vint: int -> Vint
+(** vlong_to_int64: Vlong -> int64
   *)
-Definition sint_to_vint (v: int): val := Vint v.
+Definition vlong_to_int64 (v: val64_t): int64 :=
+  match v with
+  | Vlong n => n
+  | _ => Int64.zero
+  end.
+
+Definition val64Toint64SymbolType :=
+  MkCompilableSymbolType [val64CompilableType] (Some int64CompilableType).
+
+Definition Const_vlong_to_int64 :=
+  MkPrimitive val64Toint64SymbolType
+                vlong_to_int64
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(** int_to_vint: sint32_t -> Vint
+  *)
+Definition sint_to_vint (v: sint32_t): val := Vint v.
 
 Definition sint32TovalS32SymbolType :=
   MkCompilableSymbolType [sint32CompilableType] (Some valS32CompilableType).
@@ -256,7 +425,7 @@ Definition Const_sint_to_vint:=
                 (fun es => match es with
                            | [e1] => Ok e1
                            | _       => Err PrimitiveEncodingFailed
-                           end).*)
+                           end).
 
 (** _to_U64: Val.longofintu
   *)
@@ -295,12 +464,7 @@ Definition Const_div64_checking :=
   MkPrimitive val64ToboolSymbolType
                 div64_checking
                 (fun es => match es with
-                           | [v] => Ok (Csyntax.Econdition
-                                        (Csyntax.Ebinop Cop.Oeq v C_U64_zero C_U64)
-                                        (Csyntax.Eval Values.Vfalse Ctypes.type_bool)
-                                        (Csyntax.Eval Values.Vtrue Ctypes.type_bool)
-                                        Ctypes.type_bool
-                                    )
+                           | [v] => Ok (Csyntax.Ebinop Cop.Oeq v C_U64_zero C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -318,12 +482,7 @@ Definition Const_div32_checking :=
   MkPrimitive valU32ToboolSymbolType
                 div32_checking
                 (fun es => match es with
-                           | [v] => Ok (Csyntax.Econdition
-                                        (Csyntax.Ebinop Cop.Oeq v C_U32_zero C_U32)
-                                        (Csyntax.Eval Values.Vfalse Ctypes.type_bool)
-                                        (Csyntax.Eval Values.Vtrue Ctypes.type_bool)
-                                        Ctypes.type_bool
-                                    )
+                           | [v] => Ok (Csyntax.Ebinop Cop.Oeq v C_U32_zero C_U32)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -350,12 +509,7 @@ Definition Const_shift64_checking :=
   MkPrimitive val64ToboolSymbolType
                 shift64_checking
                 (fun es => match es with
-                           | [v] => Ok (Csyntax.Econdition
-                                        (Csyntax.Ebinop Cop.Olt v C_U64_64 C_U64)
-                                        (Csyntax.Eval Values.Vfalse Ctypes.type_bool)
-                                        (Csyntax.Eval Values.Vtrue Ctypes.type_bool)
-                                        Ctypes.type_bool
-                                    )
+                           | [v] => Ok (Csyntax.Ebinop Cop.Olt v C_U64_64 C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -372,55 +526,64 @@ Definition Const_shift32_checking :=
   MkPrimitive valU32ToboolSymbolType
                 shift32_checking
                 (fun es => match es with
-                           | [v] => Ok (Csyntax.Econdition
-                                        (Csyntax.Ebinop Cop.Olt v C_U32_32 C_U32)
-                                        (Csyntax.Eval Values.Vfalse Ctypes.type_bool)
-                                        (Csyntax.Eval Values.Vtrue Ctypes.type_bool)
-                                        Ctypes.type_bool
-                                    )
+                           | [v] => Ok (Csyntax.Ebinop Cop.Olt v C_U32_32 C_U32)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
 Module Exports.
-  Definition valU32CompilableType := valU32CompilableType.
-  Definition Const_valU32_neg := Const_valU32_neg.
-  Definition Const_valU32_add := Const_valU32_add.
-  Definition Const_valU32_sub := Const_valU32_sub.
-  Definition Const_valU32_mul := Const_valU32_mul.
-  Definition Const_valU32_div := Const_valU32_div.
-  Definition Const_valU32_or  := Const_valU32_or.
-  Definition Const_valU32_and := Const_valU32_and.
-  Definition Const_valU32_shl := Const_valU32_shl.
-  Definition Const_valU32_shr := Const_valU32_shr.
-  Definition Const_valU32_mod := Const_valU32_mod.
-  Definition Const_valU32_xor := Const_valU32_xor.
-  Definition Const_valU32_shrs := Const_valU32_shrs.
-  Definition valS32CompilableType := valS32CompilableType.
-  Definition Const_valS32_neg := Const_valS32_neg.
-  Definition Const_valS32_add := Const_valS32_add.
+  Definition valU32CompilableType   := valU32CompilableType.
+  Definition Const_valU32_neg       := Const_valU32_neg.
+  Definition Const_valU32_add       := Const_valU32_add.
+  Definition Const_valU32_sub       := Const_valU32_sub.
+  Definition Const_valU32_mul       := Const_valU32_mul.
+  Definition Const_valU32_div       := Const_valU32_div.
+  Definition Const_valU32_or        := Const_valU32_or.
+  Definition Const_valU32_and       := Const_valU32_and.
+  Definition Const_valU32_shl       := Const_valU32_shl.
+  Definition Const_valU32_shr       := Const_valU32_shr.
+  Definition Const_valU32_mod       := Const_valU32_mod.
+  Definition Const_valU32_xor       := Const_valU32_xor.
+  Definition Const_valU32_shrs      := Const_valU32_shrs.
+  Definition valS32CompilableType   := valS32CompilableType.
+  Definition Const_valS32_neg       := Const_valS32_neg.
+  Definition Const_valS32_add       := Const_valS32_add.
 
-  Definition val64CompilableType := val64CompilableType.
-  Definition Const_val64_zero := Const_val64_zero.
-  Definition Const_val64_neg := Const_val64_neg.
-  Definition Const_val64_add := Const_val64_add.
-  Definition Const_val64_sub := Const_val64_sub.
-  Definition Const_val64_mul := Const_val64_mul.
-  Definition Const_val64_div := Const_val64_div.
-  Definition Const_val64_or  := Const_val64_or.
-  Definition Const_val64_and := Const_val64_and.
-  Definition Const_val64_shl := Const_val64_shl.
-  Definition Const_val64_shr := Const_val64_shr.
-  Definition Const_val64_mod := Const_val64_mod.
-  Definition Const_val64_xor := Const_val64_xor.
-  Definition Const_val64_shrs := Const_val64_shrs.
+  Definition val64CompilableType    := val64CompilableType.
+  Definition Const_val64_zero       := Const_val64_zero.
+  Definition Const_val64_neg        := Const_val64_neg.
+  Definition Const_val64_add        := Const_val64_add.
+  Definition Const_val64_sub        := Const_val64_sub.
+  Definition Const_val64_mul        := Const_val64_mul.
+  Definition Const_val64_div        := Const_val64_div.
+  Definition Const_val64_or         := Const_val64_or.
+  Definition Const_val64_and        := Const_val64_and.
+  Definition Const_val64_shl        := Const_val64_shl.
+  Definition Const_val64_shr        := Const_val64_shr.
+  Definition Const_val64_mod        := Const_val64_mod.
+  Definition Const_val64_xor        := Const_val64_xor.
+  Definition Const_val64_shrs       := Const_val64_shrs.
+
+  Definition Const_val64_eq         := Const_val64_eq.
+  Definition Const_val64_ne         := Const_val64_ne.
+  Definition Const_val64s_lt        := Const_val64s_lt.
+  Definition Const_val64s_le        := Const_val64s_le.
+  Definition Const_val64s_gt        := Const_val64s_gt.
+  Definition Const_val64s_ge        := Const_val64s_ge.
+  Definition Const_val64u_lt        := Const_val64u_lt.
+  Definition Const_val64u_le        := Const_val64u_le.
+  Definition Const_val64u_gt        := Const_val64u_gt.
+  Definition Const_val64u_ge        := Const_val64u_ge.
+  Definition Const_complu_set       := Const_complu_set.
   
-  Definition Const_val64TovalU32 := Const_val64TovalU32.
-  Definition Const_val64TovalS32 := Const_val64TovalS32.
-  Definition Const_int64_to_vlong := Const_int64_to_vlong.
-  Definition Const_valU32Toval64 := Const_valU32Toval64.
-  Definition Const_valU32Toval64_u := Const_valU32Toval64_u.
-  Definition Const_div64_checking := Const_div64_checking.
-  Definition Const_div32_checking := Const_div32_checking.
+  Definition Const_val64TovalU32    := Const_val64TovalU32.
+  Definition Const_val64TovalS32    := Const_val64TovalS32.
+  Definition Const_int64_to_vlong   := Const_int64_to_vlong.
+  Definition Const_vlong_to_int64   := Const_vlong_to_int64.
+  Definition Const_sint_to_vint     := Const_sint_to_vint.
+  Definition Const_valU32Toval64    := Const_valU32Toval64.
+  Definition Const_valU32Toval64_u  := Const_valU32Toval64_u.
+  Definition Const_div64_checking   := Const_div64_checking.
+  Definition Const_div32_checking   := Const_div32_checking.
   Definition Const_shift64_checking := Const_shift64_checking.
   Definition Const_shift32_checking := Const_shift32_checking.
 End Exports.
