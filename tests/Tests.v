@@ -11,8 +11,6 @@ From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
 Require Import DxIntegers DxList64 DxValues DxRegs DxZ DxOpcode DxMonad DxPointer DxFlag DxInstructions.
 
-Definition test_array_op (a: ptr_int64) (index: int64_t)
-
 (***************************************)
 
 
@@ -28,7 +26,11 @@ GenerateIntermediateRepresentation SymbolIRs
   DxOpcode.Exports
   DxPointer.Exports
   DxFlag.Exports
-  __(*
+  eval_pc
+  upd_pc
+  eval_reg
+  upd_reg
+  __
   get_opcode
   get_dst
   get_src
@@ -41,9 +43,10 @@ GenerateIntermediateRepresentation SymbolIRs
   normal_return
   ill_return
   ill_len
-  eval_regmapM
-  upd_regmapM
-  bpf_interpreter*)
+  ill_div
+  ill_shift
+  step
+  bpf_interpreter
 .
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.

@@ -1,15 +1,3 @@
-extern unsigned long long const pc;
-
-extern unsigned long long const regs[11];
-
-extern struct $101 const init_regs_state;
-
-extern unsigned long long list_get(unsigned long long *, unsigned long long);
-
-extern unsigned long long eval_reg(unsigned int);
-
-extern unsigned long long upd_reg(unsigned int, unsigned long long)[11];
-
 extern long long get_opcode(unsigned long long);
 
 extern long long get_dst(unsigned long long);
@@ -20,301 +8,598 @@ extern short get_offset(unsigned long long);
 
 extern int get_immediate(unsigned long long);
 
+extern unsigned long long list_get(unsigned long long *, unsigned long long);
+
 extern unsigned int ins_to_opcode(unsigned long long);
 
 extern unsigned int ins_to_dst_reg(unsigned long long);
 
 extern unsigned int ins_to_src_reg(unsigned long long);
 
-extern unsigned long long step(unsigned long long *)[11];
+extern int normal_return(void);
 
-extern unsigned long long const pc;
+extern int ill_return(void);
 
-extern unsigned long long const regs[11];
+extern int ill_len(void);
 
-extern struct $101 const init_regs_state;
+extern int ill_div(void);
 
-extern unsigned long long default_regs(void)[11];
+extern int ill_shift(void);
 
-unsigned long long list_get(unsigned long long *li, unsigned long long idx)
-{
-  return *(li + idx);
-}
+extern int step(unsigned long long *, unsigned long long *);
 
-unsigned long long eval_reg(unsigned int r)
-{
-  return *(regs + r);
-}
+extern int bpf_interpreter(unsigned long long *, unsigned long long, unsigned long long *, unsigned int);
 
-unsigned long long upd_reg(unsigned int r$20, unsigned long long v)[11]
-{
-  return *(regs + r$20) = v;
-}
+extern unsigned long long eval_pc(void);
+
+extern void upd_pc(unsigned long long);
+
+extern unsigned long long eval_reg(unsigned int);
+
+extern void upd_reg(unsigned int, unsigned long long);
 
 long long get_opcode(unsigned long long i)
 {
   return i & 255LL;
 }
 
-long long get_dst(unsigned long long i$23)
+long long get_dst(unsigned long long i$22)
 {
-  return (i$23 & 4095LL) >> 8LL;
+  return (i$22 & 4095LL) >> 8LL;
 }
 
-long long get_src(unsigned long long i$24)
+long long get_src(unsigned long long i$23)
 {
-  return (i$24 & 65535LL) >> 12LL;
+  return (i$23 & 65535LL) >> 12LL;
 }
 
-short get_offset(unsigned long long i$25)
+short get_offset(unsigned long long i$24)
 {
-  return i$25 << 32LL >> 48LL;
+  return i$24 << 32LL >> 48LL;
 }
 
-int get_immediate(unsigned long long i$26)
+int get_immediate(unsigned long long i$25)
 {
-  return (int) (i$26 >> 32LL);
+  return (int) (i$25 >> 32LL);
 }
 
-unsigned int ins_to_opcode(unsigned long long i$27)
+unsigned long long list_get(unsigned long long *l, unsigned long long idx)
+{
+  return *(l + idx);
+}
+
+unsigned int ins_to_opcode(unsigned long long ins)
 {
   long long op_z;
-  op_z = get_opcode(i$27);
+  op_z = get_opcode(ins);
   return op_z;
 }
 
-unsigned int ins_to_dst_reg(unsigned long long i$29)
+unsigned int ins_to_dst_reg(unsigned long long ins$30)
 {
   long long dst_z;
-  dst_z = get_dst(i$29);
+  dst_z = get_dst(ins$30);
   return dst_z;
 }
 
-unsigned int ins_to_src_reg(unsigned long long i$31)
+unsigned int ins_to_src_reg(unsigned long long ins$32)
 {
   long long src_z;
-  src_z = get_src(i$31);
+  src_z = get_src(ins$32);
   return src_z;
 }
 
-unsigned long long step(unsigned long long *l)[11]
+int normal_return(void)
 {
-  unsigned long long ins;
+  return 0;
+}
+
+int ill_return(void)
+{
+  return -1;
+}
+
+int ill_len(void)
+{
+  return -5;
+}
+
+int ill_div(void)
+{
+  return -9;
+}
+
+int ill_shift(void)
+{
+  return -10;
+}
+
+int step(unsigned long long *l$34, unsigned long long *result)
+{
+  unsigned long long pc;
+  unsigned long long ins$37;
   unsigned int op;
   unsigned int dst;
   unsigned int src;
-  int imm;
   unsigned long long dst64;
   unsigned long long src64;
-  ins = list_get(l, pc);
-  op = ins_to_opcode(ins);
-  dst = ins_to_dst_reg(ins);
-  src = ins_to_src_reg(ins);
-  get_offset(ins);
-  imm = get_immediate(ins);
+  short ofs;
+  int imm;
+  pc = eval_pc();
+  ins$37 = list_get(l$34, pc);
+  op = ins_to_opcode(ins$37);
+  dst = ins_to_dst_reg(ins$37);
+  src = ins_to_src_reg(ins$37);
   dst64 = eval_reg(dst);
   src64 = eval_reg(src);
+  ofs = get_offset(ins$37);
+  imm = get_immediate(ins$37);
   switch (op) {
     case 7:
-      return upd_reg(dst, dst64 + (unsigned long long) imm);
+      upd_reg(dst, dst64 + (unsigned long long) imm);
+      return normal_return();
     case 15:
-      return upd_reg(dst, dst64 + src64);
+      upd_reg(dst, dst64 + src64);
+      return normal_return();
     case 23:
-      return upd_reg(dst, dst64 - (unsigned long long) imm);
+      upd_reg(dst, dst64 - (unsigned long long) imm);
+      return normal_return();
     case 31:
-      return upd_reg(dst, dst64 - src64);
+      upd_reg(dst, dst64 - src64);
+      return normal_return();
     case 39:
-      return upd_reg(dst, dst64 * (unsigned long long) imm);
+      upd_reg(dst, dst64 * (unsigned long long) imm);
+      return normal_return();
     case 47:
-      return upd_reg(dst, dst64 * src64);
+      upd_reg(dst, dst64 * src64);
+      return normal_return();
     case 55:
-      return upd_reg(dst, dst64 / (unsigned long long) imm);
+      if ((unsigned long long) imm == 0LLU) {
+        upd_reg(dst, dst64 / (unsigned long long) imm);
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 63:
-      return upd_reg(dst, dst64 / src64);
+      if (src64 == 0LLU) {
+        upd_reg(dst, dst64 / src64);
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 71:
-      return upd_reg(dst, dst64 | (unsigned long long) imm);
+      upd_reg(dst, dst64 | (unsigned long long) imm);
+      return normal_return();
     case 79:
-      return upd_reg(dst, dst64 | src64);
+      upd_reg(dst, dst64 | (unsigned long long) imm);
+      return normal_return();
     case 87:
-      return upd_reg(dst, dst64 & (unsigned long long) imm);
+      upd_reg(dst, dst64 & (unsigned long long) imm);
+      return normal_return();
     case 95:
-      return upd_reg(dst, dst64 & src64);
+      upd_reg(dst, dst64 & (unsigned long long) imm);
+      return normal_return();
     case 103:
-      return upd_reg(dst, dst64 << (unsigned long long) imm);
+      if ((unsigned long long) imm < 64LLU) {
+        upd_reg(dst, dst64 << imm);
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 111:
-      return upd_reg(dst, dst64 << src64);
+      if (src64 < 64LLU) {
+        upd_reg(dst, dst64 << (unsigned int) src64);
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 119:
-      return upd_reg(dst, dst64 >> (unsigned long long) imm);
+      if ((unsigned long long) imm < 64LLU) {
+        upd_reg(dst, dst64 >> imm);
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 127:
-      return upd_reg(dst, dst64 >> src64);
+      if (src64 < 64LLU) {
+        upd_reg(dst, dst64 >> (unsigned int) src64);
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 135:
-      return upd_reg(dst, -dst64);
+      upd_reg(dst, -dst64);
+      return normal_return();
     case 151:
-      return upd_reg(dst, dst64 % (unsigned long long) imm);
+      if ((unsigned long long) imm == 0LLU) {
+        upd_reg(dst, dst64 % imm);
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 159:
-      return upd_reg(dst, dst64 % src64);
+      if (src64 == 0LLU) {
+        upd_reg(dst, dst64 % (unsigned int) src64);
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 167:
-      return upd_reg(dst, dst64 ^ (unsigned long long) imm);
+      upd_reg(dst, dst64 ^ (unsigned long long) imm);
+      return normal_return();
     case 175:
-      return upd_reg(dst, dst64 ^ src64);
+      upd_reg(dst, dst64 ^ src64);
+      return normal_return();
     case 183:
-      return upd_reg(dst, (unsigned long long) imm);
+      upd_reg(dst, (unsigned long long) imm);
+      return normal_return();
     case 191:
-      return upd_reg(dst, src64);
+      upd_reg(dst, src64);
+      return normal_return();
     case 199:
-      return upd_reg(dst, (long long) dst64 >> (unsigned long long) imm);
+      if ((unsigned long long) imm < 64LLU) {
+        upd_reg(dst, (long long) dst64 >> imm);
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 207:
-      return upd_reg(dst, (long long) dst64 >> src64);
+      if (src64 < 64LLU) {
+        upd_reg(dst, (long long) dst64 >> (unsigned int) src64);
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 4:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 + imm));
+      upd_reg(dst, (unsigned long long) ((unsigned int) dst64 + imm));
+      return normal_return();
     case 12:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            + (unsigned int) src64));
+      upd_reg(dst,
+              (unsigned long long) ((unsigned int) dst64
+                                     + (unsigned int) src64));
+      return normal_return();
     case 20:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 - imm));
+      upd_reg(dst, (unsigned long long) ((unsigned int) dst64 - imm));
+      return normal_return();
     case 28:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            - (unsigned int) src64));
+      upd_reg(dst,
+              (unsigned long long) ((unsigned int) dst64
+                                     - (unsigned int) src64));
+      return normal_return();
     case 36:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 * imm));
+      upd_reg(dst, (unsigned long long) ((unsigned int) dst64 * imm));
+      return normal_return();
     case 44:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            * (unsigned int) src64));
+      upd_reg(dst,
+              (unsigned long long) ((unsigned int) dst64
+                                     * (unsigned int) src64));
+      return normal_return();
     case 52:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 / imm));
+      if (imm == 0U) {
+        upd_reg(dst, (unsigned long long) ((unsigned int) dst64 / imm));
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 60:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            / (unsigned int) src64));
+      if ((unsigned int) src64 == 0U) {
+        upd_reg(dst,
+                (unsigned long long) ((unsigned int) dst64
+                                       / (unsigned int) src64));
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 68:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 | imm));
+      upd_reg(dst, (unsigned long long) ((unsigned int) dst64 | imm));
+      return normal_return();
     case 76:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            | (unsigned int) src64));
+      upd_reg(dst,
+              (unsigned long long) ((unsigned int) dst64
+                                     | (unsigned int) src64));
+      return normal_return();
     case 84:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 & imm));
+      upd_reg(dst, (unsigned long long) ((unsigned int) dst64 & imm));
+      return normal_return();
     case 92:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            & (unsigned int) src64));
+      upd_reg(dst,
+              (unsigned long long) ((unsigned int) dst64
+                                     & (unsigned int) src64));
+      return normal_return();
     case 100:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 << imm));
+      if (imm < 32U) {
+        upd_reg(dst, (unsigned long long) ((unsigned int) dst64 << imm));
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 108:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            << (unsigned int) src64));
+      if ((unsigned int) src64 < 32U) {
+        upd_reg(dst,
+                (unsigned long long) ((unsigned int) dst64
+                                       << (unsigned int) src64));
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 116:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 >> imm));
+      if (imm < 32U) {
+        upd_reg(dst, (unsigned long long) ((unsigned int) dst64 >> imm));
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 124:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            >> (unsigned int) src64));
+      if ((unsigned int) src64 < 32U) {
+        upd_reg(dst,
+                (unsigned long long) ((unsigned int) dst64
+                                       >> (unsigned int) src64));
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 132:
-      return upd_reg(dst, (unsigned long long) -((unsigned int) dst64));
+      upd_reg(dst, (unsigned long long) -((unsigned int) dst64));
+      return normal_return();
     case 148:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 % imm));
+      if (imm == 0U) {
+        upd_reg(dst, (unsigned long long) ((unsigned int) dst64 % imm));
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 156:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            % (unsigned int) src64));
+      if ((unsigned int) src64 == 0U) {
+        upd_reg(dst,
+                (unsigned long long) ((unsigned int) dst64
+                                       % (unsigned int) src64));
+        return normal_return();
+      } else {
+        return ill_div();
+      }
     case 164:
-      return upd_reg(dst, (unsigned long long) ((unsigned int) dst64 ^ imm));
+      upd_reg(dst, (unsigned long long) ((unsigned int) dst64 ^ imm));
+      return normal_return();
     case 172:
-      return upd_reg(dst,
-                     (unsigned long long) ((unsigned int) dst64
-                                            ^ (unsigned int) src64));
+      upd_reg(dst,
+              (unsigned long long) ((unsigned int) dst64
+                                     ^ (unsigned int) src64));
+      return normal_return();
     case 180:
-      return upd_reg(dst, imm);
+      upd_reg(dst, imm);
+      return normal_return();
     case 188:
-      return upd_reg(dst, (unsigned int) src64);
+      upd_reg(dst, (unsigned int) src64);
+      return normal_return();
     case 196:
-      return upd_reg(dst,
-                     (unsigned long long) ((int) (unsigned int) dst64 >> imm));
+      if (imm < 32U) {
+        upd_reg(dst,
+                (unsigned long long) ((int) (unsigned int) dst64 >> imm));
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 204:
-      return upd_reg(dst,
-                     (unsigned long long) ((int) (unsigned int) dst64
-                                            >> (unsigned int) src64));
+      if ((unsigned int) src64 < 32U) {
+        upd_reg(dst,
+                (unsigned long long) ((int) (unsigned int) dst64
+                                       >> (unsigned int) src64));
+        return normal_return();
+      } else {
+        return ill_shift();
+      }
     case 5:
-      return default_regs();
+      upd_pc(pc + ofs);
+      return normal_return();
     case 21:
-      return default_regs();
+      if (dst64 == (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 29:
-      return default_regs();
+      if (dst64 == src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 37:
-      return default_regs();
+      if (dst64 > (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 45:
-      return default_regs();
+      if (dst64 > src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 53:
-      return default_regs();
+      if (dst64 >= (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 61:
-      return default_regs();
+      if (dst64 >= src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 165:
-      return default_regs();
+      if (dst64 < (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 173:
-      return default_regs();
+      if (dst64 < src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 181:
-      return default_regs();
+      if (dst64 <= (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 189:
-      return default_regs();
+      if (dst64 <= src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 69:
-      return default_regs();
+      if ((dst64 & (unsigned long long) imm) != 0LLU) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 77:
-      return default_regs();
+      if ((dst64 & src64) != 0LLU) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 85:
-      return default_regs();
+      if (dst64 != (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 93:
-      return default_regs();
+      if (dst64 != src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 101:
-      return default_regs();
+      if ((long long) dst64 > (long long) (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 109:
-      return default_regs();
+      if ((long long) dst64 > (long long) src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 117:
-      return default_regs();
+      if ((long long) dst64 >= (long long) (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 125:
-      return default_regs();
+      if ((long long) dst64 >= (long long) src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 197:
-      return default_regs();
+      if ((long long) dst64 < (long long) (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 205:
-      return default_regs();
+      if ((long long) dst64 < (long long) src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 213:
-      return default_regs();
+      if ((long long) dst64 <= (long long) (unsigned long long) imm) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 221:
-      return default_regs();
+      if ((long long) dst64 <= (long long) src64) {
+        upd_pc(pc + ofs);
+        return normal_return();
+      } else {
+        return normal_return();
+      }
     case 24:
-      return default_regs();
+      return ill_return();
     case 97:
-      return default_regs();
+      return ill_return();
     case 105:
-      return default_regs();
+      return ill_return();
     case 113:
-      return default_regs();
+      return ill_return();
     case 121:
-      return default_regs();
+      return ill_return();
     case 98:
-      return default_regs();
+      return ill_return();
     case 106:
-      return default_regs();
+      return ill_return();
     case 114:
-      return default_regs();
+      return ill_return();
     case 122:
-      return default_regs();
+      return ill_return();
     case 99:
-      return default_regs();
+      return ill_return();
     case 107:
-      return default_regs();
+      return ill_return();
     case 115:
-      return default_regs();
+      return ill_return();
     case 123:
-      return default_regs();
+      return ill_return();
     case 149:
-      return default_regs();
+      return ill_return();
     default:
-      return default_regs();
+      return ill_return();
     
+  }
+}
+
+int bpf_interpreter(unsigned long long *l$45, unsigned long long len, unsigned long long *result$47, unsigned int fuel)
+{
+  unsigned int nfuel;
+  unsigned long long pc$50;
+  int f;
+  if (fuel == 0U) {
+    return ill_len();
+  } else {
+    nfuel = fuel - 1U;
+    pc$50 = eval_pc();
+    if (!(pc$50 < len)) {
+      return ill_len();
+    } else {
+      f = step(l$45, result$47);
+      upd_pc(pc$50 + 1LLU);
+      if (f == 0) {
+        return bpf_interpreter(l$45, len, result$47, nfuel);
+      } else {
+        return f;
+      }
+    }
   }
 }
 
