@@ -2,6 +2,7 @@ From Coq Require Import List.
 Import ListNotations.
 
 From dx Require Import ResultMonad IR.
+From dx.Type Require Import Bool.
 
 Require Import CoqIntegers DxIntegers.
 
@@ -51,8 +52,23 @@ Definition Const_BPF_ILLEGAL_DIV         := constant flagSymboalType BPF_ILLEGAL
 Definition Const_BPF_ILLEGAL_SHIFT       := constant flagSymboalType BPF_ILLEGAL_SHIFT C_S32_m10.        (**r = -10,*)
 Definition Const_BPF_ILLEGAL_ALU         := constant flagSymboalType BPF_ILLEGAL_ALU C_S32_m11.          (**r = -11,*)
 
+(** flag_eq: flag -> flag -> bool
+  *)
+Definition flag_eq (x y: bpf_flag): bool := if bpf_flag_eq x y then true else false.
+
+Definition flagToflagToboolSymbolType :=
+  MkCompilableSymbolType [flagCompilableType; flagCompilableType] (Some boolCompilableType).
+
+Definition Const_flag_eq :=
+  MkPrimitive flagToflagToboolSymbolType
+                flag_eq
+                (fun es => match es with
+                           | [f1; f2] => Ok (Csyntax.Ebinop Cop.Oeq f1 f2 C_S64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 Module Exports.
-  Definition flagCompilableType := flagCompilableType.
+  Definition flagCompilableType            := flagCompilableType.
   Definition Const_BPF_OK                  := Const_BPF_OK.
   Definition Const_BPF_ILLEGAL_INSTRUCTION := Const_BPF_ILLEGAL_INSTRUCTION.
   Definition Const_BPF_ILLEGAL_MEM         := Const_BPF_ILLEGAL_MEM.
@@ -65,4 +81,5 @@ Module Exports.
   Definition Const_BPF_ILLEGAL_DIV         := Const_BPF_ILLEGAL_DIV.
   Definition Const_BPF_ILLEGAL_SHIFT       := Const_BPF_ILLEGAL_SHIFT.
   Definition Const_BPF_ILLEGAL_ALU         := Const_BPF_ILLEGAL_ALU.
+  Definition Const_flag_eq                 := Const_flag_eq.
 End Exports.
