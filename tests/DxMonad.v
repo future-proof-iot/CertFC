@@ -1,22 +1,22 @@
-Require Import DxIntegers.
+Require Import DxIntegers DxValues DxRegs.
 
-Definition state := int64_t. (*This one must be int_64 defined in DxIntegers *)
+Definition state := regmap. (*This one must be int_64 defined in DxIntegers *)
 
 
 Definition M (A: Type) := state -> option (A * state).
 
-Definition runM {A: Type} (x: M A) (s: state) := x s.
-Definition returnM {A: Type} (a: A) : M A := fun s => Some (a, s).
-Definition emptyM {A: Type} : M A := fun s => None.
+Definition runM {A: Type} (x: M A) (st: state) := x st.
+Definition returnM {A: Type} (a: A) : M A := fun st => Some (a, st).
+Definition emptyM {A: Type} : M A := fun st => None.
 Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B :=
-  fun s =>
-    match runM x s with
+  fun st =>
+    match runM x st with
     | None => None
-    | Some (x', s') => runM (f x') s'
+    | Some (x', st') => runM (f x') st'
     end.
 
-Definition get : M state := fun s => Some (s, s).
-Definition put (s: state) : M unit := fun s' => Some (tt, s).
+Definition eval_reg (r: reg) : M val64_t := fun st => Some (eval_regmap r st, st).
+Definition upd_reg (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_regmap r v st).
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

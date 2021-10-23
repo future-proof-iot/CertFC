@@ -78,7 +78,7 @@ Definition eval_regmapM (r:reg) (regs:regmap): M val64_t := returnM (eval_regmap
 Definition upd_regmapM (r:reg) (v: val64_t) (regs:regmap): M regmap := returnM (upd_regmap r v regs).
 
 (** show loc < List.length l *)
-Fixpoint bpf_interpreter (l: MyListType) (loc: int64_t) (st: regmap) (result: ptr_int64) (fuel: nat) {struct fuel}: M bpf_flag :=
+Fixpoint bpf_interpreter (l: MyListType) (loc: int64_t) (result: ptr_int64) (fuel: nat) {struct fuel}: M bpf_flag :=
   match fuel with
   | O => ill_len
   | S nfuel =>
