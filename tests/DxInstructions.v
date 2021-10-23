@@ -73,143 +73,396 @@ Definition ill_return :M bpf_flag := returnM BPF_ILLEGAL_INSTRUCTION.
 
 Definition ill_len :M bpf_flag := returnM BPF_ILLEGAL_LEN.
 
+Definition ill_div :M bpf_flag := returnM BPF_ILLEGAL_DIV.
+
+Definition ill_shift :M bpf_flag := returnM BPF_ILLEGAL_SHIFT.
+
+(*
 Definition eval_regmapM (r:reg) (regs:regmap): M val64_t := returnM (eval_regmap r regs).
 
-Definition upd_regmapM (r:reg) (v: val64_t) (regs:regmap): M regmap := returnM (upd_regmap r v regs).
+Definition upd_regmapM (r:reg) (v: val64_t) (regs:regmap): M regmap := returnM (upd_regmap r v regs).*)
 
-(** show loc < List.length l *)
-Fixpoint bpf_interpreter (l: MyListType) (loc: int64_t) (result: ptr_int64) (fuel: nat) {struct fuel}: M bpf_flag :=
+(** show pc < List.length l *)
+
+Definition step (l: MyListType) (result: ptr_int64): M bpf_flag :=
+  do pc <- eval_pc;
+  do ins <- list_get l pc;
+  do op <- ins_to_opcode ins;
+  do dst <- ins_to_dst_reg ins;
+  do src <- ins_to_src_reg ins;
+  do dst64 <- eval_reg dst;
+  do src64 <- eval_reg src;
+  do ofs <- get_offset ins; (* optiomiz...**)
+  do imm <- get_immediate ins;
+  match op with
+  (** ALU64 *)
+  | op_BPF_ADD64i   =>
+    do _ <- upd_reg dst (Val.addl    dst64 (Val.longofintu imm));
+      normal_return
+  | op_BPF_ADD64r   => 
+    do _ <- upd_reg dst (Val.addl    dst64 src64);
+      normal_return
+
+  | op_BPF_SUB64i   =>
+    do _ <- upd_reg dst (Val.subl    dst64 (Val.longofintu imm));
+      normal_return
+  | op_BPF_SUB64r   =>
+    do _ <- upd_reg dst (Val.subl    dst64 src64);
+      normal_return
+
+  | op_BPF_MUL64i   =>
+    do _ <- upd_reg dst (Val.mull    dst64 (Val.longofintu imm));
+      normal_return
+  | op_BPF_MUL64r   =>
+    do _ <- upd_reg dst (Val.mull    dst64 src64);
+      normal_return
+  (**r how to generate exit or printf function ? *)
+  | op_BPF_DIV64i   =>
+    if div64_checking (Val.longofintu imm) then
+      do _ <- upd_reg dst (val64_divlu dst64 (Val.longofintu imm));
+        normal_return
+    else
+      ill_div
+  | op_BPF_DIV64r   =>
+    if div64_checking src64 then
+      do _ <- upd_reg dst (val64_divlu dst64 src64);
+        normal_return
+    else
+      ill_div
+  | op_BPF_OR64i    =>
+    do _ <- upd_reg dst (Val.orl     dst64 (Val.longofintu imm));
+        normal_return
+  | op_BPF_OR64r    =>
+    do _ <- upd_reg dst (Val.orl     dst64 (Val.longofintu imm));
+        normal_return
+  | op_BPF_AND64i   =>
+    do _ <- upd_reg dst (Val.andl    dst64 (Val.longofintu imm));
+        normal_return
+  | op_BPF_AND64r   =>
+    do _ <- upd_reg dst (Val.andl    dst64 (Val.longofintu imm));
+        normal_return
+  | op_BPF_LSH64i   =>
+    if shift64_checking (Val.longofintu imm) then
+      do _ <- upd_reg dst (Val.shll    dst64 imm);
+        normal_return
+    else
+      ill_shift
+  | op_BPF_LSH64r   =>
+    if shift64_checking src64 then
+      do _ <- upd_reg dst (Val.shll    dst64 (val_intuoflongu src64));
+        normal_return
+    else
+      ill_shift
+  | op_BPF_RSH64i   => 
+    if shift64_checking (Val.longofintu imm) then
+      do _ <- upd_reg dst (Val.shrlu   dst64 imm);
+        normal_return
+    else
+      ill_shift
+  | op_BPF_RSH64r   =>
+    if shift64_checking src64 then
+      do _ <- upd_reg dst (Val.shrlu   dst64 (val_intuoflongu src64));
+        normal_return
+    else
+      ill_shift
+  | op_BPF_NEG64    =>
+    do _ <- upd_reg dst (Val.negl    dst64);
+        normal_return
+  | op_BPF_MOD64i   => 
+    if div64_checking (Val.longofintu imm) then
+      do _ <- upd_reg dst (val64_modlu dst64 imm);
+        normal_return
+    else
+      ill_div
+  | op_BPF_MOD64r   => 
+    if div64_checking src64 then
+      do _ <- upd_reg dst (val64_modlu dst64 (val_intuoflongu src64));
+        normal_return
+    else
+      ill_div
+  | op_BPF_XOR64i   =>
+    do _ <- upd_reg dst (Val.xorl    dst64 (Val.longofintu imm));
+        normal_return
+  | op_BPF_XOR64r   =>
+    do _ <- upd_reg dst (Val.xorl    dst64 src64);
+        normal_return
+  | op_BPF_MOV64i   =>
+    do _ <- upd_reg dst (Val.longofintu imm);
+        normal_return
+  | op_BPF_MOV64r   =>
+    do _ <- upd_reg dst src64;
+        normal_return
+  | op_BPF_ARSH64i  => 
+    if shift64_checking (Val.longofintu imm) then
+      do _ <- upd_reg dst (Val.shrl    dst64  imm);
+        normal_return
+    else
+      ill_shift
+  | op_BPF_ARSH64r  => 
+    if shift64_checking src64 then
+      do _ <- upd_reg dst (Val.shrl    dst64  (val_intuoflongu src64));
+        normal_return
+    else
+      ill_shift
+(*ALU32*)
+  | op_BPF_ADD32i   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) imm));
+        normal_return
+  | op_BPF_ADD32r   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+  | op_BPF_SUB32i   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) imm));
+        normal_return
+  | op_BPF_SUB32r   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+  | op_BPF_MUL32i   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) imm));
+        normal_return
+  | op_BPF_MUL32r   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+  | op_BPF_DIV32i   =>
+    if div32_checking imm then
+      do _ <- upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) imm));
+        normal_return
+    else
+      ill_div
+  | op_BPF_DIV32r   =>
+    if div32_checking (val_intuoflongu src64) then
+      do _ <- upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+    else
+      ill_div
+  | op_BPF_OR32i   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) imm));
+        normal_return
+  | op_BPF_OR32r   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+  | op_BPF_AND32i   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) imm));
+        normal_return
+  | op_BPF_AND32r   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+  | op_BPF_LSH32i   =>
+    if shift32_checking imm then
+      do _ <- upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) imm));
+        normal_return
+    else
+      ill_shift
+  | op_BPF_LSH32r   =>
+    if shift32_checking (val_intuoflongu src64) then
+      do _ <- upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+    else
+      ill_shift
+  | op_BPF_RSH32i   =>
+    if shift32_checking imm then
+      do _ <- upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) imm));
+        normal_return
+    else
+      ill_shift
+  | op_BPF_RSH32r   =>
+    if shift32_checking (val_intuoflongu src64) then
+      do _ <- upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+    else
+      ill_shift
+  | op_BPF_NEG32    =>
+    do _ <- upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64))));
+        normal_return
+  | op_BPF_MOD32i   =>
+    if div32_checking imm then
+      do _ <- upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) imm));
+        normal_return
+    else
+      ill_div
+  | op_BPF_MOD32r   =>
+    if div32_checking (val_intuoflongu src64) then
+      do _ <- upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+    else
+      ill_div
+  | op_BPF_XOR32i   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) imm));
+        normal_return
+  | op_BPF_XOR32r   =>
+    do _ <- upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+  | op_BPF_MOV32i   =>
+    do _ <- upd_reg dst imm;
+        normal_return
+  | op_BPF_MOV32r   =>
+    do _ <- upd_reg dst (val_intuoflongu src64);
+        normal_return
+  | op_BPF_ARSH32i  =>
+    if shift32_checking imm then
+      do _ <- upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) imm));
+        normal_return
+    else
+      ill_shift
+  | op_BPF_ARSH32r  =>
+    if shift32_checking (val_intuoflongu src64) then
+      do _ <- upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) (val_intuoflongu src64)));
+        normal_return
+    else
+      ill_shift
+  (**Branch: 23 *)
+  | op_BPF_JA       =>
+     do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+  | op_BPF_JEQi     =>
+    if compl_eq dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JEQr     =>
+    if compl_eq dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JGTi     =>
+    if complu_gt dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JGTr     =>
+    if complu_gt dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JGEi     =>
+    if complu_ge dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JGEr     =>
+    if complu_ge dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JLTi     =>
+    if complu_lt dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JLTr     =>
+    if complu_lt dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JLEi     =>
+    if complu_le dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JLEr     =>
+    if complu_le dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSETi     =>
+    if complu_set dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSETr     =>
+    if complu_set dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JNEi     =>
+    if compl_ne dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JNEr     =>
+    if compl_ne dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSGTi     =>
+    if compl_gt dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSGTr     =>
+    if compl_gt dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSGEi     =>
+    if compl_ge dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSGEr     =>
+    if compl_ge dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSLTi     =>
+    if compl_lt dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSLTr     =>
+    if compl_lt dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSLEi     =>
+    if compl_le dst64 (Val.longofintu imm) then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | op_BPF_JSLEr     =>
+    if compl_le dst64 src64 then
+      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
+        normal_return
+    else
+      normal_return
+  | _ =>  ill_return
+  end.
+
+Fixpoint bpf_interpreter (l: MyListType) (len: int64_t) (result: ptr_int64) (fuel: nat) {struct fuel}: M bpf_flag :=
   match fuel with
   | O => ill_len
   | S nfuel =>
-    do ins <- list_get l loc;
-    do op <- ins_to_opcode ins;
-    do dst <- ins_to_dst_reg ins;
-    do src <- ins_to_src_reg ins;
-    do dst64 <- eval_regmapM dst st;
-    do src64 <- eval_regmapM src st;
-    do ofs <- get_offset ins; (* optiomiz...**)
-    do imm <- get_immediate ins;
-    match op with
-    (** ALU64 *)
-    | op_BPF_ADD64i   =>
-      do st1 <- upd_regmapM dst (Val.addl    dst64 (Val.longofintu imm)) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-    | op_BPF_ADD64r   => 
-      do st1 <- upd_regmapM dst (Val.addl    dst64 src64) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-
-    | op_BPF_SUB64i   =>
-      do st1 <- upd_regmapM dst (Val.subl    dst64 (Val.longofintu imm)) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-    | op_BPF_SUB64r   =>
-      do st1 <- upd_regmapM dst (Val.subl    dst64 src64) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-
-    | op_BPF_MUL64i   =>
-      do st1 <- upd_regmapM dst (Val.mull    dst64 (Val.longofintu imm)) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-    | op_BPF_MUL64r   =>
-      do st1 <- upd_regmapM dst (Val.mull    dst64 src64) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-    (**r how to generate exit or printf function ? *) (*
-    | op_BPF_DIV64i   => upd_reg dst (val64_divlu dst64 (Val.longofintu imm)) st 
-    | op_BPF_DIV64r   => upd_reg dst (val64_divlu dst64 src64) st
-    | op_BPF_OR64i    => upd_reg dst (Val.orl     dst64 (Val.longofintu imm)) st
-    | op_BPF_OR64r    => upd_regmapM dst (Val.orl     dst64 (Val.longofintu imm)) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-    | op_BPF_AND64i   => upd_reg dst (Val.andl    dst64 (Val.longofintu imm)) st
-    | op_BPF_AND64r   => upd_regmapM dst (Val.andl    dst64 (Val.longofintu imm)) st;
-        bpf_interpreter l (Int64.add loc Int64.one) st1 result nfuel
-    | op_BPF_LSH64i   => upd_reg dst (Val.shll    dst64 (Val.longofintu imm)) st
-    | op_BPF_LSH64r   => upd_reg dst (Val.shll    dst64 src64) st
-    | op_BPF_RSH64i   => upd_reg dst (Val.shrlu   dst64 (Val.longofintu imm)) st
-    | op_BPF_RSH64r   => upd_reg dst (Val.shrlu   dst64 src64) st
-    | op_BPF_NEG64    => upd_reg dst (Val.negl    dst64) st
-    | op_BPF_MOD64i   => upd_reg dst (val64_modlu dst64 (Val.longofintu imm)) st
-    | op_BPF_MOD64r   => upd_reg dst (val64_modlu dst64 src64) st (**r same *)
-    | op_BPF_XOR64i   => upd_reg dst (Val.xorl    dst64 (Val.longofintu imm)) st
-    | op_BPF_XOR64r   => upd_reg dst (Val.xorl    dst64 src64) st
-    | op_BPF_MOV64i   => upd_reg dst (Val.longofintu imm) st
-    | op_BPF_MOV64r   => upd_reg dst src64 st
-    | op_BPF_ARSH64i  => upd_reg dst (Val.shrl    dst64 (Val.longofintu imm)) st
-    | op_BPF_ARSH64r  => upd_reg dst (Val.shrl    dst64 src64) st
-    (*ALU32*)
-    | op_BPF_ADD32i   =>
-        upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) imm)) st
-    | op_BPF_ADD32r   =>
-        upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_SUB32i   =>
-        upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) imm)) st
-    | op_BPF_SUB32r   =>
-        upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_MUL32i   =>
-        upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) imm)) st
-    | op_BPF_MUL32r   =>
-        upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_DIV32i   =>
-        upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) imm)) st
-    | op_BPF_DIV32r   =>
-        upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_OR32i   =>
-        upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) imm)) st
-    | op_BPF_OR32r   =>
-        upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_AND32i   =>
-        upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) imm)) st
-    | op_BPF_AND32r   =>
-        upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_LSH32i   =>
-        upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) imm)) st
-    | op_BPF_LSH32r   =>
-        upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_RSH32i   =>
-        upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) imm)) st
-    | op_BPF_RSH32r   =>
-        upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_NEG32    =>
-        upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64)))) st
-    | op_BPF_MOD32i   =>
-        upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) imm)) st
-    | op_BPF_MOD32r   =>
-        upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_XOR32i   =>
-        upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) imm)) st
-    | op_BPF_XOR32r   =>
-        upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    | op_BPF_MOV32i   => upd_reg dst imm st
-    | op_BPF_MOV32r   => upd_reg dst (val_intuoflongu src64) st
-    | op_BPF_ARSH32i  =>
-        upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) imm)) st
-    | op_BPF_ARSH32r  =>
-        upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) (val_intuoflongu src64))) st
-    (**Branch: 23 *)(*
-    | op_BPF_JA       => 
-    | op_BPF_JEQi
-    | op_BPF_JEQr
-    | op_BPF_JGTi
-    | op_BPF_JGTr
-    | op_BPF_JGEi
-    | op_BPF_JGEr
-    | op_BPF_JLTi
-    | op_BPF_JLTr
-    | op_BPF_JLEi
-    | op_BPF_JLEr
-    | op_BPF_JSETi
-    | op_BPF_JSETr
-    | op_BPF_JNEi
-    | op_BPF_JNEr
-    | op_BPF_JSGTi
-    | op_BPF_JSGTr
-    | op_BPF_JSGEi
-    | op_BPF_JSGEr
-    | op_BPF_JSLTi
-    | op_BPF_JSLTr
-    | op_BPF_JSLEi
-    | op_BPF_JSLEr*) *)
-    | op_BPF_RET       => normal_return
-    | _ => ill_return
-    end
+    do pc <- eval_pc;
+      if negb (Int64.ltu pc len) then (**r len <= pc: pc is over the length of l *)
+        ill_len
+      else
+        do f <- step l result;
+        do _ <- upd_pc (Int64.add pc Int64.one);
+          if flag_eq f BPF_OK then
+            bpf_interpreter l len result nfuel
+          else
+            returnM f
   end.
 
 Close Scope monad_scope.
