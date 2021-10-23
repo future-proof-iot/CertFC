@@ -1,6 +1,6 @@
 From compcert.cfrontend Require Csyntax Ctypes Cop.
 From compcert.common Require Values Memory.
-From compcert.lib Require Integers.
+From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR.
 From dx.Type Require Bool Nat.
@@ -237,6 +237,24 @@ Definition init_regs_state := {| pc_loc := Integers.Int64.zero; regs_st := init_
 Definition init_state: state := 
   (init_mem, init_regs_state).
 
+Definition eval_pc_tot (st: state): int64_t := pc_loc (snd st).
+
+Definition upd_pc_tot (p: int64_t) (st:state): state := 
+  let m  := fst st in
+  let rs := snd st in
+  let next_rs := {| pc_loc := p; regs_st := regs_st rs; |} in
+    (m, next_rs).
+
+Definition eval_reg_tot (r: reg) (st:state): val64_t :=
+  eval_regmap r (regs_st (snd st)).
+
+Definition upd_reg_tot (r:reg) (v:val64_t) (st:state): state :=
+  let m  := fst st in
+  let rs := snd st in
+  let next_rs := {| pc_loc := pc_loc rs; regs_st := upd_regmap r v (regs_st rs); |} in
+    (m, next_rs).
+
+
 (******************** Dx Related *******************)
 
 (** Coq2C: reg -> unsigned int;
@@ -405,9 +423,10 @@ Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noat
 Definition state_struct_def: Ctypes.composite_definition := 
   Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_U32); (regmaps_id, C_regmap)] Ctypes.noattr.
 
-Definition regsMatchableType := MkCompilableType regs_state state_struct_type.
+(*
+Definition regsMatchableType := MkCompilableType regs_state state_struct_type.*)
 
-Definition stateMatchableType := MkCompilableType state Ctypes.Tvoid.
+Definition stateMatchableType := MkCompilableType state state_struct_type.
 
 Module Exports.
   Definition regMatchableType := regMatchableType.
@@ -425,7 +444,7 @@ Module Exports.
   Definition Const_z_to_reg := Const_z_to_reg.
   Definition regmapCompilableType := regmapCompilableType.
   Definition Const_eval_regmap := Const_eval_regmap.
-  Definition Const_upd_regmap  := Const_upd_regmap.
-  Definition regsMatchableType := regsMatchableType.
+  Definition Const_upd_regmap  := Const_upd_regmap. (*
+  Definition regsMatchableType := regsMatchableType.*)
   Definition stateMatchableType := stateMatchableType.
 End Exports.
