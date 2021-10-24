@@ -9,7 +9,7 @@ From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-Require Import DxIntegers DxList64 DxValues DxRegs DxOpcode DxMonad DxPointer DxFlag DxInstructions DxAST.
+Require Import DxIntegers DxList64 DxValues DxRegs DxOpcode DxMonad DxFlag DxInstructions DxAST.
 
 (***************************************)
 
@@ -23,7 +23,6 @@ GenerateIntermediateRepresentation SymbolIRs
   DxValues.Exports
   DxRegs.Exports
   DxOpcode.Exports
-  DxPointer.Exports
   DxFlag.Exports
   DxAST.Exports
   eval_pc
@@ -35,14 +34,14 @@ GenerateIntermediateRepresentation SymbolIRs
   load_mem
   store_mem
   __
+  list_get
+  get_opcode
+  get_dst
+  get_src
   get_offset
   get_immediate
-  list_get
-  ins_to_opcode
-  ins_to_dst_reg
-  ins_to_src_reg
-  normal_return
   succ_return
+  normal_return
   ill_return
   ill_len
   ill_div

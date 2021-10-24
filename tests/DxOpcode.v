@@ -220,7 +220,7 @@ Instance COP : CType opcode := mkCType _ (cType opcodeCompilableType).
 Definition Const_int64_to_opcode :=
   ltac: (mkprimitive int64_to_opcode
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ebinop Cop.Oand e1 C_U64_0xff C_U64)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U64_0xff C_U64) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
