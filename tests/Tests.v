@@ -9,9 +9,7 @@ From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-Require Import DxIntegers DxList64 DxValues DxRegs DxZ DxOpcode DxMonad DxPointer DxFlag DxInstructions DxMemRegion.
-
-Definition getMemRegion (l: MemRegionsType)(n:nat): M memory_region := returnM (MemRegionsIndex l n).
+Require Import DxIntegers DxList64 DxValues DxRegs DxOpcode DxMonad DxPointer DxFlag DxInstructions DxAST.
 
 (***************************************)
 
@@ -24,19 +22,19 @@ GenerateIntermediateRepresentation SymbolIRs
   DxList64.Exports
   DxValues.Exports
   DxRegs.Exports
-  DxZ.Exports
   DxOpcode.Exports
   DxPointer.Exports
   DxFlag.Exports
-  DxMemRegion.Exports
+  DxAST.Exports
   eval_pc
   upd_pc
   eval_reg
   upd_reg
+  eval_reg_mem
+  upd_reg_mem
+  load_mem
+  store_mem
   __
-  get_opcode
-  get_dst
-  get_src
   get_offset
   get_immediate
   list_get
@@ -44,13 +42,14 @@ GenerateIntermediateRepresentation SymbolIRs
   ins_to_dst_reg
   ins_to_src_reg
   normal_return
+  succ_return
   ill_return
   ill_len
   ill_div
   ill_shift
   step
+  bpf_interpreter_aux
   bpf_interpreter
-  getMemRegion
 .
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.
