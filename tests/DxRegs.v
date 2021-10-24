@@ -5,7 +5,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Bool Nat.
 
-Require Import IdentDef CoqIntegers DxIntegers DxValues DxZ.
+Require Import IdentDef CoqIntegers DxIntegers DxValues.
 
 From Coq Require Import List ZArith.
 Import ListNotations.
@@ -363,14 +363,36 @@ Definition z_to_reg (z:Z): reg :=
   else
     R10.
 
-Definition zToregSymbolType :=
-  MkCompilableSymbolType [ZCompilableType] (Some regCompilableType).
+Definition get_dst (i:int64_t):Z := Int64.unsigned (Int64.shru (Int64.and i int64_0xfff) int64_8).
+Definition get_src (i:int64_t):Z := Int64.unsigned (Int64.shru (Int64.and i int64_0xffff) int64_12).
 
-Definition Const_z_to_reg :=
-  MkPrimitive zToregSymbolType
-                z_to_reg
+Definition int64_to_dst_reg (ins: int64_t): reg :=
+  z_to_reg (get_dst ins).
+
+Definition int64_to_src_reg (ins: int64_t): reg :=
+  z_to_reg (get_src ins).
+
+
+Definition int64ToregSymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some regCompilableType).
+
+Definition Const_int64_to_dst_reg :=
+  MkPrimitive int64ToregSymbolType
+                int64_to_dst_reg
                 (fun es => match es with
-                           | [e1] => Ok e1
+                           | [e1] => Ok (Csyntax.Ebinop Cop.Oshr
+                                          (Csyntax.Ebinop Cop.Oand e1 C_U64_0xfff C_U64)
+                                          C_U64_8 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Const_int64_to_src_reg :=
+  MkPrimitive int64ToregSymbolType
+                int64_to_src_reg
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ebinop Cop.Oshr
+                                          (Csyntax.Ebinop Cop.Oand e1 C_U64_0xffff C_U64)
+                                          C_U64_12 C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -441,10 +463,10 @@ Module Exports.
   Definition Const_R8  := Const_R8.
   Definition Const_R9  := Const_R9.
   Definition Const_R10 := Const_R10.
-  Definition Const_z_to_reg := Const_z_to_reg.
+  Definition Const_int64_to_dst_reg := Const_int64_to_dst_reg.
+  Definition Const_int64_to_src_reg := Const_int64_to_src_reg.
   Definition regmapCompilableType := regmapCompilableType.
   Definition Const_eval_regmap := Const_eval_regmap.
-  Definition Const_upd_regmap  := Const_upd_regmap. (*
-  Definition regsMatchableType := regsMatchableType.*)
+  Definition Const_upd_regmap  := Const_upd_regmap.
   Definition stateMatchableType := stateMatchableType.
 End Exports.

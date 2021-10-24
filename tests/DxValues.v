@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-Require Import CoqIntegers DxIntegers InfComp.
+Require Import Int16 CoqIntegers DxIntegers InfComp.
 
 (** Coq2C: Values.val -> unsigned long long or unsigned int
   *)
@@ -337,8 +337,23 @@ Definition Const_complu_set :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-
 (******************** Val Type Casting *******************)
+
+(** sint16_to_vlong: sint16_t -> Val
+    *)
+Definition sint16_to_vlong (i:sint16_t): val :=
+  Vlong (Int64.repr (Int16.signed i)).
+
+Definition sint16Toval64SymbolType :=
+  MkCompilableSymbolType [sint16CompilableType] (Some val64CompilableType).
+
+Definition Const_sint16_to_vlong :=
+  MkPrimitive sint16Toval64SymbolType
+                sint16_to_vlong
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
 
 (** _to_u32 : vlong_to_vint <==> val_intoflongu
   *)
@@ -427,20 +442,25 @@ Definition Const_sint_to_vint:=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-(** _to_U64: Val.longofintu
+(** S32_to_U64: Val.longofintu
+  *)
+Definition valS32Toval64SymbolType :=
+  MkCompilableSymbolType [valS32CompilableType] (Some val64CompilableType).
+
+Definition Const_valS32Toval64 :=
+  MkPrimitive valS32Toval64SymbolType
+                Val.longofint
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ecast e1 C_U32) C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+(** U32_to_U64: Val.longofintu
   *)
 Definition valU32Toval64SymbolType :=
   MkCompilableSymbolType [valU32CompilableType] (Some val64CompilableType).
 
 Definition Const_valU32Toval64 :=
-  MkPrimitive valU32Toval64SymbolType
-                Val.longofint
-                (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast e1 C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_valU32Toval64_u :=
   MkPrimitive valU32Toval64SymbolType
                 Val.longofintu
                 (fun es => match es with
@@ -464,7 +484,7 @@ Definition Const_div64_checking :=
   MkPrimitive val64ToboolSymbolType
                 div64_checking
                 (fun es => match es with
-                           | [v] => Ok (Csyntax.Ebinop Cop.Oeq v C_U64_zero C_U64)
+                           | [v] => Ok (Csyntax.Ebinop Cop.One v C_U64_zero C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -482,7 +502,7 @@ Definition Const_div32_checking :=
   MkPrimitive valU32ToboolSymbolType
                 div32_checking
                 (fun es => match es with
-                           | [v] => Ok (Csyntax.Ebinop Cop.Oeq v C_U32_zero C_U32)
+                           | [v] => Ok (Csyntax.Ebinop Cop.One v C_U32_zero C_U32)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -575,13 +595,14 @@ Module Exports.
   Definition Const_val64u_ge        := Const_val64u_ge.
   Definition Const_complu_set       := Const_complu_set.
   
+  Definition Const_sint16_to_vlong  := Const_sint16_to_vlong.
   Definition Const_val64TovalU32    := Const_val64TovalU32.
   Definition Const_val64TovalS32    := Const_val64TovalS32.
   Definition Const_int64_to_vlong   := Const_int64_to_vlong.
   Definition Const_vlong_to_int64   := Const_vlong_to_int64.
   Definition Const_sint_to_vint     := Const_sint_to_vint.
+  Definition Const_valS32Toval64    := Const_valS32Toval64.
   Definition Const_valU32Toval64    := Const_valU32Toval64.
-  Definition Const_valU32Toval64_u  := Const_valU32Toval64_u.
   Definition Const_div64_checking   := Const_div64_checking.
   Definition Const_div32_checking   := Const_div32_checking.
   Definition Const_shift64_checking := Const_shift64_checking.

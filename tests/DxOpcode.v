@@ -5,7 +5,7 @@ From compcert Require Import Integers.
 
 From dx Require Import ResultMonad IR.
 
-Require Import CoqIntegers DxZ DxIntegers InfComp.
+Require Import CoqIntegers DxIntegers InfComp.
 
 Open Scope Z_scope.
 
@@ -106,8 +106,9 @@ Inductive opcode: Type :=
 .
 
 
-Definition z_to_opcode (z:Z): opcode := 
-  match z with
+Definition int64_to_opcode (ins: int64_t): opcode :=
+  let op_z := Int64.unsigned (Int64.and ins int64_0xff) in
+  match op_z with
   (*ALU64*)
   | 0x07 => op_BPF_ADD64i
   | 0x0f => op_BPF_ADD64r
@@ -207,31 +208,22 @@ Definition z_to_opcode (z:Z): opcode :=
 
 (******************** Dx related *******************)
 Definition opcodeCompilableType :=
-  MkCompilableType opcode C_U32.
+  MkCompilableType opcode C_U8.
 
-Definition zToopcodeSymbolType :=
-  MkCompilableSymbolType [ZCompilableType] (Some opcodeCompilableType).
+Definition int64ToopcodeSymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some opcodeCompilableType).
 
 
-Instance CINT : CType Z := mkCType _ (cType ZCompilableType).
+Instance CINT : CType int64_t := mkCType _ (cType int64CompilableType).
 Instance COP : CType opcode := mkCType _ (cType opcodeCompilableType).
 
-Definition Const_z_to_opcode :=
-  ltac: (mkprimitive z_to_opcode
+Definition Const_int64_to_opcode :=
+  ltac: (mkprimitive int64_to_opcode
                 (fun es => match es with
-                           | [e1] => Ok e1
+                           | [e1] => Ok (Csyntax.Ebinop Cop.Oand e1 C_U64_0xff C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
-(*
-Definition Const_z_to_opcode :=
-  MkPrimitive zToopcodeSymbolType
-                z_to_opcode
-                (fun es => match es with
-                           | [e1] => Ok e1
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-*)
 
 Definition opcodeMatchableType :=
   MkMatchableType opcodeCompilableType
@@ -473,5 +465,5 @@ Close Scope Z_scope.
 
 Module Exports.
   Definition opcodeMatchableType := opcodeMatchableType.
-  Definition Const_z_to_opcode := Const_z_to_opcode.
+  Definition Const_int64_to_opcode := Const_int64_to_opcode.
 End Exports.

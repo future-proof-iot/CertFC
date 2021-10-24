@@ -8,7 +8,23 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool.
 
-Require Import CoqIntegers Int16 DxZ InfComp.
+Require Import CoqIntegers Int16 InfComp.
+
+(******************** UInt8 *******************)
+
+Definition int8_t := byte.
+
+(** Values only has Vint, so we use Int.zero to replace Byte.zero.
+  *)
+
+Definition C_U8_zero: Csyntax.expr :=
+  Csyntax.Eval (Vint Int.zero) C_U8.
+
+Definition C_U8_one: Csyntax.expr :=
+  Csyntax.Eval (Vint Int.one) C_U8.
+
+Definition int8CompilableType :=
+  MkCompilableType int8_t C_U8.
 
 (******************** UInt16 *******************)
 
@@ -131,21 +147,6 @@ Definition Const_int64_unsigned :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 *)
-(** TODO: ZCompilableType is S64 while here is type casting U64 -> S64??? *)
-
-(** Int16.repr: sint64_t -> uint16_t
-  *)
-
-Definition int16_reprSymbolType :=
-  MkCompilableSymbolType [ZCompilableType] (Some sint16CompilableType).
-
-Definition Const_int16_repr :=
-  MkPrimitive int16_reprSymbolType
-                Int16.repr
-                (fun es => match es with
-                           | [e1] => Ok e1
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
 
 (******************** UInt32 *******************)
 
@@ -161,7 +162,9 @@ Definition int32_8  := Int.repr 8.
 Definition int32_9  := Int.repr 9.
 Definition int32_10 := Int.repr 10.
 
+Definition int32_16 := Int.repr 16.
 Definition int32_32 := Int.repr 32.
+Definition int32_64 := Int.repr 64.
 
 Definition C_U32_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_U32.
@@ -196,8 +199,14 @@ Definition C_U32_9: Csyntax.expr :=
 Definition C_U32_10: Csyntax.expr :=
   Csyntax.Eval (Vint int32_10) C_U32.
 
+Definition C_U32_16: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_16) C_U32.
+
 Definition C_U32_32: Csyntax.expr :=
   Csyntax.Eval (Vint int32_32) C_U32.
+
+Definition C_U32_64: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_64) C_U32.
 
 Definition uint32CompilableType :=
   MkCompilableType uint32_t C_U32.
@@ -226,6 +235,12 @@ Definition Const_uint32_8 := constant uint32SymbolType int32_8 C_U32_8.
 Definition Const_uint32_9 := constant uint32SymbolType int32_9 C_U32_9.
 
 Definition Const_uint32_10 := constant uint32SymbolType int32_10 C_U32_10.
+
+Definition Const_uint32_16 := constant uint32SymbolType int32_16 C_U32_16.
+
+Definition Const_uint32_32 := constant uint32SymbolType int32_32 C_U32_32.
+
+Definition Const_uint32_64 := constant uint32SymbolType int32_64 C_U32_64.
 
 Definition uint32Touint32SymbolType :=
   MkCompilableSymbolType [uint32CompilableType] (Some uint32CompilableType).
@@ -441,27 +456,38 @@ Definition Const_sint32_sub :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-(** Int16.repr: sint64_t -> uint16_t
-  *)
-
-Definition int32_reprSymbolType :=
-  MkCompilableSymbolType [ZCompilableType] (Some sint32CompilableType).
-
-Definition Const_int_repr :=
-  MkPrimitive int32_reprSymbolType
-                Int.repr
-                (fun es => match es with
-                           | [e1] => Ok e1
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
 (******************** Int64 *******************)
 
 Definition int64_t := int64.
 
+Definition int64CompilableType :=
+  MkCompilableType int64_t C_U64.
+
+Definition int64SymbolType :=
+  MkCompilableSymbolType nil (Some int64CompilableType).
+
+Open Scope Z_scope.
+
 Definition int64_2 := Int64.repr 2.
 
 Definition int64_64 := Int64.repr 64.
+
+Definition int64_0x07   := Int64.repr 0x07.
+Definition int64_0x0f   := Int64.repr 0x0f.
+Definition int64_0x87   := Int64.repr 0x87.
+Definition int64_0x04   := Int64.repr 0x04.
+Definition int64_0x0c   := Int64.repr 0x0c.
+Definition int64_0x84   := Int64.repr 0x84.
+Definition int64_0x95   := Int64.repr 0x95.
+
+Definition int64_0xff   := Int64.repr 0xff.
+Definition int64_8      := Int64.repr 8.
+Definition int64_12     := Int64.repr 12.
+Definition int64_32     := Int64.repr 32.
+Definition int64_48     := Int64.repr 48.
+Definition int64_0xfff  := Int64.repr 0xfff.
+Definition int64_0xffff := Int64.repr 0xffff.
+
 
 Definition C_U64_zero: Csyntax.expr :=
   Csyntax.Eval (Vlong Int64.zero) C_U64.
@@ -475,11 +501,53 @@ Definition C_U64_2: Csyntax.expr :=
 Definition C_U64_64: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_64) C_U64.
 
-Definition int64CompilableType :=
-  MkCompilableType int64_t C_U64.
+Definition C_U64_0x07: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0x07) C_U64.
+Definition C_U64_0x0f: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0x0f) C_U64.
+Definition C_U64_0x87: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0x87) C_U64.
+Definition C_U64_0x04: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0x04) C_U64.
+Definition C_U64_0x0c: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0x0c) C_U64.
+Definition C_U64_0x84: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0x84) C_U64.
+Definition C_U64_0x95: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0x95) C_U64.
 
-Definition int64SymbolType :=
-  MkCompilableSymbolType nil (Some int64CompilableType).
+Definition C_U64_0xff: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0xff) C_U64.
+Definition C_U64_8:  Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_8) C_U64.
+Definition C_U64_12: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_12) C_U64.
+Definition C_U64_32: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_32) C_U64.
+Definition C_U64_48: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_48) C_U64.
+Definition C_U64_0xfff: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0xfff) C_U64.
+Definition C_U64_0xffff: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0xffff) C_U64.
+
+Definition Const_int64_0x07 := constant int64SymbolType int64_0x07 C_U64_0x07.
+Definition Const_int64_0x0f := constant int64SymbolType int64_0x0f C_U64_0x0f.
+Definition Const_int64_0x87 := constant int64SymbolType int64_0x87 C_U64_0x87.
+Definition Const_int64_0x04 := constant int64SymbolType int64_0x04 C_U64_0x04.
+Definition Const_int64_0x0c := constant int64SymbolType int64_0x0c C_U64_0x0c.
+Definition Const_int64_0x84 := constant int64SymbolType int64_0x84 C_U64_0x84.
+Definition Const_int64_0x95 := constant int64SymbolType int64_0x95 C_U64_0x95.
+Definition Const_int64_0xff := constant int64SymbolType int64_0xff C_U64_0xff.
+
+Definition Const_int64_8  := constant int64SymbolType int64_8  C_U64_8.
+Definition Const_int64_12 := constant int64SymbolType int64_12 C_U64_12.
+Definition Const_int64_32 := constant int64SymbolType int64_32 C_U64_32.
+Definition Const_int64_48 := constant int64SymbolType int64_48 C_U64_48.
+Definition Const_int64_0xfff := constant int64SymbolType int64_0xfff C_U64_0xfff.
+Definition Const_int64_0xffff := constant int64SymbolType int64_0xffff C_U64_0xffff.
+
+Close Scope Z_scope.
 
 Definition Const_int64_zero := constant int64SymbolType Int64.zero C_U64_zero.
 
@@ -581,9 +649,23 @@ Definition Const_int64_ltu :=
 
 (******************** Int64 Type Casting *******************)
 
+(** int64_to_int8: int64_t -> int8_t
+  *)
+Definition int64_to_int8 (x: int64_t): int8_t := Byte.repr (Int64.unsigned x).
+Definition int16Toint8SymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some int8CompilableType).
+
+Definition Const_int64_to_int8 :=
+  MkPrimitive int16Toint8SymbolType
+                int64_to_int8
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_U8)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+
 (** sint16_to_uint64: sint16_t -> uint64_t
   *)
-
 Definition sint16_to_int64 (x: sint16_t): int64_t := Int64.repr (Int16.signed x).
 
 Definition sint16Toint64SymbolType :=
@@ -598,51 +680,24 @@ Definition Const_sint16_to_int64 :=
                            end).
 
 
-(** Int64.signed: uint64_t -> sint64_t
+(** int64_to_sint16: int64_t -> sint16_t
   *)
+Definition int64_to_sint16 (x: int64_t): sint16_t := Int16.repr (Int64.unsigned x).
 
-Definition int64_signedSymbolType :=
-  MkCompilableSymbolType [int64CompilableType] (Some ZCompilableType).
+Definition int64Tosint16SymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some sint16CompilableType).
 
-Definition Const_int64_signed :=
-  MkPrimitive int64_signedSymbolType
-                Int64.signed
+Definition Const_int64_to_sint16 :=
+  MkPrimitive int64Tosint16SymbolType
+                int64_to_sint16
                 (fun es => match es with
-                           | [e1] => Ok e1
+                           | [e1] => Ok (Csyntax.Ecast e1 C_S16)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-(** Int64.unsigned: uint64_t -> uint64_t (do nothing)
-  *)
-
-Definition int64_unsignedSymbolType :=
-  MkCompilableSymbolType [int64CompilableType] (Some ZCompilableType).
-
-Definition Const_int64_unsigned :=
-  MkPrimitive int64_unsignedSymbolType
-                Int64.unsigned
-                (fun es => match es with
-                           | [e1] => Ok e1
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-(** TODO: ZCompilableType is S64 while here is type casting U64 -> S64??? *)
-
-(** Int64.repr: sint64_t -> uint64_t
-  *)
-
-Definition int64_reprSymbolType :=
-  MkCompilableSymbolType [ZCompilableType] (Some int64CompilableType).
-
-Definition Const_int64_repr :=
-  MkPrimitive int64_reprSymbolType
-                Int64.repr
-                (fun es => match es with
-                           | [e1] => Ok e1
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
 
 Module Exports.
+  Definition int8CompilableType    := int8CompilableType.
   Definition uint16CompilableType  := uint16CompilableType.
   Definition Const_uint16_zero     := Const_uint16_zero.
   Definition Const_uint16_one      := Const_uint16_one.
@@ -653,7 +708,6 @@ Module Exports.
   Definition Const_sint16_one      := Const_sint16_one.
   Definition Const_sint16_add      := Const_sint16_add.
   Definition Const_sint16_sub      := Const_sint16_sub.
-  Definition Const_int16_repr      := Const_int16_repr.
   Definition uint32CompilableType  := uint32CompilableType.
   Definition Const_uint32_zero     := Const_uint32_zero.
   Definition Const_uint32_one      := Const_uint32_one.
@@ -666,6 +720,9 @@ Module Exports.
   Definition Const_uint32_8        := Const_uint32_8.
   Definition Const_uint32_9        := Const_uint32_9.
   Definition Const_uint32_10       := Const_uint32_10.
+  Definition Const_uint32_16       := Const_uint32_16.
+  Definition Const_uint32_32       := Const_uint32_32.
+  Definition Const_uint32_64       := Const_uint32_64.
   Definition Const_uint32_neg      := Const_uint32_neg.
   Definition Const_uint32_add      := Const_uint32_add.
   Definition Const_uint32_sub      := Const_uint32_sub.
@@ -695,25 +752,39 @@ Module Exports.
   Definition Const_sint32_neg      := Const_sint32_neg.
   Definition Const_sint32_add      := Const_sint32_add.
   Definition Const_sint32_sub      := Const_sint32_sub.
-  Definition Const_int_repr        := Const_int_repr.
+
   Definition int64CompilableType   := int64CompilableType.
   Definition Const_int64_zero      := Const_int64_zero.
   Definition Const_int64_one       := Const_int64_one.
   Definition Const_int64_2         := Const_int64_2.
   Definition Const_int64_64        := Const_int64_64.
+  Definition Const_int64_0x07      := Const_int64_0x07.
+  Definition Const_int64_0x0f      := Const_int64_0x0f.
+  Definition Const_int64_0x87      := Const_int64_0x87.
+  Definition Const_int64_0x04      := Const_int64_0x04.
+  Definition Const_int64_0x0c      := Const_int64_0x0c.
+  Definition Const_int64_0x84      := Const_int64_0x84.
+  Definition Const_int64_0x95      := Const_int64_0x95.
+
+  Definition Const_int64_0xff      := Const_int64_0xff.
+  Definition Const_int64_8         := Const_int64_8.
+  Definition Const_int64_12        := Const_int64_12.
+  Definition Const_int64_32        := Const_int64_32.
+  Definition Const_int64_48        := Const_int64_48.
+  Definition Const_int64_0xfff     := Const_int64_0xfff.
+  Definition Const_int64_0xffff    := Const_int64_0xffff.
   Definition Const_int64_neg       := Const_int64_neg.
   Definition Const_int64_add       := Const_int64_add.
   Definition Const_int64_sub       := Const_int64_sub.
   Definition Const_int64_and       := Const_int64_and.
+  Definition Const_int64_shr       := Const_int64_shr.
+  Definition Const_int64_shru      := Const_int64_shru.
+  Definition Const_int64_shl       := Const_int64_shl.
   Definition Const_int64_eq        := Const_int64_eq.
   Definition Const_int64_lt        := Const_int64_lt.
   Definition Const_int64_ltu       := Const_int64_ltu.
 
+  Definition Const_int64_to_int8   := Const_int64_to_int8.
   Definition Const_sint16_to_int64 := Const_sint16_to_int64.
-  Definition Const_int64_signed    := Const_int64_signed.
-  Definition Const_int64_unsigned  := Const_int64_unsigned.
-  Definition Const_int64_repr      := Const_int64_repr.
-  Definition Const_int64_shr       := Const_int64_shr.
-  Definition Const_int64_shru      := Const_int64_shru.
-  Definition Const_int64_shl       := Const_int64_shl.
+  Definition Const_int64_to_sint16 := Const_int64_to_sint16.
 End Exports.

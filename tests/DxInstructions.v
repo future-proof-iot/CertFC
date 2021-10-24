@@ -5,7 +5,7 @@ From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
-Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxZ DxMonad DxPointer DxFlag.
+Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxPointer DxFlag.
 
 
 (** TODO: regarding the decode function: from int64 to bpf_instruction
@@ -48,28 +48,23 @@ There are two ways to do decode:
 
 Open Scope monad_scope.
 
-Definition get_opcode (i:int64_t):M Z := returnM (Int64.unsigned (Int64.and i (Int64.repr z_0xff))).
-Definition get_dst (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xfff)) (Int64.repr z_8))).
-Definition get_src (i:int64_t):M Z := returnM (Int64.unsigned (Int64.shru (Int64.and i (Int64.repr z_0xffff)) (Int64.repr z_12))).
-Definition get_offset (i:int64_t ):M sint16_t := returnM (Int16.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr z_32)) (Int64.repr z_48)))).
-Definition get_immediate (i:int64_t):M vals32_t := returnM (val_intsoflongu (int64_to_vlong (Int64.shru i (Int64.repr z_32)))).
+Definition get_offset (i:int64_t ):M sint16_t := returnM (int64_to_sint16 (Int64.shru (Int64.shl i int64_32) int64_48)).
+Definition get_immediate (i:int64_t):M vals32_t := returnM (val_intsoflongu (int64_to_vlong (Int64.shru i int64_32))).
 
 Definition list_get (l: MyListType) (idx: int64_t): M int64_t :=
-  returnM (MyListIndex l idx).
+  returnM (MyListIndex64 l idx).
 
 Definition ins_to_opcode (ins: int64_t): M opcode :=
-  do op_z <- get_opcode ins;
-    returnM (z_to_opcode op_z).
+  returnM (int64_to_opcode ins).
 
 Definition ins_to_dst_reg (ins: int64_t): M reg :=
-  do dst_z <- get_dst ins;
-    returnM (z_to_reg dst_z).
+  returnM (int64_to_dst_reg ins). (**r bug? if int64_to_dst_reg renames to ins_to_dst_reg, dx will generate `id` *)
 
 Definition ins_to_src_reg (ins: int64_t): M reg :=
-  do src_z <- get_src ins;
-    returnM (z_to_reg src_z).
+  returnM (int64_to_src_reg ins).
 
 Definition normal_return :M bpf_flag := returnM BPF_OK.
+Definition succ_return :M bpf_flag := returnM BPF_SUCC_RETURN.
 
 Definition ill_return :M bpf_flag := returnM BPF_ILLEGAL_INSTRUCTION.
 
@@ -84,17 +79,19 @@ Definition ill_shift :M bpf_flag := returnM BPF_ILLEGAL_SHIFT.
                 return: sint64
    The loadv/storev will run if the return value < 0, else report a memory error!!!
   *)
-Axiom region_ptr: list val.
-Axiom region_start_addr: list val.
-Axiom region_size: list val.
 
-Fixpoint check_mem (mem_region_num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
-  match mem_region_num with
+(*
+Axiom region_ptr: MyListType.
+Axiom region_start_addr: MyListType.
+Axiom region_size: MyListType.
+
+Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
+  match num with
   | O => Vundef (**r -1 *)
   | S n => 
-    let ptr_i  := List.nth mem_region_num region_ptr Vzero in
-    let start_addr_i := List.nth mem_region_num region_start_addr Vzero in
-    let size_i := List.nth mem_region_num region_size Vzero in
+    let ptr_i  := list_getnat region_ptr num in
+    let start_addr_i := list_getnat region_start_addr num in
+    let size_i := list_getnat region_size num in
     let ofs := Val.subl addr start_addr_i in
     let hi_ofs := Val.addl ofs (Vlong (Int64.repr (size_chunk chunk))) in
       if (andb (complu_le (Vlong Int64.zero) ofs) (complu_lt hi_ofs size_i)) then
@@ -106,10 +103,12 @@ Fixpoint check_mem (mem_region_num: nat) (addr: val) (chunk: memory_chunk) (m: m
       else
         check_mem n addr chunk m
   end.
+*)
+
 
 (** show pc < List.length l *)
 
-Definition step (l: MyListType) (result: ptr_int64): M bpf_flag :=
+Definition step (l: MyListType) (len: int64_t): M bpf_flag :=
   do pc <- eval_pc;
   do ins <- list_get l pc;
   do op <- ins_to_opcode ins;
@@ -471,24 +470,83 @@ Definition step (l: MyListType) (result: ptr_int64): M bpf_flag :=
         normal_return
     else
       normal_return
+  (** Load/Store: 13 *)
+  | op_BPF_LDDW      =>
+    if (Int64.ltu (Int64.add pc Int64.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
+      do next_ins <- list_get l (Int64.add pc Int64.one);
+      do next_imm <- get_immediate next_ins;
+      do _ <- upd_reg dst (Val.or (Val.longofint imm) (Val.shl  (Val.longofint next_imm) (int64_to_vlong int64_32)));
+      do _ <- upd_pc (Int64.add pc Int64.one);
+        normal_return
+    else
+      ill_len
+  | op_BPF_LDXW      =>
+    do v <- load_mem Mint32 (Val.addl src64 (sint16_to_vlong ofs));
+    do _ <- upd_reg_mem Mint32 dst v;
+      normal_return
+  | op_BPF_LDXH      =>
+    do v <- load_mem Mint16unsigned (Val.addl src64 (sint16_to_vlong ofs));
+    do _ <- upd_reg_mem Mint16unsigned dst v;
+      normal_return
+  | op_BPF_LDXB      =>
+    do v <- load_mem Mint8unsigned (Val.addl src64 (sint16_to_vlong ofs));
+    do _ <- upd_reg_mem Mint8unsigned dst v;
+      normal_return
+  | op_BPF_LDXDW     =>
+    do v <- load_mem Mint64 (Val.addl src64 (sint16_to_vlong ofs));
+    do _ <- upd_reg_mem Mint64 dst v;
+      normal_return
+  | op_BPF_STW       =>
+    do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+      normal_return
+  | op_BPF_STH       =>
+    do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+      normal_return
+  | op_BPF_STB       =>
+    do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+      normal_return
+  | op_BPF_STDW      =>
+    do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+      normal_return
+  | op_BPF_STXW      =>
+    do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+      normal_return
+  | op_BPF_STXH      =>
+    do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+      normal_return
+  | op_BPF_STXB      =>
+    do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+      normal_return
+  | op_BPF_STXDW     =>
+    do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+      normal_return
+
+  | op_BPF_RET => succ_return
   | _ =>  ill_return
   end.
 
-Fixpoint bpf_interpreter (l: MyListType) (len: int64_t) (result: ptr_int64) (fuel: nat) {struct fuel}: M bpf_flag :=
+Fixpoint bpf_interpreter_aux (l: MyListType) (len: int64_t) (fuel: nat) {struct fuel}: M bpf_flag :=
   match fuel with
   | O => ill_len
   | S nfuel =>
     do pc <- eval_pc;
-      if negb (Int64.ltu pc len) then (**r len <= pc: pc is over the length of l *)
-        ill_len
-      else
-        do f <- step l result;
+      if Int64.ltu pc len then (**r pc < len: pc is less than the length of l *)
+        do f <- step l len;
         do _ <- upd_pc (Int64.add pc Int64.one);
           if flag_eq f BPF_OK then
-            bpf_interpreter l len result nfuel
+            bpf_interpreter_aux l len nfuel
           else
             returnM f
+      else
+        ill_len
   end.
+
+Definition bpf_interpreter (l: MyListType) (len: int64_t) (fuel: nat): M val64_t :=
+  do f <- bpf_interpreter_aux l len fuel;
+    if flag_eq f BPF_SUCC_RETURN then
+      eval_reg R0
+    else
+      returnM val64_zero.
 
 Close Scope monad_scope.
 

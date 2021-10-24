@@ -7,6 +7,7 @@ From dx.Type Require Import Bool.
 Require Import CoqIntegers DxIntegers.
 
 Inductive bpf_flag: Type := 
+  | BPF_SUCC_RETURN         (**r =  1, *)
   | BPF_OK                  (**r =  0, *)
   | BPF_ILLEGAL_INSTRUCTION (**r = -1, *)
   | BPF_ILLEGAL_MEM         (**r = -2, *)
@@ -24,10 +25,6 @@ Lemma bpf_flag_eq: forall (x y: bpf_flag), {x=y} + {x<>y}.
 Proof.
 decide equality. Defined.
 
-Inductive ErrorUndef :=
-  | ErrorL: bpf_flag -> ErrorUndef
-  | UndefR: bpf_flag -> ErrorUndef.
-
 (******************** Dx Related *******************)
 
 (** bpf_flag -> sint32_t *)
@@ -39,6 +36,7 @@ Definition flagCompilableType :=
 Definition flagSymboalType :=
   MkCompilableSymbolType nil (Some flagCompilableType).
 
+Definition Const_BPF_SUCC_RETURN         := constant flagSymboalType BPF_SUCC_RETURN C_S32_one.          (**r =  1, *)
 Definition Const_BPF_OK                  := constant flagSymboalType BPF_OK C_S32_zero.                  (**r =  0, *)
 Definition Const_BPF_ILLEGAL_INSTRUCTION := constant flagSymboalType BPF_ILLEGAL_INSTRUCTION C_S32_mone. (**r = -1, *)
 Definition Const_BPF_ILLEGAL_MEM         := constant flagSymboalType BPF_ILLEGAL_MEM C_S32_m2.           (**r = -2, *)
@@ -69,6 +67,7 @@ Definition Const_flag_eq :=
 
 Module Exports.
   Definition flagCompilableType            := flagCompilableType.
+  Definition Const_BPF_SUCC_RETURN         := Const_BPF_SUCC_RETURN.
   Definition Const_BPF_OK                  := Const_BPF_OK.
   Definition Const_BPF_ILLEGAL_INSTRUCTION := Const_BPF_ILLEGAL_INSTRUCTION.
   Definition Const_BPF_ILLEGAL_MEM         := Const_BPF_ILLEGAL_MEM.
