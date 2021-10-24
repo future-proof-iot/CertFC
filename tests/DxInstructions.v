@@ -48,8 +48,8 @@ There are two ways to do decode:
 
 Open Scope monad_scope.
 
-Definition list_get (l0: MyListType) (idx0: int64_t): M int64_t :=
-  returnM (MyListIndex64 l0 idx0).
+Definition list_get (l: MyListType) (idx0: int64_t): M int64_t :=
+  returnM (MyListIndex64 l idx0).
 
 Definition get_opcode (ins0: int64_t): M opcode :=
   returnM (int64_to_opcode ins0).
@@ -61,7 +61,8 @@ Definition get_src (ins2: int64_t): M reg :=
   returnM (int64_to_src_reg ins2).
 
 Definition get_offset (i0:int64_t ):M sint16_t := returnM (int64_to_sint16 (Int64.shru (Int64.shl i0 int64_32) int64_48)).
-
+(** get_immediate: int64_t -> vals32_t. Tthe return type is vals32_t instead of sint32_t because `imm` is always used to be calculted with other `val` type.
+  *)
 Definition get_immediate (i1:int64_t):M vals32_t := returnM (val_intsoflongu (int64_to_vlong (Int64.shru i1 int64_32))).
 
 Definition succ_return :M bpf_flag := returnM BPF_SUCC_RETURN.
@@ -102,9 +103,6 @@ Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
   end.
 *)
 
-
-(** show pc < List.length l *)
-
 Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
   do pc <- eval_pc;
   do ins <- list_get l0 pc;
@@ -123,29 +121,26 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
   | op_BPF_ADD64r   => 
     do _ <- upd_reg dst (Val.addl    dst64 src64);
       normal_return
-
   | op_BPF_SUB64i   =>
     do _ <- upd_reg dst (Val.subl    dst64 (Val.longofintu imm));
       normal_return
   | op_BPF_SUB64r   =>
     do _ <- upd_reg dst (Val.subl    dst64 src64);
       normal_return
-
   | op_BPF_MUL64i   =>
     do _ <- upd_reg dst (Val.mull    dst64 (Val.longofintu imm));
       normal_return
   | op_BPF_MUL64r   =>
     do _ <- upd_reg dst (Val.mull    dst64 src64);
       normal_return
-  (**r how to generate exit or printf function ? *)
   | op_BPF_DIV64i   =>
-    if div64_checking (Val.longofintu imm) then
+    if compl_ne (Val.longofintu imm) val64_zero then
       do _ <- upd_reg dst (val64_divlu dst64 (Val.longofintu imm));
         normal_return
     else
       ill_div
   | op_BPF_DIV64r   =>
-    if div64_checking src64 then
+    if compl_ne src64 val64_zero then
       do _ <- upd_reg dst (val64_divlu dst64 src64);
         normal_return
     else
@@ -163,25 +158,25 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     do _ <- upd_reg dst (Val.andl    dst64 (Val.longofintu imm));
         normal_return
   | op_BPF_LSH64i   =>
-    if shift64_checking (Val.longofintu imm) then
+    if complu_lt (Val.longofintu imm) val64_64 then (**r Int64.iwordsize' = int64_64 *)
       do _ <- upd_reg dst (Val.shll    dst64 imm);
         normal_return
     else
       ill_shift
   | op_BPF_LSH64r   =>
-    if shift64_checking src64 then
+    if complu_lt src64 val64_64 then
       do _ <- upd_reg dst (Val.shll    dst64 (val_intuoflongu src64));
         normal_return
     else
       ill_shift
   | op_BPF_RSH64i   => 
-    if shift64_checking (Val.longofintu imm) then
+    if complu_lt (Val.longofintu imm) val64_64 then
       do _ <- upd_reg dst (Val.shrlu   dst64 imm);
         normal_return
     else
       ill_shift
   | op_BPF_RSH64r   =>
-    if shift64_checking src64 then
+    if complu_lt src64 val64_64 then
       do _ <- upd_reg dst (Val.shrlu   dst64 (val_intuoflongu src64));
         normal_return
     else
@@ -190,13 +185,13 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     do _ <- upd_reg dst (Val.negl    dst64);
         normal_return
   | op_BPF_MOD64i   => 
-    if div64_checking (Val.longofintu imm) then
+    if compl_ne (Val.longofintu imm) val64_zero then
       do _ <- upd_reg dst (val64_modlu dst64 imm);
         normal_return
     else
       ill_div
   | op_BPF_MOD64r   => 
-    if div64_checking src64 then
+    if compl_ne src64 val64_zero then
       do _ <- upd_reg dst (val64_modlu dst64 (val_intuoflongu src64));
         normal_return
     else
@@ -214,13 +209,13 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     do _ <- upd_reg dst src64;
         normal_return
   | op_BPF_ARSH64i  => 
-    if shift64_checking (Val.longofintu imm) then
+    if complu_lt (Val.longofintu imm) val64_64 then
       do _ <- upd_reg dst (Val.shrl    dst64  imm);
         normal_return
     else
       ill_shift
   | op_BPF_ARSH64r  => 
-    if shift64_checking src64 then
+    if complu_lt src64 val64_64 then
       do _ <- upd_reg dst (Val.shrl    dst64  (val_intuoflongu src64));
         normal_return
     else
@@ -245,13 +240,13 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     do _ <- upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) (val_intuoflongu src64)));
         normal_return
   | op_BPF_DIV32i   =>
-    if div32_checking imm then
+    if compl_ne_32 imm Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) imm));
         normal_return
     else
       ill_div
   | op_BPF_DIV32r   =>
-    if div32_checking (val_intuoflongu src64) then
+    if compl_ne_32 (val_intuoflongu src64) Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) (val_intuoflongu src64)));
         normal_return
     else
@@ -269,25 +264,25 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     do _ <- upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) (val_intuoflongu src64)));
         normal_return
   | op_BPF_LSH32i   =>
-    if shift32_checking imm then
+    if complu_lt_32 imm val32_32 then (**r Int.iwordsize = int32_32 *)
       do _ <- upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) imm));
         normal_return
     else
       ill_shift
   | op_BPF_LSH32r   =>
-    if shift32_checking (val_intuoflongu src64) then
+    if complu_lt_32 (val_intuoflongu src64) val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) (val_intuoflongu src64)));
         normal_return
     else
       ill_shift
   | op_BPF_RSH32i   =>
-    if shift32_checking imm then
+    if complu_lt_32 imm val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) imm));
         normal_return
     else
       ill_shift
   | op_BPF_RSH32r   =>
-    if shift32_checking (val_intuoflongu src64) then
+    if complu_lt_32 (val_intuoflongu src64) val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) (val_intuoflongu src64)));
         normal_return
     else
@@ -296,13 +291,13 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     do _ <- upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64))));
         normal_return
   | op_BPF_MOD32i   =>
-    if div32_checking imm then
+    if compl_ne_32 imm Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) imm));
         normal_return
     else
       ill_div
   | op_BPF_MOD32r   =>
-    if div32_checking (val_intuoflongu src64) then
+    if compl_ne_32 (val_intuoflongu src64) Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) (val_intuoflongu src64)));
         normal_return
     else
@@ -320,13 +315,13 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     do _ <- upd_reg dst (val_intuoflongu src64);
         normal_return
   | op_BPF_ARSH32i  =>
-    if shift32_checking imm then
+    if complu_lt_32 imm val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) imm));
         normal_return
     else
       ill_shift
   | op_BPF_ARSH32r  =>
-    if shift32_checking (val_intuoflongu src64) then
+    if complu_lt_32 (val_intuoflongu src64) val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) (val_intuoflongu src64)));
         normal_return
     else

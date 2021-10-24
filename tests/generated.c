@@ -44,9 +44,9 @@ extern unsigned long long load_mem(unsigned int, unsigned long long);
 
 extern void store_mem(unsigned int, unsigned long long, unsigned long long);
 
-unsigned long long list_get(unsigned long long *l0, unsigned long long idx0)
+unsigned long long list_get(unsigned long long *l, unsigned long long idx0)
 {
-  return *(l0 + idx0);
+  return *(l + idx0);
 }
 
 unsigned char get_opcode(unsigned long long ins0)
@@ -104,7 +104,7 @@ int ill_shift(void)
   return -10;
 }
 
-int step(unsigned long long *l0$31, unsigned long long len0)
+int step(unsigned long long *l0, unsigned long long len0)
 {
   unsigned long long pc;
   unsigned long long ins;
@@ -122,7 +122,7 @@ int step(unsigned long long *l0$31, unsigned long long len0)
   unsigned long long v_xb;
   unsigned long long v_xdw;
   pc = eval_pc();
-  ins = list_get(l0$31, pc);
+  ins = list_get(l0, pc);
   op = get_opcode(ins);
   dst = get_dst(ins);
   src = get_src(ins);
@@ -543,7 +543,7 @@ int step(unsigned long long *l0$31, unsigned long long len0)
       }
     case 24:
       if (pc + 1LLU < len0) {
-        next_ins = list_get(l0$31, pc + 1LLU);
+        next_ins = list_get(l0, pc + 1LLU);
         next_imm = get_immediate(next_ins);
         upd_reg(dst,
                 (unsigned long long) (unsigned int) imm
@@ -554,44 +554,48 @@ int step(unsigned long long *l0$31, unsigned long long len0)
         return ill_len();
       }
     case 97:
-      v_xw = load_mem(32U, src64 + ofs);
+      v_xw = load_mem(32U, src64 + (unsigned long long) ofs);
       upd_reg_mem(32U, dst, v_xw);
       return normal_return();
     case 105:
-      v_xh = load_mem(16U, src64 + ofs);
+      v_xh = load_mem(16U, src64 + (unsigned long long) ofs);
       upd_reg_mem(16U, dst, v_xh);
       return normal_return();
     case 113:
-      v_xb = load_mem(8U, src64 + ofs);
+      v_xb = load_mem(8U, src64 + (unsigned long long) ofs);
       upd_reg_mem(8U, dst, v_xb);
       return normal_return();
     case 121:
-      v_xdw = load_mem(64U, src64 + ofs);
+      v_xdw = load_mem(64U, src64 + (unsigned long long) ofs);
       upd_reg_mem(64U, dst, v_xdw);
       return normal_return();
     case 98:
-      store_mem(32U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      store_mem(32U, dst64 + (unsigned long long) ofs,
+                (unsigned long long) (unsigned int) imm);
       return normal_return();
     case 106:
-      store_mem(16U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      store_mem(16U, dst64 + (unsigned long long) ofs,
+                (unsigned long long) (unsigned int) imm);
       return normal_return();
     case 114:
-      store_mem(8U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      store_mem(8U, dst64 + (unsigned long long) ofs,
+                (unsigned long long) (unsigned int) imm);
       return normal_return();
     case 122:
-      store_mem(64U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      store_mem(64U, dst64 + (unsigned long long) ofs,
+                (unsigned long long) (unsigned int) imm);
       return normal_return();
     case 99:
-      store_mem(32U, dst64 + ofs, src64);
+      store_mem(32U, dst64 + (unsigned long long) ofs, src64);
       return normal_return();
     case 107:
-      store_mem(16U, dst64 + ofs, src64);
+      store_mem(16U, dst64 + (unsigned long long) ofs, src64);
       return normal_return();
     case 115:
-      store_mem(8U, dst64 + ofs, src64);
+      store_mem(8U, dst64 + (unsigned long long) ofs, src64);
       return normal_return();
     case 123:
-      store_mem(64U, dst64 + ofs, src64);
+      store_mem(64U, dst64 + (unsigned long long) ofs, src64);
       return normal_return();
     case 149:
       return succ_return();
