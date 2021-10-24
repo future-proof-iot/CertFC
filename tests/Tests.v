@@ -13,8 +13,6 @@ Require Import DxIntegers DxList64 DxValues DxRegs DxZ DxOpcode DxMonad DxPointe
 
 Definition getMemRegion (l: MemRegionsType)(n:nat): M memory_region := returnM (MemRegionsIndex l n).
 
-Definition getMemRegion_start_addr (l: MemRegionsType)(n:nat): M val64_t := returnM (start_addr (MemRegionsIndex l n)).
-
 (***************************************)
 
 

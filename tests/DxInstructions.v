@@ -1,10 +1,12 @@
-From compcert Require Import Integers Values.
+From Coq Require Import List ZArith.
+Import ListNotations.
+
+From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
 Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxZ DxMonad DxPointer DxFlag.
 
-From Coq Require Import ZArith.
 
 (** TODO: regarding the decode function: from int64 to bpf_instruction
   from: https://github.com/bergzand/RIOT/blob/10cecc628e89442777f2a798f6763e3f55ac9731/sys/include/bpf/instruction.h#L89
@@ -77,10 +79,33 @@ Definition ill_div :M bpf_flag := returnM BPF_ILLEGAL_DIV.
 
 Definition ill_shift :M bpf_flag := returnM BPF_ILLEGAL_SHIFT.
 
-(*
-Definition eval_regmapM (r:reg) (regs:regmap): M val64_t := returnM (eval_regmap r regs).
+(** as I hope in C: ptr will be a `uint64 *ptr`, start_addr will be `uint64 *start_addr` and size is `uint32 *size`;
+                    addr is `uint64`, chunk is `uint8`, m is `void`
+                return: sint64
+   The loadv/storev will run if the return value < 0, else report a memory error!!!
+  *)
+Axiom region_ptr: list val.
+Axiom region_start_addr: list val.
+Axiom region_size: list val.
 
-Definition upd_regmapM (r:reg) (v: val64_t) (regs:regmap): M regmap := returnM (upd_regmap r v regs).*)
+Fixpoint check_mem (mem_region_num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
+  match mem_region_num with
+  | O => Vundef (**r -1 *)
+  | S n => 
+    let ptr_i  := List.nth mem_region_num region_ptr Vzero in
+    let start_addr_i := List.nth mem_region_num region_start_addr Vzero in
+    let size_i := List.nth mem_region_num region_size Vzero in
+    let ofs := Val.subl addr start_addr_i in
+    let hi_ofs := Val.addl ofs (Vlong (Int64.repr (size_chunk chunk))) in
+      if (andb (complu_le (Vlong Int64.zero) ofs) (complu_lt hi_ofs size_i)) then
+        if (andb (complu_le ofs (Vlong (Int64.repr (Int64.max_unsigned-(size_chunk chunk)))))
+                 (compl_eq (Vlong (Int64.zero)) (val64_modlu ofs (Vlong (Int64.repr (align_chunk chunk)))))) then
+          Val.addl ptr_i ofs (**how to translate it to `true` *)
+        else
+          Vundef (**r -1 *)
+      else
+        check_mem n addr chunk m
+  end.
 
 (** show pc < List.length l *)
 
