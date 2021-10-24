@@ -1,22 +1,18 @@
-extern long long get_opcode(unsigned long long);
-
-extern long long get_dst(unsigned long long);
-
-extern long long get_src(unsigned long long);
-
 extern short get_offset(unsigned long long);
 
 extern int get_immediate(unsigned long long);
 
 extern unsigned long long list_get(unsigned long long *, unsigned long long);
 
-extern unsigned int ins_to_opcode(unsigned long long);
+extern unsigned char ins_to_opcode(unsigned long long);
 
 extern unsigned int ins_to_dst_reg(unsigned long long);
 
 extern unsigned int ins_to_src_reg(unsigned long long);
 
 extern int normal_return(void);
+
+extern int succ_return(void);
 
 extern int ill_return(void);
 
@@ -26,11 +22,11 @@ extern int ill_div(void);
 
 extern int ill_shift(void);
 
-extern int step(unsigned long long *, unsigned long long *);
+extern int step(unsigned long long *, unsigned long long);
 
-extern int bpf_interpreter(unsigned long long *, unsigned long long, unsigned long long *, unsigned int);
+extern int bpf_interpreter_aux(unsigned long long *, unsigned long long, unsigned int);
 
-extern struct $104 getMemRegion(struct $104 *, unsigned int);
+extern unsigned long long bpf_interpreter(unsigned long long *, unsigned long long, unsigned int);
 
 extern unsigned long long eval_pc(void);
 
@@ -40,29 +36,22 @@ extern unsigned long long eval_reg(unsigned int);
 
 extern void upd_reg(unsigned int, unsigned long long);
 
-long long get_opcode(unsigned long long i)
+extern unsigned long long eval_reg_mem(unsigned int, unsigned int);
+
+extern void upd_reg_mem(unsigned int, unsigned int, unsigned long long);
+
+extern unsigned long long load_mem(unsigned int, unsigned long long);
+
+extern void store_mem(unsigned int, unsigned long long, unsigned long long);
+
+short get_offset(unsigned long long i)
 {
-  return i & 255LL;
+  return (short) (i << 32LLU >> 48LLU);
 }
 
-long long get_dst(unsigned long long i$23)
+int get_immediate(unsigned long long i$25)
 {
-  return (i$23 & 4095LL) >> 8LL;
-}
-
-long long get_src(unsigned long long i$24)
-{
-  return (i$24 & 65535LL) >> 12LL;
-}
-
-short get_offset(unsigned long long i$25)
-{
-  return i$25 << 32LL >> 48LL;
-}
-
-int get_immediate(unsigned long long i$26)
-{
-  return (int) (i$26 >> 32LL);
+  return (int) (i$25 >> 32LLU);
 }
 
 unsigned long long list_get(unsigned long long *l, unsigned long long idx)
@@ -70,30 +59,29 @@ unsigned long long list_get(unsigned long long *l, unsigned long long idx)
   return *(l + idx);
 }
 
-unsigned int ins_to_opcode(unsigned long long ins)
+unsigned char ins_to_opcode(unsigned long long ins)
 {
-  long long op_z;
-  op_z = get_opcode(ins);
-  return op_z;
+  return ins & 255LLU;
 }
 
-unsigned int ins_to_dst_reg(unsigned long long ins$31)
+unsigned int ins_to_dst_reg(unsigned long long ins$29)
 {
-  long long dst_z;
-  dst_z = get_dst(ins$31);
-  return dst_z;
+  return (ins$29 & 4095LLU) >> 8LLU;
 }
 
-unsigned int ins_to_src_reg(unsigned long long ins$33)
+unsigned int ins_to_src_reg(unsigned long long ins$30)
 {
-  long long src_z;
-  src_z = get_src(ins$33);
-  return src_z;
+  return (ins$30 & 65535LLU) >> 12LLU;
 }
 
 int normal_return(void)
 {
   return 0;
+}
+
+int succ_return(void)
+{
+  return 1;
 }
 
 int ill_return(void)
@@ -116,26 +104,32 @@ int ill_shift(void)
   return -10;
 }
 
-int step(unsigned long long *l$35, unsigned long long *result)
+int step(unsigned long long *l$31, unsigned long long len)
 {
   unsigned long long pc;
-  unsigned long long ins$38;
-  unsigned int op;
+  unsigned long long ins$34;
+  unsigned char op;
   unsigned int dst;
   unsigned int src;
   unsigned long long dst64;
   unsigned long long src64;
   short ofs;
   int imm;
+  unsigned long long next_ins;
+  int next_imm;
+  unsigned long long v;
+  unsigned long long v$45;
+  unsigned long long v$46;
+  unsigned long long v$47;
   pc = eval_pc();
-  ins$38 = list_get(l$35, pc);
-  op = ins_to_opcode(ins$38);
-  dst = ins_to_dst_reg(ins$38);
-  src = ins_to_src_reg(ins$38);
+  ins$34 = list_get(l$31, pc);
+  op = ins_to_opcode(ins$34);
+  dst = ins_to_dst_reg(ins$34);
+  src = ins_to_src_reg(ins$34);
   dst64 = eval_reg(dst);
   src64 = eval_reg(src);
-  ofs = get_offset(ins$38);
-  imm = get_immediate(ins$38);
+  ofs = get_offset(ins$34);
+  imm = get_immediate(ins$34);
   switch (op) {
     case 7:
       upd_reg(dst, dst64 + (unsigned long long) imm);
@@ -156,14 +150,14 @@ int step(unsigned long long *l$35, unsigned long long *result)
       upd_reg(dst, dst64 * src64);
       return normal_return();
     case 55:
-      if ((unsigned long long) imm == 0LLU) {
+      if ((unsigned long long) imm != 0LLU) {
         upd_reg(dst, dst64 / (unsigned long long) imm);
         return normal_return();
       } else {
         return ill_div();
       }
     case 63:
-      if (src64 == 0LLU) {
+      if (src64 != 0LLU) {
         upd_reg(dst, dst64 / src64);
         return normal_return();
       } else {
@@ -213,14 +207,14 @@ int step(unsigned long long *l$35, unsigned long long *result)
       upd_reg(dst, -dst64);
       return normal_return();
     case 151:
-      if ((unsigned long long) imm == 0LLU) {
+      if ((unsigned long long) imm != 0LLU) {
         upd_reg(dst, dst64 % imm);
         return normal_return();
       } else {
         return ill_div();
       }
     case 159:
-      if (src64 == 0LLU) {
+      if (src64 != 0LLU) {
         upd_reg(dst, dst64 % (unsigned int) src64);
         return normal_return();
       } else {
@@ -277,14 +271,14 @@ int step(unsigned long long *l$35, unsigned long long *result)
                                      * (unsigned int) src64));
       return normal_return();
     case 52:
-      if (imm == 0U) {
+      if (imm != 0U) {
         upd_reg(dst, (unsigned long long) ((unsigned int) dst64 / imm));
         return normal_return();
       } else {
         return ill_div();
       }
     case 60:
-      if ((unsigned int) src64 == 0U) {
+      if ((unsigned int) src64 != 0U) {
         upd_reg(dst,
                 (unsigned long long) ((unsigned int) dst64
                                        / (unsigned int) src64));
@@ -344,14 +338,14 @@ int step(unsigned long long *l$35, unsigned long long *result)
       upd_reg(dst, (unsigned long long) -((unsigned int) dst64));
       return normal_return();
     case 148:
-      if (imm == 0U) {
+      if (imm != 0U) {
         upd_reg(dst, (unsigned long long) ((unsigned int) dst64 % imm));
         return normal_return();
       } else {
         return ill_div();
       }
     case 156:
-      if ((unsigned int) src64 == 0U) {
+      if ((unsigned int) src64 != 0U) {
         upd_reg(dst,
                 (unsigned long long) ((unsigned int) dst64
                                        % (unsigned int) src64));
@@ -548,66 +542,98 @@ int step(unsigned long long *l$35, unsigned long long *result)
         return normal_return();
       }
     case 24:
-      return ill_return();
+      if (pc + 1LLU < len) {
+        next_ins = list_get(l$31, pc + 1LLU);
+        next_imm = get_immediate(next_ins);
+        upd_reg(dst,
+                (unsigned long long) (unsigned int) imm
+                  | (unsigned long long) (unsigned int) next_imm << 32LLU);
+        upd_pc(pc + 1LLU);
+        return normal_return();
+      } else {
+        return ill_len();
+      }
     case 97:
-      return ill_return();
+      v = load_mem(32U, src64 + ofs);
+      upd_reg_mem(32U, dst, v);
+      return normal_return();
     case 105:
-      return ill_return();
+      v$45 = load_mem(16U, src64 + ofs);
+      upd_reg_mem(16U, dst, v$45);
+      return normal_return();
     case 113:
-      return ill_return();
+      v$46 = load_mem(8U, src64 + ofs);
+      upd_reg_mem(8U, dst, v$46);
+      return normal_return();
     case 121:
-      return ill_return();
+      v$47 = load_mem(64U, src64 + ofs);
+      upd_reg_mem(64U, dst, v$47);
+      return normal_return();
     case 98:
-      return ill_return();
+      store_mem(32U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      return normal_return();
     case 106:
-      return ill_return();
+      store_mem(16U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      return normal_return();
     case 114:
-      return ill_return();
+      store_mem(8U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      return normal_return();
     case 122:
-      return ill_return();
+      store_mem(64U, dst64 + ofs, (unsigned long long) (unsigned int) imm);
+      return normal_return();
     case 99:
-      return ill_return();
+      store_mem(32U, dst64 + ofs, src64);
+      return normal_return();
     case 107:
-      return ill_return();
+      store_mem(16U, dst64 + ofs, src64);
+      return normal_return();
     case 115:
-      return ill_return();
+      store_mem(8U, dst64 + ofs, src64);
+      return normal_return();
     case 123:
-      return ill_return();
+      store_mem(64U, dst64 + ofs, src64);
+      return normal_return();
     case 149:
-      return ill_return();
+      return succ_return();
     default:
       return ill_return();
     
   }
 }
 
-int bpf_interpreter(unsigned long long *l$46, unsigned long long len, unsigned long long *result$48, unsigned int fuel)
+int bpf_interpreter_aux(unsigned long long *l$48, unsigned long long len$49, unsigned int fuel)
 {
   unsigned int nfuel;
-  unsigned long long pc$51;
+  unsigned long long pc$52;
   int f;
   if (fuel == 0U) {
     return ill_len();
   } else {
     nfuel = fuel - 1U;
-    pc$51 = eval_pc();
-    if (!(pc$51 < len)) {
-      return ill_len();
-    } else {
-      f = step(l$46, result$48);
-      upd_pc(pc$51 + 1LLU);
+    pc$52 = eval_pc();
+    if (pc$52 < len$49) {
+      f = step(l$48, len$49);
+      upd_pc(pc$52 + 1LLU);
       if (f == 0) {
-        return bpf_interpreter(l$46, len, result$48, nfuel);
+        return bpf_interpreter_aux(l$48, len$49, nfuel);
       } else {
         return f;
       }
+    } else {
+      return ill_len();
     }
   }
 }
 
-struct $104 getMemRegion(struct $104 *l$53, unsigned int n)
+unsigned long long bpf_interpreter(unsigned long long *l$54, unsigned long long len$55, unsigned int fuel$56)
 {
-  return *(l$53 + n);
+  int f$57;
+  f$57 = bpf_interpreter_aux(l$54, len$55, fuel$56);
+  if (f$57 == 1) {
+    return eval_reg(0U);
+  } else {
+    return 0LLU;
+  }
 }
 
 
