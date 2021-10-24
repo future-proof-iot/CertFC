@@ -488,7 +488,6 @@ Definition int64_48     := Int64.repr 48.
 Definition int64_0xfff  := Int64.repr 0xfff.
 Definition int64_0xffff := Int64.repr 0xffff.
 
-
 Definition C_U64_zero: Csyntax.expr :=
   Csyntax.Eval (Vlong Int64.zero) C_U64.
 
