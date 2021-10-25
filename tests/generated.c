@@ -28,6 +28,12 @@ extern int bpf_interpreter_aux(unsigned long long *, unsigned long long, unsigne
 
 extern unsigned long long bpf_interpreter(unsigned long long *, unsigned long long, unsigned int);
 
+extern struct $104 getMemRegion(struct $104 *, unsigned int);
+
+extern unsigned long long test_reg_eval(unsigned int, unsigned long long [11]);
+
+extern unsigned long long test_reg_upd(unsigned int, unsigned long long, unsigned long long [11])[11];
+
 extern unsigned long long eval_pc(void);
 
 extern void upd_pc(unsigned long long);
@@ -638,6 +644,21 @@ unsigned long long bpf_interpreter(unsigned long long *l2, unsigned long long le
   } else {
     return 0LLU;
   }
+}
+
+struct $104 getMemRegion(struct $104 *l3, unsigned int n3)
+{
+  return *(l3 + n3);
+}
+
+unsigned long long test_reg_eval(unsigned int r0, unsigned long long regs0[11])
+{
+  return *(regs0 + r0);
+}
+
+unsigned long long test_reg_upd(unsigned int r1, unsigned long long v, unsigned long long regs1[11])[11]
+{
+  return *(regs1 + r1) = v;
 }
 
 
