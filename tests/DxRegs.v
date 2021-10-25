@@ -447,7 +447,24 @@ Definition state_struct_def: Ctypes.composite_definition :=
 (*
 Definition regsMatchableType := MkCompilableType regs_state state_struct_type.*)
 
-Definition stateMatchableType := MkCompilableType state state_struct_type.
+Definition stateCompilableType := MkCompilableType state state_struct_type.
+
+(** Type signature: reg -> val64_t -> state -> state
+  *)
+Definition regToVal64ToStateToStateSymbolType :=
+  MkCompilableSymbolType [regCompilableType; val64CompilableType; stateCompilableType] (Some stateCompilableType).
+
+Definition Const_upd_reg_tot :=
+  MkPrimitive regToVal64ToStateToStateSymbolType
+                upd_reg_tot
+                (fun es => match es with
+                           | [r; v; st] => Ok (
+                              Csyntax.Eassign
+                              (Csyntax.Eindex st r C_U64)
+                              (Csyntax.Evalof v C_U64)
+                              C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
 
 Module Exports.
   Definition regMatchableType := regMatchableType.
@@ -467,5 +484,6 @@ Module Exports.
   Definition regmapCompilableType := regmapCompilableType.
   Definition Const_eval_regmap := Const_eval_regmap.
   Definition Const_upd_regmap  := Const_upd_regmap.
-  Definition stateMatchableType := stateMatchableType.
+  Definition stateCompilableType := stateCompilableType.
+  Definition Const_upd_reg_tot := Const_upd_reg_tot.
 End Exports.

@@ -5,7 +5,7 @@ From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
-Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag.
+Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag DxMemRegion.
 
 
 (** TODO: regarding the decode function: from int64 to bpf_instruction
@@ -77,15 +77,10 @@ Definition ill_shift :M bpf_flag := returnM BPF_ILLEGAL_SHIFT.
                 return: sint64
    The loadv/storev will run if the return value < 0, else report a memory error!!!
   *)
-
 (*
-Axiom region_ptr: MyListType.
-Axiom region_start_addr: MyListType.
-Axiom region_size: MyListType.
-
 Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
   match num with
-  | O => Vundef (**r -1 *)
+  | O => val64_zero (**r 0 *)
   | S n => 
     let ptr_i  := list_getnat region_ptr num in
     let start_addr_i := list_getnat region_start_addr num in
@@ -97,11 +92,11 @@ Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
                  (compl_eq (Vlong (Int64.zero)) (val64_modlu ofs (Vlong (Int64.repr (align_chunk chunk)))))) then
           Val.addl ptr_i ofs (**how to translate it to `true` *)
         else
-          Vundef (**r -1 *)
+          val64_zero (**r 0 *)
       else
         check_mem n addr chunk m
-  end.
-*)
+  end.*)
+
 
 Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
   do pc <- eval_pc;
@@ -111,7 +106,7 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
   do src <- get_src ins;
   do dst64 <- eval_reg dst;
   do src64 <- eval_reg src;
-  do ofs <- get_offset ins; (* optiomiz...**)
+  do ofs <- get_offset ins;
   do imm <- get_immediate ins;
   match op with
   (** ALU64 *)

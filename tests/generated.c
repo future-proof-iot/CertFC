@@ -28,7 +28,17 @@ extern int bpf_interpreter_aux(unsigned long long *, unsigned long long, unsigne
 
 extern unsigned long long bpf_interpreter(unsigned long long *, unsigned long long, unsigned int);
 
-extern struct $104 getMemRegion(struct $104 *, unsigned int);
+extern unsigned long long getMemRegion_block_ptr(struct $104);
+
+extern unsigned long long getMemRegion_start_addr(struct $104);
+
+extern unsigned long long getMemRegion_block_size(struct $104);
+
+extern struct $104 getMemRegions_bpf_ctx(struct $107);
+
+extern struct $104 getMemRegions_bpf_stk(struct $107);
+
+extern struct $104 getMemRegions_content(struct $107);
 
 extern unsigned long long test_reg_eval(unsigned int, unsigned long long [11]);
 
@@ -646,9 +656,34 @@ unsigned long long bpf_interpreter(unsigned long long *l2, unsigned long long le
   }
 }
 
-struct $104 getMemRegion(struct $104 *l3, unsigned int n3)
+unsigned long long getMemRegion_block_ptr(struct $104 mr0)
 {
-  return *(l3 + n3);
+  return 1LLU;
+}
+
+unsigned long long getMemRegion_start_addr(struct $104 mr1)
+{
+  return mr1.$105;
+}
+
+unsigned long long getMemRegion_block_size(struct $104 mr2)
+{
+  return mr2.$106;
+}
+
+struct $104 getMemRegions_bpf_ctx(struct $107 mrs0)
+{
+  return mrs0.$108;
+}
+
+struct $104 getMemRegions_bpf_stk(struct $107 mrs1)
+{
+  return mrs1.$109;
+}
+
+struct $104 getMemRegions_content(struct $107 mrs2)
+{
+  return mrs2.$110;
 }
 
 unsigned long long test_reg_eval(unsigned int r0, unsigned long long regs0[11])
