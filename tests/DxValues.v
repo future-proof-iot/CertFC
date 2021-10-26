@@ -161,6 +161,7 @@ Definition val64CompilableType :=
 
 Definition val64_zero := Vlong Int64.zero.
 Definition val64_64 := Vlong int64_64.
+Definition val64_max_unsigned := Vlong int64_max_unsigned.
 
 Definition val64SymbolType :=
   MkCompilableSymbolType nil (Some val64CompilableType).
@@ -168,6 +169,10 @@ Definition val64SymbolType :=
 Definition Const_val64_zero := constant val64SymbolType val64_zero C_U64_zero.
 
 Definition Const_val64_64 := constant val64SymbolType val64_64 C_U64_64.
+
+Definition Const_val64_max_unsigned := constant val64SymbolType val64_max_unsigned C_U64_max_unsigned.
+
+
 
 (** Type signature: val -> val
   *)
@@ -621,6 +626,7 @@ Module Exports.
   Definition val64CompilableType    := val64CompilableType.
   Definition Const_val64_zero       := Const_val64_zero.
   Definition Const_val64_64         := Const_val64_64.
+  Definition Const_val64_max_unsigned := Const_val64_max_unsigned.
   Definition Const_val64_neg        := Const_val64_neg.
   Definition Const_val64_add        := Const_val64_add.
   Definition Const_val64_sub        := Const_val64_sub.

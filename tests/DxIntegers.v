@@ -488,6 +488,8 @@ Definition int64_48     := Int64.repr 48.
 Definition int64_0xfff  := Int64.repr 0xfff.
 Definition int64_0xffff := Int64.repr 0xffff.
 
+Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.
+
 Definition C_U64_zero: Csyntax.expr :=
   Csyntax.Eval (Vlong Int64.zero) C_U64.
 
@@ -530,6 +532,9 @@ Definition C_U64_0xfff: Csyntax.expr :=
 Definition C_U64_0xffff: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_0xffff) C_U64.
 
+Definition C_U64_max_unsigned: Csyntax.expr :=
+  Csyntax.Eval (Vlong (Int64.repr (Int64.max_unsigned))) C_U64.
+
 Definition Const_int64_0x07 := constant int64SymbolType int64_0x07 C_U64_0x07.
 Definition Const_int64_0x0f := constant int64SymbolType int64_0x0f C_U64_0x0f.
 Definition Const_int64_0x87 := constant int64SymbolType int64_0x87 C_U64_0x87.
@@ -545,6 +550,8 @@ Definition Const_int64_32 := constant int64SymbolType int64_32 C_U64_32.
 Definition Const_int64_48 := constant int64SymbolType int64_48 C_U64_48.
 Definition Const_int64_0xfff := constant int64SymbolType int64_0xfff C_U64_0xfff.
 Definition Const_int64_0xffff := constant int64SymbolType int64_0xffff C_U64_0xffff.
+
+Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.
 
 Close Scope Z_scope.
 
@@ -772,6 +779,7 @@ Module Exports.
   Definition Const_int64_48        := Const_int64_48.
   Definition Const_int64_0xfff     := Const_int64_0xfff.
   Definition Const_int64_0xffff    := Const_int64_0xffff.
+  Definition Const_int64_max_unsigned := Const_int64_max_unsigned.
   Definition Const_int64_neg       := Const_int64_neg.
   Definition Const_int64_add       := Const_int64_add.
   Definition Const_int64_sub       := Const_int64_sub.
