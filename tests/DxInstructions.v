@@ -5,7 +5,7 @@ From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
-Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag DxMemRegion.
+Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag DxAST DxMemRegion.
 
 
 (** TODO: regarding the decode function: from int64 to bpf_instruction
@@ -65,9 +65,12 @@ Definition get_offset (i0:int64_t ):M sint16_t := returnM (int64_to_sint16 (Int6
   *)
 Definition get_immediate (i1:int64_t):M vals32_t := returnM (val_intsoflongu (int64_to_vlong (Int64.shru i1 int64_32))).
 
+Definition get_addl (x y: val64_t): M val64_t := returnM (Val.addl x y).
+
 Definition succ_return :M bpf_flag := returnM BPF_SUCC_RETURN.
 Definition normal_return :M bpf_flag := returnM BPF_OK.
 Definition ill_return :M bpf_flag := returnM BPF_ILLEGAL_INSTRUCTION.
+Definition ill_mem : M bpf_flag := returnM BPF_ILLEGAL_MEM.
 Definition ill_len :M bpf_flag := returnM BPF_ILLEGAL_LEN.
 Definition ill_div :M bpf_flag := returnM BPF_ILLEGAL_DIV.
 Definition ill_shift :M bpf_flag := returnM BPF_ILLEGAL_SHIFT.
@@ -77,6 +80,51 @@ Definition ill_shift :M bpf_flag := returnM BPF_ILLEGAL_SHIFT.
                 return: sint64
    The loadv/storev will run if the return value < 0, else report a memory error!!!
   *)
+Definition getMemRegion_block_ptr (mr0: memory_region): M val64_t := returnM (block_ptr mr0).
+
+Definition getMemRegion_start_addr (mr1: memory_region): M val64_t := returnM (start_addr mr1).
+
+Definition getMemRegion_block_size (mr2: memory_region): M val64_t := returnM (block_size mr2).
+
+Definition getMemRegions_bpf_ctx (mrs0: memory_regions): M memory_region := returnM (bpf_ctx mrs0).
+
+Definition getMemRegions_bpf_stk (mrs1: memory_regions): M memory_region := returnM (bpf_stk mrs1).
+
+Definition getMemRegions_content (mrs2: memory_regions): M memory_region := returnM (content mrs2).
+
+Definition get_subl (x1 y1: val64_t): M val64_t := returnM (Val.subl x1 y1).
+
+Definition check_mem_aux (mr: memory_region) (addr0: val64_t) (chunk0: memory_chunk): M val64_t :=
+  do ptr <- getMemRegion_block_ptr mr;
+  do start <- getMemRegion_start_addr mr;
+  do size <- getMemRegion_block_size mr;
+  do lo_ofs <- get_subl addr0 start;
+  do hi_ofs <- get_addl lo_ofs (memory_chunk_to_val64 chunk0);
+    if (andb (complu_le val64_zero lo_ofs) (complu_lt hi_ofs size)) then
+      if (andb (complu_le lo_ofs (memory_chunk_to_val64_upbound chunk0))
+               (compl_eq val64_zero (val64_modlu lo_ofs (memory_chunk_to_val64 chunk0)))) then
+        returnM (Val.addl ptr lo_ofs) (**r > 0 *)
+      else
+        returnM val64_zero (**r = 0 *)
+    else
+      returnM val64_zero.
+
+Definition check_mem (mrs6: memory_regions) (addr1: val64_t) (chunk1: memory_chunk) : M val64_t :=
+  do check_mem_ctx <- check_mem_aux (bpf_ctx mrs6) addr1 chunk1;
+    if compl_eq check_mem_ctx val64_zero then
+      do check_mem_stk <- check_mem_aux (bpf_stk mrs6) addr1 chunk1;
+        if compl_eq check_mem_stk val64_zero then
+          do check_mem_content <- check_mem_aux (content mrs6) addr1 chunk1;
+          if compl_eq check_mem_content val64_zero then
+            returnM val64_zero
+          else
+            returnM check_mem_content
+        else
+          returnM check_mem_stk
+    else
+      returnM check_mem_ctx.
+
+
 (*
 Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
   match num with
@@ -98,7 +146,7 @@ Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
   end.*)
 
 
-Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
+Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M bpf_flag :=
   do pc <- eval_pc;
   do ins <- list_get l0 pc;
   do op <- get_opcode ins;
@@ -108,6 +156,8 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
   do src64 <- eval_reg src;
   do ofs <- get_offset ins;
   do imm <- get_immediate ins;
+  do addr_dst <- get_addl dst64 (int64_to_vlong (sint16_to_int64 ofs));
+  do addr_src <- get_addl src64 (int64_to_vlong (sint16_to_int64 ofs));
   match op with
   (** ALU64 *)
   | op_BPF_ADD64i   =>
@@ -468,68 +518,115 @@ Definition step (l0: MyListType) (len0: int64_t): M bpf_flag :=
     else
       ill_len
   | op_BPF_LDXW      =>
-    do v_xw <- load_mem Mint32 (Val.addl src64 (sint16_to_vlong ofs));
-    do _ <- upd_reg_mem Mint32 dst v_xw;
-      normal_return
+    do check_ldxw <- check_mem mrs addr_src Mint32;
+      if compl_eq check_ldxw val64_zero then
+        ill_mem
+      else
+        do v_xw <- load_mem Mint32 (Val.addl src64 (sint16_to_vlong ofs));
+        do _ <- upd_reg_mem Mint32 dst v_xw;
+          normal_return
   | op_BPF_LDXH      =>
-    do v_xh <- load_mem Mint16unsigned (Val.addl src64 (sint16_to_vlong ofs));
-    do _ <- upd_reg_mem Mint16unsigned dst v_xh;
-      normal_return
+    do check_ldxh <- check_mem mrs addr_src Mint16unsigned;
+      if compl_eq check_ldxh val64_zero then
+        ill_mem
+      else
+        do v_xh <- load_mem Mint16unsigned (Val.addl src64 (sint16_to_vlong ofs));
+        do _ <- upd_reg_mem Mint16unsigned dst v_xh;
+          normal_return
   | op_BPF_LDXB      =>
-    do v_xb <- load_mem Mint8unsigned (Val.addl src64 (sint16_to_vlong ofs));
-    do _ <- upd_reg_mem Mint8unsigned dst v_xb;
-      normal_return
+    do check_ldxb <- check_mem mrs addr_src Mint8unsigned;
+      if compl_eq check_ldxb val64_zero then
+        ill_mem
+      else
+        do v_xb <- load_mem Mint8unsigned (Val.addl src64 (sint16_to_vlong ofs));
+        do _ <- upd_reg_mem Mint8unsigned dst v_xb;
+          normal_return
   | op_BPF_LDXDW     =>
-    do v_xdw <- load_mem Mint64 (Val.addl src64 (sint16_to_vlong ofs));
-    do _ <- upd_reg_mem Mint64 dst v_xdw;
-      normal_return
+    do check_ldxdw <- check_mem mrs addr_src Mint64;
+      if compl_eq check_ldxdw val64_zero then
+        ill_mem
+      else
+        do v_xdw <- load_mem Mint64 (Val.addl src64 (sint16_to_vlong ofs));
+        do _ <- upd_reg_mem Mint64 dst v_xdw;
+          normal_return
   | op_BPF_STW       =>
-    do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-      normal_return
+    do check_stw <- check_mem mrs addr_dst Mint32;
+      if compl_eq check_stw val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+          normal_return
   | op_BPF_STH       =>
-    do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-      normal_return
+    do check_sth <- check_mem mrs addr_dst Mint16unsigned;
+      if compl_eq check_sth val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+          normal_return
   | op_BPF_STB       =>
-    do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-      normal_return
+    do check_stb <- check_mem mrs addr_dst Mint8unsigned;
+      if compl_eq check_stb val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+          normal_return
   | op_BPF_STDW      =>
-    do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-      normal_return
+    do check_stdw <- check_mem mrs addr_dst Mint64;
+      if compl_eq check_stdw val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+          normal_return
   | op_BPF_STXW      =>
-    do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-      normal_return
+    do check_stxw <- check_mem mrs addr_dst Mint32;
+      if compl_eq check_stxw val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+          normal_return
   | op_BPF_STXH      =>
-    do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-      normal_return
+    do check_stxh <- check_mem mrs addr_dst Mint16unsigned;
+      if compl_eq check_stxh val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+          normal_return
   | op_BPF_STXB      =>
-    do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-      normal_return
+    do check_stxb <- check_mem mrs addr_dst Mint8unsigned;
+      if compl_eq check_stxb val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+          normal_return
   | op_BPF_STXDW     =>
-    do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-      normal_return
-
+    do check_stxdw <- check_mem mrs addr_dst Mint64;
+      if compl_eq check_stxdw val64_zero then
+        ill_mem
+      else
+        do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+          normal_return
   | op_BPF_RET => succ_return
   | _ =>  ill_return
   end.
 
-Fixpoint bpf_interpreter_aux (l1: MyListType) (len1: int64_t) (fuel1: nat) {struct fuel1}: M bpf_flag :=
+Fixpoint bpf_interpreter_aux (l1: MyListType) (len1: int64_t) (mrs3: memory_regions) (fuel1: nat) {struct fuel1}: M bpf_flag :=
   match fuel1 with
   | O => ill_len
   | S fuel0 =>
     do pc1 <- eval_pc;
       if Int64.ltu pc1 len1 then (**r pc < len: pc is less than the length of l *)
-        do f1 <- step l1 len1;
+        do f1 <- step l1 len1 mrs3;
         do _ <- upd_pc (Int64.add pc1 Int64.one);
           if flag_eq f1 BPF_OK then
-            bpf_interpreter_aux l1 len1 fuel0
+            bpf_interpreter_aux l1 len1 mrs3 fuel0
           else
             returnM f1
       else
         ill_len
   end.
 
-Definition bpf_interpreter (l2: MyListType) (len2: int64_t) (fuel2: nat): M val64_t :=
-  do f2 <- bpf_interpreter_aux l2 len2 fuel2;
+Definition bpf_interpreter (l2: MyListType) (len2: int64_t) (mrs4: memory_regions) (fuel2: nat): M val64_t :=
+  do f2 <- bpf_interpreter_aux l2 len2 mrs4 fuel2;
     if flag_eq f2 BPF_SUCC_RETURN then
       eval_reg R0
     else

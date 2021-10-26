@@ -11,18 +11,6 @@ From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
 Require Import DxIntegers DxList64 DxValues DxRegs DxOpcode DxMonad DxFlag DxInstructions DxAST DxMemRegion.
 
-Definition getMemRegion_block_ptr (mr0: memory_region): M val64_t := returnM (block_ptr mr0).
-
-Definition getMemRegion_start_addr (mr1: memory_region): M val64_t := returnM (start_addr mr1).
-
-Definition getMemRegion_block_size (mr2: memory_region): M val64_t := returnM (block_size mr2).
-
-Definition getMemRegions_bpf_ctx (mrs0: memory_regions): M memory_region := returnM (bpf_ctx mrs0).
-
-Definition getMemRegions_bpf_stk (mrs1: memory_regions): M memory_region := returnM (bpf_stk mrs1).
-
-Definition getMemRegions_content (mrs2: memory_regions): M memory_region := returnM (content mrs2).
-
 Definition test_reg_eval (r0: reg) (regs0: regmap): M val64_t :=
   returnM (eval_regmap r0 regs0).
 
@@ -59,21 +47,26 @@ GenerateIntermediateRepresentation SymbolIRs
   get_src
   get_offset
   get_immediate
+  get_addl
   succ_return
   normal_return
   ill_return
+  ill_mem
   ill_len
   ill_div
   ill_shift
-  step
-  bpf_interpreter_aux
-  bpf_interpreter
   getMemRegion_block_ptr
   getMemRegion_start_addr
   getMemRegion_block_size
   getMemRegions_bpf_ctx
   getMemRegions_bpf_stk
   getMemRegions_content
+  get_subl
+  check_mem_aux
+  check_mem
+  step
+  bpf_interpreter_aux
+  bpf_interpreter
   test_reg_eval
   test_reg_upd
 .
