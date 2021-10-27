@@ -1,34 +1,3 @@
-# rbpf-dx
-
-A testing project for using dx to transform exam_rbpf in Coq to C
-
-# rbpf-dx Overview
-
-The toy project is to use [dx](https://gitlab.univ-lille.fr/samuel.hym/dx) to generate C code from our toy rBPF interpreter (in Coq).
-
-The toy Coq interpreter consists of:
-- lib/\*.v: some libraries we may use.
-- tests/
-    - Asm.v: the syntax of rBPF instruciton set, this toy includes NEG, ADD and EXIT.
-    - Monad.v: our monad information
-    - Sem.v: the semantics part.
-    - Interp.v: the rBPF interpreter in Coq.
-    - ListOp.v, Int16.v: some necessary libraries.
-    - TestMain.v, ExtraMain.v: the existing files of dx
-    - Tests.v: we will reuse this file and add our interpreter information!
-
-_NB: we modify the makefile of the source project_, to run this repo:
-```shell
-$ git clone https://gitlab.inria.fr/syuan/rbpf-dx.git
-$ cd rbpf-dx
-$ ./configure ...
-$ ./configure --install-compcert-printer
-$ make
-$ make test
-```
-Remember, we must config the compcert-printer function!!!
-
-
 #   dx
 
 dx is a tool to _derive_ (hence the name) C code from a monadic
@@ -40,9 +9,9 @@ by the module [`Csyntax`] of the [CompCert compiler].
 [CompCert compiler]: https://compcert.org/
 
 Note that this is a _work-in-progress_!
-It will probably fail on your example, but you are most welcome to
+1. It will probably fail on your example, but you are most welcome to
 send bug reports.
-
+2. When you use positive to represent a id of some variables, you must be careful: if the positive number is too small, dx will generate a type conflict!!! because dx also uses positive numbers to represent variabls!!!
 
 ##  Overview
 
