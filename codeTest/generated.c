@@ -1,4 +1,94 @@
 #include "generated.h"
+/*
+#include <inttypes.h>
+#include<stdlib.h>
+#include<stddef.h>*/
+
+/*
+void print_bpf_state(){
+  printf("pc= %" PRIu64 "\n", state_pc);
+  //printf("flag= %" PRIu64 "\n", bpf_flag);
+  for(int i = 0; i < 11; i++){
+    printf("R%d",i);
+    printf("= %" PRIu64 ";", regsmap[i]);
+  }
+  printf("\n");
+}
+*/
+
+unsigned long long eval_pc () {
+  return state_pc;
+}
+
+
+void upd_pc(unsigned long long pc) {
+  state_pc = pc;
+  return ;
+}
+void upd_pc_incr(void) {
+  state_pc = state_pc+1;
+  return ;
+}
+
+
+unsigned long long eval_reg(unsigned int i){
+  if (i < 11){
+    return regsmap[i];
+  }
+  else {
+    bpf_flag = BPF_ILLEGAL_REGISTER;
+    return 0; //if here we update the bpf_flag, we must check bpf_flag after eval_reg
+  }
+}
+
+void upd_reg(unsigned int i, unsigned long long v){
+  if (i < 11) {
+      regsmap[i] = v; //here
+  }
+  else {
+      bpf_flag = BPF_ILLEGAL_REGISTER;
+  }
+  return ;
+}
+
+int eval_flag(){
+  return bpf_flag;
+}
+
+void upd_flag(int f){
+  bpf_flag = f;
+  return ;
+}
+
+unsigned long long load_mem(unsigned int chunk, unsigned long long v){
+  switch (chunk) {
+    case 1: return *(unsigned char *) v;
+    case 2: return *(unsigned short *) v;
+    case 4: return *(unsigned int *) v;
+    case 8: return *(unsigned long long *) v;
+    default: /*printf ("load:addr = %" PRIu64 "\n", v);*/ bpf_flag = BPF_ILLEGAL_MEM; return 0;
+  }
+}
+
+void store_mem_reg(unsigned int chunk, unsigned long long addr, unsigned long long v){
+  switch (chunk) {
+    case 1: *(unsigned char *) addr = v; return ;
+    case 2: *(unsigned short *) addr = v; return ;
+    case 4: *(unsigned int *) addr = v; return ;
+    case 8: *(unsigned long long *) addr = v; return ;
+    default: /*printf ("store_reg:addr = %" PRIu64 "\n", addr);*/ bpf_flag = BPF_ILLEGAL_MEM; return ;
+  }
+}
+
+void store_mem_imm(unsigned int chunk, unsigned long long addr, int v){
+  switch (chunk) {
+    case 1: *(unsigned char *) addr = v; return ;
+    case 2: *(unsigned short *) addr = v; return ;
+    case 4: *(unsigned int *) addr = v; return ;
+    case 8: *(unsigned long long *) addr = v; return ;
+    default: /*printf ("store_imm:addr = %" PRIu64 "\n", addr);*/ bpf_flag = BPF_ILLEGAL_MEM; return ;
+  }
+}
 
 unsigned long long list_get(unsigned long long *l, unsigned long long idx0)
 {
@@ -159,31 +249,31 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
   addr_dst = get_addl(dst64, ofs);
   addr_src = get_addl(src64, ofs);
   switch (op) {
-    case 7:
+    case 7: //printf("op_BPF_ADD64i\n");
       upd_reg(dst, dst64 + (unsigned long long) imm);
       upd_flag(0);
       return;
-    case 15:
+    case 15: //printf("op_BPF_ADD64r\n");
       upd_reg(dst, dst64 + src64);
       upd_flag(0);
       return;
-    case 23:
+    case 23: //printf("op_BPF_SUB64i\n");
       upd_reg(dst, dst64 - (unsigned long long) imm);
       upd_flag(0);
       return;
-    case 31:
+    case 31: //printf("op_BPF_SUB64r\n");
       upd_reg(dst, dst64 - src64);
       upd_flag(0);
       return;
-    case 39:
+    case 39: //printf("op_BPF_MUL64i\n");
       upd_reg(dst, dst64 * (unsigned long long) imm);
       upd_flag(0);
       return;
-    case 47:
+    case 47: //printf("op_BPF_MUL64r\n");
       upd_reg(dst, dst64 * src64);
       upd_flag(0);
       return;
-    case 55:
+    case 55: //printf("op_BPF_DIV64i\n");
       if ((unsigned long long) imm != 0LLU) {
         upd_reg(dst, dst64 / (unsigned long long) imm);
         upd_flag(0);
@@ -192,7 +282,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-9);
         return;
       }
-    case 63:
+    case 63: //printf("op_BPF_DIV64r\n");
       if (src64 != 0LLU) {
         upd_reg(dst, dst64 / src64);
         upd_flag(0);
@@ -201,23 +291,23 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-9);
         return;
       }
-    case 71:
+    case 71: //printf("op_BPF_OR64i\n");
       upd_reg(dst, dst64 | (unsigned long long) imm);
       upd_flag(0);
       return;
-    case 79:
-      upd_reg(dst, dst64 | (unsigned long long) imm);
+    case 79: //printf("op_BPF_OR64r\n");
+      upd_reg(dst, dst64 | src64);
       upd_flag(0);
       return;
-    case 87:
+    case 87: //printf("op_BPF_AND64i\n");
       upd_reg(dst, dst64 & (unsigned long long) imm);
       upd_flag(0);
       return;
-    case 95:
-      upd_reg(dst, dst64 & (unsigned long long) imm);
+    case 95: //printf("op_BPF_AND64r\n");
+      upd_reg(dst, dst64 & src64);
       upd_flag(0);
       return;
-    case 103:
+    case 103: //printf("op_BPF_LSH64i\n");
       if ((unsigned long long) imm < 64LLU) {
         upd_reg(dst, dst64 << imm);
         upd_flag(0);
@@ -226,7 +316,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-10);
         return;
       }
-    case 111:
+    case 111: //printf("op_BPF_LSH64r\n");
       if (src64 < 64LLU) {
         upd_reg(dst, dst64 << (unsigned int) src64);
         upd_flag(0);
@@ -235,8 +325,8 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-10);
         return;
       }
-    case 119:
-      if ((unsigned long long) imm < 64LLU) {
+    case 119: //printf("op_BPF_RSH64i\n");
+      if ((unsigned long long) imm < 64LLU) { //printf("dst= %d ", dst); printf("dst64= %" PRIu64 ";", dst64); printf("imm= %" PRIu64 ";", imm); printf("res= %" PRIu64 "\n", dst64 >> imm);
         upd_reg(dst, dst64 >> imm);
         upd_flag(0);
         return;
@@ -244,7 +334,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-10);
         return;
       }
-    case 127:
+    case 127: //printf("op_BPF_LSH64r\n");
       if (src64 < 64LLU) {
         upd_reg(dst, dst64 >> (unsigned int) src64);
         upd_flag(0);
@@ -253,11 +343,11 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-10);
         return;
       }
-    case 135:
+    case 135: //printf("op_BPF_NEG64\n");
       upd_reg(dst, -dst64);
       upd_flag(0);
       return;
-    case 151:
+    case 151: //printf("op_BPF_MOD64i\n");
       if ((unsigned long long) imm != 0LLU) {
         upd_reg(dst, dst64 % imm);
         upd_flag(0);
@@ -266,7 +356,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-9);
         return;
       }
-    case 159:
+    case 159: //printf("op_BPF_MOD64r\n");
       if (src64 != 0LLU) {
         upd_reg(dst, dst64 % (unsigned int) src64);
         upd_flag(0);
@@ -275,23 +365,23 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-9);
         return;
       }
-    case 167:
+    case 167: //printf("op_BPF_XOR64i\n");
       upd_reg(dst, dst64 ^ (unsigned long long) imm);
       upd_flag(0);
       return;
-    case 175:
+    case 175: //printf("op_BPF_XOR64r\n");
       upd_reg(dst, dst64 ^ src64);
       upd_flag(0);
       return;
-    case 183:
+    case 183: //printf("op_BPF_MOV64i\n");
       upd_reg(dst, (unsigned long long) imm);
       upd_flag(0);
       return;
-    case 191:
+    case 191: //printf("op_BPF_MOV64i\n");
       upd_reg(dst, src64);
       upd_flag(0);
       return;
-    case 199:
+    case 199: //printf("op_BPF_ARSH64i\n");
       if ((unsigned long long) imm < 64LLU) {
         upd_reg(dst, (long long) dst64 >> imm);
         upd_flag(0);
@@ -300,7 +390,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-10);
         return;
       }
-    case 207:
+    case 207: //printf("op_BPF_ARSH64r\n");
       if (src64 < 64LLU) {
         upd_reg(dst, (long long) dst64 >> (unsigned int) src64);
         upd_flag(0);
@@ -684,7 +774,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 24:
+    case 24: //printf("op_BPF_LDDW\n");
       if (pc + 1LLU < len0) {
         next_ins = list_get(l0, pc + 1LLU);
         next_imm = get_immediate(next_ins);
@@ -698,7 +788,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(-5);
         return;
       }
-    case 97:
+    case 97: //printf("op_BPF_LDXW\n");
       check_ldxw = check_mem(mrs, addr_src, 4U);
       if (check_ldxw == 0LLU) {
         upd_flag(-2);
@@ -709,7 +799,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 105:
+    case 105: //printf("op_BPF_LDXH\n");
       check_ldxh = check_mem(mrs, addr_src, 2U);
       if (check_ldxh == 0LLU) {
         upd_flag(-2);
@@ -720,9 +810,9 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 113:
+    case 113: //printf("op_BPF_LDXB\n");
       check_ldxb = check_mem(mrs, addr_src, 1U);
-      if (check_ldxb == 0LLU) {
+      if (check_ldxb == 0LLU) { //printf("here!!!\n\n");
         upd_flag(-2);
         return;
       } else {
@@ -731,7 +821,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 121:
+    case 121: //printf("op_BPF_LDXDW\n");
       check_ldxdw = check_mem(mrs, addr_src, 8U);
       if (check_ldxdw == 0LLU) {
         upd_flag(-2);
@@ -742,7 +832,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 98:
+    case 98: //printf("op_BPF_STW\n");
       check_stw = check_mem(mrs, addr_dst, 4U);
       if (check_stw == 0LLU) {
         upd_flag(-2);
@@ -752,7 +842,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 106:
+    case 106: //printf("op_BPF_STH\n");
       check_sth = check_mem(mrs, addr_dst, 2U);
       if (check_sth == 0LLU) {
         upd_flag(-2);
@@ -762,7 +852,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 114:
+    case 114: //printf("op_BPF_STB\n");
       check_stb = check_mem(mrs, addr_dst, 1U);
       if (check_stb == 0LLU) {
         upd_flag(-2);
@@ -772,7 +862,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 122:
+    case 122: //printf("op_BPF_STDW\n");
       check_stdw = check_mem(mrs, addr_dst, 8U);
       if (check_stdw == 0LLU) {
         upd_flag(-2);
@@ -782,7 +872,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 99:
+    case 99: //printf("op_BPF_STXW\n");
       check_stxw = check_mem(mrs, addr_dst, 4U);
       if (check_stxw == 0LLU) {
         upd_flag(-2);
@@ -792,7 +882,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 107:
+    case 107: //printf("op_BPF_STXH\n");
       check_stxh = check_mem(mrs, addr_dst, 2U);
       if (check_stxh == 0LLU) {
         upd_flag(-2);
@@ -802,7 +892,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 115:
+    case 115: //printf("op_BPF_STXB\n");
       check_stxb = check_mem(mrs, addr_dst, 1U);
       if (check_stxb == 0LLU) {
         upd_flag(-2);
@@ -812,7 +902,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $107 mrs)
         upd_flag(0);
         return;
       }
-    case 123:
+    case 123: //printf("op_BPF_STXDW\n");
       check_stxdw = check_mem(mrs, addr_dst, 8U);
       if (check_stxdw == 0LLU) {
         upd_flag(-2);
@@ -844,17 +934,17 @@ void bpf_interpreter_aux(unsigned long long *l1, unsigned long long len1, struct
   } else {
     fuel0 = fuel1 - 1U;
     pc1 = eval_pc();
-    if (pc1 < len1) {
+    if (pc1 < len1) { //print_bpf_state();
       step(l1, len1, mrs3);
-      upd_pc(pc1 + 1LLU);
+      upd_pc_incr();
       f1 = eval_flag();
       if (f1 == 0) {
         bpf_interpreter_aux(l1, len1, mrs3, fuel0);
         return;
-      } else {
+      } else { //printf("\nfuel0=%d, pc=%d, flag=%d\n", fuel0, eval_pc(), eval_flag());
         return;
       }
-    } else {
+    } else { //printf("\nfuel0=%d, pc=%d, flag=%d\n", fuel0, eval_pc(), eval_flag());
       upd_flag(-5);
       return;
     }
@@ -864,6 +954,7 @@ void bpf_interpreter_aux(unsigned long long *l1, unsigned long long len1, struct
 unsigned long long bpf_interpreter(unsigned long long *l2, unsigned long long len2, struct $107 mrs4, unsigned int fuel2)
 {
   int f2;
+  upd_reg(1U, mrs4.$108.$105);
   bpf_interpreter_aux(l2, len2, mrs4, fuel2);
   f2 = eval_flag();
   if (f2 == 1) {
