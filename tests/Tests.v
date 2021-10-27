@@ -59,11 +59,11 @@ GenerateIntermediateRepresentation SymbolIRs
   get_subl
   check_mem_aux
   check_mem
-  step (*
+  step
   bpf_interpreter_aux
   bpf_interpreter
   test_reg_eval
-  test_reg_upd*)
+  test_reg_upd
 .
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.

@@ -186,13 +186,13 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M unit :
     do _ <- upd_reg dst (Val.orl     dst64 (Val.longofintu imm));
         upd_flag BPF_OK
   | op_BPF_OR64r    =>
-    do _ <- upd_reg dst (Val.orl     dst64 (Val.longofintu imm));
+    do _ <- upd_reg dst (Val.orl     dst64 src64);
         upd_flag BPF_OK
   | op_BPF_AND64i   =>
     do _ <- upd_reg dst (Val.andl    dst64 (Val.longofintu imm));
         upd_flag BPF_OK
   | op_BPF_AND64r   =>
-    do _ <- upd_reg dst (Val.andl    dst64 (Val.longofintu imm));
+    do _ <- upd_reg dst (Val.andl    dst64 src64);
         upd_flag BPF_OK
   | op_BPF_LSH64i   =>
     if complu_lt (Val.longofintu imm) val64_64 then (**r Int64.iwordsize' = int64_64 *)
@@ -325,7 +325,7 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M unit :
     else
       upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_NEG32    =>
-    do _ <- upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64))));
+    do _ <- upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu dst64)));
         upd_flag BPF_OK
   | op_BPF_MOD32i   =>
     if compl_ne_32 imm Vzero then
