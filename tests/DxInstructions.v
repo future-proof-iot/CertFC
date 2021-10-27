@@ -515,7 +515,7 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M unit :
         upd_flag BPF_ILLEGAL_MEM
       else
         do v_xw <- load_mem Mint32 (Val.addl src64 (sint16_to_vlong ofs));
-        do _ <- upd_reg_mem Mint32 dst v_xw;
+        do _ <- upd_reg dst v_xw;
           upd_flag BPF_OK
   | op_BPF_LDXH      =>
     do check_ldxh <- check_mem mrs addr_src Mint16unsigned;
@@ -523,7 +523,7 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M unit :
         upd_flag BPF_ILLEGAL_MEM
       else
         do v_xh <- load_mem Mint16unsigned (Val.addl src64 (sint16_to_vlong ofs));
-        do _ <- upd_reg_mem Mint16unsigned dst v_xh;
+        do _ <- upd_reg dst v_xh;
           upd_flag BPF_OK
   | op_BPF_LDXB      =>
     do check_ldxb <- check_mem mrs addr_src Mint8unsigned;
@@ -531,7 +531,7 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M unit :
         upd_flag BPF_ILLEGAL_MEM
       else
         do v_xb <- load_mem Mint8unsigned (Val.addl src64 (sint16_to_vlong ofs));
-        do _ <- upd_reg_mem Mint8unsigned dst v_xb;
+        do _ <- upd_reg dst v_xb;
           upd_flag BPF_OK
   | op_BPF_LDXDW     =>
     do check_ldxdw <- check_mem mrs addr_src Mint64;
@@ -539,63 +539,63 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M unit :
         upd_flag BPF_ILLEGAL_MEM
       else
         do v_xdw <- load_mem Mint64 (Val.addl src64 (sint16_to_vlong ofs));
-        do _ <- upd_reg_mem Mint64 dst v_xdw;
+        do _ <- upd_reg dst v_xdw;
           upd_flag BPF_OK
   | op_BPF_STW       =>
     do check_stw <- check_mem mrs addr_dst Mint32;
       if compl_eq check_stw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+        do _ <- store_mem_imm Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) imm;
           upd_flag BPF_OK
   | op_BPF_STH       =>
     do check_sth <- check_mem mrs addr_dst Mint16unsigned;
       if compl_eq check_sth val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+        do _ <- store_mem_imm Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) imm;
           upd_flag BPF_OK
   | op_BPF_STB       =>
     do check_stb <- check_mem mrs addr_dst Mint8unsigned;
       if compl_eq check_stb val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+        do _ <- store_mem_imm Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) imm;
           upd_flag BPF_OK
   | op_BPF_STDW      =>
     do check_stdw <- check_mem mrs addr_dst Mint64;
       if compl_eq check_stdw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
+        do _ <- store_mem_imm Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) imm;
           upd_flag BPF_OK
   | op_BPF_STXW      =>
     do check_stxw <- check_mem mrs addr_dst Mint32;
       if compl_eq check_stxw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+        do _ <- store_mem_reg Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
           upd_flag BPF_OK
   | op_BPF_STXH      =>
     do check_stxh <- check_mem mrs addr_dst Mint16unsigned;
       if compl_eq check_stxh val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+        do _ <- store_mem_reg Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
           upd_flag BPF_OK
   | op_BPF_STXB      =>
     do check_stxb <- check_mem mrs addr_dst Mint8unsigned;
       if compl_eq check_stxb val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+        do _ <- store_mem_reg Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
           upd_flag BPF_OK
   | op_BPF_STXDW     =>
     do check_stxdw <- check_mem mrs addr_dst Mint64;
       if compl_eq check_stxdw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
+        do _ <- store_mem_reg Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
           upd_flag BPF_OK
   | op_BPF_RET => upd_flag BPF_SUCC_RETURN
   | _ =>  upd_flag BPF_ILLEGAL_INSTRUCTION

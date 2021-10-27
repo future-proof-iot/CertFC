@@ -23,8 +23,8 @@ Definition upd_reg (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg
 Definition eval_flag : M bpf_flag := fun st => Some (snd st, st).
 Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag_tot f st).
 
-Definition eval_reg_mem (chunk: memory_chunk) (r: reg) : M val64_t := fun st => Some (eval_reg_tot r st, st).
-Definition upd_reg_mem (chunk: memory_chunk) (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg_tot r v st).
+(*Definition eval_reg_mem (chunk: memory_chunk) (r: reg) : M val64_t := fun st => Some (eval_reg_tot r st, st).
+Definition upd_reg_mem (chunk: memory_chunk) (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg_tot r v st).*)
 
 
 Definition load_mem_tot (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
@@ -33,7 +33,13 @@ Definition load_mem_tot (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
   | None => val64_zero
   end.
 
-Definition store_mem_tot (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
+Definition store_mem_imm_tot (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) (st: state) :=
+  match Mem.storev chunk (fst (fst st)) ptr v with
+  | Some m => m
+  | None => init_mem
+  end.
+
+Definition store_mem_reg_tot (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
   match Mem.storev chunk (fst (fst st)) ptr v with
   | Some m => m
   | None => init_mem
@@ -41,7 +47,9 @@ Definition store_mem_tot (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
 
 Definition load_mem (chunk: memory_chunk) (ptr: val64_t): M val64_t := fun st => Some (load_mem_tot chunk ptr st, st).
 
-Definition store_mem (chunk: memory_chunk) (ptr v: val64_t) : M unit := fun st => Some (tt, ((store_mem_tot chunk ptr v st), snd (fst st), snd st)).
+Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) : M unit := fun st => Some (tt, ((store_mem_imm_tot chunk ptr v st), snd (fst st), snd st)).
+
+Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) : M unit := fun st => Some (tt, ((store_mem_reg_tot chunk ptr v st), snd (fst st), snd st)).
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

@@ -17,6 +17,7 @@ Definition test_reg_eval (r0: reg) (regs0: regmap): M val64_t :=
 Definition test_reg_upd (r1: reg) (v: val64_t) (regs1: regmap): M regmap :=
   returnM (upd_regmap r1 v regs1).
 
+
 (***************************************)
 
 
@@ -38,10 +39,9 @@ GenerateIntermediateRepresentation SymbolIRs
   upd_reg
   eval_flag
   upd_flag
-  eval_reg_mem
-  upd_reg_mem
   load_mem
-  store_mem
+  store_mem_imm
+  store_mem_reg
   __
   list_get
   get_opcode
@@ -59,11 +59,11 @@ GenerateIntermediateRepresentation SymbolIRs
   get_subl
   check_mem_aux
   check_mem
-  step
+  step (*
   bpf_interpreter_aux
   bpf_interpreter
   test_reg_eval
-  test_reg_upd
+  test_reg_upd*)
 .
 
 Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.
