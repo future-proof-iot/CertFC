@@ -297,6 +297,7 @@ Definition int32_m8  := Int.repr (-8).
 Definition int32_m9  := Int.repr (-9).
 Definition int32_m10 := Int.repr (-10).
 Definition int32_m11 := Int.repr (-11).
+Definition int32_m12 := Int.repr (-12).
 
 Definition C_S32_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_S32.
@@ -367,6 +368,9 @@ Definition C_S32_m10: Csyntax.expr :=
 Definition C_S32_m11: Csyntax.expr :=
   Csyntax.Eval (Vint int32_m11) C_S32.
 
+Definition C_S32_m12: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_m12) C_S32.
+
 Definition C_S32_neg (x: Csyntax.expr) : Csyntax.expr :=
   Csyntax.Eunop Cop.Oneg x C_S32.
 
@@ -425,6 +429,8 @@ Definition Const_sint32_m9 := constant sint32SymbolType int32_m9 C_S32_m9.
 Definition Const_sint32_m10 := constant sint32SymbolType int32_m10 C_S32_m10.
 
 Definition Const_sint32_m11 := constant sint32SymbolType int32_m11 C_S32_m11.
+
+Definition Const_sint32_m12 := constant sint32SymbolType int32_m12 C_S32_m12.
 
 Definition sint32Tosint32SymbolType :=
   MkCompilableSymbolType [sint32CompilableType] (Some sint32CompilableType).
@@ -755,6 +761,7 @@ Module Exports.
   Definition Const_sint32_m9       := Const_sint32_m9.
   Definition Const_sint32_m10      := Const_sint32_m10.
   Definition Const_sint32_m11      := Const_sint32_m11.
+  Definition Const_sint32_m12      := Const_sint32_m12.
   Definition Const_sint32_neg      := Const_sint32_neg.
   Definition Const_sint32_add      := Const_sint32_add.
   Definition Const_sint32_sub      := Const_sint32_sub.

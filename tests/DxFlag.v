@@ -20,6 +20,7 @@ Inductive bpf_flag: Type :=
   | BPF_ILLEGAL_DIV         (**r = -9, *)
   | BPF_ILLEGAL_SHIFT       (**r = -10,*)
   | BPF_ILLEGAL_ALU         (**r = -11,*)
+  | BPF_UNDEF_ERROR         (**r = -12 *)
 .
 Lemma bpf_flag_eq: forall (x y: bpf_flag), {x=y} + {x<>y}.
 Proof.
@@ -49,6 +50,7 @@ Definition Const_BPF_OUT_OF_BRANCHES     := constant flagSymboalType BPF_OUT_OF_
 Definition Const_BPF_ILLEGAL_DIV         := constant flagSymboalType BPF_ILLEGAL_DIV C_S32_m9.           (**r = -9, *)
 Definition Const_BPF_ILLEGAL_SHIFT       := constant flagSymboalType BPF_ILLEGAL_SHIFT C_S32_m10.        (**r = -10,*)
 Definition Const_BPF_ILLEGAL_ALU         := constant flagSymboalType BPF_ILLEGAL_ALU C_S32_m11.          (**r = -11,*)
+Definition Const_BPF_UNDEF_ERROR         := constant flagSymboalType BPF_UNDEF_ERROR C_S32_m12.          (**r = -12,*)
 
 (** flag_eq: flag -> flag -> bool
   *)
@@ -80,5 +82,6 @@ Module Exports.
   Definition Const_BPF_ILLEGAL_DIV         := Const_BPF_ILLEGAL_DIV.
   Definition Const_BPF_ILLEGAL_SHIFT       := Const_BPF_ILLEGAL_SHIFT.
   Definition Const_BPF_ILLEGAL_ALU         := Const_BPF_ILLEGAL_ALU.
+  Definition Const_BPF_UNDEF_ERROR         := Const_BPF_UNDEF_ERROR.
   Definition Const_flag_eq                 := Const_flag_eq.
 End Exports.

@@ -36,6 +36,8 @@ GenerateIntermediateRepresentation SymbolIRs
   upd_pc
   eval_reg
   upd_reg
+  eval_flag
+  upd_flag
   eval_reg_mem
   upd_reg_mem
   load_mem
@@ -48,13 +50,6 @@ GenerateIntermediateRepresentation SymbolIRs
   get_offset
   get_immediate
   get_addl
-  succ_return
-  normal_return
-  ill_return
-  ill_mem
-  ill_len
-  ill_div
-  ill_shift
   getMemRegion_block_ptr
   getMemRegion_start_addr
   getMemRegion_block_size

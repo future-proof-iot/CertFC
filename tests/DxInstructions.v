@@ -67,14 +67,6 @@ Definition get_immediate (i1:int64_t):M vals32_t := returnM (val_intsoflongu (in
 
 Definition get_addl (x y: val64_t): M val64_t := returnM (Val.addl x y).
 
-Definition succ_return :M bpf_flag := returnM BPF_SUCC_RETURN.
-Definition normal_return :M bpf_flag := returnM BPF_OK.
-Definition ill_return :M bpf_flag := returnM BPF_ILLEGAL_INSTRUCTION.
-Definition ill_mem : M bpf_flag := returnM BPF_ILLEGAL_MEM.
-Definition ill_len :M bpf_flag := returnM BPF_ILLEGAL_LEN.
-Definition ill_div :M bpf_flag := returnM BPF_ILLEGAL_DIV.
-Definition ill_shift :M bpf_flag := returnM BPF_ILLEGAL_SHIFT.
-
 (** as I hope in C: ptr will be a `uint64 *ptr`, start_addr will be `uint64 *start_addr` and size is `uint32 *size`;
                     addr is `uint64`, chunk is `uint8`, m is `void`
                 return: sint64
@@ -146,7 +138,7 @@ Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
   end.*)
 
 
-Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M bpf_flag :=
+Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M unit :=
   do pc <- eval_pc;
   do ins <- list_get l0 pc;
   do op <- get_opcode ins;
@@ -162,351 +154,351 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M bpf_fl
   (** ALU64 *)
   | op_BPF_ADD64i   =>
     do _ <- upd_reg dst (Val.addl    dst64 (Val.longofintu imm));
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_ADD64r   => 
     do _ <- upd_reg dst (Val.addl    dst64 src64);
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_SUB64i   =>
     do _ <- upd_reg dst (Val.subl    dst64 (Val.longofintu imm));
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_SUB64r   =>
     do _ <- upd_reg dst (Val.subl    dst64 src64);
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_MUL64i   =>
     do _ <- upd_reg dst (Val.mull    dst64 (Val.longofintu imm));
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_MUL64r   =>
     do _ <- upd_reg dst (Val.mull    dst64 src64);
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_DIV64i   =>
     if compl_ne (Val.longofintu imm) val64_zero then
       do _ <- upd_reg dst (val64_divlu dst64 (Val.longofintu imm));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_DIV64r   =>
     if compl_ne src64 val64_zero then
       do _ <- upd_reg dst (val64_divlu dst64 src64);
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_OR64i    =>
     do _ <- upd_reg dst (Val.orl     dst64 (Val.longofintu imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_OR64r    =>
     do _ <- upd_reg dst (Val.orl     dst64 (Val.longofintu imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_AND64i   =>
     do _ <- upd_reg dst (Val.andl    dst64 (Val.longofintu imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_AND64r   =>
     do _ <- upd_reg dst (Val.andl    dst64 (Val.longofintu imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_LSH64i   =>
     if complu_lt (Val.longofintu imm) val64_64 then (**r Int64.iwordsize' = int64_64 *)
       do _ <- upd_reg dst (Val.shll    dst64 imm);
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_LSH64r   =>
     if complu_lt src64 val64_64 then
       do _ <- upd_reg dst (Val.shll    dst64 (val_intuoflongu src64));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_RSH64i   => 
     if complu_lt (Val.longofintu imm) val64_64 then
       do _ <- upd_reg dst (Val.shrlu   dst64 imm);
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_RSH64r   =>
     if complu_lt src64 val64_64 then
       do _ <- upd_reg dst (Val.shrlu   dst64 (val_intuoflongu src64));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_NEG64    =>
     do _ <- upd_reg dst (Val.negl    dst64);
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MOD64i   => 
     if compl_ne (Val.longofintu imm) val64_zero then
       do _ <- upd_reg dst (val64_modlu dst64 imm);
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_MOD64r   => 
     if compl_ne src64 val64_zero then
       do _ <- upd_reg dst (val64_modlu dst64 (val_intuoflongu src64));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_XOR64i   =>
     do _ <- upd_reg dst (Val.xorl    dst64 (Val.longofintu imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_XOR64r   =>
     do _ <- upd_reg dst (Val.xorl    dst64 src64);
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MOV64i   =>
     do _ <- upd_reg dst (Val.longofintu imm);
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MOV64r   =>
     do _ <- upd_reg dst src64;
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_ARSH64i  => 
     if complu_lt (Val.longofintu imm) val64_64 then
       do _ <- upd_reg dst (Val.shrl    dst64  imm);
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_ARSH64r  => 
     if complu_lt src64 val64_64 then
       do _ <- upd_reg dst (Val.shrl    dst64  (val_intuoflongu src64));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
 (*ALU32*)
   | op_BPF_ADD32i   =>
     do _ <- upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_ADD32r   =>
     do _ <- upd_reg dst (Val.longofintu (Val.add (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_SUB32i   =>
     do _ <- upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_SUB32r   =>
     do _ <- upd_reg dst (Val.longofintu (Val.sub (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MUL32i   =>
     do _ <- upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MUL32r   =>
     do _ <- upd_reg dst (Val.longofintu (Val.mul (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_DIV32i   =>
     if compl_ne_32 imm Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_DIV32r   =>
     if compl_ne_32 (val_intuoflongu src64) Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_divu (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_OR32i   =>
     do _ <- upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_OR32r   =>
     do _ <- upd_reg dst (Val.longofintu (Val.or  (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_AND32i   =>
     do _ <- upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_AND32r   =>
     do _ <- upd_reg dst (Val.longofintu (Val.and (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_LSH32i   =>
     if complu_lt_32 imm val32_32 then (**r Int.iwordsize = int32_32 *)
       do _ <- upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_LSH32r   =>
     if complu_lt_32 (val_intuoflongu src64) val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shl (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_RSH32i   =>
     if complu_lt_32 imm val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_RSH32r   =>
     if complu_lt_32 (val_intuoflongu src64) val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shru (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_NEG32    =>
     do _ <- upd_reg dst (Val.longofintu (Val.neg (val_intuoflongu (dst64))));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MOD32i   =>
     if compl_ne_32 imm Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_MOD32r   =>
     if compl_ne_32 (val_intuoflongu src64) Vzero then
       do _ <- upd_reg dst (Val.longofintu (val32_modu (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_div
+      upd_flag BPF_ILLEGAL_DIV
   | op_BPF_XOR32i   =>
     do _ <- upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_XOR32r   =>
     do _ <- upd_reg dst (Val.longofintu (Val.xor (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MOV32i   =>
     do _ <- upd_reg dst imm;
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_MOV32r   =>
     do _ <- upd_reg dst (val_intuoflongu src64);
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_ARSH32i  =>
     if complu_lt_32 imm val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) imm));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_ARSH32r  =>
     if complu_lt_32 (val_intuoflongu src64) val32_32 then
       do _ <- upd_reg dst (Val.longofintu (Val.shr (val_intuoflongu dst64) (val_intuoflongu src64)));
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_shift
+      upd_flag BPF_ILLEGAL_SHIFT
   (**Branch: 23 *)
   | op_BPF_JA       =>
      do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
   | op_BPF_JEQi     =>
     if compl_eq dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JEQr     =>
     if compl_eq dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JGTi     =>
     if complu_gt dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JGTr     =>
     if complu_gt dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JGEi     =>
     if complu_ge dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JGEr     =>
     if complu_ge dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JLTi     =>
     if complu_lt dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JLTr     =>
     if complu_lt dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JLEi     =>
     if complu_le dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JLEr     =>
     if complu_le dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSETi     =>
     if complu_set dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSETr     =>
     if complu_set dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JNEi     =>
     if compl_ne dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JNEr     =>
     if compl_ne dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSGTi     =>
     if compl_gt dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSGTr     =>
     if compl_gt dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSGEi     =>
     if compl_ge dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSGEr     =>
     if compl_ge dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSLTi     =>
     if compl_lt dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSLTr     =>
     if compl_lt dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSLEi     =>
     if compl_le dst64 (Val.longofintu imm) then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   | op_BPF_JSLEr     =>
     if compl_le dst64 src64 then
       do _ <- upd_pc (Int64.add pc (sint16_to_int64 ofs));
-        normal_return
+        upd_flag BPF_OK
     else
-      normal_return
+      upd_flag BPF_OK
   (** Load/Store: 13 *)
   | op_BPF_LDDW      =>
     if (Int64.ltu (Int64.add pc Int64.one) len0) then (**r pc+1 < len: pc+1 is less than the length of l *)
@@ -514,119 +506,121 @@ Definition step (l0: MyListType) (len0: int64_t) (mrs: memory_regions): M bpf_fl
       do next_imm <- get_immediate next_ins;
       do _ <- upd_reg dst (Val.or (Val.longofint imm) (Val.shl  (Val.longofint next_imm) (int64_to_vlong int64_32)));
       do _ <- upd_pc (Int64.add pc Int64.one);
-        normal_return
+        upd_flag BPF_OK
     else
-      ill_len
+      upd_flag BPF_ILLEGAL_LEN
   | op_BPF_LDXW      =>
     do check_ldxw <- check_mem mrs addr_src Mint32;
       if compl_eq check_ldxw val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do v_xw <- load_mem Mint32 (Val.addl src64 (sint16_to_vlong ofs));
         do _ <- upd_reg_mem Mint32 dst v_xw;
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_LDXH      =>
     do check_ldxh <- check_mem mrs addr_src Mint16unsigned;
       if compl_eq check_ldxh val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do v_xh <- load_mem Mint16unsigned (Val.addl src64 (sint16_to_vlong ofs));
         do _ <- upd_reg_mem Mint16unsigned dst v_xh;
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_LDXB      =>
     do check_ldxb <- check_mem mrs addr_src Mint8unsigned;
       if compl_eq check_ldxb val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do v_xb <- load_mem Mint8unsigned (Val.addl src64 (sint16_to_vlong ofs));
         do _ <- upd_reg_mem Mint8unsigned dst v_xb;
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_LDXDW     =>
     do check_ldxdw <- check_mem mrs addr_src Mint64;
       if compl_eq check_ldxdw val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do v_xdw <- load_mem Mint64 (Val.addl src64 (sint16_to_vlong ofs));
         do _ <- upd_reg_mem Mint64 dst v_xdw;
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STW       =>
     do check_stw <- check_mem mrs addr_dst Mint32;
       if compl_eq check_stw val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STH       =>
     do check_sth <- check_mem mrs addr_dst Mint16unsigned;
       if compl_eq check_sth val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STB       =>
     do check_stb <- check_mem mrs addr_dst Mint8unsigned;
       if compl_eq check_stb val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STDW      =>
     do check_stdw <- check_mem mrs addr_dst Mint64;
       if compl_eq check_stdw val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) (Val.longofint imm);
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STXW      =>
     do check_stxw <- check_mem mrs addr_dst Mint32;
       if compl_eq check_stxw val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STXH      =>
     do check_stxh <- check_mem mrs addr_dst Mint16unsigned;
       if compl_eq check_stxh val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STXB      =>
     do check_stxb <- check_mem mrs addr_dst Mint8unsigned;
       if compl_eq check_stxb val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-          normal_return
+          upd_flag BPF_OK
   | op_BPF_STXDW     =>
     do check_stxdw <- check_mem mrs addr_dst Mint64;
       if compl_eq check_stxdw val64_zero then
-        ill_mem
+        upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
-          normal_return
-  | op_BPF_RET => succ_return
-  | _ =>  ill_return
+          upd_flag BPF_OK
+  | op_BPF_RET => upd_flag BPF_SUCC_RETURN
+  | _ =>  upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Fixpoint bpf_interpreter_aux (l1: MyListType) (len1: int64_t) (mrs3: memory_regions) (fuel1: nat) {struct fuel1}: M bpf_flag :=
+Fixpoint bpf_interpreter_aux (l1: MyListType) (len1: int64_t) (mrs3: memory_regions) (fuel1: nat) {struct fuel1}: M unit :=
   match fuel1 with
-  | O => ill_len
+  | O => upd_flag BPF_ILLEGAL_LEN
   | S fuel0 =>
     do pc1 <- eval_pc;
       if Int64.ltu pc1 len1 then (**r pc < len: pc is less than the length of l *)
-        do f1 <- step l1 len1 mrs3;
+        do _ <- step l1 len1 mrs3;
         do _ <- upd_pc (Int64.add pc1 Int64.one);
+        do f1 <- eval_flag;
           if flag_eq f1 BPF_OK then
             bpf_interpreter_aux l1 len1 mrs3 fuel0
           else
-            returnM f1
+            returnM tt
       else
-        ill_len
+        upd_flag BPF_ILLEGAL_LEN
   end.
 
 Definition bpf_interpreter (l2: MyListType) (len2: int64_t) (mrs4: memory_regions) (fuel2: nat): M val64_t :=
-  do f2 <- bpf_interpreter_aux l2 len2 mrs4 fuel2;
+  do _ <- bpf_interpreter_aux l2 len2 mrs4 fuel2;
+  do f2 <- eval_flag;
     if flag_eq f2 BPF_SUCC_RETURN then
       eval_reg R0
     else

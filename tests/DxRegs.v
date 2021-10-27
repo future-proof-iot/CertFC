@@ -5,7 +5,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Bool Nat.
 
-Require Import IdentDef CoqIntegers DxIntegers DxValues.
+Require Import IdentDef CoqIntegers DxIntegers DxValues DxFlag.
 
 From Coq Require Import List ZArith.
 Import ListNotations.
@@ -228,31 +228,40 @@ Record regs_state: Type := make_rst{
   regs_st : regmap;
 }.
 
-Definition state: Type := Memory.mem * regs_state.
+Definition state: Type := Memory.mem * regs_state * bpf_flag.
 
 Definition init_mem: Memory.mem := Memory.Mem.empty.
 
 Definition init_regs_state := {| pc_loc := Integers.Int64.zero; regs_st := init_regmap;|}.
 
 Definition init_state: state := 
-  (init_mem, init_regs_state).
+  (init_mem, init_regs_state, BPF_OK).
 
-Definition eval_pc_tot (st: state): int64_t := pc_loc (snd st).
+Definition eval_pc_tot (st: state): int64_t := pc_loc (snd (fst st)).
 
 Definition upd_pc_tot (p: int64_t) (st:state): state := 
-  let m  := fst st in
-  let rs := snd st in
+  let m  := fst (fst st) in
+  let rs := snd (fst st) in
+  let f  := snd st in
   let next_rs := {| pc_loc := p; regs_st := regs_st rs; |} in
-    (m, next_rs).
+    (m, next_rs, f).
 
 Definition eval_reg_tot (r: reg) (st:state): val64_t :=
-  eval_regmap r (regs_st (snd st)).
+  eval_regmap r (regs_st (snd (fst st))).
 
 Definition upd_reg_tot (r:reg) (v:val64_t) (st:state): state :=
-  let m  := fst st in
-  let rs := snd st in
+  let m  := fst (fst st) in
+  let rs := snd (fst st) in
+  let f  := snd st in
   let next_rs := {| pc_loc := pc_loc rs; regs_st := upd_regmap r v (regs_st rs); |} in
-    (m, next_rs).
+    (m, next_rs, f).
+
+Definition eval_flag_tot (r: reg) (st:state): bpf_flag := snd st.
+
+Definition upd_flag_tot (f: bpf_flag) (st:state): state :=
+  let m  := fst (fst st) in
+  let rs := snd (fst st) in
+    (m, rs, f).
 
 Definition z_to_reg (z:Z): reg :=
   if (Z.eqb z 0%Z) then
