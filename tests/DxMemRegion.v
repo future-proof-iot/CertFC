@@ -41,6 +41,12 @@ Definition default_memory_region := {|
   block_size := val64_zero;
 |}.
 
+Definition default_memory_regions := {|
+  bpf_ctx := default_memory_region;
+  bpf_stk := default_memory_region;
+  content := default_memory_region;
+|}.
+
 (** Type for mem_region -> val64_t *)
 Definition mem_regionToVal64CompilableSymbolType :=
   MkCompilableSymbolType [mem_regionCompilableType] (Some val64CompilableType).

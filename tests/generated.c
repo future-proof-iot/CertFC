@@ -12,37 +12,29 @@ extern int get_immediate(unsigned long long);
 
 extern unsigned long long get_addl(unsigned long long, unsigned long long);
 
+extern unsigned long long get_subl(unsigned long long, unsigned long long);
+
 extern unsigned long long getMemRegion_block_ptr(struct $1004);
 
 extern unsigned long long getMemRegion_start_addr(struct $1004);
 
 extern unsigned long long getMemRegion_block_size(struct $1004);
 
-extern struct $1004 getMemRegions_bpf_ctx(struct $1007);
-
-extern struct $1004 getMemRegions_bpf_stk(struct $1007);
-
-extern struct $1004 getMemRegions_content(struct $1007);
-
-extern unsigned long long get_subl(unsigned long long, unsigned long long);
-
 extern unsigned long long check_mem_aux(struct $1004, unsigned long long, unsigned int);
 
-extern unsigned long long check_mem(struct $1007, unsigned long long, unsigned int);
+extern unsigned long long check_mem(unsigned long long, unsigned int);
 
-extern void step(unsigned long long *, unsigned long long, struct $1007);
+extern void step(unsigned long long *, unsigned long long);
 
-extern void bpf_interpreter_aux(unsigned long long *, unsigned long long, struct $1007, unsigned int);
+extern void bpf_interpreter_aux(unsigned long long *, unsigned long long, unsigned int);
 
-extern unsigned long long bpf_interpreter(unsigned long long *, unsigned long long, struct $1007, unsigned int);
-
-extern unsigned long long test_reg_eval(unsigned int, unsigned long long [11]);
-
-extern unsigned long long test_reg_upd(unsigned int, unsigned long long, unsigned long long [11])[11];
+extern unsigned long long bpf_interpreter(unsigned long long *, unsigned long long, unsigned int);
 
 extern unsigned long long eval_pc(void);
 
 extern void upd_pc(unsigned long long);
+
+extern void upd_pc_incr(void);
 
 extern unsigned long long eval_reg(unsigned int);
 
@@ -51,6 +43,10 @@ extern void upd_reg(unsigned int, unsigned long long);
 extern int eval_flag(void);
 
 extern void upd_flag(int);
+
+extern struct $1007 eval_mem_regions(void);
+
+extern void upd_mem_regions(struct $1007);
 
 extern unsigned long long load_mem(unsigned int, unsigned long long);
 
@@ -93,6 +89,11 @@ unsigned long long get_addl(unsigned long long x, unsigned long long y)
   return x + y;
 }
 
+unsigned long long get_subl(unsigned long long x1, unsigned long long y1)
+{
+  return x1 - y1;
+}
+
 unsigned long long getMemRegion_block_ptr(struct $1004 mr0)
 {
   return 1LLU;
@@ -108,36 +109,16 @@ unsigned long long getMemRegion_block_size(struct $1004 mr2)
   return mr2.$1006;
 }
 
-struct $1004 getMemRegions_bpf_ctx(struct $1007 mrs0)
-{
-  return mrs0.$1008;
-}
-
-struct $1004 getMemRegions_bpf_stk(struct $1007 mrs1)
-{
-  return mrs1.$1009;
-}
-
-struct $1004 getMemRegions_content(struct $1007 mrs2)
-{
-  return mrs2.$1010;
-}
-
-unsigned long long get_subl(unsigned long long x1, unsigned long long y1)
-{
-  return x1 - y1;
-}
-
-unsigned long long check_mem_aux(struct $1004 mr, unsigned long long addr0, unsigned int chunk0)
+unsigned long long check_mem_aux(struct $1004 mr3, unsigned long long addr0, unsigned int chunk0)
 {
   unsigned long long ptr;
   unsigned long long start;
   unsigned long long size;
   unsigned long long lo_ofs;
   unsigned long long hi_ofs;
-  ptr = getMemRegion_block_ptr(mr);
-  start = getMemRegion_start_addr(mr);
-  size = getMemRegion_block_size(mr);
+  ptr = getMemRegion_block_ptr(mr3);
+  start = getMemRegion_start_addr(mr3);
+  size = getMemRegion_block_size(mr3);
   lo_ofs = get_subl(addr0, start);
   hi_ofs = get_addl(lo_ofs, chunk0);
   if (0LLU <= lo_ofs && hi_ofs < size) {
@@ -151,16 +132,18 @@ unsigned long long check_mem_aux(struct $1004 mr, unsigned long long addr0, unsi
   }
 }
 
-unsigned long long check_mem(struct $1007 mrs6, unsigned long long addr1, unsigned int chunk1)
+unsigned long long check_mem(unsigned long long addr1, unsigned int chunk1)
 {
+  struct $1007 mrs4;
   unsigned long long check_mem_ctx;
   unsigned long long check_mem_stk;
   unsigned long long check_mem_content;
-  check_mem_ctx = check_mem_aux(mrs6.$1008, addr1, chunk1);
+  mrs4 = eval_mem_regions();
+  check_mem_ctx = check_mem_aux(mrs4.$1008, addr1, chunk1);
   if (check_mem_ctx == 0LLU) {
-    check_mem_stk = check_mem_aux(mrs6.$1009, addr1, chunk1);
+    check_mem_stk = check_mem_aux(mrs4.$1009, addr1, chunk1);
     if (check_mem_stk == 0LLU) {
-      check_mem_content = check_mem_aux(mrs6.$1010, addr1, chunk1);
+      check_mem_content = check_mem_aux(mrs4.$1010, addr1, chunk1);
       if (check_mem_content == 0LLU) {
         return 0LLU;
       } else {
@@ -174,7 +157,7 @@ unsigned long long check_mem(struct $1007 mrs6, unsigned long long addr1, unsign
   }
 }
 
-void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
+void step(unsigned long long *l0, unsigned long long len0)
 {
   unsigned long long pc;
   unsigned long long ins;
@@ -749,7 +732,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         upd_reg(dst,
                 (unsigned long long) (unsigned int) imm
                   | (unsigned long long) (unsigned int) next_imm << 32LLU);
-        upd_pc(pc + 1LLU);
+        upd_pc_incr();
         upd_flag(0);
         return;
       } else {
@@ -757,7 +740,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 97:
-      check_ldxw = check_mem(mrs, addr_src, 4U);
+      check_ldxw = check_mem(addr_src, 4U);
       if (check_ldxw == 0LLU) {
         upd_flag(-2);
         return;
@@ -768,7 +751,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 105:
-      check_ldxh = check_mem(mrs, addr_src, 2U);
+      check_ldxh = check_mem(addr_src, 2U);
       if (check_ldxh == 0LLU) {
         upd_flag(-2);
         return;
@@ -779,7 +762,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 113:
-      check_ldxb = check_mem(mrs, addr_src, 1U);
+      check_ldxb = check_mem(addr_src, 1U);
       if (check_ldxb == 0LLU) {
         upd_flag(-2);
         return;
@@ -790,7 +773,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 121:
-      check_ldxdw = check_mem(mrs, addr_src, 8U);
+      check_ldxdw = check_mem(addr_src, 8U);
       if (check_ldxdw == 0LLU) {
         upd_flag(-2);
         return;
@@ -801,7 +784,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 98:
-      check_stw = check_mem(mrs, addr_dst, 4U);
+      check_stw = check_mem(addr_dst, 4U);
       if (check_stw == 0LLU) {
         upd_flag(-2);
         return;
@@ -811,7 +794,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 106:
-      check_sth = check_mem(mrs, addr_dst, 2U);
+      check_sth = check_mem(addr_dst, 2U);
       if (check_sth == 0LLU) {
         upd_flag(-2);
         return;
@@ -821,7 +804,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 114:
-      check_stb = check_mem(mrs, addr_dst, 1U);
+      check_stb = check_mem(addr_dst, 1U);
       if (check_stb == 0LLU) {
         upd_flag(-2);
         return;
@@ -831,7 +814,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 122:
-      check_stdw = check_mem(mrs, addr_dst, 8U);
+      check_stdw = check_mem(addr_dst, 8U);
       if (check_stdw == 0LLU) {
         upd_flag(-2);
         return;
@@ -841,7 +824,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 99:
-      check_stxw = check_mem(mrs, addr_dst, 4U);
+      check_stxw = check_mem(addr_dst, 4U);
       if (check_stxw == 0LLU) {
         upd_flag(-2);
         return;
@@ -851,7 +834,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 107:
-      check_stxh = check_mem(mrs, addr_dst, 2U);
+      check_stxh = check_mem(addr_dst, 2U);
       if (check_stxh == 0LLU) {
         upd_flag(-2);
         return;
@@ -861,7 +844,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 115:
-      check_stxb = check_mem(mrs, addr_dst, 1U);
+      check_stxb = check_mem(addr_dst, 1U);
       if (check_stxb == 0LLU) {
         upd_flag(-2);
         return;
@@ -871,7 +854,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
         return;
       }
     case 123:
-      check_stxdw = check_mem(mrs, addr_dst, 8U);
+      check_stxdw = check_mem(addr_dst, 8U);
       if (check_stxdw == 0LLU) {
         upd_flag(-2);
         return;
@@ -890,7 +873,7 @@ void step(unsigned long long *l0, unsigned long long len0, struct $1007 mrs)
   }
 }
 
-void bpf_interpreter_aux(unsigned long long *l1, unsigned long long len1, struct $1007 mrs3, unsigned int fuel1)
+void bpf_interpreter_aux(unsigned long long *l1, unsigned long long len1, unsigned int fuel1)
 {
   unsigned int fuel0;
   unsigned long long pc1;
@@ -902,11 +885,11 @@ void bpf_interpreter_aux(unsigned long long *l1, unsigned long long len1, struct
     fuel0 = fuel1 - 1U;
     pc1 = eval_pc();
     if (pc1 < len1) {
-      step(l1, len1, mrs3);
-      upd_pc(pc1 + 1LLU);
+      step(l1, len1);
+      upd_pc_incr();
       f1 = eval_flag();
       if (f1 == 0) {
-        bpf_interpreter_aux(l1, len1, mrs3, fuel0);
+        bpf_interpreter_aux(l1, len1, fuel0);
         return;
       } else {
         return;
@@ -918,26 +901,19 @@ void bpf_interpreter_aux(unsigned long long *l1, unsigned long long len1, struct
   }
 }
 
-unsigned long long bpf_interpreter(unsigned long long *l2, unsigned long long len2, struct $1007 mrs4, unsigned int fuel2)
+unsigned long long bpf_interpreter(unsigned long long *l2, unsigned long long len2, unsigned int fuel2)
 {
+  struct $1007 mrs5;
   int f2;
-  bpf_interpreter_aux(l2, len2, mrs4, fuel2);
+  mrs5 = eval_mem_regions();
+  upd_reg(1U, mrs5.$1008.$1005);
+  bpf_interpreter_aux(l2, len2, fuel2);
   f2 = eval_flag();
   if (f2 == 1) {
     return eval_reg(0U);
   } else {
     return 0LLU;
   }
-}
-
-unsigned long long test_reg_eval(unsigned int r0, unsigned long long regs0[11])
-{
-  return *(regs0 + r0);
-}
-
-unsigned long long test_reg_upd(unsigned int r1, unsigned long long v, unsigned long long regs1[11])[11]
-{
-  return *(regs1 + r1) = v;
 }
 
 
