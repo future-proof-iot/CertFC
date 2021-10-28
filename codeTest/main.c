@@ -33,7 +33,6 @@ static const unsigned char wrap_around_data[] =
         "tLhgfET2gUGU65V3edSwADMqRttI9JPVz8JS37g5QZj4Ax56rU1u0m0K8YUs57UYG5645n"
         "byNy4yqxu7";
 
-struct $107 memory_regions;
 
 struct fletcher32_ctx {
   const unsigned short * data;
@@ -46,27 +45,27 @@ struct fletcher32_ctx f32_ctx = {
 };
 
 void bpf_add_region_ctx(){
-  memory_regions.$108.$105 = (unsigned long long) &f32_ctx;
-  memory_regions.$108.$106 = sizeof(f32_ctx);
+  memory_regions.$1008.$1005 = (unsigned long long) &f32_ctx;
+  memory_regions.$1008.$1006 = sizeof(f32_ctx);
 }
 
 void bpf_add_region_content(){
-  memory_regions.$110.$105 = (unsigned long long) (const uint16_t *)wrap_around_data;
-  memory_regions.$110.$106 = sizeof(wrap_around_data);
+  memory_regions.$1010.$1005 = (unsigned long long) (const uint16_t *)wrap_around_data;
+  memory_regions.$1010.$1006 = sizeof(wrap_around_data);
 }
 
 /*
 void print_region_ctx(){
-  printf("start_ctx = %lld\n", (const unsigned short *)(uintptr_t) memory_regions.$108.$105);
-  printf("ctx_size = %lld\n", memory_regions.$108.$106);
-  printf("ctx_words = %lld\n", ((unsigned short *)(uintptr_t) (memory_regions.$108.$105+8)));
-  printf("ctx_words = %lld\n", *((unsigned short *)(uintptr_t) (memory_regions.$108.$105+8)));
+  printf("start_ctx = %lld\n", (const unsigned short *)(uintptr_t) memory_regions.$1008.$1005);
+  printf("ctx_size = %lld\n", memory_regions.$1008.$1006);
+  printf("ctx_words = %lld\n", ((unsigned short *)(uintptr_t) (memory_regions.$1008.$1005+8)));
+  printf("ctx_words = %lld\n", *((unsigned short *)(uintptr_t) (memory_regions.$1008.$1005+8)));
 }
 
 void print_region_content(){
-  printf("content_start_addr = %" PRIu64 "\n", memory_regions.$110.$105);
-  printf("content_start = %" PRIu64 "\n", * (const uint16_t *) memory_regions.$110.$105);
-  printf("content_size = %" PRIu64 "\n", memory_regions.$110.$106);
+  printf("content_start_addr = %" PRIu64 "\n", memory_regions.$1010.$1005);
+  printf("content_start = %" PRIu64 "\n", * (const uint16_t *) memory_regions.$1010.$1005);
+  printf("content_size = %" PRIu64 "\n", memory_regions.$1010.$1006);
 }
 
 void print_normal_addr(){
@@ -111,7 +110,7 @@ int main(){
   //print_region_ctx();
   //print_region_content();
   
-  result = bpf_interpreter((unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), memory_regions, 10000);
+  result = bpf_interpreter((unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000);
   
   //printf("pc = %d\n", eval_pc());
   
