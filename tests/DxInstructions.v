@@ -112,28 +112,6 @@ Definition check_mem (addr1: val64_t) (chunk1: memory_chunk) : M val64_t :=
     else
       returnM check_mem_ctx.
 
-
-(*
-Fixpoint check_mem (num: nat) (addr: val) (chunk: memory_chunk) (m: mem): val :=
-  match num with
-  | O => val64_zero (**r 0 *)
-  | S n => 
-    let ptr_i  := list_getnat region_ptr num in
-    let start_addr_i := list_getnat region_start_addr num in
-    let size_i := list_getnat region_size num in
-    let ofs := Val.subl addr start_addr_i in
-    let hi_ofs := Val.addl ofs (Vlong (Int64.repr (size_chunk chunk))) in
-      if (andb (complu_le (Vlong Int64.zero) ofs) (complu_lt hi_ofs size_i)) then
-        if (andb (complu_le ofs (Vlong (Int64.repr (Int64.max_unsigned-(size_chunk chunk)))))
-                 (compl_eq (Vlong (Int64.zero)) (val64_modlu ofs (Vlong (Int64.repr (align_chunk chunk)))))) then
-          Val.addl ptr_i ofs (**how to translate it to `true` *)
-        else
-          val64_zero (**r 0 *)
-      else
-        check_mem n addr chunk m
-  end.*)
-
-
 Definition step (l0: MyListType) (len0: int64_t): M unit :=
   do pc <- eval_pc;
   do ins <- list_get l0 pc;

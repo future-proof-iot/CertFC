@@ -292,24 +292,6 @@ Definition Const_R9 := constant regSymbolType R9 C_U32_9.
 
 Definition Const_R10 := constant regSymbolType R10 C_U32_10.
 
-(** So, the compcert switch_case only supports case based on Some Z? and None corresponds to default!!!
-
-(Csyntax.Sswitch x
-              (Csyntax.LScons (Some 0%Z) r0
-                (Csyntax.LScons None r1
-                  Csyntax.LSnil))
-            )
-where x:Csyntax.expr, (Some 0%Z) <=> expr1, ... None <=> default, r0:Csyntax.statement <=> statement1
-===>
-
-switch (expression) {
-  case expr1: statement1
-  case expr2: statement2
-  ...
-  default: ...
-}
-
-  *)
 Definition regMatchableType :=
   MkMatchableType regCompilableType
     (fun x cases =>

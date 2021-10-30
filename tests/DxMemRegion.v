@@ -10,30 +10,17 @@ From dx.Type Require Import Nat.
 
 Require Import IdentDef CoqIntegers DxIntegers DxValues.
 
-Definition mem_region_type: Ctypes.type := Ctypes.Tstruct mem_region_id Ctypes.noattr.
-
-Definition mem_region_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U64); (size_id, C_U32)] Ctypes.noattr.
-
 Record memory_region : Type := mkmr{
   block_ptr  : val64_t;
   start_addr : val64_t;
   block_size : val64_t;
 }.
 
-Definition mem_regions_type: Ctypes.type := Ctypes.Tstruct mem_regions_id Ctypes.noattr.
-
-Definition mem_regions_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_regions_id Ctypes.Struct [(bpf_ctx_id, mem_region_type); (bpf_stk_id, mem_region_type); (content_id, mem_region_type)] Ctypes.noattr.
-
 Record memory_regions : Type := mkmrs{
   bpf_ctx: memory_region;
   bpf_stk: memory_region;
   content: memory_region;
 }.
-
-Definition mem_regionCompilableType := MkCompilableType memory_region mem_region_type.
-Definition mem_regionsCompilableType := MkCompilableType memory_regions mem_regions_type.
 
 Definition default_memory_region := {|
   block_ptr  := val64_zero;
@@ -46,6 +33,21 @@ Definition default_memory_regions := {|
   bpf_stk := default_memory_region;
   content := default_memory_region;
 |}.
+
+(******************** Dx Related *******************)
+
+Definition mem_region_type: Ctypes.type := Ctypes.Tstruct mem_region_id Ctypes.noattr.
+
+Definition mem_region_def: Ctypes.composite_definition := 
+  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U64); (size_id, C_U32)] Ctypes.noattr.
+
+Definition mem_regions_type: Ctypes.type := Ctypes.Tstruct mem_regions_id Ctypes.noattr.
+
+Definition mem_regions_def: Ctypes.composite_definition := 
+  Ctypes.Composite mem_regions_id Ctypes.Struct [(bpf_ctx_id, mem_region_type); (bpf_stk_id, mem_region_type); (content_id, mem_region_type)] Ctypes.noattr.
+
+Definition mem_regionCompilableType := MkCompilableType memory_region mem_region_type.
+Definition mem_regionsCompilableType := MkCompilableType memory_regions mem_regions_type.
 
 (** Type for mem_region -> val64_t *)
 Definition mem_regionToVal64CompilableSymbolType :=
