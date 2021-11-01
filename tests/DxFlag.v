@@ -26,6 +26,10 @@ Lemma bpf_flag_eq: forall (x y: bpf_flag), {x=y} + {x<>y}.
 Proof.
 decide equality. Defined.
 
+(** flag_eq: flag -> flag -> bool
+  *)
+Definition flag_eq (x y: bpf_flag): bool := if bpf_flag_eq x y then true else false.
+
 (******************** Dx Related *******************)
 
 (** bpf_flag -> sint32_t *)
@@ -51,10 +55,6 @@ Definition Const_BPF_ILLEGAL_DIV         := constant flagSymboalType BPF_ILLEGAL
 Definition Const_BPF_ILLEGAL_SHIFT       := constant flagSymboalType BPF_ILLEGAL_SHIFT C_S32_m10.        (**r = -10,*)
 Definition Const_BPF_ILLEGAL_ALU         := constant flagSymboalType BPF_ILLEGAL_ALU C_S32_m11.          (**r = -11,*)
 Definition Const_BPF_UNDEF_ERROR         := constant flagSymboalType BPF_UNDEF_ERROR C_S32_m12.          (**r = -12,*)
-
-(** flag_eq: flag -> flag -> bool
-  *)
-Definition flag_eq (x y: bpf_flag): bool := if bpf_flag_eq x y then true else false.
 
 Definition flagToflagToboolSymbolType :=
   MkCompilableSymbolType [flagCompilableType; flagCompilableType] (Some boolCompilableType).

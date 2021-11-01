@@ -10,6 +10,14 @@ From dx.Type Require Import Nat.
 
 Require Import CoqIntegers DxIntegers DxValues.
 
+Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
+  Vlong (Int64.repr (size_chunk chunk)).
+
+Definition memory_chunk_to_val64_upbound (chunk: memory_chunk) :=
+  Vlong (Int64.repr (Int64.max_unsigned-(size_chunk chunk))).
+
+(******************** Dx Related *******************)
+
 Definition memoryChunkCompilableType :=
   MkCompilableType memory_chunk C_U32.
 
@@ -23,12 +31,6 @@ Definition Const_Mint16unsigned := constant memoryChunkSymbolType Mint16unsigned
 Definition Const_Mint32 := constant memoryChunkSymbolType Mint32 C_U32_4.
 
 Definition Const_Mint64 := constant memoryChunkSymbolType Mint64 C_U32_8.
-
-Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
-  Vlong (Int64.repr (size_chunk chunk)).
-
-Definition memory_chunk_to_val64_upbound (chunk: memory_chunk) :=
-  Vlong (Int64.repr (Int64.max_unsigned-(size_chunk chunk))).
 
 Definition memoryChunkToval64SymbolType :=
   MkCompilableSymbolType [memoryChunkCompilableType] (Some val64CompilableType).

@@ -1,5 +1,5 @@
 From compcert.cfrontend Require Csyntax Ctypes Cop.
-From compcert.common Require Values Memory.
+From compcert.common Require Import Values Memory AST.
 From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR.
@@ -24,9 +24,9 @@ Definition init_regs_state := {| pc_loc := Integers.Int64.zero; regs_st := init_
 Definition init_state: state := 
   (init_mem, init_regs_state, BPF_OK, default_memory_regions).
 
-Definition eval_pc_tot (st: state): int64_t := pc_loc (snd (fst (fst st))).
+Definition eval_pc (st: state): int64_t := pc_loc (snd (fst (fst st))).
 
-Definition upd_pc_tot (p: int64_t) (st:state): state :=
+Definition upd_pc (p: int64_t) (st:state): state :=
   let m  := fst (fst (fst st)) in
   let rs := snd (fst (fst st)) in
   let f  := snd (fst st) in
@@ -34,7 +34,7 @@ Definition upd_pc_tot (p: int64_t) (st:state): state :=
   let next_rs := {| pc_loc := p; regs_st := regs_st rs; |} in
     (m, next_rs, f, mrs).
 
-Definition upd_pc_incr_tot (st:state): state :=
+Definition upd_pc_incr (st:state): state :=
   let m  := fst (fst (fst st)) in
   let rs := snd (fst (fst st)) in
   let f  := snd (fst st) in
@@ -42,10 +42,10 @@ Definition upd_pc_incr_tot (st:state): state :=
   let next_rs := {| pc_loc := Int64.add (pc_loc rs) Int64.one; regs_st := regs_st rs; |} in
     (m, next_rs, f, mrs).
 
-Definition eval_reg_tot (r: reg) (st:state): val64_t :=
+Definition eval_reg (r: reg) (st:state): val64_t :=
   eval_regmap r (regs_st (snd (fst (fst st)))).
 
-Definition upd_reg_tot (r:reg) (v:val64_t) (st:state): state :=
+Definition upd_reg (r:reg) (v:val64_t) (st:state): state :=
   let m  := fst (fst (fst st)) in
   let rs := snd (fst (fst st)) in
   let f  := snd (fst st) in
@@ -53,21 +53,42 @@ Definition upd_reg_tot (r:reg) (v:val64_t) (st:state): state :=
   let next_rs := {| pc_loc := pc_loc rs; regs_st := upd_regmap r v (regs_st rs); |} in
     (m, next_rs, f, mrs).
 
-Definition eval_flag_tot (st:state): bpf_flag := snd (fst st).
+Definition eval_flag (st:state): bpf_flag := snd (fst st).
 
-Definition upd_flag_tot (f: bpf_flag) (st:state): state :=
+Definition upd_flag (f: bpf_flag) (st:state): state :=
   let m  := fst (fst (fst st)) in
   let rs := snd (fst (fst st)) in
   let mrs:= snd st in
     (m, rs, f, mrs).
 
-Definition eval_mem_regions_tot (st:state): memory_regions := snd st.
+Definition eval_mem_regions (st:state): memory_regions := snd st.
 
-Definition upd_mem_regions_tot (mrs: memory_regions) (st:state): state :=
+Definition upd_mem_regions (mrs: memory_regions) (st:state): state :=
   let m  := fst (fst (fst st)) in
   let rs := snd (fst (fst st)) in
   let f  := snd (fst st) in
     (m, rs, f, mrs).
+
+
+Definition load_mem (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
+  match Mem.loadv chunk (fst (fst (fst st))) ptr with
+  | Some res => res
+  | None => val64_zero
+  end.
+
+Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) (st: state) :=
+  match Mem.storev chunk (fst (fst (fst st))) ptr v with
+  | Some m => m
+  | None => init_mem
+  end.
+
+Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
+  match Mem.storev chunk (fst (fst (fst st))) ptr v with
+  | Some m => m
+  | None => init_mem
+  end.
+
+(******************** Dx Related *******************)
 
 (** Coq2C: state -> 
             struct state {
@@ -81,30 +102,8 @@ Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noat
 Definition state_struct_def: Ctypes.composite_definition := 
   Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_U32); (regmaps_id, C_regmap); (mem_regions_id, mem_regions_type)] Ctypes.noattr.
 
-(*
-Definition regsMatchableType := MkCompilableType regs_state state_struct_type.*)
-
 Definition stateCompilableType := MkCompilableType state state_struct_type.
 
-(*
-(** Type signature: reg -> val64_t -> state -> state
-  *)
-Definition regToVal64ToStateToStateSymbolType :=
-  MkCompilableSymbolType [regCompilableType; val64CompilableType; stateCompilableType] (Some stateCompilableType).
-
-Definition Const_upd_reg_tot :=
-  MkPrimitive regToVal64ToStateToStateSymbolType
-                upd_reg_tot
-                (fun es => match es with
-                           | [r; v; st] => Ok (
-                              Csyntax.Eassign
-                              (Csyntax.Eindex st r C_U64)
-                              (Csyntax.Evalof v C_U64)
-                              C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end). *)
-
 Module Exports.
-  Definition stateCompilableType := stateCompilableType. (*
-  Definition Const_upd_reg_tot := Const_upd_reg_tot.*)
+  Definition stateCompilableType := stateCompilableType.
 End Exports.

@@ -11,8 +11,95 @@ From dx.Type Require Import Bool.
 Require Import CoqIntegers Int16 InfComp.
 
 (******************** UInt8 *******************)
-
 Definition int8_t := byte.
+
+(******************** UInt16 *******************)
+Definition uint16_t := int16.
+
+(******************** SInt16 *******************)
+
+Definition sint16_t := int16.
+
+(******************** UInt32 *******************)
+Definition uint32_t := int.
+
+Definition int32_2  := Int.repr 2.
+Definition int32_3  := Int.repr 3.
+Definition int32_4  := Int.repr 4.
+Definition int32_5  := Int.repr 5.
+Definition int32_6  := Int.repr 6.
+Definition int32_7  := Int.repr 7.
+Definition int32_8  := Int.repr 8.
+Definition int32_9  := Int.repr 9.
+Definition int32_10 := Int.repr 10.
+
+Definition int32_16 := Int.repr 16.
+Definition int32_32 := Int.repr 32.
+Definition int32_64 := Int.repr 64.
+
+(******************** SInt32 *******************)
+Definition sint32_t := int. (**r here we should define two types for C: sint32_t and uint32_t, then we should use those two types to define rbpf functions *)
+
+Definition int32_m2  := Int.repr (-2).
+Definition int32_m3  := Int.repr (-3).
+Definition int32_m4  := Int.repr (-4).
+Definition int32_m5  := Int.repr (-5).
+Definition int32_m6  := Int.repr (-6).
+Definition int32_m7  := Int.repr (-7).
+Definition int32_m8  := Int.repr (-8).
+Definition int32_m9  := Int.repr (-9).
+Definition int32_m10 := Int.repr (-10).
+Definition int32_m11 := Int.repr (-11).
+Definition int32_m12 := Int.repr (-12).
+
+(******************** Int64 *******************)
+Definition int64_t := int64.
+
+Definition int64_2 := Int64.repr 2.
+
+Definition int64_64 := Int64.repr 64.
+
+Definition int64_0x07   := Int64.repr 0x07.
+Definition int64_0x0f   := Int64.repr 0x0f.
+Definition int64_0x87   := Int64.repr 0x87.
+Definition int64_0x04   := Int64.repr 0x04.
+Definition int64_0x0c   := Int64.repr 0x0c.
+Definition int64_0x84   := Int64.repr 0x84.
+Definition int64_0x95   := Int64.repr 0x95.
+
+Definition int64_0xff   := Int64.repr 0xff.
+Definition int64_8      := Int64.repr 8.
+Definition int64_12     := Int64.repr 12.
+Definition int64_32     := Int64.repr 32.
+Definition int64_48     := Int64.repr 48.
+Definition int64_0xfff  := Int64.repr 0xfff.
+Definition int64_0xffff := Int64.repr 0xffff.
+
+Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.
+
+(******************** Int64 Type Casting *******************)
+
+(** int64_to_int8: int64_t -> int8_t
+  *)
+Definition int64_to_int8 (x: int64_t): int8_t := Byte.repr (Int64.unsigned x).
+
+(** sint16_to_uint64: sint16_t -> uint64_t
+  *)
+Definition sint16_to_int64 (x: sint16_t): int64_t := Int64.repr (Int16.signed x).
+
+(** int64_to_sint16: int64_t -> sint16_t
+  *)
+Definition int64_to_sint16 (x: int64_t): sint16_t := Int16.repr (Int64.unsigned x).
+
+(** int64_to_sint32: int64_t -> sint32_t
+  *)
+Definition int64_to_sint32 (x: int64_t): sint32_t := Int.repr (Int64.unsigned x).
+
+
+(******************** Dx Related *******************)
+
+
+(******************** UInt8 *******************)
 
 (** Values only has Vint, so we use Int.zero to replace Byte.zero.
   *)
@@ -27,8 +114,6 @@ Definition int8CompilableType :=
   MkCompilableType int8_t C_U8.
 
 (******************** UInt16 *******************)
-
-Definition uint16_t := int16.
 
 Definition C_U16_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_U16.
@@ -73,9 +158,6 @@ Definition Const_uint16_sub :=
 
 
 (******************** SInt16 *******************)
-
-Definition sint16_t := int16.
-
 Definition C_S16_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_S16.
 
@@ -117,55 +199,7 @@ Definition Const_sint16_sub :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-(******************** Int16 Type Casting *******************)
-
-(** Int16.signed: uint16_t -> sint16_t
-  *)
-(*
-Definition int16_signedSymbolType :=
-  MkCompilableSymbolType [sint16CompilableType] (Some ZCompilableType).
-
-Definition Const_int64_signed :=
-  MkPrimitive int64_signedSymbolType
-                Int64.signed
-                (fun es => match es with
-                           | [e1] => Ok e1
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-(** Int64.unsigned: uint64_t -> uint64_t (do nothing)
-  *)
-
-Definition int64_unsignedSymbolType :=
-  MkCompilableSymbolType [int64CompilableType] (Some ZCompilableType).
-
-Definition Const_int64_unsigned :=
-  MkPrimitive int64_unsignedSymbolType
-                Int64.unsigned
-                (fun es => match es with
-                           | [e1] => Ok e1
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-*)
-
 (******************** UInt32 *******************)
-
-Definition uint32_t := int.
-
-Definition int32_2  := Int.repr 2.
-Definition int32_3  := Int.repr 3.
-Definition int32_4  := Int.repr 4.
-Definition int32_5  := Int.repr 5.
-Definition int32_6  := Int.repr 6.
-Definition int32_7  := Int.repr 7.
-Definition int32_8  := Int.repr 8.
-Definition int32_9  := Int.repr 9.
-Definition int32_10 := Int.repr 10.
-
-Definition int32_16 := Int.repr 16.
-Definition int32_32 := Int.repr 32.
-Definition int32_64 := Int.repr 64.
-
 Definition C_U32_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_U32.
 
@@ -267,38 +301,7 @@ Instance CUINT32 : CType uint32_t := mkCType _ (cType uint32CompilableType).
 Definition Const_uint32_add := ltac: (mkprimitive Int.add (binop_expr Cop.Oadd C_U32)).
 Definition Const_uint32_sub := ltac: (mkprimitive Int.add (binop_expr Cop.Oadd C_U32)).
 
-(*
-Definition Const_uint32_add :=
-  MkPrimitive uint32Touint32Touint32SymbolType
-                Int.add
-                (fun es => match es with
-                           | [e1;e2] => Ok (C_U32_add e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_uint32_sub :=
-  MkPrimitive uint32Touint32Touint32SymbolType
-                Int.sub
-                (fun es => match es with
-                           | [e1;e2] => Ok (C_U32_sub e1 e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).*)
-
 (******************** SInt32 *******************)
-Definition sint32_t := int. (**r here we should define two types for C: sint32_t and uint32_t, then we should use those two types to define rbpf functions *)
-
-Definition int32_m2  := Int.repr (-2).
-Definition int32_m3  := Int.repr (-3).
-Definition int32_m4  := Int.repr (-4).
-Definition int32_m5  := Int.repr (-5).
-Definition int32_m6  := Int.repr (-6).
-Definition int32_m7  := Int.repr (-7).
-Definition int32_m8  := Int.repr (-8).
-Definition int32_m9  := Int.repr (-9).
-Definition int32_m10 := Int.repr (-10).
-Definition int32_m11 := Int.repr (-11).
-Definition int32_m12 := Int.repr (-12).
-
 Definition C_S32_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_S32.
 
@@ -463,38 +466,11 @@ Definition Const_sint32_sub :=
                            end).
 
 (******************** Int64 *******************)
-
-Definition int64_t := int64.
-
 Definition int64CompilableType :=
   MkCompilableType int64_t C_U64.
 
 Definition int64SymbolType :=
   MkCompilableSymbolType nil (Some int64CompilableType).
-
-Open Scope Z_scope.
-
-Definition int64_2 := Int64.repr 2.
-
-Definition int64_64 := Int64.repr 64.
-
-Definition int64_0x07   := Int64.repr 0x07.
-Definition int64_0x0f   := Int64.repr 0x0f.
-Definition int64_0x87   := Int64.repr 0x87.
-Definition int64_0x04   := Int64.repr 0x04.
-Definition int64_0x0c   := Int64.repr 0x0c.
-Definition int64_0x84   := Int64.repr 0x84.
-Definition int64_0x95   := Int64.repr 0x95.
-
-Definition int64_0xff   := Int64.repr 0xff.
-Definition int64_8      := Int64.repr 8.
-Definition int64_12     := Int64.repr 12.
-Definition int64_32     := Int64.repr 32.
-Definition int64_48     := Int64.repr 48.
-Definition int64_0xfff  := Int64.repr 0xfff.
-Definition int64_0xffff := Int64.repr 0xffff.
-
-Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.
 
 Definition C_U64_zero: Csyntax.expr :=
   Csyntax.Eval (Vlong Int64.zero) C_U64.
@@ -558,8 +534,6 @@ Definition Const_int64_0xfff := constant int64SymbolType int64_0xfff C_U64_0xfff
 Definition Const_int64_0xffff := constant int64SymbolType int64_0xffff C_U64_0xffff.
 
 Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.
-
-Close Scope Z_scope.
 
 Definition Const_int64_zero := constant int64SymbolType Int64.zero C_U64_zero.
 
@@ -661,9 +635,6 @@ Definition Const_int64_ltu :=
 
 (******************** Int64 Type Casting *******************)
 
-(** int64_to_int8: int64_t -> int8_t
-  *)
-Definition int64_to_int8 (x: int64_t): int8_t := Byte.repr (Int64.unsigned x).
 Definition int16Toint8SymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some int8CompilableType).
 
@@ -674,11 +645,6 @@ Definition Const_int64_to_int8 :=
                            | [e1] => Ok (Csyntax.Ecast e1 C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end).
-
-
-(** sint16_to_uint64: sint16_t -> uint64_t
-  *)
-Definition sint16_to_int64 (x: sint16_t): int64_t := Int64.repr (Int16.signed x).
 
 Definition sint16Toint64SymbolType :=
   MkCompilableSymbolType [sint16CompilableType] (Some int64CompilableType).
@@ -691,11 +657,6 @@ Definition Const_sint16_to_int64 :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-
-(** int64_to_sint16: int64_t -> sint16_t
-  *)
-Definition int64_to_sint16 (x: int64_t): sint16_t := Int16.repr (Int64.unsigned x).
-
 Definition int64Tosint16SymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some sint16CompilableType).
 
@@ -707,6 +668,16 @@ Definition Const_int64_to_sint16 :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+Definition int64Tosint32SymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some sint32CompilableType).
+
+Definition Const_int64_to_sint32 :=
+  MkPrimitive int64Tosint32SymbolType
+                int64_to_sint32
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
 
 Module Exports.
   Definition int8CompilableType    := int8CompilableType.
@@ -801,4 +772,5 @@ Module Exports.
   Definition Const_int64_to_int8   := Const_int64_to_int8.
   Definition Const_sint16_to_int64 := Const_sint16_to_int64.
   Definition Const_int64_to_sint16 := Const_int64_to_sint16.
+  Definition Const_int64_to_sint32 := Const_int64_to_sint32.
 End Exports.
