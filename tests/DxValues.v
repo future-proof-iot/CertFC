@@ -164,6 +164,9 @@ Definition val_intsoflongu (v: val): val :=
   | Vlong n    => Vint (Int.repr (Int64.unsigned n))
   | _          => Vundef
   end.
+(** sint32_to_vlong: sint32 -> Vlong
+  *)
+Definition sint32_to_vint (v: sint32_t): val := Vint v.
 (** int64_to_vlong: long -> Vlong
   *)
 Definition int64_to_vlong (v: int64): val := Vlong v.
@@ -453,6 +456,17 @@ Definition Const_val64TovalS32 :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+Definition sint32Tosval32SymbolType :=
+  MkCompilableSymbolType [sint32CompilableType] (Some valS32CompilableType).
+
+Definition Const_sint32_to_vint :=
+  MkPrimitive sint32Tosval32SymbolType
+                sint32_to_vint
+                (fun es => match es with
+                           | [e1] => Ok e1
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 Definition int64Toval64SymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some val64CompilableType).
 
@@ -544,13 +558,8 @@ Module Exports.
   Definition Const_sint16_to_vlong  := Const_sint16_to_vlong.
   Definition Const_val64TovalU32    := Const_val64TovalU32.
   Definition Const_val64TovalS32    := Const_val64TovalS32.
-  Definition Const_int64_to_vlong   := Const_int64_to_vlong. (*
-  Definition Const_vlong_to_int64   := Const_vlong_to_int64.
-  Definition Const_sint_to_vint     := Const_sint_to_vint. *)
+  Definition Const_sint32_to_vint   := Const_sint32_to_vint.
+  Definition Const_int64_to_vlong   := Const_int64_to_vlong.
   Definition Const_valS32Toval64    := Const_valS32Toval64.
-  Definition Const_valU32Toval64    := Const_valU32Toval64. (*
-  Definition Const_div64_checking   := Const_div64_checking.
-  Definition Const_div32_checking   := Const_div32_checking.
-  Definition Const_shift64_checking := Const_shift64_checking.
-  Definition Const_shift32_checking := Const_shift32_checking.*)
+  Definition Const_valU32Toval64    := Const_valU32Toval64.
 End Exports.

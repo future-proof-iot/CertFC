@@ -91,6 +91,10 @@ Definition sint16_to_int64 (x: sint16_t): int64_t := Int64.repr (Int16.signed x)
   *)
 Definition int64_to_sint16 (x: int64_t): sint16_t := Int16.repr (Int64.unsigned x).
 
+(** int64_to_sint32: int64_t -> sint32_t
+  *)
+Definition int64_to_sint32 (x: int64_t): sint32_t := Int.repr (Int64.unsigned x).
+
 
 (******************** Dx Related *******************)
 
@@ -664,6 +668,16 @@ Definition Const_int64_to_sint16 :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+Definition int64Tosint32SymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some sint32CompilableType).
+
+Definition Const_int64_to_sint32 :=
+  MkPrimitive int64Tosint32SymbolType
+                int64_to_sint32
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
 
 Module Exports.
   Definition int8CompilableType    := int8CompilableType.
@@ -758,4 +772,5 @@ Module Exports.
   Definition Const_int64_to_int8   := Const_int64_to_int8.
   Definition Const_sint16_to_int64 := Const_sint16_to_int64.
   Definition Const_int64_to_sint16 := Const_int64_to_sint16.
+  Definition Const_int64_to_sint32 := Const_int64_to_sint32.
 End Exports.
