@@ -5,7 +5,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Bool Nat.
 
-Require Import IdentDef CoqIntegers DxIntegers DxValues.
+Require Import IdentDef CoqIntegers DxIntegers DxValues GenMatchable.
 
 From Coq Require Import List ZArith.
 Import ListNotations.
@@ -223,27 +223,28 @@ Definition init_regmap: regmap := {|
   r10_val := val64_zero;
 |}.
 
+Open Scope Z_scope.
 
 Definition z_to_reg (z:Z): reg :=
-  if (Z.eqb z 0%Z) then
+  if (Z.eqb z 0) then
     R0
-  else if (Z.eqb z 1%Z) then
+  else if (Z.eqb z 1) then
     R1
-  else if (Z.eqb z 2%Z) then
+  else if (Z.eqb z 2) then
     R2
-  else if (Z.eqb z 3%Z) then
+  else if (Z.eqb z 3) then
     R3
-  else if (Z.eqb z 4%Z) then
+  else if (Z.eqb z 4) then
     R4
-  else if (Z.eqb z 5%Z) then
+  else if (Z.eqb z 5) then
     R5
-  else if (Z.eqb z 6%Z) then
+  else if (Z.eqb z 6) then
     R6
-  else if (Z.eqb z 7%Z) then
+  else if (Z.eqb z 7) then
     R7
-  else if (Z.eqb z 8%Z) then
+  else if (Z.eqb z 8) then
     R8
-  else if (Z.eqb z 9%Z) then
+  else if (Z.eqb z 9) then
     R9
   else
     R10.
@@ -292,37 +293,39 @@ Definition Const_R9 := constant regSymbolType R9 C_U32_9.
 
 Definition Const_R10 := constant regSymbolType R10 C_U32_10.
 
-Definition regMatchableType :=
-  MkMatchableType regCompilableType
-    (fun x cases =>
-      match cases with
-      | [r0; r1; r2; r3; r4; r5; r6; r7; r8; r9; r10] =>
-        Ok (Csyntax.Sswitch x
-              (Csyntax.LScons (Some 0%Z) r0
-                (Csyntax.LScons (Some 1%Z) r1
-                  (Csyntax.LScons (Some 2%Z) r2
-                    (Csyntax.LScons (Some 3%Z) r3
-                      (Csyntax.LScons (Some 4%Z) r4
-                          Csyntax.LSnil)))))
-            )
-      | _ => Err MatchEncodingFailed
-      end)
-    [[]; []; []; []; []; []; []; []; []; []; []]
-    [[]; []; []; []; []; []; []; []; []; []; []]
-    (fun m A r whenR0 whenR1 whenR2 whenR3 whenR4 whenR5 whenR6 whenR7 whenR8 whenR9 whenR10 =>
-      match r with
-      | R0 => whenR0
-      | R1 => whenR1
-      | R2 => whenR2
-      | R3 => whenR3
-      | R4 => whenR4
-      | R5 => whenR5
-      | R6 => whenR6
-      | R7 => whenR7
-      | R8 => whenR8
-      | R9 => whenR9
-      | R10 => whenR10
-      end).
+Definition reg_eqb (o o' : reg) : bool :=
+  match o , o' with
+  | R0, R0
+  | R1, R1
+  | R2, R2
+  | R3, R3
+  | R4, R4
+  | R5, R5
+  | R6, R6
+  | R7, R7
+  | R8, R8
+  | R9, R9
+  | R10, R10 => true
+  | _, _ => false
+  end.
+
+Definition regMatchableType : MatchableType:=
+  Eval compute in
+ (mkEnumMatchableType
+    regCompilableType  reg_eqb
+    ((R0, 0)
+       :: (R1, 1)
+       :: (R2, 2)
+       :: (R3, 3)
+       :: (R4, 4)
+       :: (R5, 5)
+       :: (R6, 6)
+       :: (R7, 7)
+       :: (R8, 8)
+       :: (R9, 9) :: nil) R10 (fun m A
+=> reg_rect (fun _ => m A))).
+
+Close Scope Z_scope.
 
 Definition int64ToregSymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some regCompilableType).
