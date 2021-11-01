@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Nat.
 
-Require Import CoqIntegers DxIntegers DxValues.
+Require Import CoqIntegers DxIntegers DxValues GenMatchable.
 
 Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
   Vlong (Int64.repr (size_chunk chunk)).
@@ -20,6 +20,31 @@ Definition memory_chunk_to_val64_upbound (chunk: memory_chunk) :=
 
 Definition memoryChunkCompilableType :=
   MkCompilableType memory_chunk C_U32.
+
+Definition memorychunk_eqb (o o' : memory_chunk) : bool :=
+  match o , o' with
+  | Mint8unsigned, Mint8unsigned
+  | Mint16unsigned, Mint16unsigned
+  | Mint32, Mint32
+  | Mint64, Mint64 => true
+  | _, _ => false
+  end.
+
+Open Scope Z_scope.
+Definition memoryChunkMatchableType : MatchableType:=
+  Eval compute in
+ (mkEnumMatchableType
+    memoryChunkCompilableType  memorychunk_eqb
+    ((Mint8unsigned, 8)
+       :: (Mint16unsigned, 16)
+       :: (Mint32, 32)
+       :: (Mint64, 64)
+       :: (Mint8signed, 8)
+       :: (Mint16signed, 16)
+       :: (Mfloat32, 32)
+       :: (Mfloat64, 64)
+       :: (Many32, 32) :: nil) Many64 (fun m A
+=> memory_chunk_rect (fun _ => m A))).
 
 Definition memoryChunkSymbolType :=
   MkCompilableSymbolType nil (Some memoryChunkCompilableType).
@@ -52,7 +77,7 @@ Definition Const_memory_chunk_to_val64_upbound :=
                            end).
 
 Module Exports.
-  Definition memoryChunkCompilableType := memoryChunkCompilableType.
+  Definition memoryChunkMatchableType  := memoryChunkMatchableType.
   Definition Const_Mint8unsigned       := Const_Mint8unsigned.
   Definition Const_Mint16unsigned      := Const_Mint16unsigned.
   Definition Const_Mint32              := Const_Mint32.
