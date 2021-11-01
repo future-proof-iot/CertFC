@@ -52,6 +52,7 @@ GenerateIntermediateRepresentation SymbolIRs
   getMemRegion_block_ptr
   getMemRegion_start_addr
   getMemRegion_block_size
+  is_well_chunk_bool
   check_mem_aux
   check_mem
   step

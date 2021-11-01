@@ -81,28 +81,39 @@ Definition getMemRegion_start_addr (mr1: memory_region): M val64_t := returnM (s
 
 Definition getMemRegion_block_size (mr2: memory_region): M val64_t := returnM (block_size mr2).
 
-Definition check_mem_aux (mr3: memory_region) (addr0: val64_t) (chunk0: memory_chunk): M val64_t :=
-  do ptr <- getMemRegion_block_ptr mr3;
-  do start <- getMemRegion_start_addr mr3;
-  do size <- getMemRegion_block_size mr3;
-  do lo_ofs <- get_subl addr0 start;
-  do hi_ofs <- get_addl lo_ofs (memory_chunk_to_val64 chunk0);
-    if (andb (complu_le val64_zero lo_ofs) (complu_lt hi_ofs size)) then
-      if (andb (complu_le lo_ofs (memory_chunk_to_val64_upbound chunk0))
-               (compl_eq val64_zero (val64_modlu lo_ofs (memory_chunk_to_val64 chunk0)))) then
-        returnM (Val.addl ptr lo_ofs) (**r > 0 *)
-      else
-        returnM val64_zero (**r = 0 *)
+Definition is_well_chunk_bool (chunk0: memory_chunk) : M bool :=
+  match chunk0 with
+  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 => returnM true
+  | _ => returnM false
+  end.
+
+
+Definition check_mem_aux (mr3: memory_region) (addr0: val64_t) (chunk1: memory_chunk): M val64_t :=
+  do well_chunk <- is_well_chunk_bool chunk1;
+    if well_chunk then
+      do ptr <- getMemRegion_block_ptr mr3;
+      do start <- getMemRegion_start_addr mr3;
+      do size <- getMemRegion_block_size mr3;
+      do lo_ofs <- get_subl addr0 start;
+      do hi_ofs <- get_addl lo_ofs (memory_chunk_to_val64 chunk1);
+        if (andb (complu_le val64_zero lo_ofs) (complu_lt hi_ofs size)) then
+          if (andb (complu_le lo_ofs (memory_chunk_to_val64_upbound chunk1))
+                   (compl_eq val64_zero (val64_modlu lo_ofs (memory_chunk_to_val64 chunk1)))) then
+            returnM (Val.addl ptr lo_ofs) (**r > 0 *)
+          else
+            returnM val64_zero (**r = 0 *)
+        else
+          returnM val64_zero
     else
       returnM val64_zero.
 
-Definition check_mem (addr1: val64_t) (chunk1: memory_chunk) : M val64_t :=
+Definition check_mem (addr1: val64_t) (chunk2: memory_chunk) : M val64_t :=
   do mrs4 <- eval_mem_regions;
-  do check_mem_ctx <- check_mem_aux (bpf_ctx mrs4) addr1 chunk1;
+  do check_mem_ctx <- check_mem_aux (bpf_ctx mrs4) addr1 chunk2;
     if compl_eq check_mem_ctx val64_zero then
-      do check_mem_stk <- check_mem_aux (bpf_stk mrs4) addr1 chunk1;
+      do check_mem_stk <- check_mem_aux (bpf_stk mrs4) addr1 chunk2;
         if compl_eq check_mem_stk val64_zero then
-          do check_mem_content <- check_mem_aux (content mrs4) addr1 chunk1;
+          do check_mem_content <- check_mem_aux (content mrs4) addr1 chunk2;
           if compl_eq check_mem_content val64_zero then
             returnM val64_zero
           else
