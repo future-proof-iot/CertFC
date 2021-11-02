@@ -11,10 +11,10 @@ From dx.Type Require Import Nat.
 Require Import CoqIntegers DxIntegers DxValues GenMatchable.
 
 Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
-  Vlong (Int64.repr (size_chunk chunk)).
+  Vlong (Int64.repr (align_chunk chunk)).
 
 Definition memory_chunk_to_val64_upbound (chunk: memory_chunk) :=
-  Vlong (Int64.repr (Int64.max_unsigned-(size_chunk chunk))).
+  Vlong (Int64.repr (Int64.max_unsigned-(align_chunk chunk))).
 
 (******************** Dx Related *******************)
 
