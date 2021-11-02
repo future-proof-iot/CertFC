@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Nat.
 
-Require Import CoqIntegers DxIntegers DxValues GenMatchable.
+Require Import CoqIntegers DxIntegers DxValues.
 
 Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
   Vlong (Int64.repr (align_chunk chunk)).
@@ -21,30 +21,38 @@ Definition memory_chunk_to_val64_upbound (chunk: memory_chunk) :=
 Definition memoryChunkCompilableType :=
   MkCompilableType memory_chunk C_U32.
 
-Definition memorychunk_eqb (o o' : memory_chunk) : bool :=
-  match o , o' with
-  | Mint8unsigned, Mint8unsigned
-  | Mint16unsigned, Mint16unsigned
-  | Mint32, Mint32
-  | Mint64, Mint64 => true
-  | _, _ => false
-  end.
+Definition memoryChunkMatchableType :=
+  MkMatchableType memoryChunkCompilableType
+    (fun x cases =>
+      match cases with
+      | [s8; u8; s16; u16; s32; s64; f32; f64; a32; a64] =>
+        Ok (Csyntax.Sswitch x
+              (Csyntax.LScons (Some 1%Z) u8
+                (Csyntax.LScons (Some 2%Z) u16
+                  (Csyntax.LScons (Some 4%Z) s32
+                    (Csyntax.LScons (Some 8%Z) s64
+                      (Csyntax.LScons None s8
+                      Csyntax.LSnil)))))
+            )
+      | _ => Err MatchEncodingFailed
+      end)
+    [[]; []; []; []; []; []; []; []; []; []]
+    [[]; []; []; []; []; []; []; []; []; []]
+    (fun m A r whenR0 whenR1 whenR2 whenR3 whenR4 whenR5 whenR6 whenR7 whenR8 whenR9 =>
+      match r with
+      | Mint8signed => whenR0
+      | Mint8unsigned => whenR1
+      | Mint16signed => whenR2
+      | Mint16unsigned => whenR3
+      | Mint32 => whenR4
+      | Mint64 => whenR5
+      | Mfloat32 => whenR6
+      | Mfloat64 => whenR7
+      | Many32 => whenR8
+      | Many64 => whenR9
+      end).
 
 Open Scope Z_scope.
-Definition memoryChunkMatchableType : MatchableType:=
-  Eval compute in
- (mkEnumMatchableType
-    memoryChunkCompilableType  memorychunk_eqb
-    ((Mint8unsigned, 8)
-       :: (Mint16unsigned, 16)
-       :: (Mint32, 32)
-       :: (Mint64, 64)
-       :: (Mint8signed, 8)
-       :: (Mint16signed, 16)
-       :: (Mfloat32, 32)
-       :: (Mfloat64, 64)
-       :: (Many32, 32) :: nil) Many64 (fun m A
-=> memory_chunk_rect (fun _ => m A))).
 
 Definition memoryChunkSymbolType :=
   MkCompilableSymbolType nil (Some memoryChunkCompilableType).

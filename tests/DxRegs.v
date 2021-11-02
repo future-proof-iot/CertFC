@@ -5,7 +5,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Bool Nat.
 
-Require Import IdentDef CoqIntegers DxIntegers DxValues GenMatchable.
+Require Import IdentDef CoqIntegers DxIntegers DxValues. (* GenMatchable.*)
 
 From Coq Require Import List ZArith.
 Import ListNotations.
@@ -293,6 +293,7 @@ Definition Const_R9 := constant regSymbolType R9 C_U32_9.
 
 Definition Const_R10 := constant regSymbolType R10 C_U32_10.
 
+(*
 Definition reg_eqb (o o' : reg) : bool :=
   match o , o' with
   | R0, R0
@@ -323,7 +324,7 @@ Definition regMatchableType : MatchableType:=
        :: (R7, 7)
        :: (R8, 8)
        :: (R9, 9) :: nil) R10 (fun m A
-=> reg_rect (fun _ => m A))).
+=> reg_rect (fun _ => m A))).*)
 
 Close Scope Z_scope.
 
@@ -388,21 +389,21 @@ Definition Const_upd_regmap :=
                            end).
 
 Module Exports.
-  Definition regMatchableType := regMatchableType.
-  Definition Const_R0  := Const_R0.
-  Definition Const_R1  := Const_R1.
-  Definition Const_R2  := Const_R2.
-  Definition Const_R3  := Const_R3.
-  Definition Const_R4  := Const_R4.
-  Definition Const_R5  := Const_R5.
-  Definition Const_R6  := Const_R6.
-  Definition Const_R7  := Const_R7.
-  Definition Const_R8  := Const_R8.
-  Definition Const_R9  := Const_R9.
-  Definition Const_R10 := Const_R10.
+  Definition regCompilableType      := regCompilableType.
+  Definition Const_R0               := Const_R0.
+  Definition Const_R1               := Const_R1.
+  Definition Const_R2               := Const_R2.
+  Definition Const_R3               := Const_R3.
+  Definition Const_R4               := Const_R4.
+  Definition Const_R5               := Const_R5.
+  Definition Const_R6               := Const_R6.
+  Definition Const_R7               := Const_R7.
+  Definition Const_R8               := Const_R8.
+  Definition Const_R9               := Const_R9.
+  Definition Const_R10              := Const_R10.
   Definition Const_int64_to_dst_reg := Const_int64_to_dst_reg.
   Definition Const_int64_to_src_reg := Const_int64_to_src_reg.
-  Definition regmapCompilableType := regmapCompilableType.
-  Definition Const_eval_regmap := Const_eval_regmap.
-  Definition Const_upd_regmap  := Const_upd_regmap.
+  Definition regmapCompilableType   := regmapCompilableType.
+  Definition Const_eval_regmap      := Const_eval_regmap.
+  Definition Const_upd_regmap       := Const_upd_regmap.
 End Exports.
