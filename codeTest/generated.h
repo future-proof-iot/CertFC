@@ -81,6 +81,8 @@ extern unsigned long long getMemRegion_start_addr(struct $1004);
 
 extern unsigned long long getMemRegion_block_size(struct $1004);
 
+extern _Bool is_well_chunk_bool(unsigned int);
+
 extern unsigned long long check_mem_aux(struct $1004, unsigned long long, unsigned int);
 
 extern unsigned long long check_mem(unsigned long long, unsigned int);

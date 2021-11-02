@@ -156,21 +156,45 @@ unsigned long long getMemRegion_block_size(struct $1004 mr2)
   return mr2.$1006;
 }
 
-unsigned long long check_mem_aux(struct $1004 mr3, unsigned long long addr0, unsigned int chunk0)
+_Bool is_well_chunk_bool(unsigned int chunk0)
 {
+  switch (chunk0) {
+    case 1:
+      return 1;
+    case 2:
+      return 1;
+    case 4:
+      return 1;
+    case 8:
+      return 1;
+    default:
+      return 0;
+    
+  }
+}
+
+unsigned long long check_mem_aux(struct $1004 mr3, unsigned long long addr0, unsigned int chunk1)
+{
+  _Bool well_chunk;
   unsigned long long ptr;
   unsigned long long start;
   unsigned long long size;
   unsigned long long lo_ofs;
   unsigned long long hi_ofs;
-  ptr = getMemRegion_block_ptr(mr3);
-  start = getMemRegion_start_addr(mr3);
-  size = getMemRegion_block_size(mr3);
-  lo_ofs = get_subl(addr0, start);
-  hi_ofs = get_addl(lo_ofs, chunk0);
-  if (0LLU <= lo_ofs && hi_ofs < size) {
-    if (lo_ofs <= 18446744073709551615LLU - chunk0 && 0LLU == lo_ofs % chunk0) {
-      return ptr + lo_ofs;
+  well_chunk = is_well_chunk_bool(chunk1);
+  if (well_chunk) {
+    ptr = getMemRegion_block_ptr(mr3);
+    start = getMemRegion_start_addr(mr3);
+    size = getMemRegion_block_size(mr3);
+    lo_ofs = get_subl(addr0, start);
+    hi_ofs = get_addl(lo_ofs, chunk1);
+    if (0LLU <= lo_ofs && hi_ofs < size) {
+      if (lo_ofs <= 18446744073709551615LLU - chunk1
+            && 0LLU == lo_ofs % chunk1) {
+        return ptr + lo_ofs;
+      } else {
+        return 0LLU;
+      }
     } else {
       return 0LLU;
     }
@@ -179,18 +203,18 @@ unsigned long long check_mem_aux(struct $1004 mr3, unsigned long long addr0, uns
   }
 }
 
-unsigned long long check_mem(unsigned long long addr1, unsigned int chunk1)
+unsigned long long check_mem(unsigned long long addr1, unsigned int chunk2)
 {
   struct $1007 mrs4;
   unsigned long long check_mem_ctx;
   unsigned long long check_mem_stk;
   unsigned long long check_mem_content;
   mrs4 = eval_mem_regions();
-  check_mem_ctx = check_mem_aux(mrs4.$1008, addr1, chunk1);
+  check_mem_ctx = check_mem_aux(mrs4.$1008, addr1, chunk2);
   if (check_mem_ctx == 0LLU) {
-    check_mem_stk = check_mem_aux(mrs4.$1009, addr1, chunk1);
+    check_mem_stk = check_mem_aux(mrs4.$1009, addr1, chunk2);
     if (check_mem_stk == 0LLU) {
-      check_mem_content = check_mem_aux(mrs4.$1010, addr1, chunk1);
+      check_mem_content = check_mem_aux(mrs4.$1010, addr1, chunk2);
       if (check_mem_content == 0LLU) {
         return 0LLU;
       } else {
