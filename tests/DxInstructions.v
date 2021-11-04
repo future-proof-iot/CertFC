@@ -489,7 +489,7 @@ Definition step (l0: MyListType) (len0: int64_t): M unit :=
     if (Int64.ltu (Int64.add pc Int64.one) len0) then (**r pc+1 < len: pc+1 is less than the length of l *)
       do next_ins <- list_get l0 (Int64.add pc Int64.one);
       do next_imm <- get_immediate next_ins;
-      do _ <- upd_reg dst (Val.or (Val.longofint (sint32_to_vint imm)) (Val.shl  (Val.longofint (sint32_to_vint next_imm)) (int64_to_vlong int64_32)));
+      do _ <- upd_reg dst (Val.or (Val.longofint (sint32_to_vint imm)) (Val.shl  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint int32_32)));
       do _ <- upd_pc_incr;
         upd_flag BPF_OK
     else
