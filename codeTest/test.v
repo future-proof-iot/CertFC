@@ -4,6 +4,7 @@ From dx Require Import ResultMonad IR.
 From Coq Require Import List.
 From compcert Require Import Values Clight Memory.
 Import ListNotations.
+Require Import ZArith.
 
 Definition val64_correct (x v:val) := x = v /\ exists v', Vlong v' = v.
 
@@ -37,6 +38,32 @@ Definition match_arg_list : DList.t (fun x => coqType x -> val -> Prop) Args :=
 (* [match_res] relates the Coq result and the C result *)
 Definition match_res : coqType Res -> val -> Prop := val64_correct.
 
+Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
+    Coqlib.list_norepet_dec eq_dec l = left H ->
+    Coqlib.list_norepet l.
+Proof.
+  intros.
+  auto.
+Qed.
+
+Lemma exists_pair : forall {A B: Type} (x: A * B) a b,
+    (fst x , snd x) = (a,b) ->
+    x = (a,b).
+Proof.
+  destruct x; simpl ; auto.
+Qed.
+
+Lemma store_ok_if_valid :
+      forall m1 chunk b ofs v
+             (V : Mem.valid_access m1 chunk b ofs Writable),
+        Mem.store chunk m1 b ofs v =
+          Some (proj1_sig (Mem.valid_access_store m1 chunk b ofs v V)).
+Proof.
+  intros.
+  destruct (Mem.valid_access_store m1 chunk b ofs v V).
+  simpl. auto.
+Qed.
+
 Lemma correct_function_addl : correct_function p Args Res f fn match_mem match_arg_list match_res.
 Proof.
   constructor.
@@ -44,8 +71,52 @@ Proof.
   - reflexivity.
   - reflexivity.
   - reflexivity.
-  - intros.
-    destruct la.
-
+  - unfold Args.
+    intro.
+    car_cdr.
+    simpl.
+    (** Here, the goal is readable *)
+    intros.
+    (** Here, we know that v = Val.addl (fst c) (fst c0) and m' = m and the trace is empty*)
+    (* We need to do it early or we have problems with existentials *)
+    destruct c as (v,v').
+    destruct c0 as (c0,c0').
+    unfold val64_correct in *.
+    simpl in H.
+    intuition subst. destruct H3 ; subst.
+    destruct H5 ; subst.
+    simpl.
+    eexists. eexists. eexists.
+    repeat split.
+    (* We need to run the program. Some automation is probably possible *)
+    unfold step1.
+    apply Smallstep.plus_star.
+    eapply Smallstep.plus_left';eauto.
+    econstructor ; eauto.
+    (* We build the initial environment *)
+    econstructor;eauto.
+    +
+      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec).
+      reflexivity.
+    + simpl.
+      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec).
+      reflexivity.
+    + simpl.
+      unfold Coqlib.list_disjoint.
+      simpl. intuition congruence.
+    + repeat econstructor; eauto.
+    + reflexivity.
+    +  eapply Smallstep.plus_one.
+      econstructor; eauto.
+       (* We evaluate the expresssions *)
+      econstructor;eauto.
+      econstructor;eauto.
+      reflexivity.
+      econstructor;eauto.
+      reflexivity.
+      Transparent Archi.ptr64.
+      reflexivity.
+      reflexivity.
+      reflexivity.
+    + eexists;reflexivity.
 Qed.
-

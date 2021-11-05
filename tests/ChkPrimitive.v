@@ -441,9 +441,9 @@ Section S.
               | Some (v',st') =>
                 (* We prove that we can reach a return state *)
                 exists v m' t,
-                Star (Clight.semantics1 p) (Callstate  (Ctypes.Internal fn)
+                Star (Clight.semantics2 p) (Callstate  (Ctypes.Internal fn)
                                                  lval  k m) t
-                     (Returnstate v k m') /\
+                     (Returnstate v (call_cont k) m') /\
                 (* The return memory matches the return state *)
                 match_mem st' (globalenv (semantics1 p)) m'
                 /\ (* The return value matches *)
