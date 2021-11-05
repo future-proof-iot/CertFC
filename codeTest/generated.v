@@ -12,7 +12,7 @@ Module Info.
   Definition build_branch := "".
   Definition arch := "x86".
   Definition model := "64".
-  Definition abi := "macos".
+  Definition abi := "standard".
   Definition bitsize := 64.
   Definition big_endian := false.
   Definition source_file := "generated.c".
@@ -26,6 +26,7 @@ Definition __1007 : ident := $"$1007".
 Definition __1008 : ident := $"$1008".
 Definition __1009 : ident := $"$1009".
 Definition __1010 : ident := $"$1010".
+Definition ___builtin_ais_annot : ident := $"__builtin_ais_annot".
 Definition ___builtin_annot : ident := $"__builtin_annot".
 Definition ___builtin_annot_intval : ident := $"__builtin_annot_intval".
 Definition ___builtin_bswap : ident := $"__builtin_bswap".
@@ -88,7 +89,6 @@ Definition ___stringlit_4 : ident := $"__stringlit_4".
 Definition ___stringlit_5 : ident := $"__stringlit_5".
 Definition ___stringlit_6 : ident := $"__stringlit_6".
 Definition ___stringlit_7 : ident := $"__stringlit_7".
-Definition __res : ident := $"_res".
 Definition _addr : ident := $"addr".
 Definition _addr0 : ident := $"addr0".
 Definition _addr1 : ident := $"addr1".
@@ -126,7 +126,6 @@ Definition _data : ident := $"data".
 Definition _dst : ident := $"dst".
 Definition _dst64 : ident := $"dst64".
 Definition _eval_flag : ident := $"eval_flag".
-Definition _eval_mem_regions : ident := $"eval_mem_regions".
 Definition _eval_pc : ident := $"eval_pc".
 Definition _eval_reg : ident := $"eval_reg".
 Definition _f : ident := $"f".
@@ -154,6 +153,10 @@ Definition _i0 : ident := $"i0".
 Definition _i1 : ident := $"i1".
 Definition _idx0 : ident := $"idx0".
 Definition _imm : ident := $"imm".
+Definition _init_memory_region0 : ident := $"init_memory_region0".
+Definition _init_memory_region1 : ident := $"init_memory_region1".
+Definition _init_memory_region2 : ident := $"init_memory_region2".
+Definition _init_memory_regions : ident := $"init_memory_regions".
 Definition _ins : ident := $"ins".
 Definition _ins0 : ident := $"ins0".
 Definition _ins1 : ident := $"ins1".
@@ -175,9 +178,10 @@ Definition _mr0 : ident := $"mr0".
 Definition _mr1 : ident := $"mr1".
 Definition _mr2 : ident := $"mr2".
 Definition _mr3 : ident := $"mr3".
-Definition _mrs : ident := $"mrs".
 Definition _mrs4 : ident := $"mrs4".
 Definition _mrs5 : ident := $"mrs5".
+Definition _mrs6 : ident := $"mrs6".
+Definition _mrs7 : ident := $"mrs7".
 Definition _next_imm : ident := $"next_imm".
 Definition _next_ins : ident := $"next_ins".
 Definition _ofs : ident := $"ofs".
@@ -202,7 +206,6 @@ Definition _sum2 : ident := $"sum2".
 Definition _sumt : ident := $"sumt".
 Definition _tlen : ident := $"tlen".
 Definition _upd_flag : ident := $"upd_flag".
-Definition _upd_mem_regions : ident := $"upd_mem_regions".
 Definition _upd_pc : ident := $"upd_pc".
 Definition _upd_pc_incr : ident := $"upd_pc_incr".
 Definition _upd_reg : ident := $"upd_reg".
@@ -251,13 +254,6 @@ Definition _t'9 : ident := 136%positive.
 Definition v_bpf_flag := {|
   gvar_info := tint;
   gvar_init := (Init_space 4 :: nil);
-  gvar_readonly := false;
-  gvar_volatile := false
-|}.
-
-Definition v_memory_regions := {|
-  gvar_info := (Tstruct __1007 noattr);
-  gvar_init := (Init_space 48 :: nil);
   gvar_readonly := false;
   gvar_volatile := false
 |}.
@@ -365,37 +361,6 @@ Definition f_upd_flag := {|
   fn_temps := nil;
   fn_body :=
 (Ssequence (Sassign (Evar _bpf_flag tint) (Etempvar _f tint)) (Sreturn None))
-|}.
-
-Definition f_eval_mem_regions := {|
-  fn_return := tvoid;
-  fn_callconv := {|cc_vararg:=None; cc_unproto:=false; cc_structret:=true|};
-  fn_params := ((__res, (tptr (Tstruct __1007 noattr))) :: nil);
-  fn_vars := nil;
-  fn_temps := nil;
-  fn_body :=
-(Ssequence
-  (Sassign
-    (Ederef (Etempvar __res (tptr (Tstruct __1007 noattr)))
-      (Tstruct __1007 noattr))
-    (Evar _memory_regions (Tstruct __1007 noattr)))
-  (Sreturn None))
-|}.
-
-Definition f_upd_mem_regions := {|
-  fn_return := tvoid;
-  fn_callconv := cc_default;
-  fn_params := ((_mrs, (Tstruct __1007 noattr)) :: nil);
-  fn_vars := ((_mrs, (Tstruct __1007 noattr)) :: nil);
-  fn_temps := nil;
-  fn_body :=
-(Ssequence
-  (Sassign (Evar _mrs (Tstruct __1007 noattr))
-    (Etempvar _mrs (Tstruct __1007 noattr)))
-  (Ssequence
-    (Sassign (Evar _memory_regions (Tstruct __1007 noattr))
-      (Evar _mrs (Tstruct __1007 noattr)))
-    (Sreturn None)))
 |}.
 
 Definition f_load_mem := {|
@@ -605,40 +570,35 @@ Definition f_get_subl := {|
 Definition f_getMemRegion_block_ptr := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_mr0, (Tstruct __1004 noattr)) :: nil);
-  fn_vars := ((_mr0, (Tstruct __1004 noattr)) :: nil);
+  fn_params := ((_mr0, (tptr (Tstruct __1004 noattr))) :: nil);
+  fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Ssequence
-  (Sassign (Evar _mr0 (Tstruct __1004 noattr))
-    (Etempvar _mr0 (Tstruct __1004 noattr)))
-  (Sreturn (Some (Econst_long (Int64.repr 1) tulong))))
+(Sreturn (Some (Econst_long (Int64.repr 1) tulong)))
 |}.
 
 Definition f_getMemRegion_start_addr := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_mr1, (Tstruct __1004 noattr)) :: nil);
-  fn_vars := ((_mr1, (Tstruct __1004 noattr)) :: nil);
+  fn_params := ((_mr1, (tptr (Tstruct __1004 noattr))) :: nil);
+  fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Ssequence
-  (Sassign (Evar _mr1 (Tstruct __1004 noattr))
-    (Etempvar _mr1 (Tstruct __1004 noattr)))
-  (Sreturn (Some (Efield (Evar _mr1 (Tstruct __1004 noattr)) __1005 tulong))))
+(Sreturn (Some (Efield
+                 (Ederef (Etempvar _mr1 (tptr (Tstruct __1004 noattr)))
+                   (Tstruct __1004 noattr)) __1005 tulong)))
 |}.
 
 Definition f_getMemRegion_block_size := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_mr2, (Tstruct __1004 noattr)) :: nil);
-  fn_vars := ((_mr2, (Tstruct __1004 noattr)) :: nil);
+  fn_params := ((_mr2, (tptr (Tstruct __1004 noattr))) :: nil);
+  fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Ssequence
-  (Sassign (Evar _mr2 (Tstruct __1004 noattr))
-    (Etempvar _mr2 (Tstruct __1004 noattr)))
-  (Sreturn (Some (Efield (Evar _mr2 (Tstruct __1004 noattr)) __1006 tulong))))
+(Sreturn (Some (Efield
+                 (Ederef (Etempvar _mr2 (tptr (Tstruct __1004 noattr)))
+                   (Tstruct __1004 noattr)) __1006 tulong)))
 |}.
 
 Definition f_is_well_chunk_bool := {|
@@ -663,9 +623,9 @@ Definition f_is_well_chunk_bool := {|
 Definition f_check_mem_aux := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_mr3, (Tstruct __1004 noattr)) :: (_addr0, tulong) ::
+  fn_params := ((_mr3, (tptr (Tstruct __1004 noattr))) :: (_addr0, tulong) ::
                 (_chunk1, tuint) :: nil);
-  fn_vars := ((_mr3, (Tstruct __1004 noattr)) :: nil);
+  fn_vars := nil;
   fn_temps := ((_well_chunk, tbool) :: (_ptr, tulong) :: (_start, tulong) ::
                (_size, tulong) :: (_lo_ofs, tulong) :: (_hi_ofs, tulong) ::
                (_t'8, tint) :: (_t'7, tint) :: (_t'6, tulong) ::
@@ -673,158 +633,149 @@ Definition f_check_mem_aux := {|
                (_t'2, tulong) :: (_t'1, tbool) :: nil);
   fn_body :=
 (Ssequence
-  (Sassign (Evar _mr3 (Tstruct __1004 noattr))
-    (Etempvar _mr3 (Tstruct __1004 noattr)))
   (Ssequence
+    (Scall (Some _t'1)
+      (Evar _is_well_chunk_bool (Tfunction (Tcons tuint Tnil) tbool
+                                  cc_default))
+      ((Etempvar _chunk1 tuint) :: nil))
+    (Sset _well_chunk (Ecast (Etempvar _t'1 tbool) tbool)))
+  (Sifthenelse (Etempvar _well_chunk tbool)
     (Ssequence
-      (Scall (Some _t'1)
-        (Evar _is_well_chunk_bool (Tfunction (Tcons tuint Tnil) tbool
-                                    cc_default))
-        ((Etempvar _chunk1 tuint) :: nil))
-      (Sset _well_chunk (Ecast (Etempvar _t'1 tbool) tbool)))
-    (Sifthenelse (Etempvar _well_chunk tbool)
+      (Ssequence
+        (Scall (Some _t'2)
+          (Evar _getMemRegion_block_ptr (Tfunction
+                                          (Tcons
+                                            (tptr (Tstruct __1004 noattr))
+                                            Tnil) tulong cc_default))
+          ((Etempvar _mr3 (tptr (Tstruct __1004 noattr))) :: nil))
+        (Sset _ptr (Etempvar _t'2 tulong)))
       (Ssequence
         (Ssequence
-          (Scall (Some _t'2)
-            (Evar _getMemRegion_block_ptr (Tfunction
-                                            (Tcons (Tstruct __1004 noattr)
-                                              Tnil) tulong cc_default))
-            ((Evar _mr3 (Tstruct __1004 noattr)) :: nil))
-          (Sset _ptr (Etempvar _t'2 tulong)))
+          (Scall (Some _t'3)
+            (Evar _getMemRegion_start_addr (Tfunction
+                                             (Tcons
+                                               (tptr (Tstruct __1004 noattr))
+                                               Tnil) tulong cc_default))
+            ((Etempvar _mr3 (tptr (Tstruct __1004 noattr))) :: nil))
+          (Sset _start (Etempvar _t'3 tulong)))
         (Ssequence
           (Ssequence
-            (Scall (Some _t'3)
-              (Evar _getMemRegion_start_addr (Tfunction
-                                               (Tcons (Tstruct __1004 noattr)
+            (Scall (Some _t'4)
+              (Evar _getMemRegion_block_size (Tfunction
+                                               (Tcons
+                                                 (tptr (Tstruct __1004 noattr))
                                                  Tnil) tulong cc_default))
-              ((Evar _mr3 (Tstruct __1004 noattr)) :: nil))
-            (Sset _start (Etempvar _t'3 tulong)))
+              ((Etempvar _mr3 (tptr (Tstruct __1004 noattr))) :: nil))
+            (Sset _size (Etempvar _t'4 tulong)))
           (Ssequence
             (Ssequence
-              (Scall (Some _t'4)
-                (Evar _getMemRegion_block_size (Tfunction
-                                                 (Tcons
-                                                   (Tstruct __1004 noattr)
-                                                   Tnil) tulong cc_default))
-                ((Evar _mr3 (Tstruct __1004 noattr)) :: nil))
-              (Sset _size (Etempvar _t'4 tulong)))
+              (Scall (Some _t'5)
+                (Evar _get_subl (Tfunction (Tcons tulong (Tcons tulong Tnil))
+                                  tulong cc_default))
+                ((Etempvar _addr0 tulong) :: (Etempvar _start tulong) :: nil))
+              (Sset _lo_ofs (Etempvar _t'5 tulong)))
             (Ssequence
               (Ssequence
-                (Scall (Some _t'5)
-                  (Evar _get_subl (Tfunction
+                (Scall (Some _t'6)
+                  (Evar _get_addl (Tfunction
                                     (Tcons tulong (Tcons tulong Tnil)) tulong
                                     cc_default))
-                  ((Etempvar _addr0 tulong) :: (Etempvar _start tulong) ::
+                  ((Etempvar _lo_ofs tulong) :: (Etempvar _chunk1 tuint) ::
                    nil))
-                (Sset _lo_ofs (Etempvar _t'5 tulong)))
+                (Sset _hi_ofs (Etempvar _t'6 tulong)))
               (Ssequence
-                (Ssequence
-                  (Scall (Some _t'6)
-                    (Evar _get_addl (Tfunction
-                                      (Tcons tulong (Tcons tulong Tnil))
-                                      tulong cc_default))
-                    ((Etempvar _lo_ofs tulong) :: (Etempvar _chunk1 tuint) ::
-                     nil))
-                  (Sset _hi_ofs (Etempvar _t'6 tulong)))
-                (Ssequence
-                  (Sifthenelse (Ebinop Ole
-                                 (Econst_long (Int64.repr 0) tulong)
-                                 (Etempvar _lo_ofs tulong) tint)
-                    (Sset _t'8
-                      (Ecast
-                        (Ebinop Olt (Etempvar _hi_ofs tulong)
-                          (Etempvar _size tulong) tint) tbool))
-                    (Sset _t'8 (Econst_int (Int.repr 0) tint)))
-                  (Sifthenelse (Etempvar _t'8 tint)
-                    (Ssequence
-                      (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tulong)
-                                     (Ebinop Osub
-                                       (Econst_long (Int64.repr (-1)) tulong)
-                                       (Etempvar _chunk1 tuint) tulong) tint)
-                        (Sset _t'7
-                          (Ecast
-                            (Ebinop Oeq (Econst_long (Int64.repr 0) tulong)
-                              (Ebinop Omod (Etempvar _lo_ofs tulong)
-                                (Etempvar _chunk1 tuint) tulong) tint) tbool))
-                        (Sset _t'7 (Econst_int (Int.repr 0) tint)))
-                      (Sifthenelse (Etempvar _t'7 tint)
-                        (Sreturn (Some (Ebinop Oadd (Etempvar _ptr tulong)
-                                         (Etempvar _lo_ofs tulong) tulong)))
-                        (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
-                    (Sreturn (Some (Econst_long (Int64.repr 0) tulong))))))))))
-      (Sreturn (Some (Econst_long (Int64.repr 0) tulong))))))
+                (Sifthenelse (Ebinop Ole (Econst_long (Int64.repr 0) tulong)
+                               (Etempvar _lo_ofs tulong) tint)
+                  (Sset _t'8
+                    (Ecast
+                      (Ebinop Olt (Etempvar _hi_ofs tulong)
+                        (Etempvar _size tulong) tint) tbool))
+                  (Sset _t'8 (Econst_int (Int.repr 0) tint)))
+                (Sifthenelse (Etempvar _t'8 tint)
+                  (Ssequence
+                    (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tulong)
+                                   (Ebinop Osub
+                                     (Econst_long (Int64.repr (-1)) tulong)
+                                     (Etempvar _chunk1 tuint) tulong) tint)
+                      (Sset _t'7
+                        (Ecast
+                          (Ebinop Oeq (Econst_long (Int64.repr 0) tulong)
+                            (Ebinop Omod (Etempvar _lo_ofs tulong)
+                              (Etempvar _chunk1 tuint) tulong) tint) tbool))
+                      (Sset _t'7 (Econst_int (Int.repr 0) tint)))
+                    (Sifthenelse (Etempvar _t'7 tint)
+                      (Sreturn (Some (Ebinop Oadd (Etempvar _ptr tulong)
+                                       (Etempvar _lo_ofs tulong) tulong)))
+                      (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
+                  (Sreturn (Some (Econst_long (Int64.repr 0) tulong))))))))))
+    (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
 |}.
 
 Definition f_check_mem := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_addr1, tulong) :: (_chunk2, tuint) :: nil);
-  fn_vars := ((_mrs4, (Tstruct __1007 noattr)) ::
-              (__res, (Tstruct __1007 noattr)) :: nil);
+  fn_params := ((_mrs4, (tptr (Tstruct __1007 noattr))) ::
+                (_addr1, tulong) :: (_chunk2, tuint) :: nil);
+  fn_vars := nil;
   fn_temps := ((_check_mem_ctx, tulong) :: (_check_mem_stk, tulong) ::
                (_check_mem_content, tulong) :: (_t'3, tulong) ::
                (_t'2, tulong) :: (_t'1, tulong) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
-    (Scall None
-      (Evar _eval_mem_regions (Tfunction
-                                (Tcons (tptr (Tstruct __1007 noattr)) Tnil)
-                                tvoid
-                                {|cc_vararg:=None; cc_unproto:=false; cc_structret:=true|}))
-      ((Eaddrof (Evar __res (Tstruct __1007 noattr))
-         (tptr (Tstruct __1007 noattr))) :: nil))
-    (Sassign (Evar _mrs4 (Tstruct __1007 noattr))
-      (Evar __res (Tstruct __1007 noattr))))
-  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _check_mem_aux (Tfunction
+                             (Tcons (tptr (Tstruct __1004 noattr))
+                               (Tcons tulong (Tcons tuint Tnil))) tulong
+                             cc_default))
+      ((Efield
+         (Ederef (Etempvar _mrs4 (tptr (Tstruct __1007 noattr)))
+           (Tstruct __1007 noattr)) __1008 (tptr (Tstruct __1004 noattr))) ::
+       (Etempvar _addr1 tulong) :: (Etempvar _chunk2 tuint) :: nil))
+    (Sset _check_mem_ctx (Etempvar _t'1 tulong)))
+  (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_ctx tulong)
+                 (Econst_long (Int64.repr 0) tulong) tint)
     (Ssequence
-      (Scall (Some _t'1)
-        (Evar _check_mem_aux (Tfunction
-                               (Tcons (Tstruct __1004 noattr)
-                                 (Tcons tulong (Tcons tuint Tnil))) tulong
-                               cc_default))
-        ((Efield (Evar _mrs4 (Tstruct __1007 noattr)) __1008
-           (Tstruct __1004 noattr)) :: (Etempvar _addr1 tulong) ::
-         (Etempvar _chunk2 tuint) :: nil))
-      (Sset _check_mem_ctx (Etempvar _t'1 tulong)))
-    (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_ctx tulong)
-                   (Econst_long (Int64.repr 0) tulong) tint)
       (Ssequence
+        (Scall (Some _t'2)
+          (Evar _check_mem_aux (Tfunction
+                                 (Tcons (tptr (Tstruct __1004 noattr))
+                                   (Tcons tulong (Tcons tuint Tnil))) tulong
+                                 cc_default))
+          ((Efield
+             (Ederef (Etempvar _mrs4 (tptr (Tstruct __1007 noattr)))
+               (Tstruct __1007 noattr)) __1009
+             (tptr (Tstruct __1004 noattr))) :: (Etempvar _addr1 tulong) ::
+           (Etempvar _chunk2 tuint) :: nil))
+        (Sset _check_mem_stk (Etempvar _t'2 tulong)))
+      (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_stk tulong)
+                     (Econst_long (Int64.repr 0) tulong) tint)
         (Ssequence
-          (Scall (Some _t'2)
-            (Evar _check_mem_aux (Tfunction
-                                   (Tcons (Tstruct __1004 noattr)
-                                     (Tcons tulong (Tcons tuint Tnil)))
-                                   tulong cc_default))
-            ((Efield (Evar _mrs4 (Tstruct __1007 noattr)) __1009
-               (Tstruct __1004 noattr)) :: (Etempvar _addr1 tulong) ::
-             (Etempvar _chunk2 tuint) :: nil))
-          (Sset _check_mem_stk (Etempvar _t'2 tulong)))
-        (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_stk tulong)
-                       (Econst_long (Int64.repr 0) tulong) tint)
           (Ssequence
-            (Ssequence
-              (Scall (Some _t'3)
-                (Evar _check_mem_aux (Tfunction
-                                       (Tcons (Tstruct __1004 noattr)
-                                         (Tcons tulong (Tcons tuint Tnil)))
-                                       tulong cc_default))
-                ((Efield (Evar _mrs4 (Tstruct __1007 noattr)) __1010
-                   (Tstruct __1004 noattr)) :: (Etempvar _addr1 tulong) ::
-                 (Etempvar _chunk2 tuint) :: nil))
-              (Sset _check_mem_content (Etempvar _t'3 tulong)))
-            (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_content tulong)
-                           (Econst_long (Int64.repr 0) tulong) tint)
-              (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))
-              (Sreturn (Some (Etempvar _check_mem_content tulong)))))
-          (Sreturn (Some (Etempvar _check_mem_stk tulong)))))
-      (Sreturn (Some (Etempvar _check_mem_ctx tulong))))))
+            (Scall (Some _t'3)
+              (Evar _check_mem_aux (Tfunction
+                                     (Tcons (tptr (Tstruct __1004 noattr))
+                                       (Tcons tulong (Tcons tuint Tnil)))
+                                     tulong cc_default))
+              ((Efield
+                 (Ederef (Etempvar _mrs4 (tptr (Tstruct __1007 noattr)))
+                   (Tstruct __1007 noattr)) __1010
+                 (tptr (Tstruct __1004 noattr))) ::
+               (Etempvar _addr1 tulong) :: (Etempvar _chunk2 tuint) :: nil))
+            (Sset _check_mem_content (Etempvar _t'3 tulong)))
+          (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_content tulong)
+                         (Econst_long (Int64.repr 0) tulong) tint)
+            (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))
+            (Sreturn (Some (Etempvar _check_mem_content tulong)))))
+        (Sreturn (Some (Etempvar _check_mem_stk tulong)))))
+    (Sreturn (Some (Etempvar _check_mem_ctx tulong)))))
 |}.
 
 Definition f_step := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
-  fn_params := ((_l0, (tptr tulong)) :: (_len0, tulong) :: nil);
+  fn_params := ((_mrs5, (tptr (Tstruct __1007 noattr))) ::
+                (_l0, (tptr tulong)) :: (_len0, tulong) :: nil);
   fn_vars := nil;
   fn_temps := ((_pc, tulong) :: (_ins, tulong) :: (_op, tuchar) ::
                (_dst, tuint) :: (_src, tuint) :: (_dst64, tulong) ::
@@ -3927,7 +3878,7 @@ Definition f_step := {|
                                                                     (Etempvar _next_imm tint)
                                                                     tuint)
                                                                     tulong)
-                                                                    (Econst_long (Int64.repr 32) tulong)
+                                                                    (Econst_int (Int.repr 32) tuint)
                                                                     tulong)
                                                                     tulong) ::
                                                                     nil))
@@ -3972,13 +3923,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_src tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_src tulong) ::
                                                                     (Econst_int (Int.repr 4) tuint) ::
                                                                     nil))
                                                                     (Sset _check_ldxw
@@ -4057,13 +4011,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_src tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_src tulong) ::
                                                                     (Econst_int (Int.repr 2) tuint) ::
                                                                     nil))
                                                                     (Sset _check_ldxh
@@ -4142,13 +4099,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_src tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_src tulong) ::
                                                                     (Econst_int (Int.repr 1) tuint) ::
                                                                     nil))
                                                                     (Sset _check_ldxb
@@ -4227,13 +4187,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_src tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_src tulong) ::
                                                                     (Econst_int (Int.repr 8) tuint) ::
                                                                     nil))
                                                                     (Sset _check_ldxdw
@@ -4312,13 +4275,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 4) tuint) ::
                                                                     nil))
                                                                     (Sset _check_stw
@@ -4383,13 +4349,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 2) tuint) ::
                                                                     nil))
                                                                     (Sset _check_sth
@@ -4454,13 +4423,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 1) tuint) ::
                                                                     nil))
                                                                     (Sset _check_stb
@@ -4525,13 +4497,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 8) tuint) ::
                                                                     nil))
                                                                     (Sset _check_stdw
@@ -4596,13 +4571,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 4) tuint) ::
                                                                     nil))
                                                                     (Sset _check_stxw
@@ -4667,13 +4645,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 2) tuint) ::
                                                                     nil))
                                                                     (Sset _check_stxh
@@ -4738,13 +4719,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 1) tuint) ::
                                                                     nil))
                                                                     (Sset _check_stxb
@@ -4809,13 +4793,16 @@ Definition f_step := {|
                                                                     (Evar _check_mem 
                                                                     (Tfunction
                                                                     (Tcons
+                                                                    (tptr (Tstruct __1007 noattr))
+                                                                    (Tcons
                                                                     tulong
                                                                     (Tcons
                                                                     tuint
-                                                                    Tnil))
+                                                                    Tnil)))
                                                                     tulong
                                                                     cc_default))
-                                                                    ((Etempvar _addr_dst tulong) ::
+                                                                    ((Etempvar _mrs5 (tptr (Tstruct __1007 noattr))) ::
+                                                                    (Etempvar _addr_dst tulong) ::
                                                                     (Econst_int (Int.repr 8) tuint) ::
                                                                     nil))
                                                                     (Sset _check_stxdw
@@ -4907,7 +4894,8 @@ Definition f_step := {|
 Definition f_bpf_interpreter_aux := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
-  fn_params := ((_l1, (tptr tulong)) :: (_len1, tulong) :: (_fuel1, tuint) ::
+  fn_params := ((_mrs6, (tptr (Tstruct __1007 noattr))) ::
+                (_l1, (tptr tulong)) :: (_len1, tulong) :: (_fuel1, tuint) ::
                 nil);
   fn_vars := nil;
   fn_temps := ((_fuel0, tuint) :: (_pc1, tulong) :: (_f1, tint) ::
@@ -4933,9 +4921,12 @@ Definition f_bpf_interpreter_aux := {|
                      tint)
         (Ssequence
           (Scall None
-            (Evar _step (Tfunction (Tcons (tptr tulong) (Tcons tulong Tnil))
-                          tvoid cc_default))
-            ((Etempvar _l1 (tptr tulong)) :: (Etempvar _len1 tulong) :: nil))
+            (Evar _step (Tfunction
+                          (Tcons (tptr (Tstruct __1007 noattr))
+                            (Tcons (tptr tulong) (Tcons tulong Tnil))) tvoid
+                          cc_default))
+            ((Etempvar _mrs6 (tptr (Tstruct __1007 noattr))) ::
+             (Etempvar _l1 (tptr tulong)) :: (Etempvar _len1 tulong) :: nil))
           (Ssequence
             (Scall None (Evar _upd_pc_incr (Tfunction Tnil tvoid cc_default))
               nil)
@@ -4949,11 +4940,14 @@ Definition f_bpf_interpreter_aux := {|
                 (Ssequence
                   (Scall None
                     (Evar _bpf_interpreter_aux (Tfunction
-                                                 (Tcons (tptr tulong)
-                                                   (Tcons tulong
-                                                     (Tcons tuint Tnil)))
+                                                 (Tcons
+                                                   (tptr (Tstruct __1007 noattr))
+                                                   (Tcons (tptr tulong)
+                                                     (Tcons tulong
+                                                       (Tcons tuint Tnil))))
                                                  tvoid cc_default))
-                    ((Etempvar _l1 (tptr tulong)) ::
+                    ((Etempvar _mrs6 (tptr (Tstruct __1007 noattr))) ::
+                     (Etempvar _l1 (tptr tulong)) ::
                      (Etempvar _len1 tulong) :: (Etempvar _fuel0 tuint) ::
                      nil))
                   (Sreturn None))
@@ -4968,64 +4962,64 @@ Definition f_bpf_interpreter_aux := {|
 Definition f_bpf_interpreter := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_l2, (tptr tulong)) :: (_len2, tulong) :: (_fuel2, tuint) ::
+  fn_params := ((_mrs7, (tptr (Tstruct __1007 noattr))) ::
+                (_l2, (tptr tulong)) :: (_len2, tulong) :: (_fuel2, tuint) ::
                 nil);
-  fn_vars := ((_mrs5, (Tstruct __1007 noattr)) ::
-              (__res, (Tstruct __1007 noattr)) :: nil);
+  fn_vars := nil;
   fn_temps := ((_f2, tint) :: (_t'2, tulong) :: (_t'1, tint) :: nil);
   fn_body :=
 (Ssequence
+  (Scall None
+    (Evar _upd_reg (Tfunction (Tcons tuint (Tcons tulong Tnil)) tvoid
+                     cc_default))
+    ((Econst_int (Int.repr 1) tuint) ::
+     (Efield
+       (Ederef
+         (Efield
+           (Ederef (Etempvar _mrs7 (tptr (Tstruct __1007 noattr)))
+             (Tstruct __1007 noattr)) __1008 (tptr (Tstruct __1004 noattr)))
+         (Tstruct __1004 noattr)) __1005 tulong) :: nil))
   (Ssequence
     (Scall None
-      (Evar _eval_mem_regions (Tfunction
-                                (Tcons (tptr (Tstruct __1007 noattr)) Tnil)
-                                tvoid
-                                {|cc_vararg:=None; cc_unproto:=false; cc_structret:=true|}))
-      ((Eaddrof (Evar __res (Tstruct __1007 noattr))
-         (tptr (Tstruct __1007 noattr))) :: nil))
-    (Sassign (Evar _mrs5 (Tstruct __1007 noattr))
-      (Evar __res (Tstruct __1007 noattr))))
-  (Ssequence
-    (Scall None
-      (Evar _upd_reg (Tfunction (Tcons tuint (Tcons tulong Tnil)) tvoid
-                       cc_default))
-      ((Econst_int (Int.repr 1) tuint) ::
-       (Efield
-         (Efield (Evar _mrs5 (Tstruct __1007 noattr)) __1008
-           (Tstruct __1004 noattr)) __1005 tulong) :: nil))
-    (Ssequence
-      (Scall None
-        (Evar _bpf_interpreter_aux (Tfunction
+      (Evar _bpf_interpreter_aux (Tfunction
+                                   (Tcons (tptr (Tstruct __1007 noattr))
                                      (Tcons (tptr tulong)
-                                       (Tcons tulong (Tcons tuint Tnil)))
-                                     tvoid cc_default))
-        ((Etempvar _l2 (tptr tulong)) :: (Etempvar _len2 tulong) ::
-         (Etempvar _fuel2 tuint) :: nil))
+                                       (Tcons tulong (Tcons tuint Tnil))))
+                                   tvoid cc_default))
+      ((Etempvar _mrs7 (tptr (Tstruct __1007 noattr))) ::
+       (Etempvar _l2 (tptr tulong)) :: (Etempvar _len2 tulong) ::
+       (Etempvar _fuel2 tuint) :: nil))
+    (Ssequence
       (Ssequence
+        (Scall (Some _t'1) (Evar _eval_flag (Tfunction Tnil tint cc_default))
+          nil)
+        (Sset _f2 (Etempvar _t'1 tint)))
+      (Sifthenelse (Ebinop Oeq (Etempvar _f2 tint)
+                     (Econst_int (Int.repr 1) tint) tint)
         (Ssequence
-          (Scall (Some _t'1)
-            (Evar _eval_flag (Tfunction Tnil tint cc_default)) nil)
-          (Sset _f2 (Etempvar _t'1 tint)))
-        (Sifthenelse (Ebinop Oeq (Etempvar _f2 tint)
-                       (Econst_int (Int.repr 1) tint) tint)
-          (Ssequence
-            (Scall (Some _t'2)
-              (Evar _eval_reg (Tfunction (Tcons tuint Tnil) tulong
-                                cc_default))
-              ((Econst_int (Int.repr 0) tuint) :: nil))
-            (Sreturn (Some (Etempvar _t'2 tulong))))
-          (Sreturn (Some (Econst_long (Int64.repr 0) tulong))))))))
+          (Scall (Some _t'2)
+            (Evar _eval_reg (Tfunction (Tcons tuint Tnil) tulong cc_default))
+            ((Econst_int (Int.repr 0) tuint) :: nil))
+          (Sreturn (Some (Etempvar _t'2 tulong))))
+        (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))))
 |}.
 
 Definition composites : list composite_definition :=
 (Composite __1004 Struct ((__1005, tulong) :: (__1006, tulong) :: nil) noattr ::
  Composite __1007 Struct
-   ((__1008, (Tstruct __1004 noattr)) :: (__1009, (Tstruct __1004 noattr)) ::
-    (__1010, (Tstruct __1004 noattr)) :: nil)
+   ((__1008, (tptr (Tstruct __1004 noattr))) ::
+    (__1009, (tptr (Tstruct __1004 noattr))) ::
+    (__1010, (tptr (Tstruct __1004 noattr))) :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=
-((___builtin_bswap64,
+((___builtin_ais_annot,
+   Gfun(External (EF_builtin "__builtin_ais_annot"
+                   (mksignature (AST.Tlong :: nil) AST.Tvoid
+                     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+     (Tcons (tptr tschar) Tnil) tvoid
+     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
+ (___builtin_bswap64,
    Gfun(External (EF_builtin "__builtin_bswap64"
                    (mksignature (AST.Tlong :: nil) AST.Tlong cc_default))
      (Tcons tulong Tnil) tulong cc_default)) ::
@@ -5286,17 +5280,14 @@ Definition global_definitions : list (ident * globdef fundef type) :=
                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
      (Tcons tint Tnil) tvoid
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
- (_bpf_flag, Gvar v_bpf_flag) :: (_memory_regions, Gvar v_memory_regions) ::
- (_state_pc, Gvar v_state_pc) :: (_regsmap, Gvar v_regsmap) ::
- (_eval_pc, Gfun(Internal f_eval_pc)) ::
+ (_bpf_flag, Gvar v_bpf_flag) :: (_state_pc, Gvar v_state_pc) ::
+ (_regsmap, Gvar v_regsmap) :: (_eval_pc, Gfun(Internal f_eval_pc)) ::
  (_upd_pc, Gfun(Internal f_upd_pc)) ::
  (_upd_pc_incr, Gfun(Internal f_upd_pc_incr)) ::
  (_eval_reg, Gfun(Internal f_eval_reg)) ::
  (_upd_reg, Gfun(Internal f_upd_reg)) ::
  (_eval_flag, Gfun(Internal f_eval_flag)) ::
  (_upd_flag, Gfun(Internal f_upd_flag)) ::
- (_eval_mem_regions, Gfun(Internal f_eval_mem_regions)) ::
- (_upd_mem_regions, Gfun(Internal f_upd_mem_regions)) ::
  (_load_mem, Gfun(Internal f_load_mem)) ::
  (_store_mem_reg, Gfun(Internal f_store_mem_reg)) ::
  (_store_mem_imm, Gfun(Internal f_store_mem_imm)) ::
@@ -5324,28 +5315,28 @@ Definition public_idents : list ident :=
  _getMemRegion_start_addr :: _getMemRegion_block_ptr :: _get_subl ::
  _get_addl :: _get_immediate :: _get_offset :: _get_src :: _get_dst ::
  _get_opcode :: _list_get :: _store_mem_imm :: _store_mem_reg :: _load_mem ::
- _upd_mem_regions :: _eval_mem_regions :: _upd_flag :: _eval_flag ::
- _upd_reg :: _eval_reg :: _upd_pc_incr :: _upd_pc :: _eval_pc :: _regsmap ::
- _state_pc :: _memory_regions :: _bpf_flag :: ___builtin_debug ::
- ___builtin_write32_reversed :: ___builtin_write16_reversed ::
- ___builtin_read32_reversed :: ___builtin_read16_reversed ::
- ___builtin_fnmsub :: ___builtin_fnmadd :: ___builtin_fmsub ::
- ___builtin_fmadd :: ___builtin_fmin :: ___builtin_fmax ::
- ___compcert_i64_umulh :: ___compcert_i64_smulh :: ___compcert_i64_sar ::
- ___compcert_i64_shr :: ___compcert_i64_shl :: ___compcert_i64_umod ::
- ___compcert_i64_smod :: ___compcert_i64_udiv :: ___compcert_i64_sdiv ::
- ___compcert_i64_utof :: ___compcert_i64_stof :: ___compcert_i64_utod ::
- ___compcert_i64_stod :: ___compcert_i64_dtou :: ___compcert_i64_dtos ::
- ___builtin_expect :: ___builtin_unreachable :: ___compcert_va_composite ::
- ___compcert_va_float64 :: ___compcert_va_int64 :: ___compcert_va_int32 ::
- ___builtin_va_end :: ___builtin_va_copy :: ___builtin_va_arg ::
- ___builtin_va_start :: ___builtin_membar :: ___builtin_annot_intval ::
- ___builtin_annot :: ___builtin_sel :: ___builtin_memcpy_aligned ::
- ___builtin_sqrt :: ___builtin_fsqrt :: ___builtin_fabsf ::
- ___builtin_fabs :: ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz ::
- ___builtin_clzll :: ___builtin_clzl :: ___builtin_clz ::
- ___builtin_bswap16 :: ___builtin_bswap32 :: ___builtin_bswap ::
- ___builtin_bswap64 :: nil).
+ _upd_flag :: _eval_flag :: _upd_reg :: _eval_reg :: _upd_pc_incr ::
+ _upd_pc :: _eval_pc :: _regsmap :: _state_pc :: _bpf_flag ::
+ ___builtin_debug :: ___builtin_write32_reversed ::
+ ___builtin_write16_reversed :: ___builtin_read32_reversed ::
+ ___builtin_read16_reversed :: ___builtin_fnmsub :: ___builtin_fnmadd ::
+ ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_fmin ::
+ ___builtin_fmax :: ___compcert_i64_umulh :: ___compcert_i64_smulh ::
+ ___compcert_i64_sar :: ___compcert_i64_shr :: ___compcert_i64_shl ::
+ ___compcert_i64_umod :: ___compcert_i64_smod :: ___compcert_i64_udiv ::
+ ___compcert_i64_sdiv :: ___compcert_i64_utof :: ___compcert_i64_stof ::
+ ___compcert_i64_utod :: ___compcert_i64_stod :: ___compcert_i64_dtou ::
+ ___compcert_i64_dtos :: ___builtin_expect :: ___builtin_unreachable ::
+ ___compcert_va_composite :: ___compcert_va_float64 ::
+ ___compcert_va_int64 :: ___compcert_va_int32 :: ___builtin_va_end ::
+ ___builtin_va_copy :: ___builtin_va_arg :: ___builtin_va_start ::
+ ___builtin_membar :: ___builtin_annot_intval :: ___builtin_annot ::
+ ___builtin_sel :: ___builtin_memcpy_aligned :: ___builtin_sqrt ::
+ ___builtin_fsqrt :: ___builtin_fabsf :: ___builtin_fabs ::
+ ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll ::
+ ___builtin_clzl :: ___builtin_clz :: ___builtin_bswap16 ::
+ ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 ::
+ ___builtin_ais_annot :: nil).
 
 Definition prog : Clight.program := 
   mkprogram composites global_definitions public_idents _main Logic.I.

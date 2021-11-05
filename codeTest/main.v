@@ -12,7 +12,7 @@ Module Info.
   Definition build_branch := "".
   Definition arch := "x86".
   Definition model := "64".
-  Definition abi := "macos".
+  Definition abi := "standard".
   Definition bitsize := 64.
   Definition big_endian := false.
   Definition source_file := "main.c".
@@ -26,6 +26,7 @@ Definition __1007 : ident := $"$1007".
 Definition __1008 : ident := $"$1008".
 Definition __1009 : ident := $"$1009".
 Definition __1010 : ident := $"$1010".
+Definition ___builtin_ais_annot : ident := $"__builtin_ais_annot".
 Definition ___builtin_annot : ident := $"__builtin_annot".
 Definition ___builtin_annot_intval : ident := $"__builtin_annot_intval".
 Definition ___builtin_bswap : ident := $"__builtin_bswap".
@@ -98,6 +99,10 @@ Definition _data : ident := $"data".
 Definition _f32_ctx : ident := $"f32_ctx".
 Definition _fletcher32 : ident := $"fletcher32".
 Definition _fletcher32_ctx : ident := $"fletcher32_ctx".
+Definition _init_memory_region0 : ident := $"init_memory_region0".
+Definition _init_memory_region1 : ident := $"init_memory_region1".
+Definition _init_memory_region2 : ident := $"init_memory_region2".
+Definition _init_memory_regions : ident := $"init_memory_regions".
 Definition _main : ident := $"main".
 Definition _memory_regions : ident := $"memory_regions".
 Definition _printf : ident := $"printf".
@@ -278,13 +283,6 @@ Definition v___stringlit_7 := {|
 Definition v_bpf_flag := {|
   gvar_info := tint;
   gvar_init := (Init_space 4 :: nil);
-  gvar_readonly := false;
-  gvar_volatile := false
-|}.
-
-Definition v_memory_regions := {|
-  gvar_info := (Tstruct __1007 noattr);
-  gvar_init := (Init_space 48 :: nil);
   gvar_readonly := false;
   gvar_volatile := false
 |}.
@@ -863,6 +861,46 @@ Definition v_f32_ctx := {|
   gvar_volatile := false
 |}.
 
+Definition v_init_memory_region0 := {|
+  gvar_info := (Tstruct __1004 noattr);
+  gvar_init := (Init_int64 (Int64.repr 0) :: Init_int64 (Int64.repr 0) ::
+                nil);
+  gvar_readonly := false;
+  gvar_volatile := false
+|}.
+
+Definition v_init_memory_region1 := {|
+  gvar_info := (Tstruct __1004 noattr);
+  gvar_init := (Init_int64 (Int64.repr 0) :: Init_int64 (Int64.repr 0) ::
+                nil);
+  gvar_readonly := false;
+  gvar_volatile := false
+|}.
+
+Definition v_init_memory_region2 := {|
+  gvar_info := (Tstruct __1004 noattr);
+  gvar_init := (Init_int64 (Int64.repr 0) :: Init_int64 (Int64.repr 0) ::
+                nil);
+  gvar_readonly := false;
+  gvar_volatile := false
+|}.
+
+Definition v_init_memory_regions := {|
+  gvar_info := (Tstruct __1007 noattr);
+  gvar_init := (Init_addrof _init_memory_region0 (Ptrofs.repr 0) ::
+                Init_addrof _init_memory_region1 (Ptrofs.repr 0) ::
+                Init_addrof _init_memory_region2 (Ptrofs.repr 0) :: nil);
+  gvar_readonly := false;
+  gvar_volatile := false
+|}.
+
+Definition v_memory_regions := {|
+  gvar_info := (tptr (Tstruct __1007 noattr));
+  gvar_init := (Init_addrof _init_memory_regions (Ptrofs.repr 0) :: nil);
+  gvar_readonly := false;
+  gvar_volatile := false
+|}.
+
 Definition f_bpf_add_region_ctx := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
@@ -873,14 +911,20 @@ Definition f_bpf_add_region_ctx := {|
 (Ssequence
   (Sassign
     (Efield
-      (Efield (Evar _memory_regions (Tstruct __1007 noattr)) __1008
+      (Ederef
+        (Efield
+          (Ederef (Evar _memory_regions (tptr (Tstruct __1007 noattr)))
+            (Tstruct __1007 noattr)) __1008 (tptr (Tstruct __1004 noattr)))
         (Tstruct __1004 noattr)) __1005 tulong)
     (Ecast
       (Eaddrof (Evar _f32_ctx (Tstruct _fletcher32_ctx noattr))
         (tptr (Tstruct _fletcher32_ctx noattr))) tulong))
   (Sassign
     (Efield
-      (Efield (Evar _memory_regions (Tstruct __1007 noattr)) __1008
+      (Ederef
+        (Efield
+          (Ederef (Evar _memory_regions (tptr (Tstruct __1007 noattr)))
+            (Tstruct __1007 noattr)) __1008 (tptr (Tstruct __1004 noattr)))
         (Tstruct __1004 noattr)) __1006 tulong)
     (Esizeof (Tstruct _fletcher32_ctx noattr) tulong)))
 |}.
@@ -895,14 +939,20 @@ Definition f_bpf_add_region_content := {|
 (Ssequence
   (Sassign
     (Efield
-      (Efield (Evar _memory_regions (Tstruct __1007 noattr)) __1010
+      (Ederef
+        (Efield
+          (Ederef (Evar _memory_regions (tptr (Tstruct __1007 noattr)))
+            (Tstruct __1007 noattr)) __1010 (tptr (Tstruct __1004 noattr)))
         (Tstruct __1004 noattr)) __1005 tulong)
     (Ecast
       (Ecast (Evar _wrap_around_data (tarray tuchar 361)) (tptr tushort))
       tulong))
   (Sassign
     (Efield
-      (Efield (Evar _memory_regions (Tstruct __1007 noattr)) __1010
+      (Ederef
+        (Efield
+          (Ederef (Evar _memory_regions (tptr (Tstruct __1007 noattr)))
+            (Tstruct __1007 noattr)) __1010 (tptr (Tstruct __1004 noattr)))
         (Tstruct __1004 noattr)) __1006 tulong)
     (Esizeof (tarray tuchar 361) tulong)))
 |}.
@@ -965,11 +1015,14 @@ Definition f_main := {|
                     (Ssequence
                       (Scall (Some _t'2)
                         (Evar _bpf_interpreter (Tfunction
-                                                 (Tcons (tptr tulong)
-                                                   (Tcons tulong
-                                                     (Tcons tuint Tnil)))
+                                                 (Tcons
+                                                   (tptr (Tstruct __1007 noattr))
+                                                   (Tcons (tptr tulong)
+                                                     (Tcons tulong
+                                                       (Tcons tuint Tnil))))
                                                  tulong cc_default))
-                        ((Ecast
+                        ((Evar _memory_regions (tptr (Tstruct __1007 noattr))) ::
+                         (Ecast
                            (Evar _bpf_fletcher32_bpf_bin (tarray tuchar 520))
                            (tptr tulong)) ::
                          (Esizeof (tarray tuchar 520) tulong) ::
@@ -995,8 +1048,9 @@ Definition f_main := {|
 Definition composites : list composite_definition :=
 (Composite __1004 Struct ((__1005, tulong) :: (__1006, tulong) :: nil) noattr ::
  Composite __1007 Struct
-   ((__1008, (Tstruct __1004 noattr)) :: (__1009, (Tstruct __1004 noattr)) ::
-    (__1010, (Tstruct __1004 noattr)) :: nil)
+   ((__1008, (tptr (Tstruct __1004 noattr))) ::
+    (__1009, (tptr (Tstruct __1004 noattr))) ::
+    (__1010, (tptr (Tstruct __1004 noattr))) :: nil)
    noattr ::
  Composite _fletcher32_ctx Struct
    ((_data, (tptr tushort)) :: (_words, tuint) :: nil)
@@ -1010,6 +1064,12 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (___stringlit_5, Gvar v___stringlit_5) ::
  (___stringlit_6, Gvar v___stringlit_6) ::
  (___stringlit_7, Gvar v___stringlit_7) ::
+ (___builtin_ais_annot,
+   Gfun(External (EF_builtin "__builtin_ais_annot"
+                   (mksignature (AST.Tlong :: nil) AST.Tvoid
+                     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+     (Tcons (tptr tschar) Tnil) tvoid
+     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
  (___builtin_bswap64,
    Gfun(External (EF_builtin "__builtin_bswap64"
                    (mksignature (AST.Tlong :: nil) AST.Tlong cc_default))
@@ -1277,28 +1337,35 @@ Definition global_definitions : list (ident * globdef fundef type) :=
                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
      (Tcons (tptr tschar) Tnil) tint
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
- (_bpf_flag, Gvar v_bpf_flag) :: (_memory_regions, Gvar v_memory_regions) ::
- (_state_pc, Gvar v_state_pc) :: (_regsmap, Gvar v_regsmap) ::
+ (_bpf_flag, Gvar v_bpf_flag) :: (_state_pc, Gvar v_state_pc) ::
+ (_regsmap, Gvar v_regsmap) ::
  (_bpf_interpreter,
    Gfun(External (EF_external "bpf_interpreter"
-                   (mksignature (AST.Tlong :: AST.Tlong :: AST.Tint :: nil)
+                   (mksignature
+                     (AST.Tlong :: AST.Tlong :: AST.Tlong :: AST.Tint :: nil)
                      AST.Tlong cc_default))
-     (Tcons (tptr tulong) (Tcons tulong (Tcons tuint Tnil))) tulong
+     (Tcons (tptr (Tstruct __1007 noattr))
+       (Tcons (tptr tulong) (Tcons tulong (Tcons tuint Tnil)))) tulong
      cc_default)) ::
  (_bpf_fletcher32_bpf_bin, Gvar v_bpf_fletcher32_bpf_bin) ::
  (_bpf_fletcher32_bpf_bin_len, Gvar v_bpf_fletcher32_bpf_bin_len) ::
  (_fletcher32, Gfun(Internal f_fletcher32)) ::
  (_wrap_around_data, Gvar v_wrap_around_data) ::
  (_f32_ctx, Gvar v_f32_ctx) ::
+ (_init_memory_region0, Gvar v_init_memory_region0) ::
+ (_init_memory_region1, Gvar v_init_memory_region1) ::
+ (_init_memory_region2, Gvar v_init_memory_region2) ::
+ (_init_memory_regions, Gvar v_init_memory_regions) ::
+ (_memory_regions, Gvar v_memory_regions) ::
  (_bpf_add_region_ctx, Gfun(Internal f_bpf_add_region_ctx)) ::
  (_bpf_add_region_content, Gfun(Internal f_bpf_add_region_content)) ::
  (_main, Gfun(Internal f_main)) :: nil).
 
 Definition public_idents : list ident :=
-(_main :: _bpf_add_region_content :: _bpf_add_region_ctx :: _f32_ctx ::
- _fletcher32 :: _bpf_fletcher32_bpf_bin_len :: _bpf_fletcher32_bpf_bin ::
- _bpf_interpreter :: _regsmap :: _state_pc :: _memory_regions :: _bpf_flag ::
- _printf :: ___builtin_debug :: ___builtin_write32_reversed ::
+(_main :: _bpf_add_region_content :: _bpf_add_region_ctx ::
+ _memory_regions :: _f32_ctx :: _fletcher32 :: _bpf_fletcher32_bpf_bin_len ::
+ _bpf_fletcher32_bpf_bin :: _bpf_interpreter :: _regsmap :: _state_pc ::
+ _bpf_flag :: _printf :: ___builtin_debug :: ___builtin_write32_reversed ::
  ___builtin_write16_reversed :: ___builtin_read32_reversed ::
  ___builtin_read16_reversed :: ___builtin_fnmsub :: ___builtin_fnmadd ::
  ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_fmin ::
@@ -1316,7 +1383,8 @@ Definition public_idents : list ident :=
  ___builtin_fsqrt :: ___builtin_fabsf :: ___builtin_fabs ::
  ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll ::
  ___builtin_clzl :: ___builtin_clz :: ___builtin_bswap16 ::
- ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 :: nil).
+ ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 ::
+ ___builtin_ais_annot :: nil).
 
 Definition prog : Clight.program := 
   mkprogram composites global_definitions public_idents _main Logic.I.
