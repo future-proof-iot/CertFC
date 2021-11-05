@@ -31,14 +31,15 @@ struct memory_region {
   unsigned long long block_size;
 };
  */
+static struct $1004 init_memory_region = {.$1005 = 0LLU, .$1006 = 0LLU }; 
+//static struct $1004 *memory_region = &init_memory_region;
 
 struct $1007 {
-  struct $1004 $1008;
-  struct $1004 $1009;
-  struct $1004 $1010;
+  struct $1004* $1008;
+  struct $1004* $1009;
+  struct $1004* $1010;
 };
 
-struct $1007 memory_regions;
 
 /*
 struct memory_regions {
@@ -75,23 +76,23 @@ extern unsigned long long get_addl(unsigned long long, unsigned long long);
 
 extern unsigned long long get_subl(unsigned long long, unsigned long long);
 
-extern unsigned long long getMemRegion_block_ptr(struct $1004);
+extern unsigned long long getMemRegion_block_ptr(struct $1004 *);
 
-extern unsigned long long getMemRegion_start_addr(struct $1004);
+extern unsigned long long getMemRegion_start_addr(struct $1004 *);
 
-extern unsigned long long getMemRegion_block_size(struct $1004);
+extern unsigned long long getMemRegion_block_size(struct $1004 *);
 
 extern _Bool is_well_chunk_bool(unsigned int);
 
-extern unsigned long long check_mem_aux(struct $1004, unsigned long long, unsigned int);
+extern unsigned long long check_mem_aux(struct $1004 *, unsigned long long, unsigned int);
 
-extern unsigned long long check_mem(unsigned long long, unsigned int);
+extern unsigned long long check_mem(struct $1007 *, unsigned long long, unsigned int);
 
-extern void step(unsigned long long *, unsigned long long);
+extern void step(struct $1007 *, unsigned long long *, unsigned long long);
 
-extern void bpf_interpreter_aux(unsigned long long *, unsigned long long, unsigned int);
+extern void bpf_interpreter_aux(struct $1007 *, unsigned long long *, unsigned long long, unsigned int);
 
-extern unsigned long long bpf_interpreter(unsigned long long *, unsigned long long, unsigned int);
+extern unsigned long long bpf_interpreter(struct $1007 *, unsigned long long *, unsigned long long, unsigned int);
 
 extern unsigned long long eval_pc(void);
 
@@ -107,12 +108,9 @@ extern int eval_flag(void);
 
 extern void upd_flag(int);
 
-extern struct $1007 eval_mem_regions(void);
-
-extern void upd_mem_regions(struct $1007);
-
 extern unsigned long long load_mem(unsigned int, unsigned long long);
 
 extern void store_mem_imm(unsigned int, unsigned long long, int);
 
 extern void store_mem_reg(unsigned int, unsigned long long, unsigned long long);
+
