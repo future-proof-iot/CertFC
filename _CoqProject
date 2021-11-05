@@ -1,2 +1,3 @@
 -R src dx
 -R tests dx.tests
+-R codeTest dx.codeTest
