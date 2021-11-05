@@ -43,15 +43,24 @@ struct fletcher32_ctx f32_ctx = {
   .data = (const unsigned short *) wrap_around_data,
   .words = sizeof(wrap_around_data)/2,
 };
+static struct $1004 init_memory_region0 = {.$1005 = 0LLU, .$1006 = 0LLU }; 
+static struct $1004 init_memory_region1 = {.$1005 = 0LLU, .$1006 = 0LLU }; 
+static struct $1004 init_memory_region2 = {.$1005 = 0LLU, .$1006 = 0LLU }; 
+
+static struct $1007 init_memory_regions = {
+  .$1008 = &init_memory_region0,
+  .$1009 = &init_memory_region1,
+  .$1010 = &init_memory_region2 };
+struct $1007 *memory_regions = &init_memory_regions;
 
 void bpf_add_region_ctx(){
-  memory_regions.$1008.$1005 = (unsigned long long) &f32_ctx;
-  memory_regions.$1008.$1006 = sizeof(f32_ctx);
+  (*(*memory_regions).$1008).$1005 = (unsigned long long) &f32_ctx;
+  (*(*memory_regions).$1008).$1006 = sizeof(f32_ctx);
 }
 
 void bpf_add_region_content(){
-  memory_regions.$1010.$1005 = (unsigned long long) (const uint16_t *)wrap_around_data;
-  memory_regions.$1010.$1006 = sizeof(wrap_around_data);
+  (*(*memory_regions).$1010).$1005 = (unsigned long long) (const uint16_t *)wrap_around_data;
+  (*(*memory_regions).$1010).$1006 = sizeof(wrap_around_data);
 }
 
 /*
@@ -110,7 +119,7 @@ int main(){
   //print_region_ctx();
   //print_region_content();
   
-  result = bpf_interpreter((unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000);
+  result = bpf_interpreter(memory_regions, (unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000);
   
   //printf("pc = %d\n", eval_pc());
   
