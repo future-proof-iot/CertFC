@@ -206,6 +206,8 @@ Definition valU32TovalU32TovalU32SymbolType :=
 
 Instance C_valu32 : CType valu32_t := mkCType _ (cType valU32CompilableType).
 
+Locate binop_expr.
+
 Definition Const_valU32_add := ltac: (mkprimitive Val.add (binop_expr Cop.Oadd C_U32)).
 Definition Const_valU32_sub := ltac: (mkprimitive Val.sub (binop_expr Cop.Osub C_U32)).
 Definition Const_valU32_mul := ltac: (mkprimitive Val.mul (binop_expr Cop.Omul C_U32)).
@@ -227,25 +229,11 @@ Definition Const_valU32_shrs :=
 
 Definition valU32TovalU32ToboolSymbolType :=
   MkCompilableSymbolType [valU32CompilableType; valU32CompilableType] (Some boolCompilableType).
+
 Instance C_bool : CType bool := mkCType _ (cType boolCompilableType).
+
 Definition Const_valU32_ne  := ltac: (mkprimitive compl_ne_32 (binop_expr Cop.One C_U32)).
 Definition Const_valU32_ltu := ltac: (mkprimitive complu_lt_32 (binop_expr Cop.Olt C_U32)).
-(*
-Definition Const_val32_ne :=
-  MkPrimitive valU32TovalU32ToboolSymbolType
-                compl_ne_32
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.One e1 e2 C_U32)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val32u_lt :=
-  MkPrimitive valU32TovalU32ToboolSymbolType
-                complu_lt_32
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_U32)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).*)
 
 (******************** Val2S32 *******************)
 
@@ -323,99 +311,24 @@ Definition Const_val64_xor := ltac: (mkprimitive Val.xorl (binop_expr Cop.Oxor C
 Definition val64Toval64Toval64SymbolType :=
   MkCompilableSymbolType [val64CompilableType; val64CompilableType] (Some val64CompilableType).
 
-Definition Const_val64_shrs :=
-  MkPrimitive val64Toval64Toval64SymbolType
-                Val.shrl
-                (fun es => match es with
-                           | [e1; e2] => Ok (C_U64_shr (Csyntax.Ecast  e1 C_S64) e2)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
+Definition Const_val64_shrs := ltac: (mkprimitive Val.shrl (binop_expr_cast1 Cop.Oshr C_S64 C_U64)).
 
 Definition val64Toval64ToboolSymbolType :=
   MkCompilableSymbolType [val64CompilableType; val64CompilableType] (Some boolCompilableType).
 
 Definition Const_val64_eq := ltac: (mkprimitive compl_eq (binop_expr Cop.Oeq C_U64)).
 Definition Const_val64_ne := ltac: (mkprimitive compl_ne (binop_expr Cop.One C_U64)).
-(*
-Definition Const_val64_eq :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                compl_eq
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oeq e1 e2 C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
 
-Definition Const_val64_ne :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                compl_ne
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.One e1 e2 C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).*)
+Definition Const_val64u_lt := ltac: (mkprimitive complu_lt (binop_expr Cop.Olt C_U64)).
+Definition Const_val64u_le := ltac: (mkprimitive complu_le (binop_expr Cop.Ole C_U64)).
+Definition Const_val64u_gt := ltac: (mkprimitive complu_gt (binop_expr Cop.Ogt C_U64)).
+Definition Const_val64u_ge := ltac: (mkprimitive complu_ge (binop_expr Cop.Oge C_U64)).
 
-Definition Const_val64s_lt :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                compl_lt
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
+Definition Const_val64s_lt := ltac: (mkprimitive compl_lt (binop_expr_cast2 Cop.Olt C_S64 C_U64)).
+Definition Const_val64s_le := ltac: (mkprimitive compl_le (binop_expr_cast2 Cop.Ole C_S64 C_U64)).
+Definition Const_val64s_gt := ltac: (mkprimitive compl_gt (binop_expr_cast2 Cop.Ogt C_S64 C_U64)).
+Definition Const_val64s_ge := ltac: (mkprimitive compl_ge (binop_expr_cast2 Cop.Oge C_S64 C_U64)).
 
-Definition Const_val64s_le :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                compl_le
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ole (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64s_gt :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                compl_gt
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ogt (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64s_ge :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                compl_ge
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oge (Csyntax.Ecast e1 C_S64) (Csyntax.Ecast e2 C_S64) C_S64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64u_lt :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                complu_lt
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64u_le :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                complu_le
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ole e1 e2 C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64u_gt :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                complu_gt
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ogt e1 e2 C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
-
-Definition Const_val64u_ge :=
-  MkPrimitive val64Toval64ToboolSymbolType
-                complu_ge
-                (fun es => match es with
-                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Oge e1 e2 C_U64)
-                           | _       => Err PrimitiveEncodingFailed
-                           end).
 
 Definition Const_complu_set :=
   MkPrimitive val64Toval64ToboolSymbolType
