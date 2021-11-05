@@ -107,8 +107,7 @@ Definition check_mem_aux (mr3: memory_region) (addr0: val64_t) (chunk1: memory_c
     else
       returnM val64_zero.
 
-Definition check_mem (addr1: val64_t) (chunk2: memory_chunk) : M val64_t :=
-  do mrs4 <- eval_mem_regions;
+Definition check_mem (mrs4: memory_regions) (addr1: val64_t) (chunk2: memory_chunk) : M val64_t :=
   do check_mem_ctx <- check_mem_aux (bpf_ctx mrs4) addr1 chunk2;
     if compl_eq check_mem_ctx val64_zero then
       do check_mem_stk <- check_mem_aux (bpf_stk mrs4) addr1 chunk2;
@@ -123,7 +122,7 @@ Definition check_mem (addr1: val64_t) (chunk2: memory_chunk) : M val64_t :=
     else
       returnM check_mem_ctx.
 
-Definition step (l0: MyListType) (len0: int64_t): M unit :=
+Definition step (mrs5: memory_regions) (l0: MyListType) (len0: int64_t): M unit :=
   do pc <- eval_pc;
   do ins <- list_get l0 pc;
   do op <- get_opcode ins;
@@ -495,7 +494,7 @@ Definition step (l0: MyListType) (len0: int64_t): M unit :=
     else
       upd_flag BPF_ILLEGAL_LEN
   | op_BPF_LDXW      =>
-    do check_ldxw <- check_mem addr_src Mint32;
+    do check_ldxw <- check_mem mrs5 addr_src Mint32;
       if compl_eq check_ldxw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
@@ -503,7 +502,7 @@ Definition step (l0: MyListType) (len0: int64_t): M unit :=
         do _ <- upd_reg dst v_xw;
           upd_flag BPF_OK
   | op_BPF_LDXH      =>
-    do check_ldxh <- check_mem addr_src Mint16unsigned;
+    do check_ldxh <- check_mem mrs5 addr_src Mint16unsigned;
       if compl_eq check_ldxh val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
@@ -511,7 +510,7 @@ Definition step (l0: MyListType) (len0: int64_t): M unit :=
         do _ <- upd_reg dst v_xh;
           upd_flag BPF_OK
   | op_BPF_LDXB      =>
-    do check_ldxb <- check_mem addr_src Mint8unsigned;
+    do check_ldxb <- check_mem mrs5 addr_src Mint8unsigned;
       if compl_eq check_ldxb val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
@@ -519,7 +518,7 @@ Definition step (l0: MyListType) (len0: int64_t): M unit :=
         do _ <- upd_reg dst v_xb;
           upd_flag BPF_OK
   | op_BPF_LDXDW     =>
-    do check_ldxdw <- check_mem addr_src Mint64;
+    do check_ldxdw <- check_mem mrs5 addr_src Mint64;
       if compl_eq check_ldxdw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
@@ -527,56 +526,56 @@ Definition step (l0: MyListType) (len0: int64_t): M unit :=
         do _ <- upd_reg dst v_xdw;
           upd_flag BPF_OK
   | op_BPF_STW       =>
-    do check_stw <- check_mem addr_dst Mint32;
+    do check_stw <- check_mem mrs5 addr_dst Mint32;
       if compl_eq check_stw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) (sint32_to_vint imm);
           upd_flag BPF_OK
   | op_BPF_STH       =>
-    do check_sth <- check_mem addr_dst Mint16unsigned;
+    do check_sth <- check_mem mrs5 addr_dst Mint16unsigned;
       if compl_eq check_sth val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (sint32_to_vint imm);
           upd_flag BPF_OK
   | op_BPF_STB       =>
-    do check_stb <- check_mem addr_dst Mint8unsigned;
+    do check_stb <- check_mem mrs5 addr_dst Mint8unsigned;
       if compl_eq check_stb val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) (sint32_to_vint imm);
           upd_flag BPF_OK
   | op_BPF_STDW      =>
-    do check_stdw <- check_mem addr_dst Mint64;
+    do check_stdw <- check_mem mrs5 addr_dst Mint64;
       if compl_eq check_stdw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint64 (Val.addl dst64 (sint16_to_vlong ofs)) (sint32_to_vint imm);
           upd_flag BPF_OK
   | op_BPF_STXW      =>
-    do check_stxw <- check_mem addr_dst Mint32;
+    do check_stxw <- check_mem mrs5 addr_dst Mint32;
       if compl_eq check_stxw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint32 (Val.addl dst64 (sint16_to_vlong ofs)) src64;
           upd_flag BPF_OK
   | op_BPF_STXH      =>
-    do check_stxh <- check_mem addr_dst Mint16unsigned;
+    do check_stxh <- check_mem mrs5 addr_dst Mint16unsigned;
       if compl_eq check_stxh val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint16unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
           upd_flag BPF_OK
   | op_BPF_STXB      =>
-    do check_stxb <- check_mem addr_dst Mint8unsigned;
+    do check_stxb <- check_mem mrs5 addr_dst Mint8unsigned;
       if compl_eq check_stxb val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint8unsigned (Val.addl dst64 (sint16_to_vlong ofs)) src64;
           upd_flag BPF_OK
   | op_BPF_STXDW     =>
-    do check_stxdw <- check_mem addr_dst Mint64;
+    do check_stxdw <- check_mem mrs5 addr_dst Mint64;
       if compl_eq check_stxdw val64_zero then
         upd_flag BPF_ILLEGAL_MEM
       else
@@ -586,27 +585,26 @@ Definition step (l0: MyListType) (len0: int64_t): M unit :=
   | _ =>  upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Fixpoint bpf_interpreter_aux (l1: MyListType) (len1: int64_t) (fuel1: nat) {struct fuel1}: M unit :=
+Fixpoint bpf_interpreter_aux (mrs6: memory_regions) (l1: MyListType) (len1: int64_t) (fuel1: nat) {struct fuel1}: M unit :=
   match fuel1 with
   | O => upd_flag BPF_ILLEGAL_LEN
   | S fuel0 =>
     do pc1 <- eval_pc;
       if Int64.ltu pc1 len1 then (**r pc < len: pc is less than the length of l *)
-        do _ <- step l1 len1;
+        do _ <- step mrs6 l1 len1;
         do _ <- upd_pc_incr;
         do f1 <- eval_flag;
           if flag_eq f1 BPF_OK then
-            bpf_interpreter_aux l1 len1 fuel0
+            bpf_interpreter_aux mrs6 l1 len1 fuel0
           else
             returnM tt
       else
         upd_flag BPF_ILLEGAL_LEN
   end.
 
-Definition bpf_interpreter (l2: MyListType) (len2: int64_t) (fuel2: nat): M val64_t :=
-  do mrs5 <- eval_mem_regions;
-  do _ <- upd_reg R1 (start_addr (bpf_ctx mrs5));
-  do _ <- bpf_interpreter_aux l2 len2 fuel2;
+Definition bpf_interpreter (mrs7: memory_regions) (l2: MyListType) (len2: int64_t) (fuel2: nat): M val64_t :=
+  do _ <- upd_reg R1 (start_addr (bpf_ctx mrs7));
+  do _ <- bpf_interpreter_aux mrs7 l2 len2 fuel2;
   do f2 <- eval_flag;
     if flag_eq f2 BPF_SUCC_RETURN then
       eval_reg R0

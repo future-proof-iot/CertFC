@@ -34,9 +34,9 @@ GenerateIntermediateRepresentation SymbolIRs
   eval_reg
   upd_reg
   eval_flag
-  upd_flag
+  upd_flag (*
   eval_mem_regions
-  upd_mem_regions
+  upd_mem_regions*)
   load_mem
   store_mem_imm
   store_mem_reg
