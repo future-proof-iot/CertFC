@@ -227,7 +227,10 @@ Definition Const_valU32_shrs :=
 
 Definition valU32TovalU32ToboolSymbolType :=
   MkCompilableSymbolType [valU32CompilableType; valU32CompilableType] (Some boolCompilableType).
-
+Instance C_bool : CType bool := mkCType _ (cType boolCompilableType).
+Definition Const_valU32_ne  := ltac: (mkprimitive compl_ne_32 (binop_expr Cop.One C_U32)).
+Definition Const_valU32_ltu := ltac: (mkprimitive complu_lt_32 (binop_expr Cop.Olt C_U32)).
+(*
 Definition Const_val32_ne :=
   MkPrimitive valU32TovalU32ToboolSymbolType
                 compl_ne_32
@@ -242,7 +245,7 @@ Definition Const_val32u_lt :=
                 (fun es => match es with
                            | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_U32)
                            | _       => Err PrimitiveEncodingFailed
-                           end).
+                           end).*)
 
 (******************** Val2S32 *******************)
 
@@ -331,6 +334,9 @@ Definition Const_val64_shrs :=
 Definition val64Toval64ToboolSymbolType :=
   MkCompilableSymbolType [val64CompilableType; val64CompilableType] (Some boolCompilableType).
 
+Definition Const_val64_eq := ltac: (mkprimitive compl_eq (binop_expr Cop.Oeq C_U64)).
+Definition Const_val64_ne := ltac: (mkprimitive compl_ne (binop_expr Cop.One C_U64)).
+(*
 Definition Const_val64_eq :=
   MkPrimitive val64Toval64ToboolSymbolType
                 compl_eq
@@ -345,7 +351,7 @@ Definition Const_val64_ne :=
                 (fun es => match es with
                            | [e1; e2] => Ok (Csyntax.Ebinop Cop.One e1 e2 C_U64)
                            | _       => Err PrimitiveEncodingFailed
-                           end).
+                           end).*)
 
 Definition Const_val64s_lt :=
   MkPrimitive val64Toval64ToboolSymbolType
@@ -520,8 +526,8 @@ Module Exports.
   Definition Const_valU32_mod       := Const_valU32_mod.
   Definition Const_valU32_xor       := Const_valU32_xor.
   Definition Const_valU32_shrs      := Const_valU32_shrs.
-  Definition Const_val32_ne         := Const_val32_ne.
-  Definition Const_val32u_lt        := Const_val32u_lt.
+  Definition Const_valU32_ne        := Const_valU32_ne.
+  Definition Const_valU32_ltu       := Const_valU32_ltu.
   Definition valS32CompilableType   := valS32CompilableType.
   Definition Const_valS32_neg       := Const_valS32_neg.
   Definition Const_valS32_add       := Const_valS32_add.

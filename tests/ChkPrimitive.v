@@ -272,70 +272,183 @@ Definition args_binary_int64_correct : DList.t (fun x => coqType x -> val -> Pro
                              int64CompilableType int64_correct _
                              (@DList.DNil CompilableType _)).
 
-Ltac car_cdr DL :=
-  match type of DL with
-  | @DList.t _ _ (?E :: ?L) =>
-   rewrite (@DList.car_cdr _ _ E L DL) in *;
-  let c := fresh "c" in
-  let d := fresh "d" in
-  set (c:= @DList.car _ _ _ _ DL) in *;
-  set (d:= @DList.cdr _ _ _ _ DL)  in *;
-  clearbody c; clearbody d ; clear DL
+Ltac car_cdr :=
+  repeat match goal with
+  | DL : DList.t _ (?E :: ?L) |- _ =>
+    rewrite (@DList.car_cdr _ _ E L DL) in *;
+    let c := fresh "c" in
+    let d := fresh "d" in
+    set (c:= @DList.car _ _ _ _ DL) in *;
+    set (d:= @DList.cdr _ _ _ _ DL)  in *;
+    clearbody c; clearbody d ; clear DL
+  | DL : DList.t _ nil |- _ =>
+    rewrite (DList.Dnil_nil _ DL) in *; clear DL
+         end.
+
+
+Lemma genv_ex : genv.
+Proof.
+  apply Build_genv.
+  Print Globalenvs.Genv.mkgenv.
+  eapply (@Globalenvs.Genv.mkgenv _ _ nil (Maps.PTree.empty block)
+                                 (Maps.PTree.empty _)
+                                 BinPos.xH
+         ).
+  - intros.
+    rewrite Maps.PTree.gempty in H. discriminate.
+  - intros.
+    rewrite Maps.PTree.gempty in H. discriminate.
+  - intros.
+    rewrite Maps.PTree.gempty in H. discriminate.
+  - apply Maps.PTree.empty.
+Qed.
+
+
+
+
+
+Ltac correctPrimitive_Op OP :=
+  unfold correctPrimitive;
+  cbn;
+  intros;
+  car_cdr;
+  simpl in *;
+  (* Explain that the translation of the Csyntax espression
+     is a Clight expression *)
+  intros v EVAL;
+  unfold eval_Csem in EVAL;
+  destruct EVAL as [e' [Htr Heval]];
+  match goal with
+  | H : _ (fst ?A1) _ /\
+        _ (fst ?A2) (snd _) /\ True |- _ =>
+    let HA1 := fresh "HA1" in
+    let HA2 := fresh "HA2" in
+    destruct H as [HA1 [HA2 _]];
+    assert (e' =
+            (Ebinop OP (Econst_long (fst A1) CoqIntegers.C_U64)
+                    (Econst_long (fst A2) CoqIntegers.C_U64) CoqIntegers.C_U64))
+           by (
+    unfold uniq in Htr;
+    destruct Htr as [Htr1  Htr2];
+    apply Htr2;
+    unfold is_transl_expr;
+    intros;
+    rewrite <- HA1;
+    rewrite <- HA2;
+    simpl;
+    unfold bind2,bind, SimplExpr.ret;
+    simpl; f_equal;
+    apply Axioms.proof_irr
+             );
+    subst; clear Htr;
+  unfold uniq in Heval;
+  destruct Heval as [Heval1 Heval2];
+  symmetry;
+  apply Heval2;
+  apply (EvalExpr_Intro _ _ genv_ex (Maps.PTree.empty _) (Maps.PTree.empty _)
+                        Memory.Mem.empty);
+  repeat econstructor
   end.
 
 
-
 Lemma  Const_int64_add_correct : correctPrimitive
-                                   Const_int64_sub  args_binary_int64_correct int64_correct.
+                                   Const_int64_add args_binary_int64_correct int64_correct.
 Proof.
-  (* Specialise the lemma for our types *)
-  unfold correctPrimitive.
-  cbn.
-  intros.
-  car_cdr la.
-  car_cdr d.
-  rewrite (DList.Dnil_nil _ d0) in *.
-  simpl in *.
-  (* unfold our relation between val and int64 *)
-  unfold int64_correct in *.
-  destruct H as [Harg1 [Harg2 _]].
-  (* Explain that the translation of the Csyntax espression
-     is a Clight expression *)
-  intros.
-  unfold eval_Csem in H.
-  destruct H as [e' [Htr Heval]].
-  assert (e' =
-          (Ebinop Cop.Osub (Econst_long (fst c) CoqIntegers.C_U64)
-                                 (Econst_long (fst c0) CoqIntegers.C_U64) CoqIntegers.C_U64)).
-  {
-    unfold uniq in Htr.
-    destruct Htr.
-    apply H0.
-    unfold is_transl_expr.
-    intros.
-    rewrite <- Harg1.
-    rewrite <- Harg2.
-    simpl.
-    unfold bind2,bind, SimplExpr.ret.
-    simpl. f_equal.
-    apply Axioms.proof_irr.
-  }
-  subst. clear Htr.
-  (* Show that the evaluation is OK *)
-  unfold uniq in Heval.
-  destruct Heval.
-  symmetry.
-  apply H0.
-  econstructor.
-  eapply eval_Ebinop.
-  econstructor. econstructor.
-  reflexivity.
-  (* We need to provide a genv, env, ...
-     any will do *)
-  Unshelve.
-  admit.
-  admit.
-  admit.
-  admit.
+  correctPrimitive_Op Cop.Oadd.
+Qed.
 
-Admitted.
+Lemma  Const_int64_sub_correct : correctPrimitive
+                                   Const_int64_sub args_binary_int64_correct int64_correct.
+Proof.
+  correctPrimitive_Op Cop.Osub.
+Qed.
+
+(*
+
+Lemma  Const_int64_mul_correct : correctPrimitive
+                                   Const_int64_mul args_binary_int64_correct int64_correct.
+Proof.
+  correctPrimitive_Op Cop.Omul.
+Qed.*)
+
+Require Import DxMonad.
+From compcert Require Import Smallstep.
+
+
+
+
+
+Section S.
+  (** The program contains our function of interest [fn] *)
+  Variables p : Clight.program.
+
+  (* [Args,Res] provides the mapping between the Coq and the C types *)
+  Variable Args : list CompilableType.
+  Variable Res : CompilableType.
+
+  (* [f] is a Coq Monadic function with the right type *)
+  Variable f : encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res)).
+
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Variable fn: Clight.function.
+
+  (* [match_mem] related the Coq monadic state and the C memory *)
+  Variable match_mem : stateM -> genv -> Memory.Mem.mem -> Prop.
+
+  (* [match_arg] relates the Coq arguments and the C arguments *)
+  Variable match_arg_list : DList.t (fun x => coqType x -> val -> Prop) Args.
+
+  (* [match_res] relates the Coq result and the C result *)
+  Variable match_res : coqType Res -> val -> Prop.
+
+  Lemma arrow_type_encode' : (arrow_type (List.map coqType Args) (M (coqType Res)) = encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res))).
+  Proof.
+    unfold encodeCompilableSymbolType.
+    simpl. clear.
+    induction Args.
+    - simpl. reflexivity.
+    - simpl.
+      rewrite IHl.
+      reflexivity.
+  Defined.
+
+  Record correct_function  :=
+    mk_correct_function
+      {
+        (** syntactic checks *)
+        fn_return_ok : fn_return fn = cType Res;
+        fn_callconv_ok : fn_callconv fn = AST.mkcallconv None false false;
+        fn_params_ok   : List.map snd (fn_params fn) =
+                         List.map cType Args;
+        fn_temps_ok       : fn_temps fn = nil;
+        (** semantic check *)
+        fn_eval_ok : forall
+            (* la is a list of pairs of arguments both Coq and C *)
+            (la: DList.t (fun x => coqType x * val) Args),
+            (* they satisfy the invariants *)
+            DList.Forall2 (fun (x : CompilableType) (R : coqType x -> val -> Prop) v => R (fst v) (snd v)) match_arg_list la ->
+            (* The C arguments are the second elements of the list la *)
+            let lval :=   DList.list  (fun (x : CompilableType) (tval : coqType x * val) => snd tval) la in
+            (* The Coq arguments are the first elements of the list *)
+            let a  := DList.MapT (fun x => coqType x) (fun (x:CompilableType) v => fst v) la in
+            forall k st m,
+              (* The input state are in relation *)
+              match_mem st (globalenv (semantics1 p)) m ->
+              (* let fa be the Coq result *)
+              let fa := app (r:=M (coqType Res)) (eq_rect_r (fun T : Type => T) f (arrow_type_encode')) a st in
+              match fa with
+              | None => False (* This is not possible because of the invariant *)
+              | Some (v',st') =>
+                (* We prove that we can reach a return state *)
+                exists v m' t,
+                Star (Clight.semantics1 p) (Callstate  (Ctypes.Internal fn)
+                                                 lval  k m) t
+                     (Returnstate v k m') /\
+                (* The return memory matches the return state *)
+                match_mem st' (globalenv (semantics1 p)) m'
+                /\ (* The return value matches *)
+                match_res v' v
+              end
+      }.
+
+End S.
