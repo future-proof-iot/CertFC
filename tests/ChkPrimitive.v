@@ -371,16 +371,28 @@ Proof.
   correctPrimitive_Op Cop.Omul.
 Qed.*)
 
+Lemma arrow_type_encode' :
+  forall  Args Res M,
+  (arrow_type (List.map coqType Args) (M (coqType Res)) = encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res))).
+  Proof.
+    unfold encodeCompilableSymbolType.
+    simpl. intros.
+    induction Args.
+    - simpl. reflexivity.
+    - simpl.
+      rewrite IHArgs.
+      reflexivity.
+  Defined.
+
+
+
 Require Import DxMonad.
 From compcert Require Import Smallstep.
 
 
-
-
-
 Section S.
   (** The program contains our function of interest [fn] *)
-  Variables p : Clight.program.
+  Variable p : Clight.program.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   Variable Args : list CompilableType.
@@ -396,21 +408,10 @@ Section S.
   Variable match_mem : stateM -> genv -> Memory.Mem.mem -> Prop.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Variable match_arg_list : DList.t (fun x => coqType x -> val -> Prop) Args.
+  Variable match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) Args.
 
   (* [match_res] relates the Coq result and the C result *)
-  Variable match_res : coqType Res -> val -> Prop.
-
-  Lemma arrow_type_encode' : (arrow_type (List.map coqType Args) (M (coqType Res)) = encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res))).
-  Proof.
-    unfold encodeCompilableSymbolType.
-    simpl. clear.
-    induction Args.
-    - simpl. reflexivity.
-    - simpl.
-      rewrite IHl.
-      reflexivity.
-  Defined.
+  Variable match_res : coqType Res -> Memory.Mem.mem -> val -> Prop.
 
   Record correct_function  :=
     mk_correct_function
@@ -425,17 +426,17 @@ Section S.
         fn_eval_ok : forall
             (* la is a list of pairs of arguments both Coq and C *)
             (la: DList.t (fun x => coqType x * val) Args),
-            (* they satisfy the invariants *)
-            DList.Forall2 (fun (x : CompilableType) (R : coqType x -> val -> Prop) v => R (fst v) (snd v)) match_arg_list la ->
             (* The C arguments are the second elements of the list la *)
             let lval :=   DList.list  (fun (x : CompilableType) (tval : coqType x * val) => snd tval) la in
             (* The Coq arguments are the first elements of the list *)
             let a  := DList.MapT (fun x => coqType x) (fun (x:CompilableType) v => fst v) la in
             forall k st m,
+              (* they satisfy the invariants *)
+              DList.Forall2 (fun (x : CompilableType) (R : coqType x -> Memory.Mem.mem -> val -> Prop) v => R (fst v) m (snd v)) match_arg_list la ->
               (* The input state are in relation *)
               match_mem st (globalenv (semantics1 p)) m ->
               (* let fa be the Coq result *)
-              let fa := app (r:=M (coqType Res)) (eq_rect_r (fun T : Type => T) f (arrow_type_encode')) a st in
+              let fa := app (r:=M (coqType Res)) (eq_rect_r (fun T : Type => T) f (arrow_type_encode' Args Res M)) a st in
               match fa with
               | None => False (* This is not possible because of the invariant *)
               | Some (v',st') =>
@@ -447,7 +448,7 @@ Section S.
                 (* The return memory matches the return state *)
                 match_mem st' (globalenv (semantics1 p)) m'
                 /\ (* The return value matches *)
-                match_res v' v
+                match_res v' m' v
               end
       }.
 

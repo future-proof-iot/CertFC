@@ -6,9 +6,9 @@ From compcert Require Import Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-Definition val64_correct (x v:val) := x = v /\ exists v', Vlong v' = v.
+Definition val64_correct (x :val) (m: Memory.Mem.mem) (v:val) := x = v /\ exists v', Vlong v' = v.
 
-Definition args_binary_val64_correct : DList.t (fun x => coqType x -> val -> Prop) (compilableSymbolArgTypes val64Toval64Toval64SymbolType) :=
+Definition args_binary_val64_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes val64Toval64Toval64SymbolType) :=
   @DList.DCons _ _ val64CompilableType val64_correct _
                (@DList.DCons _  _
                              val64CompilableType val64_correct _
@@ -32,11 +32,11 @@ Definition match_mem : stateM -> genv -> Memory.Mem.mem -> Prop :=
   fun stm g m => True.
 
 (* [match_arg] relates the Coq arguments and the C arguments *)
-Definition match_arg_list : DList.t (fun x => coqType x -> val -> Prop) Args := 
+Definition match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) Args :=
   args_binary_val64_correct.
 
 (* [match_res] relates the Coq result and the C result *)
-Definition match_res : coqType Res -> val -> Prop := val64_correct.
+Definition match_res : coqType Res -> Memory.Mem.mem -> val -> Prop := val64_correct.
 
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
     Coqlib.list_norepet_dec eq_dec l = left H ->
