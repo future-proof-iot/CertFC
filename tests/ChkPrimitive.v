@@ -416,12 +416,12 @@ Section S.
   Record correct_function  :=
     mk_correct_function
       {
-        (** syntactic checks *)
+        (** syntactic checks *) (*
         fn_return_ok : fn_return fn = cType Res;
         fn_callconv_ok : fn_callconv fn = AST.mkcallconv None false false;
         fn_params_ok   : List.map snd (fn_params fn) =
                          List.map cType Args;
-        fn_temps_ok       : fn_temps fn = nil;
+        fn_temps_ok       : fn_temps fn = nil;*)
         (** semantic check *)
         fn_eval_ok : forall
             (* la is a list of pairs of arguments both Coq and C *)
