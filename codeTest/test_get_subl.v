@@ -14,6 +14,8 @@ Definition args_binary_val64_correct : DList.t (fun x => coqType x -> Memory.Mem
                              val64CompilableType val64_correct _
                              (@DList.DNil CompilableType _)).
 
+Section Get_subl.
+
 (** The program contains our function of interest [fn] *)
 Definition p : Clight.program := prog.
 
@@ -22,19 +24,20 @@ Definition Args : list CompilableType := [val64CompilableType; val64CompilableTy
 Definition Res : CompilableType := val64CompilableType.
 
 (* [f] is a Coq Monadic function with the right type *)
-Definition f : encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res)) := get_addl.
+Definition f : encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res)) := get_subl.
 
 (* [fn] is the Cligth function which has the same behaviour as [f] *)
-Definition fn: Clight.function := f_get_addl.
+Definition fn: Clight.function := f_get_subl.
 
 (* [match_mem] related the Coq monadic state and the C memory *)
-Definition match_mem : stateM -> genv -> Memory.Mem.mem -> Prop :=
+Definition match_mem : stateM -> genv -> Mem.mem -> Prop :=
   fun stm g m =>
     g = globalenv p /\
       (match Globalenvs.Genv.alloc_globals (genv_genv g) (eval_mem stm) global_definitions with
        | None => True
        | Some m' => m' = m
-       end).
+       end)
+.
 
 (* [match_arg] relates the Coq arguments and the C arguments *)
 Definition match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) Args :=
@@ -69,7 +72,7 @@ Proof.
   simpl. auto.
 Qed.
 
-Lemma correct_function_addl : correct_function p Args Res f fn match_mem match_arg_list match_res.
+Lemma correct_function_subl : correct_function p Args Res f fn match_mem match_arg_list match_res.
 Proof.
   constructor.
   - reflexivity.
@@ -111,7 +114,7 @@ Proof.
       simpl. intuition congruence.
     + repeat econstructor; eauto.
     + reflexivity.
-    +  eapply Smallstep.plus_one.
+    + eapply Smallstep.plus_one.
       econstructor; eauto.
        (* We evaluate the expresssions *)
       econstructor;eauto.
@@ -126,3 +129,5 @@ Proof.
     + unfold match_mem in H0. destruct H0 as [H0 H1]. assumption.
     + eexists;reflexivity.
 Qed.
+
+End Get_subl.
