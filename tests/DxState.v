@@ -57,6 +57,13 @@ Definition upd_flag (f: bpf_flag) (st:state): state :=
   let rs := snd (fst st) in
     (m, rs, f).
 
+Definition eval_mem (st: state):Mem.mem := fst (fst st).
+
+Definition upd_mem (m: Mem.mem) (st: state): state :=
+  let rs := snd (fst st) in
+  let f  := snd st in
+    (m, rs, f).
+
 (*
 Definition eval_mem_regions (st:state): memory_regions := snd st.
 
