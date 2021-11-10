@@ -6,7 +6,7 @@ From compcert.common Require Import Values AST Memdata.
 From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR.
-From dx.Type Require Import Nat.
+From dx.Type Require Import Bool Nat.
 
 Require Import CoqIntegers DxIntegers DxValues.
 
@@ -64,6 +64,9 @@ Definition Const_Mint16unsigned := constant memoryChunkSymbolType Mint16unsigned
 Definition Const_Mint32 := constant memoryChunkSymbolType Mint32 C_U32_4.
 
 Definition Const_Mint64 := constant memoryChunkSymbolType Mint64 C_U32_8.
+
+Definition memoryChunkToboolSymbolType :=
+  MkCompilableSymbolType [memoryChunkCompilableType] (Some boolCompilableType).
 
 Definition memoryChunkToval64SymbolType :=
   MkCompilableSymbolType [memoryChunkCompilableType] (Some val64CompilableType).
