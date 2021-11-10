@@ -4,7 +4,7 @@
 #include "fletcher32_bpf.h"
 #include<stdlib.h>
 #include<stddef.h>
-
+#include <time.h> 
 
 uint32_t fletcher32(const uint16_t *data, size_t words)
 {
@@ -95,19 +95,21 @@ void print_normal_addr(){
 */
 
 int main(){
-  
     printf("Hello rBPF_fletcher32 C code Testing:\n");
-    
+    uint32_t res0;    
     //printf("start_content:%d\n", (const uint16_t *) wrap_around_data);
     //printf("start_addr_content:%d\n", *wrap_around_data);
     //printf("start_addr_content1:%d\n", *(const uint16_t *) wrap_around_data);
    // printf("size_content:%d\n", sizeof(wrap_around_data)/2);
-
-    uint32_t res0 = fletcher32((const uint16_t *) wrap_around_data, sizeof(wrap_around_data)/2);
+    clock_t begin0 = clock();
+    //for (int i = 0; i < 1000; i++) {
+      res0 = fletcher32((const uint16_t *) wrap_around_data, sizeof(wrap_around_data)/2);
+      //}
+    clock_t end0 = clock();
+    printf("execution time:%f\n", (double)(end0-begin0)/CLOCKS_PER_SEC);
     printf("rBPF_fletcher32 C result = 0x:%x\n", res0);
 
     printf("End rBPF_fletcher32 Testing!\n");
-    printf("\n\n*******************************************\n\n");
 
   printf ("fletcher32 start!!! \n");
   unsigned long long result;
@@ -118,9 +120,12 @@ int main(){
   
   //print_region_ctx();
   //print_region_content();
-  
-  result = bpf_interpreter(memory_regions, (unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000);
-  
+  clock_t begin1 = clock();
+  //for (int j = 0; j < 1000; j++) {
+    result = bpf_interpreter(memory_regions, (unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000);
+    //}
+  clock_t end1 = clock();
+  printf("execution time:%f\n", (double)(end1-begin1)/CLOCKS_PER_SEC);
   //printf("pc = %d\n", eval_pc());
   
   printf("rBPF_fletcher32 (dx) C result = 0x:%x\n", (unsigned int)result);
