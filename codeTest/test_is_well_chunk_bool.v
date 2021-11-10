@@ -1,5 +1,5 @@
 Require Import ChkPrimitive RelCorrect generated.
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
+From dx.tests Require Import DxIntegers DxValues DxAST DxState DxMonad DxInstructions.
 From dx.Type Require Import Bool.
 From dx Require Import ResultMonad IR.
 From Coq Require Import List.
@@ -35,11 +35,11 @@ Definition match_mem : stateM -> genv -> Mem.mem -> Prop :=
 .
 
 (* [match_arg] relates the Coq arguments and the C arguments *)
-Definition match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) Args :=
-  args_block_ptr_correct.
+Definition match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> bool -> Prop) Args :=
+  args_is_well_chunk_correct.
 
 (* [match_res] relates the Coq result and the C result *)
-Definition match_res : coqType Res -> Memory.Mem.mem -> val -> Prop := val64_correct.
+Definition match_res : coqType Res -> Memory.Mem.mem -> bool -> Prop := bool_correct.
 
 (** How to tell compcert this relation *) (*
 Axiom id_assum: __1004 = IdentDef.mem_region_id.*)
