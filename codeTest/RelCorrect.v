@@ -6,7 +6,7 @@ From Coq Require Import ZArith List.
 Import ListNotations.
 Require Import ChkPrimitive.
 
-Definition val64_correct (x :val) (m: Memory.Mem.mem) (v:val) := x = v /\ exists v', Vlong v' = v.
+Definition val64_correct (x: val) (m: Memory.Mem.mem) (v: val) := x = v /\ exists v', Vlong v' = v.
 
 Definition args_binary_val64_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes val64Toval64Toval64SymbolType) :=
   @DList.DCons _ _ val64CompilableType val64_correct _
@@ -15,7 +15,7 @@ Definition args_binary_val64_correct : DList.t (fun x => coqType x -> Memory.Mem
                              (@DList.DNil CompilableType _)).
 
 
-Definition block_ptr_correct (x :memory_region) (m: Memory.Mem.mem) (v:val) :=
+Definition block_ptr_correct (x: memory_region) (m: Memory.Mem.mem) (v: val) :=
   v = block_ptr x /\
   Vlong Int64.one = block_ptr x.
 
@@ -24,7 +24,7 @@ Definition args_block_ptr_correct : DList.t (fun x => coqType x -> Memory.Mem.me
      mem_regionCompilableType block_ptr_correct _
      (@DList.DNil CompilableType _).
 
-Definition start_addr_correct (x :memory_region) (m: Memory.Mem.mem) (v:val) :=
+Definition start_addr_correct (x: memory_region) (m: Memory.Mem.mem) (v: val) :=
   exists b ofs vaddr, (v = Vptr b ofs) /\
   (Mem.loadv AST.Mint64 m (Vptr b ofs) = Some (start_addr x)) /\
   Vlong vaddr = start_addr x.
@@ -34,7 +34,7 @@ Definition args_start_addr_correct : DList.t (fun x => coqType x -> Memory.Mem.m
      mem_regionCompilableType start_addr_correct _
      (@DList.DNil CompilableType _).
 
-Definition block_size_correct (x :memory_region) (m: Memory.Mem.mem) (v:val) :=
+Definition block_size_correct (x: memory_region) (m: Memory.Mem.mem) (v: val) :=
   exists b ofs vsize, (v = Vptr b ofs) /\
   (Mem.loadv AST.Mint64 m (Vptr b (Integers.Ptrofs.add ofs (Integers.Ptrofs.repr 8))) = Some (block_size x)) /\
   Vlong vsize = block_size x.
@@ -44,14 +44,16 @@ Definition args_block_size_correct : DList.t (fun x => coqType x -> Memory.Mem.m
      mem_regionCompilableType block_size_correct _
      (@DList.DNil CompilableType _).
 
-Definition is_well_chunk_correct (x: memory_chunk) (m: Memory.Mem.mem) (b:bool) :=
+Definition bool_correct (x:bool) (m: Memory.Mem.mem) (v: bool) := x = v.
+
+Definition is_well_chunk_correct (x: memory_chunk) (m: Memory.Mem.mem) (b: bool) :=
   match x with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 => true = b
   | _ => false = b
   end.
 
 (** Here *)
-Definition args_is_well_chunk_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes memoryChunkToboolSymbolType) :=
+Definition args_is_well_chunk_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> bool -> Prop) (compilableSymbolArgTypes memoryChunkToboolSymbolType) :=
   @DList.DCons _  _
      memoryChunkCompilableType is_well_chunk_correct _
      (@DList.DNil CompilableType _).
