@@ -1,19 +1,12 @@
-Require Import generated.
-From dx.tests Require Import ChkPrimitive DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
+Require Import ChkPrimitive RelCorrect generated.
+From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
 From dx Require Import ResultMonad IR.
 From Coq Require Import List.
 From compcert Require Import Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-Definition val64_correct (x :val) (m: Memory.Mem.mem) (v:val) := x = v /\ exists v', Vlong v' = v.
 
-Definition start_addr_correct (x :memory_region) (m: Memory.Mem.mem) (v:val) := exists b ofs v', (v = Vptr b ofs) /\ (Mem.loadv AST.Mint64 m v = Some (start_addr x)) /\ Vlong v' = start_addr x.
-
-Definition args_start_addr_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes mem_regionToVal64CompilableSymbolType) :=
-  @DList.DCons _  _
-                             mem_regionCompilableType start_addr_correct _
-                             (@DList.DNil CompilableType _).
 
 Section GetMemRegion_start_addr.
 
@@ -47,34 +40,8 @@ Definition match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> val
 (* [match_res] relates the Coq result and the C result *)
 Definition match_res : coqType Res -> Memory.Mem.mem -> val -> Prop := val64_correct.
 
-Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
-    Coqlib.list_norepet_dec eq_dec l = left H ->
-    Coqlib.list_norepet l.
-Proof.
-  intros.
-  auto.
-Qed.
-
-Lemma exists_pair : forall {A B: Type} (x: A * B) a b,
-    (fst x , snd x) = (a,b) ->
-    x = (a,b).
-Proof.
-  destruct x; simpl ; auto.
-Qed.
-
-Lemma store_ok_if_valid :
-      forall m1 chunk b ofs v
-             (V : Mem.valid_access m1 chunk b ofs Writable),
-        Mem.store chunk m1 b ofs v =
-          Some (proj1_sig (Mem.valid_access_store m1 chunk b ofs v V)).
-Proof.
-  intros.
-  destruct (Mem.valid_access_store m1 chunk b ofs v V).
-  simpl. auto.
-Qed.
-
-(** How to tell compcert this relation *)
-Axiom id_assum: __1004 = IdentDef.mem_region_id.
+(** How to tell compcert this relation *) (*
+Axiom id_assum: __1004 = IdentDef.mem_region_id.*)
 
 Lemma correct_function_start_addr : correct_function p Args Res f fn match_mem match_arg_list match_res.
 Proof.
@@ -99,9 +66,9 @@ Proof.
     destruct c as (v,v').
     unfold start_addr_correct in *.
     simpl in H.
-    intuition subst. clear H2. destruct H1 ; subst. destruct H as [ofs [v'0 [H [H1 H2]]]].
+    intuition subst. clear H2. destruct H1 ; subst. destruct H as [ofs [vaddr [H [H1 H2]]]].
     simpl.
-    eexists. eexists. eexists.
+    do 3 eexists.
     repeat split.
     (* We need to run the program. Some automation is probably possible *)
     unfold step2.
@@ -118,7 +85,7 @@ Proof.
       reflexivity.
     + simpl.
       unfold Coqlib.list_disjoint.
-      simpl. intuition congruence.
+      simpl; intuition congruence.
     + repeat econstructor; eauto.
     + reflexivity.
     + eapply Smallstep.plus_one.
@@ -128,57 +95,25 @@ Proof.
         econstructor;eauto.
         econstructor;eauto.
         econstructor;eauto.
-        simpl. rewrite H; reflexivity.
-        simpl.
-        apply deref_loc_copy.
+        rewrite H; reflexivity; simpl.
+        apply deref_loc_copy; simpl; reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        simpl; econstructor;eauto.
         simpl; reflexivity.
-        simpl.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        simpl.
-        econstructor;eauto.
-        simpl.
-        reflexivity.
         Transparent Archi.align_int64.
-        unfold Archi.align_int64.
-        unfold Coqlib.align.
-        simpl.
+        unfold Archi.align_int64; unfold Coqlib.align; simpl.
         rewrite Integers.Ptrofs.add_zero.
-        rewrite H in H1.
-        unfold Mem.loadv in H1; simpl in H1.
-        eauto.
-      * simpl.
-        rewrite <- H2.
+        rewrite H1; reflexivity.
+      * simpl; rewrite <- H2.
         Transparent Archi.ptr64.
         reflexivity.
-      * 
-        compute.
-        destruct v.
-        simpl in *.
-        
-        unfold Cop.sem_cast.
-         econstructor;eauto.
-        eapply Mem.valid_access_load.
-        *** econstructor;eauto. econstructor;eauto. econstructor;eauto. rewrite Maps.PTree.gss. rewrite H; reflexivity. simpl. Locate deref_loc. constructor. simpl.
-      rewrite H; reflexivity.
-       (* We evaluate the expresssions *)
-      repeat econstructor;eauto.
-      rewrite Maps.PTree.gss.
-      rewrite H; reflexivity.
-      simpl.
-      reflexivity.
-      econstructor;eauto.
-      econstructor;eauto.
-      econstructor;eauto.
-      econstructor;eauto.
-      reflexivity.
-      Transparent Archi.ptr64.
-      reflexivity.
-      reflexivity.
-      reflexivity.
-    + unfold match_mem in H0. destruct H0 as [H0 H1]. assumption.
-    + eexists;reflexivity.
+      * compute; destruct v; simpl in *.
+        eauto.
+    + unfold match_mem in H0.
+      destruct H0; assumption.
+    + eauto.
 Qed.
 
 End GetMemRegion_start_addr.
