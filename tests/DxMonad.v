@@ -2,6 +2,27 @@ From compcert Require Import AST Memory.
 Require Import DxIntegers DxValues DxRegs DxFlag DxMemRegion DxState.
 
 
+
+
+Definition load_mem (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
+  match Mem.loadv chunk (fst (fst st)) ptr with
+  | Some res => res
+  | None => val64_zero
+  end.
+
+Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) (st: state) :=
+  match Mem.storev chunk (fst (fst st)) ptr v with
+  | Some m => m
+  | None => init_mem
+  end.
+
+Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
+  match Mem.storev chunk (fst (fst st)) ptr v with
+  | Some m => m
+  | None => init_mem
+  end.
+
+
 Definition stateM := state. (*This one must be int_64 defined in DxIntegers *)
 
 
