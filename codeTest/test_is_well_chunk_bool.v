@@ -1,9 +1,9 @@
 Require Import ChkPrimitive RelCorrect generated.
 From dx.tests Require Import DxIntegers DxValues DxAST DxState DxMonad DxInstructions.
 From dx.Type Require Import Bool.
-From dx Require Import ResultMonad IR.
+From dx Require Import IR.
 From Coq Require Import List.
-From compcert Require Import Values Clight Memory.
+From compcert Require Import Values Clight Memory AST Smallstep.
 Import ListNotations.
 Require Import ZArith.
 
