@@ -44,12 +44,19 @@ Definition args_block_size_correct : DList.t (fun x => coqType x -> Memory.Mem.m
      mem_regionCompilableType block_size_correct _
      (@DList.DNil CompilableType _).
 
-Definition bool_correct (x:bool) (m: Memory.Mem.mem) (v: bool) := x = v.
+Definition bool_correct (x:bool) (m: Memory.Mem.mem) (v: val) :=
+  if x then
+   v = Vtrue 
+  else
+   v = Vfalse.
 
-Definition is_well_chunk_correct (x: memory_chunk) (m: Memory.Mem.mem) (b: bool) :=
+Definition is_well_chunk_correct (x: memory_chunk) (m: Memory.Mem.mem) (b: val) :=
   match x with
-  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 => true = b
-  | _ => false = b
+  | Mint8unsigned => b = Vint (Int.one)
+  | Mint16unsigned => b = Vint (Int.repr 2)
+  | Mint32  => b = Vint (Int.repr 4)
+  | Mint64 => b = Vint (Int.repr 8)
+  | _ => b = Vint (Int.repr 0)
   end.
 
 (** Here *)
