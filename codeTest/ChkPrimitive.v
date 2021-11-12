@@ -6,6 +6,10 @@ From compcert Require Import Values.
 From compcert Require Import SimplExpr.
 From compcert Require Import Clight.
 
+From dx.tests Require Import DxIntegers DxMonad.
+From compcert Require Import Integers.
+From compcert Require Import Smallstep.
+
 (** dx requires primitives.
     For each primitive,
     we have soundness theorem relating the Coq function and the primitive expres    sion. The primitive declaration is untyped.*)
@@ -261,9 +265,6 @@ Definition correctPrimitive (P: Primitive)
   end
   .
 
-Require Import DxIntegers.
-From compcert Require Import Integers.
-
 Definition int64_correct (x : int64) (v:val) := Vlong x = v.
 
 Definition args_binary_int64_correct : DList.t (fun x => coqType x -> val -> Prop) (compilableSymbolArgTypes int64Toint64Toint64SymbolType) :=
@@ -385,11 +386,6 @@ Lemma arrow_type_encode' :
   Defined.
 
 
-
-Require Import DxMonad.
-From compcert Require Import Smallstep.
-
-
 Section S.
   (** The program contains our function of interest [fn] *)
   Variable p : Clight.program.
@@ -453,3 +449,67 @@ Section S.
       }.
 
 End S.
+
+Section G.
+  (** The program contains our function of interest [fn] *)
+  Variable p : Clight.program.
+
+  (* [Args,Res] provides the mapping between the Coq and the C types *)
+  Variable Args : list CompilableType.
+  Variable Res : CompilableType.
+
+  (* [f] is a Coq Monadic function with the right type *)
+  Variable f : encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res)).
+
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Variable fn: Clight.function.
+
+  (* [match_mem] related the Coq monadic state and the C memory *)
+  Variable match_mem : stateM -> genv -> Memory.Mem.mem -> Prop.
+
+  (* [match_arg] relates the Coq arguments and the C arguments *)
+  Variable match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> int64_t -> Prop) Args.
+
+  (* [match_res] relates the Coq result and the C result *)
+  Variable match_res : coqType Res -> Memory.Mem.mem -> val -> Prop. Print Datatypes.app.
+
+  Record correct_functionG  :=
+    mk_correct_functionG
+      {
+        (** syntactic checks *) (*
+        fn_return_ok : fn_return fn = cType Res;
+        fn_callconv_ok : fn_callconv fn = AST.mkcallconv None false false;
+        fn_params_ok   : List.map snd (fn_params fn) =
+                         List.map cType Args;
+        fn_temps_ok       : fn_temps fn = nil;*)
+        (** semantic check *)
+        fn_eval_okG : forall
+            (* la is a list of pairs of arguments both Coq and C *)
+            (la: DList.t (fun x => coqType x * int64_t) Args),
+            (* The C arguments are the second elements of the list la *)
+            let lval :=   DList.list  (fun (x : CompilableType) (tval : coqType x * int64_t) =>Vlong  (snd tval)) la in
+            (* The Coq arguments are the first elements of the list *)
+            let a  := DList.MapT (fun x => coqType x) (fun (x:CompilableType) v => fst v) la in
+            forall k st m,
+              (* they satisfy the invariants *)
+              DList.Forall2 (fun (x : CompilableType) (R : coqType x -> Memory.Mem.mem -> int64_t -> Prop) v => R (fst v) m (snd v)) match_arg_list la ->
+              (* The input state are in relation *)
+              match_mem st (globalenv (semantics1 p)) m ->
+              (* let fa be the Coq result *)
+              let fa := app (r:=M (coqType Res)) (eq_rect_r (fun T : Type => T) f (arrow_type_encode' Args Res M)) a st in
+              match fa with
+              | None => False (* This is not possible because of the invariant *)
+              | Some (v',st') =>
+                (* We prove that we can reach a return state *)
+                exists v m' t,
+                Star (Clight.semantics2 p) (Callstate  (Ctypes.Internal fn)
+                                                 lval  k m) t
+                     (Returnstate v (call_cont k) m') /\
+                (* The return memory matches the return state *)
+                match_mem st' (globalenv (semantics1 p)) m'
+                /\ (* The return value matches *)
+                match_res v' m' v
+              end
+      }.
+
+End G.
