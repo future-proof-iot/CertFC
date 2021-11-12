@@ -132,19 +132,19 @@ static unsigned long long get_subl(unsigned long long x1, unsigned long long y1)
   return x1 - y1;
 }
 
-static unsigned long long getMemRegion_block_ptr(struct $1004 *mr0)
+static unsigned long long getMemRegion_block_ptr(struct memory_region *mr0)
 {
   return 1LLU;
 }
 
-static unsigned long long getMemRegion_start_addr(struct $1004 *mr1)
+static unsigned long long getMemRegion_start_addr(struct memory_region *mr1)
 {
-  return (*mr1).$1005;
+  return (*mr1).start_addr;
 }
 
-static unsigned long long getMemRegion_block_size(struct $1004 *mr2)
+static unsigned long long getMemRegion_block_size(struct memory_region *mr2)
 {
-  return (*mr2).$1006;
+  return (*mr2).block_size;
 }
 
 static _Bool is_well_chunk_bool(unsigned int chunk0)
@@ -164,7 +164,7 @@ static _Bool is_well_chunk_bool(unsigned int chunk0)
   }
 }
 
-static unsigned long long check_mem_aux(struct $1004 *mr3, unsigned long long addr0, unsigned int chunk1)
+static unsigned long long check_mem_aux(struct memory_region *mr3, unsigned long long addr0, unsigned int chunk1)
 {
   _Bool well_chunk;
   unsigned long long ptr;
@@ -194,16 +194,16 @@ static unsigned long long check_mem_aux(struct $1004 *mr3, unsigned long long ad
   }
 }
 
-static unsigned long long check_mem(struct $1007 *mrs4, unsigned long long addr1, unsigned int chunk2)
+static unsigned long long check_mem(struct memory_regions *mrs4, unsigned long long addr1, unsigned int chunk2)
 {
   unsigned long long check_mem_ctx;
   unsigned long long check_mem_stk;
   unsigned long long check_mem_content;
-  check_mem_ctx = check_mem_aux((*mrs4).$1008, addr1, chunk2);
+  check_mem_ctx = check_mem_aux((*mrs4).bpf_ctx, addr1, chunk2);
   if (check_mem_ctx == 0LLU) {
-    check_mem_stk = check_mem_aux((*mrs4).$1009, addr1, chunk2);
+    check_mem_stk = check_mem_aux((*mrs4).bpf_stk, addr1, chunk2);
     if (check_mem_stk == 0LLU) {
-      check_mem_content = check_mem_aux((*mrs4).$1010, addr1, chunk2);
+      check_mem_content = check_mem_aux((*mrs4).content, addr1, chunk2);
       if (check_mem_content == 0LLU) {
         return 0LLU;
       } else {
@@ -217,7 +217,7 @@ static unsigned long long check_mem(struct $1007 *mrs4, unsigned long long addr1
   }
 }
 
-void step(struct $1007 *mrs5, unsigned long long *l0, unsigned long long len0)
+void step(struct memory_regions *mrs5, unsigned long long *l0, unsigned long long len0)
 {
   unsigned long long pc;
   unsigned long long ins;
@@ -933,7 +933,7 @@ void step(struct $1007 *mrs5, unsigned long long *l0, unsigned long long len0)
   }
 }
 
-void bpf_interpreter_aux(struct $1007 *mrs6, unsigned long long *l1, unsigned long long len1, unsigned int fuel1)
+void bpf_interpreter_aux(struct memory_regions *mrs6, unsigned long long *l1, unsigned long long len1, unsigned int fuel1)
 {
   unsigned int fuel0;
   unsigned long long pc1;
@@ -961,10 +961,10 @@ void bpf_interpreter_aux(struct $1007 *mrs6, unsigned long long *l1, unsigned lo
   }
 }
 
-unsigned long long bpf_interpreter(struct $1007 *mrs7, unsigned long long *l2, unsigned long long len2, unsigned int fuel2)
+unsigned long long bpf_interpreter(struct memory_regions *mrs7, unsigned long long *l2, unsigned long long len2, unsigned int fuel2)
 {
   int f2;
-  upd_reg(1U, (*(*mrs7).$1008).$1005);
+  upd_reg(1U, (*(*mrs7).bpf_ctx).start_addr);
   bpf_interpreter_aux(mrs7, l2, len2, fuel2);
   f2 = eval_flag();
   if (f2 == 1) {

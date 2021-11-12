@@ -43,38 +43,38 @@ struct fletcher32_ctx f32_ctx = {
   .data = (const unsigned short *) wrap_around_data,
   .words = sizeof(wrap_around_data)/2,
 };
-static struct $1004 init_memory_region0 = {.$1005 = 0LLU, .$1006 = 0LLU }; 
-static struct $1004 init_memory_region1 = {.$1005 = 0LLU, .$1006 = 0LLU }; 
-static struct $1004 init_memory_region2 = {.$1005 = 0LLU, .$1006 = 0LLU }; 
+static struct memory_region init_memory_region0 = {.start_addr = 0LLU, .block_size = 0LLU }; 
+static struct memory_region init_memory_region1 = {.start_addr = 0LLU, .block_size = 0LLU }; 
+static struct memory_region init_memory_region2 = {.start_addr = 0LLU, .block_size = 0LLU }; 
 
-static struct $1007 init_memory_regions = {
-  .$1008 = &init_memory_region0,
-  .$1009 = &init_memory_region1,
-  .$1010 = &init_memory_region2 };
-struct $1007 *memory_regions = &init_memory_regions;
+static struct memory_regions init_memory_regions = {
+  .bpf_ctx = &init_memory_region0,
+  .bpf_stk = &init_memory_region1,
+  .content = &init_memory_region2 };
+struct memory_regions *memory_regions = &init_memory_regions;
 
 void bpf_add_region_ctx(){
-  (*(*memory_regions).$1008).$1005 = (unsigned long long) &f32_ctx;
-  (*(*memory_regions).$1008).$1006 = sizeof(f32_ctx);
+  (*(*memory_regions).bpf_ctx).start_addr = (unsigned long long) &f32_ctx;
+  (*(*memory_regions).bpf_ctx).block_size = sizeof(f32_ctx);
 }
 
 void bpf_add_region_content(){
-  (*(*memory_regions).$1010).$1005 = (unsigned long long) (const uint16_t *)wrap_around_data;
-  (*(*memory_regions).$1010).$1006 = sizeof(wrap_around_data);
+  (*(*memory_regions).content).start_addr = (unsigned long long) (const uint16_t *)wrap_around_data;
+  (*(*memory_regions).content).block_size = sizeof(wrap_around_data);
 }
 
 /*
 void print_region_ctx(){
-  printf("start_ctx = %lld\n", (const unsigned short *)(uintptr_t) memory_regions.$1008.$1005);
-  printf("ctx_size = %lld\n", memory_regions.$1008.$1006);
-  printf("ctx_words = %lld\n", ((unsigned short *)(uintptr_t) (memory_regions.$1008.$1005+8)));
-  printf("ctx_words = %lld\n", *((unsigned short *)(uintptr_t) (memory_regions.$1008.$1005+8)));
+  printf("start_ctx = %lld\n", (const unsigned short *)(uintptr_t) memory_regions.bpf_ctx.start_addr);
+  printf("ctx_size = %lld\n", memory_regions.bpf_ctx.block_size);
+  printf("ctx_words = %lld\n", ((unsigned short *)(uintptr_t) (memory_regions.bpf_ctx.start_addr+8)));
+  printf("ctx_words = %lld\n", *((unsigned short *)(uintptr_t) (memory_regions.bpf_ctx.start_addr+8)));
 }
 
 void print_region_content(){
-  printf("content_start_addr = %" PRIu64 "\n", memory_regions.$1010.$1005);
-  printf("content_start = %" PRIu64 "\n", * (const uint16_t *) memory_regions.$1010.$1005);
-  printf("content_size = %" PRIu64 "\n", memory_regions.$1010.$1006);
+  printf("content_start_addr = %" PRIu64 "\n", memory_regions.content.start_addr);
+  printf("content_start = %" PRIu64 "\n", * (const uint16_t *) memory_regions.content.start_addr);
+  printf("content_size = %" PRIu64 "\n", memory_regions.content.block_size);
 }
 
 void print_normal_addr(){

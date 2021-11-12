@@ -20,34 +20,33 @@ enum {
 };
 
 int bpf_flag;
-
+/*
 struct $1004 {
   unsigned long long $1005;
   unsigned long long $1006;
 };
-/*
+*/
 struct memory_region {
   unsigned long long start_addr;
   unsigned long long block_size;
 };
- */
-static struct $1004 init_memory_region = {.$1005 = 0LLU, .$1006 = 0LLU }; 
-//static struct $1004 *memory_region = &init_memory_region;
 
+//static struct $1004 init_memory_region = {.$1005 = 0LLU, .$1006 = 0LLU }; 
+//static struct $1004 *memory_region = &init_memory_region;
+/*
 struct $1007 {
   struct $1004* $1008;
   struct $1004* $1009;
   struct $1004* $1010;
 };
+*/
 
-
-/*
 struct memory_regions {
-  struct memory_region bpf_ctx;
-  struct memory_region bpf_stk;
-  struct memory_region content;
+  struct memory_region* bpf_ctx;
+  struct memory_region* bpf_stk;
+  struct memory_region* content;
 };   
- */
+
 
 /*
 state:
@@ -92,7 +91,7 @@ extern void step(struct $1007 *, unsigned long long *, unsigned long long);
 
 extern void bpf_interpreter_aux(struct $1007 *, unsigned long long *, unsigned long long, unsigned int);
 */
-extern unsigned long long bpf_interpreter(struct $1007 *, unsigned long long *, unsigned long long, unsigned int);
+extern unsigned long long bpf_interpreter(struct memory_regions *, unsigned long long *, unsigned long long, unsigned int);
 /*
 extern unsigned long long eval_pc(void);
 
