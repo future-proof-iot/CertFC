@@ -10,63 +10,87 @@ Require Import IdentDef CoqIntegers DxIntegers DxValues DxFlag DxRegs DxMemRegio
 From Coq Require Import List ZArith.
 Import ListNotations.
 
-Record state := mkbst{
-  pc_loc : int64_t;
-  regs   : regmap;
-  flag   : bpf_flag;
-  mrs    : memory_regions;
+Record regs_state: Type := make_rst{
+  pc_loc  : int64_t;
+  regs_st : regmap;
 }.
 
-Definition init_state: state := {|
-  pc_loc := Integers.Int64.zero;
-  regs   := init_regmap;
-  flag   := BPF_OK;
-  mrs    := default_memory_regions;
-|}.
+Definition state: Type := Memory.mem * regs_state * bpf_flag. (* * memory_regions.*)
 
-Definition eval_pc (st: state): int64_t := pc_loc st.
+Definition init_mem: Memory.mem := Memory.Mem.empty.
 
-Definition upd_pc (p: int64_t) (st:state): state := {|
-  pc_loc := p;
-  regs   := regs st;
-  flag   := flag st;
-  mrs    := mrs st;
-|}.
+Definition init_regs_state := {| pc_loc := Integers.Int64.zero; regs_st := init_regmap;|}.
 
-Definition upd_pc_incr (st:state): state := {|
-  pc_loc := Int64.add (pc_loc st) Int64.one;
-  regs   := regs st;
-  flag   := flag st;
-  mrs    := mrs st;
-|}.
+Definition init_state: state := 
+  (init_mem, init_regs_state, BPF_OK).
+
+Definition eval_pc (st: state): int64_t := pc_loc (snd (fst st)).
+
+Definition upd_pc (p: int64_t) (st:state): state :=
+  let m  := fst (fst st) in
+  let rs := snd (fst st) in
+  let f  := snd st in
+  let next_rs := {| pc_loc := p; regs_st := regs_st rs; |} in
+    (m, next_rs, f).
+
+Definition upd_pc_incr (st:state): state :=
+  let m  := fst (fst st) in
+  let rs := snd (fst st) in
+  let f  := snd st in
+  let next_rs := {| pc_loc := Int64.add (pc_loc rs) Int64.one; regs_st := regs_st rs; |} in
+    (m, next_rs, f).
 
 Definition eval_reg (r: reg) (st:state): val64_t :=
-  eval_regmap r (regs st).
+  eval_regmap r (regs_st (snd (fst st))).
 
-Definition upd_reg (r:reg) (v:val64_t) (st:state): state := {|
-  pc_loc := pc_loc st;
-  regs   := upd_regmap r v (regs st);
-  flag   := flag st;
-  mrs    := mrs st;
-|}.
+Definition upd_reg (r:reg) (v:val64_t) (st:state): state :=
+  let m  := fst (fst st) in
+  let rs := snd (fst st) in
+  let f  := snd st in
+  let next_rs := {| pc_loc := pc_loc rs; regs_st := upd_regmap r v (regs_st rs); |} in
+    (m, next_rs, f).
 
-Definition eval_flag (st:state): bpf_flag := flag st.
+Definition eval_flag (st:state): bpf_flag := snd st.
 
-Definition upd_flag (f: bpf_flag) (st:state): state := {|
-  pc_loc := pc_loc st;
-  regs   := regs st;
-  flag   := f;
-  mrs    := mrs st;
-|}.
+Definition upd_flag (f: bpf_flag) (st:state): state :=
+  let m  := fst (fst st) in
+  let rs := snd (fst st) in
+    (m, rs, f).
 
-Definition eval_mem_regions (st:state): memory_regions := mrs st.
+Definition eval_mem (st: state):Mem.mem := fst (fst st).
 
-Definition upd_mem_regions (mrs1: memory_regions) (st:state): state := {|
-  pc_loc := pc_loc st;
-  regs   := regs st;
-  flag   := flag st;
-  mrs    := mrs1;
-|}.
+Definition upd_mem (m: Mem.mem) (st: state): state :=
+  let rs := snd (fst st) in
+  let f  := snd st in
+    (m, rs, f).
+
+(*
+Definition eval_mem_regions (st:state): memory_regions := snd st.
+
+Definition upd_mem_regions (mrs: memory_regions) (st:state): state :=
+  let m  := fst (fst (fst st)) in
+  let rs := snd (fst (fst st)) in
+  let f  := snd (fst st) in
+    (m, rs, f, mrs).*)
+
+
+Definition load_mem (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
+  match Mem.loadv chunk (fst (fst st)) ptr with
+  | Some res => res
+  | None => val64_zero
+  end.
+
+Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) (st: state) :=
+  match Mem.storev chunk (fst (fst st)) ptr v with
+  | Some m => m
+  | None => init_mem
+  end.
+
+Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
+  match Mem.storev chunk (fst (fst st)) ptr v with
+  | Some m => m
+  | None => init_mem
+  end.
 
 (******************** Dx Related *******************)
 
@@ -77,23 +101,12 @@ Definition upd_mem_regions (mrs1: memory_regions) (st:state): state := {|
             };
   *)
 
-Definition state_struct_type: Ctypes.type := Ctypes.Tpointer (Ctypes.Tstruct state_id Ctypes.noattr) Ctypes.noattr.
+Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noattr.
 
 Definition state_struct_def: Ctypes.composite_definition := 
-  Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_U32); (regmaps_id, C_regmap); (flag_id, C_S32); (mem_regions_id, mem_regions_type)] Ctypes.noattr.
+  Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_U32); (regmaps_id, C_regmap)] Ctypes.noattr.
 
 Definition stateCompilableType := MkCompilableType state state_struct_type.
-(** Type for state -> val64_t *)
-Definition mem_regionToVal64CompilableSymbolType :=
-  MkCompilableSymbolType [mem_regionCompilableType] (Some val64CompilableType).
-
-Definition Const_block_ptr := 
-  MkPrimitive mem_regionToVal64CompilableSymbolType 
-              block_ptr
-              (fun es => match es with
-                         | [e1] => Ok (C_U64_one)
-                         | _   => Err PrimitiveEncodingFailed
-                         end).
 
 Module Exports.
   Definition stateCompilableType := stateCompilableType.
