@@ -1,4 +1,4 @@
-Require Import ChkPrimitive RelCorrect generated.
+Require Import ChkPrimitive RelCorrect interpreter.
 From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
 From dx Require Import ResultMonad IR.
 From Coq Require Import List.
