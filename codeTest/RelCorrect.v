@@ -60,7 +60,7 @@ Definition is_well_chunk_correct (x: memory_chunk) (m: Memory.Mem.mem) (b: val) 
   end.
 
 (** Here *)
-Definition args_is_well_chunk_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> bool -> Prop) (compilableSymbolArgTypes memoryChunkToboolSymbolType) :=
+Definition args_is_well_chunk_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes memoryChunkToboolSymbolType) :=
   @DList.DCons _  _
      memoryChunkCompilableType is_well_chunk_correct _
      (@DList.DNil CompilableType _).
