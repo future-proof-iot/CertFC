@@ -45,59 +45,33 @@ Axiom id_assum: __1004 = IdentDef.mem_region_id.*)
 
 Lemma correct_function_block_ptr : correct_function p Args Res f fn match_mem match_arg_list match_res.
 Proof.
-  constructor. (*
-  - reflexivity.
-  - reflexivity.
-  - unfold Args.
-    simpl.
-    unfold mem_region_type.
-    unfold Clightdefs.tptr.
-    rewrite id_assum.
-    reflexivity.
-  - reflexivity.*)
-  - unfold Args.
-    intro.
-    car_cdr.
-    simpl.
+  constructor.
+  - unfold Args; intro; car_cdr; simpl;
     (** Here, the goal is readable *)
     intros.
     (** Here, we know that v = Val.addl (fst c) (fst c0) and m' = m and the trace is empty*)
     (* We need to do it early or we have problems with existentials *)
-    destruct c as (v,v').
-    unfold block_size_correct in *.
-    simpl in H.
-    intuition subst. clear H2. destruct H1 ; subst.
-    simpl.
-    do 3 eexists.
-    repeat split.
+    destruct c as (v,v'); unfold block_size_correct in *; simpl in H; intuition subst; clear H2; destruct H1 ; subst.
+    simpl; do 3 eexists; repeat split;
     (* We need to run the program. Some automation is probably possible *)
     unfold step2.
-    apply Smallstep.plus_star.
-    eapply Smallstep.plus_left';eauto.
-    econstructor ; eauto.
+    apply Smallstep.plus_star;
+    eapply Smallstep.plus_left'; eauto.
+    econstructor; eauto;
     (* We build the initial environment *)
-    econstructor;eauto.
-    +
-      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec).
-      reflexivity.
-    + simpl.
-      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec).
-      reflexivity.
-    + simpl.
-      unfold Coqlib.list_disjoint.
-      simpl; intuition congruence.
+    econstructor; eauto.
+    + eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    + simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    + simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
     + repeat econstructor; eauto.
     + reflexivity.
-    + eapply Smallstep.plus_one.
+    + eapply Smallstep.plus_one;
       econstructor; eauto.
-      * econstructor;eauto.
-      * simpl; rewrite <- H1.
-        Transparent Archi.ptr64.
-        reflexivity.
-      * compute; destruct v; simpl in *.
-        eauto.
-    + unfold match_mem in H0.
-      destruct H0; assumption.
+      * econstructor; eauto.
+      * Transparent Archi.ptr64.
+        simpl; rewrite <- H1; reflexivity.
+      * compute; destruct v; simpl in *; eauto.
+    + unfold match_mem in H0; destruct H0; assumption.
     + eauto.
 Qed.
 
