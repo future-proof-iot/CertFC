@@ -45,9 +45,59 @@ Axiom id_assum: __1004 = IdentDef.mem_region_id.*)
 Lemma correct_function_check_mem_aux_correct : correct_function p Args Res f fn match_mem match_arg_list match_res.
 Proof.
   constructor.
-  unfold Args; intro; car_cdr; simpl;
+  unfold Args. intro. car_cdr. simpl.
     (** Here, the goal is readable *)
     intros.
+
+    unfold mem_region_correct, val64_correct, is_well_chunk_correct in H.
+      destruct H; subst.
+      assert (Hchunk: exists x, snd c1 = Vint x). admit.
+      destruct Hchunk as [x Hchunk]. simpl in Hchunk.
+
+    unfold eq_rect_r, eq_rect.
+    unfold eq_sym, eq_ind_r, eq_ind.
+    repeat (unfold eq_sym).
+    destruct (f _ _ _ _) eqn: Hf.
+    destruct p0.
+    do 3 eexists.
+    repeat split; unfold step2.
+    apply Smallstep.plus_star;
+    eapply Smallstep.plus_left'; eauto.
+    do 2 econstructor; eauto.
+    + eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    + simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    + simpl; unfold Coqlib.list_disjoint. simpl. intuition (subst; discriminate).
+    + repeat econstructor; eauto.
+    + reflexivity.
+    + eapply Smallstep.plus_left'; eauto.
+      repeat econstructor; eauto.
+      eapply Smallstep.plus_left'; eauto.
+      repeat econstructor; eauto.
+      eapply Smallstep.plus_left'; eauto.
+      econstructor; eauto.
+      simpl; reflexivity.
+      econstructor.
+      eapply eval_Evar_global.
+      reflexivity.
+      reflexivity.
+      simpl.
+      eapply deref_loc_reference.
+      simpl; reflexivity.
+      econstructor; eauto.
+      econstructor; eauto.
+      reflexivity.
+      simpl.
+      rewrite Hchunk.
+      reflexivity.
+      econstructor; eauto.
+      econstructor; eauto.
+      reflexivity. Print correct_function_is_well_chunk_bool. (**r TODO: how to reuse correct_function_is_well_chunk_bool *)
+      econstructor; eauto.
+
+
+    + rewrite H1, Hptr; rewrite <- H6. eapply Smallstep.plus_left'; eauto; repeat econstructor; eauto. Print Maps.PTree.get.
+
+
     destruct c as (v,v').
     unfold mem_region_correct, val64_correct, is_well_chunk_correct in H;
     intuition subst; clear H7;
