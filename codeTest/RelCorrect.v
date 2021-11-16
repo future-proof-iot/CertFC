@@ -59,11 +59,37 @@ Definition is_well_chunk_correct (x: memory_chunk) (m: Memory.Mem.mem) (b: val) 
   | _ => b = Vint (Int.repr 0)
   end.
 
-(** Here *)
 Definition args_is_well_chunk_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes memoryChunkToboolSymbolType) :=
   @DList.DCons _  _
      memoryChunkCompilableType is_well_chunk_correct _
      (@DList.DNil CompilableType _).
+
+Definition valptr_correct (x:val) (m: Memory.Mem.mem) (v: val) :=
+  x = v /\
+  ((x = val64_zero)\/ (exists b ofs, x = Vptr b ofs)).
+
+Definition mem_region_correct (x: memory_region) (m: Memory.Mem.mem) (v: val) :=
+  v = block_ptr x /\
+  Vlong Int64.one = block_ptr x /\
+  (exists b ofs vaddr vsize, (v = Vptr b ofs) /\
+   (Mem.loadv AST.Mint64 m (Vptr b ofs) = Some (start_addr x)) /\
+    Vlong vaddr = start_addr x /\
+   (Mem.loadv AST.Mint64 m (Vptr b (Integers.Ptrofs.add ofs (Integers.Ptrofs.repr 8))) = Some (block_size x)) /\
+    Vlong vsize = block_size x).
+
+Definition memoryRegionToval64TomemoryChunkToval64SymbolType :=
+  MkCompilableSymbolType [mem_regionCompilableType; val64CompilableType; memoryChunkCompilableType] (Some val64CompilableType).
+
+(* TODO: could we just give `Definition f_name: DList.t ... (compilableSymbolArgTypes _) := [mem_region_correct; val64_correct; is_well_chunk_correct]`*)
+Definition args_check_mem_aux_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes memoryRegionToval64TomemoryChunkToval64SymbolType) :=
+  @DList.DCons _  _
+    mem_regionCompilableType mem_region_correct _
+    (@DList.DCons _  _
+      val64CompilableType val64_correct _
+    (@DList.DCons _  _
+      memoryChunkCompilableType is_well_chunk_correct _
+        (@DList.DNil CompilableType _))).
+
 
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
     Coqlib.list_norepet_dec eq_dec l = left H ->
