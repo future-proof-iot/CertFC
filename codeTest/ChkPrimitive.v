@@ -115,6 +115,15 @@ Module DList.
             R e v (car G dl3) /\ Forall2  dl2 (cdr G dl3)
         end.
 
+    Lemma Forall2_rew : forall (e:A) (e1:F e) (e2 : G e)
+                               l (dl1 : t F l) (dl2 : t G l),
+        @Forall2 (e::l) (@DCons _ _ e e1 l dl1) (@DCons _ _ e e2 l dl2) =
+          (R e e1 e2 /\ @Forall2 l dl1 dl2).
+    Proof.
+      reflexivity.
+    Qed.
+
+    
   End FORALL2.
 
   Section MAP.
@@ -442,10 +451,11 @@ Section S.
                                                  lval  k m) t
                      (Returnstate v (call_cont k) m') /\
                 (* The return memory matches the return state *)
-                match_mem st' (globalenv (semantics1 p)) m'
+                match_mem st' (globalenv (semantics2 p)) m'
                 /\ (* The return value matches *)
                 match_res v' m' v
               end
       }.
 
 End S.
+
