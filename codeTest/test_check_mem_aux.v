@@ -1,9 +1,11 @@
-Require Import ChkPrimitive RelCorrect generated.
+Require Import ChkPrimitive RelCorrect interpreter.
 From dx Require Import ResultMonad IR.
 From dx.tests Require Import DxIntegers DxValues DxAST DxMemRegion DxState DxMonad DxInstructions.
 From compcert Require Import Values Clight Memory.
 From Coq Require Import List ZArith.
 Import ListNotations.
+
+Require Import test_is_well_chunk_bool.
 
 Section Check_mem_aux.
 
@@ -40,14 +42,32 @@ Definition match_res : coqType Res -> Memory.Mem.mem -> val -> Prop := valptr_co
 (** How to tell compcert this relation *) (*
 Axiom id_assum: __1004 = IdentDef.mem_region_id.*)
 
-Lemma correct_function_check_mem_aux : correct_function p Args Res f fn match_mem match_arg_list match_res.
+Lemma correct_function_check_mem_aux_correct : correct_function p Args Res f fn match_mem match_arg_list match_res.
 Proof.
   constructor.
-  - unfold Args; intro; car_cdr; simpl;
+  unfold Args; intro; car_cdr; simpl;
     (** Here, the goal is readable *)
     intros.
-    (** Here, we know that v = Val.addl (fst c) (fst c0) and m' = m and the trace is empty*)
-    (* We need to do it early or we have problems with existentials *)
+    destruct c as (v,v').
+    unfold mem_region_correct, val64_correct, is_well_chunk_correct in H;
+    intuition subst; clear H7;
+    destruct H5 as [b [ofs [vaddr [vsize [Hptr [Hmptr [Haddr [Hmaddr Hsize]]]]]]]];
+    destruct H6 as [v0 H6]; subst;
+    rewrite <- H6 in H3. simpl in *; rewrite H3; simpl.
+    destruct (fst c1) eqn: Hc1 in H1; subst;
+    simpl in *; rewrite Hc1; simpl.
+    do 3 eexists; repeat split; unfold step2.
+    apply Smallstep.plus_star;
+    eapply Smallstep.plus_left'; eauto.
+    do 2 econstructor; eauto.
+    + eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    + simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    + simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
+    + repeat econstructor; eauto.
+    + reflexivity.
+    + rewrite H1, Hptr; rewrite <- H6. eapply Smallstep.plus_left'; eauto; repeat econstructor; eauto. Print Maps.PTree.get.
+      simpl.
+
     destruct c as (v,v'); unfold block_size_correct in *; simpl in H; intuition subst; clear H2; destruct H1 ; subst.
     simpl; do 3 eexists; repeat split;
     (* We need to run the program. Some automation is probably possible *)
