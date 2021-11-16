@@ -70,97 +70,19 @@ Proof.
     (** Here, we know that v = Val.addl (fst c) (fst c0) and m' = m and the trace is empty*)
     (* We need to do it early or we have problems with existentials *)
     destruct c as (v,v'); unfold is_well_chunk_correct in *; simpl in H; intuition subst; clear H2;
-    destruct v; subst; simpl; do 3 eexists; repeat split; unfold step2.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left'; eauto. (**r TODO: using a Ltac to replace all same proof patterns *)
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
-    + apply Smallstep.plus_star; eapply Smallstep.plus_left';eauto.
-      econstructor; eauto; econstructor; eauto.
-      * eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-      * simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
-      * repeat econstructor; eauto.
-      * reflexivity.
-      * eapply Smallstep.plus_left';eauto; repeat econstructor; eauto.
-    + unfold match_mem in H0; destruct H0; assumption.
+    destruct v; subst; simpl; do 3 eexists; repeat split; unfold step2;
+    try (apply Smallstep.plus_star; eapply Smallstep.plus_left'; eauto;
+      do 2 econstructor; eauto;
+      [ eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
+       simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
+       simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence |
+       repeat econstructor; eauto |
+       reflexivity |
+       repeat econstructor; eauto |
+       reflexivity |
+       repeat econstructor; eauto |
+       repeat econstructor; eauto]);
+    try (unfold match_mem in H0; destruct H0; assumption).
 Qed.
 
 End Is_well_chunk_bool.
