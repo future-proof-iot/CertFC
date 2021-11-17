@@ -10,6 +10,17 @@ Require Import IdentDef CoqIntegers DxIntegers DxValues DxFlag DxRegs DxMemRegio
 From Coq Require Import List ZArith.
 Import ListNotations.
 
+(**
+Record state := mkst {
+  bpf_m   : Memory.mem;
+  pc_loc  : int64_t;
+  regs_st : regmap;
+  flag    : bpf_flag;
+  bpf_mrs : memory_regions;
+}.
+
+*)
+
 Record regs_state: Type := make_rst{
   pc_loc  : int64_t;
   regs_st : regmap;
