@@ -59,4 +59,15 @@ GenerateIntermediateRepresentation SymbolIRs
   bpf_interpreter
 .
 
-Definition dxModuleTest := makeDXModuleWithoutMain SymbolIRs.
+Definition dxModuleTest := makeDXModuleWithUserIds 
+  [state_struct_def; mem_region_def; mem_regions_def]
+  ["bpf_state"; "state_pc"; "regsmap"; "bpf_flag"; "memory_regions";
+   "memory_region"; "start_addr"; "block_size";
+   "memory_regions"; "bpf_ctx"; "bpf_stk"; "content"] SymbolIRs.
+
+(*
+Definition dxModuleTest := makeDXModuleWithUserIds 
+  [state_struct_def; mem_region_def; mem_regions_def] 
+  ["bpf_state"; "state_pc"; "regsmap"; 
+   "memory_region"; "start_addr"; "block_size";
+   "memory_regions"; "bpf_ctx"; "bpf_stk"; "content"] SymbolIRs.*)
