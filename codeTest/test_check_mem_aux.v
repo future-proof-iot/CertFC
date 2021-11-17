@@ -92,7 +92,8 @@ Proof.
 
   unfold mem_region_correct, val64_correct, is_well_chunk_correct in H.
   destruct H; subst.
-  assert (Hchunk: exists x, snd c1 = Vint x). admit. (*apply memoryChunk_vint.*)
+  destruct H1 as ((Heq_c0 & (v' & Hc0_vlong)) & Hfst_c1 & Htrue); clear Htrue.
+  assert (Hchunk: exists x, snd c1 = Vint x). apply (memoryChunk_vint c1 Hfst_c1).
   destruct Hchunk as [x Hchunk]; simpl in Hchunk.
 
   destruct H as (Hsndc & Hptrc & b & ofs & vaddr & vsize & Hptr & Hmaddr & Haddr & Hmsize & Hsize). (**r I just destruct here, and must automation is done *)
@@ -110,150 +111,58 @@ Proof.
   + repeat econstructor; eauto.
   + reflexivity.
   + eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto. (** call is_well_chunk_bool *)
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      eapply Smallstep.plus_left'; eauto.
-      econstructor; eauto.
-      simpl; reflexivity.
-      econstructor.
-      eapply eval_Evar_global. (**r we must tell coq to evaluate the goal with this inductive constructor otherwise coq will use another one *)
-      reflexivity.
-      reflexivity.
-      simpl.
-      eapply deref_loc_reference. (**r coq doesn't know which constructor is correct *)
-      simpl; reflexivity.
-      econstructor; eauto.
-      econstructor; eauto.
-      reflexivity.
-      simpl.
-      rewrite Hchunk.
-      reflexivity.
-      econstructor; eauto.
-      econstructor; eauto.
-      reflexivity.
-      unfold f, check_mem_aux in Hf.
-      match goal with
-      | W : @bindM _ _ ?F1 ?F2 _ = _ |- _ =>
-          unfold bindM at 1 in W;
-          unfold runM in W;
-          let X := fresh "F1" in
-          let v := fresh "r" in
-          let st' := fresh "st" in
-          destruct F1 as [(v,st')|] eqn:X ; try congruence
-      end.
+    repeat econstructor; eauto. (** call is_well_chunk_bool *)
+    eapply Smallstep.plus_left'; eauto.
+    repeat econstructor; eauto.
+    eapply Smallstep.plus_left'; eauto.
+    econstructor; eauto.
+    simpl; reflexivity.
+    econstructor.
+    eapply eval_Evar_global. (**r we must tell coq to evaluate the goal with this inductive constructor otherwise coq will use another one *)
+    reflexivity.
+    reflexivity.
+    simpl.
+    eapply deref_loc_reference. (**r coq doesn't know which constructor is correct *)
+    simpl; reflexivity.
+    econstructor; eauto.
+    econstructor; eauto.
+    reflexivity.
+    simpl.
+    rewrite Hchunk.
+    reflexivity.
+    econstructor; eauto.
+    econstructor; eauto.
+    reflexivity.
+    unfold f, check_mem_aux in Hf.
+    match goal with
+    | W : @bindM _ _ ?F1 ?F2 _ = _ |- _ =>
+        unfold bindM at 1 in W;
+        unfold runM in W;
+        let X := fresh "F1" in
+        let v := fresh "r" in
+        let st' := fresh "st" in
+        destruct F1 as [(v,st')|] eqn:X ; try congruence
+    end.
   + unfold match_mem in H0; destruct H0.
     assert (Heq_st: st = s). {
-      unfold f, check_mem_aux in Hf.
-      unfold bindM, returnM, runM in Hf.
-      destruct (is_well_chunk_bool _ _) in Hf; try (inversion Hf).
-      destruct p0 in Hf.
-      destruct b0 in Hf.
-      destruct (getMemRegion_block_ptr _ _) in Hf; try (inversion Hf).
-      destruct p0 in Hf.
-      destruct (getMemRegion_start_addr _ _) in Hf; try (inversion Hf).
-      destruct p0 in Hf.
-      destruct (getMemRegion_block_size _ _) in Hf; try (inversion Hf).
-      destruct p0 in Hf.
-      destruct (get_subl _ _ _) in Hf; try (inversion Hf).
-      destruct p0 in Hf.
-      destruct (get_addl _ _ _) in Hf; try (inversion Hf).
-      destruct p0 in Hf.
-      destruct (complu_le val64_zero v2 && complu_lt v3 v1)%bool in Hf.
-      apply st in Hf.
-      destruct (complu_le v2 (memory_chunk_to_val64_upbound (fst c1)) && compl_eq val64_zero (val64_modlu v2 (memory_chunk_to_val64 (fst c1))))%bool in Hf.
-      destruct (complu_le v2 (memory_chunk_to_val64_upbound (fst c1)) &&
-        compl_eq val64_zero (val64_modlu v2 (memory_chunk_to_val64 (fst c1))))%bool in Hf.
-      simpl in Hf.
-      destruct p0 in Hf.
-      d
-    }
-
- assumption.
-      destruct correct_function_is_well_chunk_bool.
-      nameK K.
-      specialize (fn_eval_ok (DList.DCons  c1  (DList.DNil _))).
-      cbv zeta in fn_eval_ok.
-      specialize (fn_eval_ok K st m).
-      change (                 ChkPrimitive.app
-                   (eq_rect_r (fun T : Type => T) test_is_well_chunk_bool.f
-                      (arrow_type_encode' test_is_well_chunk_bool.Args
-                         test_is_well_chunk_bool.Res M))
-                   (DList.MapT (fun x : CompilableType => coqType x)
-                      (fun (x : CompilableType) (v : coqType x * val) =>
-                       fst v)
-                      (DList.DCons c1
-                         (DList.DNil
-                            (fun x : CompilableType => coqType x * val)))) st
-             ) with (test_is_well_chunk_bool.f (fst c1) st) in fn_eval_ok.
-      unfold test_is_well_chunk_bool.f in *.
-      unfold memoryChunkCompilableType,coqType in fn_eval_ok.
-      rewrite F1 in fn_eval_ok.
-      unfold test_is_well_chunk_bool.match_arg_list in *.
-      unfold args_is_well_chunk_correct in *.
-      repeat unfold DList.Forall2, DList.car
-        in fn_eval_ok.
-      intuition.
-      destruct H8 as (v1 & m1 & t & (STEP &P1 &P2)).
-      repeat unfold DList.list in STEP.
-      eapply Smallstep.star_plus_trans.
-      rewrite Hchunk in *.
-      eapply STEP.
-      (* Done - we need to continue *)
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      (* Use property of return *)
-      unfold test_is_well_chunk_bool.match_res in P2.
-      rewrite bool_correct_Vint in P2.
-      subst.
-      reflexivity.
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      destruct r.
-      (* Conditional *)
-      rewrite Int_eq_one_zero.
-      rewrite Int_eq_one_zero.
-      unfold negb.
-      (* Sequence *)
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      eapply Smallstep.plus_left'; eauto.
-      repeat econstructor; eauto.
-      (* Another call ... *)
-      eapply Smallstep.plus_left'; eauto.
-      econstructor; eauto.
-      reflexivity.
-      econstructor; eauto.
-      eapply eval_Evar_global. (**r coq doesn't apply this one *)
-      reflexivity.
-      simpl; reflexivity.
-      simpl.
-      eapply deref_loc_reference. simpl; reflexivity.
-      econstructor; eauto.
-      econstructor; eauto.
-      reflexivity.
-      rewrite H2 in *.
-      simpl.
-      
-      rewrite Hptr in *.
-      unfold Cop.sem_cast, Cop.classify_cast.
-      simpl.
-      econstructor.
-      reflexivity.
-      econstructor; eauto.
-      econstructor; eauto.
-      reflexivity.
-      
-      
-      destruct correct_function_block_ptr.
-      nameK K.
-
+      unfold f, check_mem_aux, is_well_chunk_bool, bindM, returnM, runM in Hf.
+      unfold coqType', compilableSymbolResType, coqType, Res, val64CompilableType, val64_t, stateM in Hf.
+      destruct (@fst AST.memory_chunk val c1) eqn: Hfst_eq in Hf; congruence.
+      }
+      rewrite Heq_st in y; eapply y.
+  + (**res *)
+    simpl in c2.
+    unfold f, check_mem_aux, is_well_chunk_bool, bindM, runM, returnM in Hf.
+    unfold coqType', compilableSymbolResType, coqType, Res, val64CompilableType, val64_t, stateM in Hf.
+    destruct (@fst AST.memory_chunk val c1) eqn: Hfst_eq in Hf; congruence.
+  + unfold f, check_mem_aux, is_well_chunk_bool, bindM, runM, returnM in Hf.
+    unfold coqType', compilableSymbolResType, coqType, Res, val64CompilableType, val64_t, stateM in Hf.
+    destruct (@fst AST.memory_chunk val c1) eqn: Hfst_eq in Hf; congruence.
+  Unshelve.
+  apply Events.E0.
 Qed.
+
+Definition ft := 0%nat.
+Definition fs := 1%nat.
 
 End Check_mem_aux.
