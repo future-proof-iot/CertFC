@@ -104,7 +104,7 @@ Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
 Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noattr.
 
 Definition state_struct_def: Ctypes.composite_definition := 
-  Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_U32); (regmaps_id, C_regmap)] Ctypes.noattr.
+  Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_U32); (regmaps_id, C_regmap); (flag_id, C_S32); (mem_regions_id, mem_regions_type)] Ctypes.noattr.
 
 Definition stateCompilableType := MkCompilableType state state_struct_type.
 
