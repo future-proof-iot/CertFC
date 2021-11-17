@@ -1,15 +1,18 @@
 From compcert.common Require AST.
+From dx Require Import IRtoC.
+From Coq Require Import ZArith String.
+Import UserIdentNotations.
+Open Scope string.
 
-From Coq Require Import ZArith.
-
-Definition state_id:      AST.ident := 1001%positive.
-Definition pc_id:         AST.ident := 1002%positive.
-Definition regmaps_id:    AST.ident := 1003%positive.
-Definition flag_id:       AST.ident := 1004%positive.
-Definition mem_region_id: AST.ident := 1005%positive.
-Definition start_addr_id: AST.ident := 1006%positive.
-Definition size_id:       AST.ident := 1007%positive.
-Definition mem_regions_id:AST.ident := 1008%positive.
-Definition bpf_ctx_id:    AST.ident := 1009%positive.
-Definition bpf_stk_id:    AST.ident := 1010%positive.
-Definition content_id:    AST.ident := 1011%positive.
+Definition state_id:      AST.ident := $"bpf_state".
+Definition pc_id:         AST.ident := $"state_pc".
+Definition regmaps_id:    AST.ident := $"regsmap".
+Definition flag_id:       AST.ident := $"bpf_flag".
+Definition mem_region_id: AST.ident := $"memory_region".
+Definition start_addr_id: AST.ident := $"start_addr".
+Definition size_id:       AST.ident := $"block_size".
+Definition mem_regions_id:AST.ident := $"memory_regions".
+Definition bpf_ctx_id:    AST.ident := $"bpf_ctx".
+Definition bpf_stk_id:    AST.ident := $"bpf_stk".
+Definition content_id:    AST.ident := $"content".
+Close Scope string.
