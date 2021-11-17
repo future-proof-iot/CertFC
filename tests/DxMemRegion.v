@@ -5,7 +5,7 @@ From compcert.cfrontend Require Csyntax Ctypes Cop.
 From compcert.common Require Import Values.
 From compcert.lib Require Integers.
 
-From dx Require Import ResultMonad IR.
+From dx Require Import ResultMonad IR IRtoC.
 From dx.Type Require Import Nat.
 
 Require Import IdentDef CoqIntegers DxIntegers DxValues.
@@ -104,7 +104,6 @@ Definition Const_content :=
                          | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) content_id mem_region_type)
                          | _   => Err PrimitiveEncodingFailed
                          end).
-
 
 Module Exports.
   Definition mem_regionCompilableType := mem_regionCompilableType.
