@@ -65,7 +65,7 @@ Definition Const_start_addr :=
   MkPrimitive mem_regionToVal64CompilableSymbolType 
               start_addr
               (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 C_U64) start_addr_id C_U64)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) start_addr_id C_U64)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 
@@ -73,7 +73,7 @@ Definition Const_block_size :=
   MkPrimitive mem_regionToVal64CompilableSymbolType 
               block_size
               (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 C_U64) size_id C_U64)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) size_id C_U64)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 
@@ -85,7 +85,7 @@ Definition Const_bpf_ctx :=
   MkPrimitive mem_regionTomem_regionsCompilableSymbolType 
               bpf_ctx
               (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) bpf_ctx_id mem_region_type)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_regions_type) bpf_ctx_id mem_region_type)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 
@@ -93,7 +93,7 @@ Definition Const_bpf_stk :=
   MkPrimitive mem_regionTomem_regionsCompilableSymbolType 
               bpf_stk
               (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) bpf_stk_id mem_region_type)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_regions_type) bpf_stk_id mem_region_type)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 
@@ -101,7 +101,7 @@ Definition Const_content :=
   MkPrimitive mem_regionTomem_regionsCompilableSymbolType 
               content
               (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) content_id mem_region_type)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_regions_type) content_id mem_region_type)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 
