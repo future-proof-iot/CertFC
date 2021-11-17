@@ -25,7 +25,9 @@ OCAMLOPT := ocamlopt
 
 # Disable warnings on notations (that are coming from the standard
 # library)
-COQOPTS := $(shell $(CAT) _CoqProject) -w all,-notation
+COQPROJOPTS := $(shell $(CAT) _CoqProject)
+COQDEPOPTS := $(COQPROJOPTS)
+COQCOPTS := $(COQPROJOPTS) -w all,-notation
 COQEXTROPTS := $(shell $(SED) 's/-[RQ]  */&..\//g' _CoqProject) -w all,-extraction
 
 OCAMLINCS := -I extr -I src
@@ -61,7 +63,7 @@ all: $(INSTALLDEPS)
 test: tests/generated.c
 
 .depend.coq: $(wildcard */*.v */*/*.v)
-	$(COQDEP) $(COQOPTS) $^ > $@
+	$(COQDEP) $(COQDEPOPTS) $^ > $@
 
 -include .depend.coq
 
@@ -162,7 +164,7 @@ tests/compcert.ini:
 ## Implicit rules
 
 %.vo: %.v
-	$(COQC) $(COQOPTS) $<
+	$(COQC) $(COQCOPTS) $<
 
 %.cmi: %.mli compcertsrc-I
 	$(OCAMLOPT) -args compcertsrc-I $(OCAMLINCS) $<
