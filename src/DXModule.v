@@ -14,13 +14,14 @@
 (*  GNU General Public License for more details.                          *)
 (**************************************************************************)
 
-From Coq Require Import BinNums String.
+From Coq Require Import String.
 
+From compcert.common Require AST.
 From compcert.cfrontend Require Csyntax Ctypes.
 
 (* Pack together the content of a C module (identifiers and their body but also
    the names (as strings) for all the global and local identifiers *)
 Record dxModule := MkDXModule
   { dxModuleContent: Ctypes.program Csyntax.function
-  ; dxModuleNames:   list (positive * String.string)
+  ; dxModuleNames:   list (AST.ident * String.string)
   }.

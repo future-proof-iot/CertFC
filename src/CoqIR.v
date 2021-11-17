@@ -120,8 +120,8 @@ Elpi Accumulate lp:{{
   chr->ascii "7" {{ "7"%char }} :- !.
   chr->ascii "8" {{ "8"%char }} :- !.
   chr->ascii "9" {{ "9"%char }} :- !.
-  chr->ascii C X :-
-    coq.warn "Cannot use character" C "in names", fail.
+  chr->ascii C _ :-
+    coq.error "Cannot use character" C "in names", fail.
 
   pred string->listchr i:string, o:list string.
   string->listchr "" [] :- !.
@@ -214,7 +214,10 @@ Elpi Accumulate lp:{{
   pred resolveId i:configuration, i:term, o:term, o:term.
   resolveId (cfg _ _ _ _ PGs _) (global Id) GId STyp :-
     coq.gref.map.find Id PGs (pgGlobal IId STyp),
+    !,
     int->pos IId GId.
+  resolveId _ (global Id) _ _ :-
+    coq.error "Unknown identifier" Id.
 
   pred matchArgType i:term, o:gref.
   matchArgType (match _ (fun _ (global T) _) _) T.
