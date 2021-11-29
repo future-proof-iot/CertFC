@@ -1,13 +1,31 @@
-Require Import ChkPrimitive RelCorrect interpreter.
+Require Import ChkPrimitive interpreter.
 From dx.tests Require Import DxIntegers DxValues DxAST DxState DxMonad DxInstructions.
 From dx.Type Require Import Bool.
 From dx Require Import IR.
 From Coq Require Import List.
-From compcert Require Import Values Clight Memory AST.
+From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
 Require Import ZArith.
 
+Definition bool_correct (x:bool) (m: Memory.Mem.mem) (v: val) :=
+  if x then
+   v = Vtrue 
+  else
+   v = Vfalse.
 
+Definition is_well_chunk_correct (x: memory_chunk) (m: Memory.Mem.mem) (b: val) :=
+  match x with
+  | Mint8unsigned => b = Vint (Int.one)
+  | Mint16unsigned => b = Vint (Int.repr 2)
+  | Mint32  => b = Vint (Int.repr 4)
+  | Mint64 => b = Vint (Int.repr 8)
+  | _ => b = Vint (Int.repr 0)
+  end.
+
+Definition args_is_well_chunk_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes memoryChunkToboolSymbolType) :=
+  @DList.DCons _  _
+     memoryChunkCompilableType is_well_chunk_correct _
+     (@DList.DNil CompilableType _).
 
 Section Is_well_chunk_bool.
 
@@ -33,23 +51,6 @@ Definition match_mem : stateM -> genv -> Mem.mem -> Prop :=
        | Some m' => m' = m
        end)
 .
-(*
-Definition fbody := fn_body fn.
-Compute fbody.
-
-Definition sl :=
-  match fbody with
-  | Sswitch s ls => ls
-  | _ => LSnil
-  end.
-Compute sl.
-
-Compute select_switch 1 sl.
-Compute select_switch 2 sl.
-Compute select_switch 4 sl.
-Compute select_switch 8 sl.
-Compute select_switch 0 sl.
-Compute select_switch 10 sl.*)
 
 (* [match_arg] relates the Coq arguments and the C arguments *)
 Definition match_arg_list : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) Args :=

@@ -1,11 +1,21 @@
-Require Import ChkPrimitive RelCorrect interpreter.
+Require Import ChkPrimitive interpreter.
 From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
 From dx Require Import ResultMonad IR.
 From Coq Require Import List.
-From compcert Require Import Values Clight Memory.
+From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
+Definition val64_correct (x: val) (m: Memory.Mem.mem) (v: val) := x = v /\ exists v', Vlong v' = v.
+
+Definition block_ptr_correct (x: memory_region) (m: Memory.Mem.mem) (v: val) :=
+  v = block_ptr x /\
+  Vlong Int64.one = block_ptr x.
+
+Definition args_block_ptr_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes mem_regionToVal64CompilableSymbolType) :=
+  @DList.DCons _  _
+     mem_regionCompilableType block_ptr_correct _
+     (@DList.DNil CompilableType _).
 
 
 Section GetMemRegion_block_ptr.
@@ -51,7 +61,7 @@ Proof.
     intros.
     (** Here, we know that v = Val.addl (fst c) (fst c0) and m' = m and the trace is empty*)
     (* We need to do it early or we have problems with existentials *)
-    destruct c as (v,v'); unfold block_size_correct in *; simpl in H; intuition subst; clear H2; destruct H1 ; subst.
+    destruct c as (v,v'); unfold block_ptr_correct in *; simpl in H; intuition subst; clear H2; rewrite <- H3.
     simpl; do 3 eexists; repeat split;
     (* We need to run the program. Some automation is probably possible *)
     unfold step2.
@@ -69,7 +79,7 @@ Proof.
       econstructor; eauto.
       * econstructor; eauto.
       * Transparent Archi.ptr64.
-        simpl; rewrite <- H1; reflexivity.
+        simpl; rewrite <- H3; reflexivity.
       * compute; destruct v; simpl in *; eauto.
     + unfold match_mem in H0; destruct H0; assumption.
     + eauto.

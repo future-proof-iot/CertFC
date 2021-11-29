@@ -1,4 +1,4 @@
-Require Import ChkPrimitive RelCorrect interpreter.
+Require Import ChkPrimitive interpreter.
 From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
 From dx Require Import ResultMonad IR.
 From Coq Require Import List.
@@ -6,7 +6,17 @@ From compcert Require Import Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
+Definition val64_correct (x: val) (m: Memory.Mem.mem) (v: val) := x = v /\ exists v', Vlong v' = v.
 
+Definition start_addr_correct (x: memory_region) (m: Memory.Mem.mem) (v: val) :=
+  exists b ofs vaddr, (v = Vptr b ofs) /\
+  (Mem.loadv AST.Mint64 m (Vptr b ofs) = Some (start_addr x)) /\
+  Vlong vaddr = start_addr x.
+
+Definition args_start_addr_correct : DList.t (fun x => coqType x -> Memory.Mem.mem -> val -> Prop) (compilableSymbolArgTypes mem_regionToVal64CompilableSymbolType) :=
+  @DList.DCons _  _
+     mem_regionCompilableType start_addr_correct _
+     (@DList.DNil CompilableType _).
 
 Section GetMemRegion_start_addr.
 

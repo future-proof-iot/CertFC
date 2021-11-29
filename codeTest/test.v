@@ -1,4 +1,4 @@
-Require Import ChkPrimitive RelCorrect generated.
+Require Import ChkPrimitive RelCorrect interpreter.
 From dx.tests Require Import DxIntegers DxValues DxState DxMonad DxInstructions.
 From dx Require Import ResultMonad IR.
 From Coq Require Import List.
@@ -6,6 +6,38 @@ From compcert Require Import Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
+(** The program contains our function of interest [fn] *)
+Definition p : Clight.program := prog.
+
+Definition coq_f := is_well_chunk_bool. (** AST.memory_chunk -> M bool *)
+
+Definition clight_f := f_is_well_chunk_bool.
+
+From compcert Require Import Coqlib Integers Floats AST Ctypes Cop Clight Clightdefs.
+From compcert Require Import Smallstep.
+Import Clightdefs.ClightNotations.
+Local Open Scope clight_scope.
+
+Definition memeory_chunkToval (chunk:memory_chunk): val :=
+  match chunk with
+  | Mint8unsigned => (Vint Int.one)
+  | Mint16unsigned => (Vint (Int.repr 2))
+  | Mint32 => (Vint (Int.repr 4))
+  | Mint64 => (Vint (Int.repr 8))
+  | _ => (Vint Int.zero)
+  end.
+
+Definition boolToval (b:bool): val :=
+  if b then
+   Vtrue
+  else
+   Vfalse.
+
+Lemma back_relation:
+  forall m k (chunk:memory_chunk), exists m' t,
+                Star (Clight.semantics2 p) (Callstate  (Ctypes.Internal clight_f)
+                                                 [memeory_chunkToval chunk]  k m) t
+                     (Returnstate (boolToval (coq_f chunk)) (call_cont k) m').
 
 (** The program contains our function of interest [fn] *)
 Definition p : Clight.program := prog.
