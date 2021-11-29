@@ -4,7 +4,7 @@ Require Import Coq.Program.Equality.
 From dx Require Import IR.
 From compcert Require Import Values.
 From compcert Require Import SimplExpr.
-From compcert Require Import Clight.
+From compcert Require Import Clight Memory.
 
 From dx.tests Require Import DxIntegers DxMonad.
 From compcert Require Import Integers.
@@ -314,7 +314,31 @@ Proof.
 Qed.
 
 
+Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
+    Coqlib.list_norepet_dec eq_dec l = left H ->
+    Coqlib.list_norepet l.
+Proof.
+  intros.
+  auto.
+Qed.
 
+Lemma exists_pair : forall {A B: Type} (x: A * B) a b,
+    (fst x , snd x) = (a,b) ->
+    x = (a,b).
+Proof.
+  destruct x; simpl ; auto.
+Qed.
+
+Lemma store_ok_if_valid :
+      forall m1 chunk b ofs v
+             (V : Mem.valid_access m1 chunk b ofs Writable),
+        Mem.store chunk m1 b ofs v =
+          Some (proj1_sig (Mem.valid_access_store m1 chunk b ofs v V)).
+Proof.
+  intros.
+  destruct (Mem.valid_access_store m1 chunk b ofs v V).
+  simpl. auto.
+Qed.
 
 
 Ltac correctPrimitive_Op OP :=
