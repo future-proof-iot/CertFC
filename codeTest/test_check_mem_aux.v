@@ -271,6 +271,20 @@ Proof.
     rewrite Hchunk in *.
     eapply STEP.
     (* Done - we need to continue *)
+
+    (* we need to solve the memory relation now *)
+    unfold match_mem in H0.
+    destruct H0 as (_ & H0).
+    destruct (Globalenvs.Genv.alloc_globals (globalenv p) 
+                                            (eval_mem s) global_definitions) in H0; subst.
+    clear m0.
+    unfold test_is_well_chunk_bool.p, test_is_well_chunk_bool.fn in STEP.
+    
+    assert (Hmem_eq: m = m1). {
+      rewrite Hchunk in STEP.
+      simpl in STEP.
+    }
+    
     (** goal: plus ge s2 t2 s3 *)
     (** goal: Smallstep.plus _ _ (Returnstate v1 (call_cont K) m1) _ (Returnstate c2 (call_cont k) ?m')*)
     forward.
@@ -303,10 +317,7 @@ Proof.
       simpl.
       (** goal: Some m1 = Some ?m' *)
   
-      unfold match_mem in H0.
-      destruct H0 as (_ & H0).
-      destruct (Globalenvs.Genv.alloc_globals (globalenv p) 
-         (eval_mem s) global_definitions) in H0; subst. Set Printing All.
+     
       unfold test_is_well_chunk_bool.match_mem in P1.
       destruct P1 as (Henv & P1).
       unfold test_is_well_chunk_bool.p in *.
