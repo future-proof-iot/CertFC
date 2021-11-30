@@ -36,7 +36,7 @@ static const unsigned char wrap_around_data[] =
 
 struct fletcher32_ctx {
   const unsigned short * data;
-  unsigned int words;
+  uint32_t words;
 };
 
 struct fletcher32_ctx f32_ctx = {
@@ -56,45 +56,46 @@ void bpf_add_region_content(struct bpf_state* st){
   (*(*((*st).mrs)).content).block_size = sizeof(wrap_around_data);
 }
 
-/*
-void print_region_ctx(){
-  printf("start_ctx = %lld\n", (const unsigned short *)(uintptr_t) memory_regions.bpf_ctx.start_addr);
-  printf("ctx_size = %lld\n", memory_regions.bpf_ctx.block_size);
-  printf("ctx_words = %lld\n", ((unsigned short *)(uintptr_t) (memory_regions.bpf_ctx.start_addr+8)));
-  printf("ctx_words = %lld\n", *((unsigned short *)(uintptr_t) (memory_regions.bpf_ctx.start_addr+8)));
-}
-
-void print_region_content(){
-  printf("content_start_addr = %" PRIu64 "\n", memory_regions.content.start_addr);
-  printf("content_start = %" PRIu64 "\n", * (const uint16_t *) memory_regions.content.start_addr);
-  printf("content_size = %" PRIu64 "\n", memory_regions.content.block_size);
-}
-
-void print_normal_addr(){
+void print_normal_addr(struct bpf_state* st){
   printf("\n\n *********print_normal_addr*******\n\n");
-  printf("sizeof(bpf_fletcher32_bpf_bin) = %d\n", sizeof(bpf_fletcher32_bpf_bin));
+  printf("sizeof(f32_ctx) = %ld\n", sizeof(f32_ctx));
+  printf("sizeof(f32_ctx.data) = %ld\n", sizeof(f32_ctx.data));
+  printf("sizeof(f32_ctx.words) = %ld\n", sizeof(f32_ctx.words));
+  printf("sizeof(bpf_fletcher32_bpf_bin) = %ld\n", sizeof(bpf_fletcher32_bpf_bin));
   
-  printf("start_f32_ctx       = %lld\n", &f32_ctx);
-  printf("start_f32_ctx.data  = %lld\n", &(f32_ctx.data));
-  printf("start_f32_ctx.words = %lld\n", f32_ctx.words);
-  printf("start_f32_ctx.words = %lld\n", &(f32_ctx.words));
+  printf("start_f32_ctx       = %lld\n", (unsigned long long) (intptr_t) &f32_ctx);
+  printf("start_f32_ctx.data  = %lld\n",  (unsigned long long) (intptr_t) &(f32_ctx.data));
+  printf("start_f32_ctx.words = %d\n", f32_ctx.words);
+  printf("start_f32_ctx.words = %lld\n",  (unsigned long long) (intptr_t) &(f32_ctx.words));
   
   for (int i = 0; i < 10; i++) {
   	printf("%0d:", i);
-  	printf("ins64        = %" PRIu64 "\n", *((unsigned long long *) bpf_fletcher32_bpf_bin +i));
+  	printf("ins64        = %lld\n", *((unsigned long long *) bpf_fletcher32_bpf_bin +i));
   }
   printf("\n\n *********print_normal_addr*******\n\n");
+  
+  printf("\n\n *********print_region_info*******\n\n");
+  
+  printf("start_ctx(physical) = %lld\n", (*(*((*st).mrs)).bpf_ctx).start_addr);
+  printf("start_ctx (value)   = %"PRIu64"\n", *(uint64_t *) (uintptr_t)(*(*((*st).mrs)).bpf_ctx).start_addr);
+  printf("ctx_size  = %lld\n", (*(*((*st).mrs)).bpf_ctx).block_size);
+  printf("ctx_words = %"PRIu16"\n", (uint16_t)(intptr_t)((&(*(*((*st).mrs)).bpf_ctx).start_addr)+8));
+  printf("ctx_words = %"PRIu16"\n", *((uint16_t *)(uintptr_t) ((&(*(*((*st).mrs)).bpf_ctx).start_addr)+8)));
+  
+   
+  printf("start_content(physical) = %lld\n", (*(*((*st).mrs)).content).start_addr);
+  printf("start_content (value)   = %"PRIu16"\n", *(uint16_t *) (uintptr_t)(*(*((*st).mrs)).content).start_addr);
+  printf("content_size  = %lld\n", (*(*((*st).mrs)).content).block_size);
+  
+  printf("\n\n *********print_region_info*******\n\n");
 }
-*/
+
 
 int main(){
   
   printf("Hello rBPF_fletcher32 C code Testing:\n");
   uint32_t res0;    
-  //printf("start_content:%d\n", (const uint16_t *) wrap_around_data);
-  //printf("start_addr_content:%d\n", *wrap_around_data);
-  //printf("start_addr_content1:%d\n", *(const uint16_t *) wrap_around_data);
-  // printf("size_content:%d\n", sizeof(wrap_around_data)/2);
+  
   clock_t begin0 = clock();
   //for (int i = 0; i < 1000; i++) {
     res0 = fletcher32((const uint16_t *) wrap_around_data, sizeof(wrap_around_data)/2);
@@ -129,6 +130,7 @@ int main(){
   
   bpf_add_region_ctx(&st);
   bpf_add_region_content(&st);
+  print_normal_addr(&st);
   
   clock_t begin1 = clock();
   //for (int j = 0; j < 1000; j++) { //TODO: why a loop returns a wrong result? 

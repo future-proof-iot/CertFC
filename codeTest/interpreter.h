@@ -21,6 +21,7 @@ enum {
 struct memory_region {
   unsigned long long start_addr;
   unsigned long long block_size;
+  unsigned long long block_ptr_id;
 };
 
 struct memory_regions {

@@ -1,20 +1,20 @@
 #include "interpreter.h"
-/*
+
 #include <inttypes.h>
 #include<stdlib.h>
-#include<stddef.h>*/
+#include<stddef.h>
 
-/*
-void print_bpf_state(){
-  printf("pc= %" PRIu64 "\n", state_pc);
-  //printf("flag= %" PRIu64 "\n", bpf_flag);
+
+void print_bpf_state(struct bpf_state* st){
+  printf("pc= %" PRIu64 "\n", (uint64_t) (*st).state_pc);
+  printf("flag= %d\n", (*st).bpf_flag);
   for(int i = 0; i < 11; i++){
     printf("R%d",i);
-    printf("= %" PRIu64 ";", regsmap[i]);
+    printf("= %" PRIu64 ";", (uint64_t) (*st).regsmap[i]);
   }
   printf("\n");
 }
-*/
+
 
 static unsigned long long eval_pc (struct bpf_state* st) {
   return (*st).state_pc;
@@ -62,20 +62,20 @@ static void upd_flag(struct bpf_state* st, int f){
 
 static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned long long v){
   switch (chunk) {
-    case 1: return *(unsigned char *) v;
-    case 2: return *(unsigned short *) v;
-    case 4: return *(unsigned int *) v;
-    case 8: return *(unsigned long long *) v;
+    case 1: return *(unsigned char *) (intptr_t)v;
+    case 2: return *(unsigned short *) (intptr_t)v;
+    case 4: return *(unsigned int *) (intptr_t)v;
+    case 8: return *(unsigned long long *) (intptr_t) v;
     default: /*printf ("load:addr = %" PRIu64 "\n", v);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return 0;
   }
 }
 
 static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned long long addr, unsigned long long v){
   switch (chunk) {
-    case 1: *(unsigned char *) addr = v; return ;
-    case 2: *(unsigned short *) addr = v; return ;
-    case 4: *(unsigned int *) addr = v; return ;
-    case 8: *(unsigned long long *) addr = v; return ;
+    case 1: *(unsigned char *) (intptr_t) addr = v; return ;
+    case 2: *(unsigned short *) (intptr_t) addr = v; return ;
+    case 4: *(unsigned int *) (intptr_t) addr = v; return ;
+    case 8: *(unsigned long long *) (intptr_t) addr = v; return ;
     default: /*printf ("store_reg:addr = %" PRIu64 "\n", addr);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
 }
@@ -933,6 +933,7 @@ void step(struct bpf_state* st, unsigned long long *l0, unsigned long long len0)
   }
 }
 
+/*
 void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned long long len1, unsigned int fuel1)
 {
   unsigned int fuel0;
@@ -945,7 +946,7 @@ void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned 
     fuel0 = fuel1 - 1U;
     pc1 = eval_pc(st);
     if (pc1 < len1) {
-      step(st, l1, len1);
+      step(st, l1, len1); print_bpf_state(st);
       upd_pc_incr(st);
       f1 = eval_flag(st);
       if (f1 == 0) {
@@ -959,6 +960,31 @@ void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned 
       return;
     }
   }
+} */
+
+void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned long long len1, unsigned int fuel1)
+{
+  unsigned int fuel0;
+  unsigned long long pc1;
+  int f1;
+  for (int i=0; i< fuel1; i++){
+    pc1 = eval_pc(st);
+    if (pc1 < len1) {
+      step(st, l1, len1); print_bpf_state(st);
+      upd_pc_incr(st);
+      f1 = eval_flag(st);
+      if (f1 == 0) {
+        continue;
+      } else {
+        return;
+      }
+    } else {
+      upd_flag(st, -5);
+      return;
+    }
+  }
+  upd_flag(st, -5);
+  return;
 }
 
 unsigned long long bpf_interpreter(struct bpf_state *st, unsigned long long *l2, unsigned long long len2, unsigned int fuel2)
