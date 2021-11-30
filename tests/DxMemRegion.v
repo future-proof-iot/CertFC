@@ -11,9 +11,9 @@ From dx.Type Require Import Nat.
 Require Import IdentDef CoqIntegers DxIntegers DxValues.
 
 Record memory_region : Type := mkmr{
-  block_ptr  : val64_t;
   start_addr : val64_t;
   block_size : val64_t;
+  block_ptr  : val64_t;
 }.
 
 Record memory_regions : Type := mkmrs{
@@ -23,9 +23,9 @@ Record memory_regions : Type := mkmrs{
 }.
 
 Definition default_memory_region := {|
-  block_ptr  := val64_zero;
   start_addr := val64_zero;
   block_size := val64_zero;
+  block_ptr  := val64_zero;
 |}.
 
 Definition default_memory_regions := {|
@@ -39,7 +39,7 @@ Definition default_memory_regions := {|
 Definition mem_region_type: Ctypes.type := Ctypes.Tpointer (Ctypes.Tstruct mem_region_id Ctypes.noattr) Ctypes.noattr.
 
 Definition mem_region_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U64); (size_id, C_U32)] Ctypes.noattr.
+  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U64); (size_id, C_U64); (block_ptr_id, C_U64)] Ctypes.noattr.
 
 Definition mem_regions_type: Ctypes.type := Ctypes.Tpointer (Ctypes.Tstruct mem_regions_id Ctypes.noattr) Ctypes.noattr.
 
