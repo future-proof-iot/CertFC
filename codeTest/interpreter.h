@@ -38,4 +38,4 @@ struct bpf_state {
 };
 
 
-unsigned long long bpf_interpreter(struct bpf_state *, unsigned long long *, unsigned long long, unsigned int);
+unsigned long long bpf_interpreter(unsigned long long *, unsigned long long, unsigned int, struct bpf_state *);

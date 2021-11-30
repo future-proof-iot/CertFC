@@ -134,7 +134,7 @@ int main(){
   
   clock_t begin1 = clock();
   //for (int j = 0; j < 1000; j++) { //TODO: why a loop returns a wrong result? 
-    result = bpf_interpreter(&st, (unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000);
+    result = bpf_interpreter((unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000, &st);
     //}
   clock_t end1 = clock();
   printf("execution time:%f\n", (double)(end1-begin1)/CLOCKS_PER_SEC);
