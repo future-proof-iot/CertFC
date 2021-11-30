@@ -31,9 +31,9 @@ Definition upd_mem_regions (mrs: memory_regions) : M unit := fun st => Some (tt,
 
 Definition load_mem (chunk: memory_chunk) (ptr: val64_t): M val64_t := fun st => Some (load_mem chunk ptr st, st).
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) : M unit := fun st => Some (tt, ((store_mem_imm chunk ptr v st), snd (fst  st), snd  st)).
+Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) : M unit := fun st => Some (tt, store_mem_imm chunk ptr v st).
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) : M unit := fun st => Some (tt, ((store_mem_reg chunk ptr v st), snd (fst st), snd st)).
+Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) : M unit := fun st => Some (tt, store_mem_reg chunk ptr v st).
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

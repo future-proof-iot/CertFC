@@ -10,70 +10,83 @@ Require Import IdentDef CoqIntegers DxIntegers DxValues DxFlag DxRegs DxMemRegio
 From Coq Require Import List ZArith.
 Import ListNotations.
 
-(**
 Record state := mkst {
-  bpf_m   : Memory.mem;
   pc_loc  : int64_t;
   regs_st : regmap;
   flag    : bpf_flag;
   bpf_mrs : memory_regions;
+  bpf_m   : Memory.mem;
 }.
-
-*)
-
-Record regs_state: Type := make_rst{
-  pc_loc  : int64_t;
-  regs_st : regmap;
-}.
-
-Definition state: Type := Memory.mem * regs_state * bpf_flag. (* * memory_regions.*)
 
 Definition init_mem: Memory.mem := Memory.Mem.empty.
 
-Definition init_regs_state := {| pc_loc := Integers.Int64.zero; regs_st := init_regmap;|}.
+Definition init_state: state := {|
+  pc_loc  := Integers.Int64.zero;
+  regs_st := init_regmap;
+  flag    := BPF_OK;
+  bpf_mrs := default_memory_regions;
+  bpf_m   := init_mem;
+ |}.
 
-Definition init_state: state := 
-  (init_mem, init_regs_state, BPF_OK).
+Definition eval_pc (st: state): int64_t := pc_loc st.
 
-Definition eval_pc (st: state): int64_t := pc_loc (snd (fst st)).
+Definition upd_pc (p: int64_t) (st:state): state := {|
+  pc_loc  := p;
+  regs_st := regs_st st;
+  flag    := flag st;
+  bpf_mrs := bpf_mrs st;
+  bpf_m   := bpf_m st;
+|}.
 
-Definition upd_pc (p: int64_t) (st:state): state :=
-  let m  := fst (fst st) in
-  let rs := snd (fst st) in
-  let f  := snd st in
-  let next_rs := {| pc_loc := p; regs_st := regs_st rs; |} in
-    (m, next_rs, f).
+(*
+Definition upd_pc (p: int64_t) (st:state): state := {|
+  pc_loc  := pc_loc st;
+  regs_st := regs_st st;
+  flag    := flag st;
+  bpf_mrs := bpf_mrs st;
+  bpf_m   := bpf_m st;
+|}.
 
-Definition upd_pc_incr (st:state): state :=
-  let m  := fst (fst st) in
-  let rs := snd (fst st) in
-  let f  := snd st in
-  let next_rs := {| pc_loc := Int64.add (pc_loc rs) Int64.one; regs_st := regs_st rs; |} in
-    (m, next_rs, f).
+*)
+
+Definition upd_pc_incr (st:state): state := {|
+  pc_loc  := Int64.add (pc_loc st) Int64.one;
+  regs_st := regs_st st;
+  flag    := flag st;
+  bpf_mrs := bpf_mrs st;
+  bpf_m   := bpf_m st;
+|}.
 
 Definition eval_reg (r: reg) (st:state): val64_t :=
-  eval_regmap r (regs_st (snd (fst st))).
+  eval_regmap r (regs_st st).
 
-Definition upd_reg (r:reg) (v:val64_t) (st:state): state :=
-  let m  := fst (fst st) in
-  let rs := snd (fst st) in
-  let f  := snd st in
-  let next_rs := {| pc_loc := pc_loc rs; regs_st := upd_regmap r v (regs_st rs); |} in
-    (m, next_rs, f).
+Definition upd_reg (r:reg) (v:val64_t) (st:state): state := {|
+  pc_loc  := pc_loc st;
+  regs_st := upd_regmap r v (regs_st st);
+  flag    := flag st;
+  bpf_mrs := bpf_mrs st;
+  bpf_m   := bpf_m st;
+|}.
 
-Definition eval_flag (st:state): bpf_flag := snd st.
+Definition eval_flag (st:state): bpf_flag := flag st.
 
-Definition upd_flag (f: bpf_flag) (st:state): state :=
-  let m  := fst (fst st) in
-  let rs := snd (fst st) in
-    (m, rs, f).
+Definition upd_flag (f: bpf_flag) (st:state): state := {|
+  pc_loc  := pc_loc st;
+  regs_st := regs_st st;
+  flag    := f;
+  bpf_mrs := bpf_mrs st;
+  bpf_m   := bpf_m st;
+|}.
 
-Definition eval_mem (st: state):Mem.mem := fst (fst st).
+Definition eval_mem (st: state):Mem.mem := bpf_m st.
 
-Definition upd_mem (m: Mem.mem) (st: state): state :=
-  let rs := snd (fst st) in
-  let f  := snd st in
-    (m, rs, f).
+Definition upd_mem (m: Mem.mem) (st: state): state := {|
+  pc_loc  := pc_loc st;
+  regs_st := regs_st st;
+  flag    := flag st;
+  bpf_mrs := bpf_mrs st;
+  bpf_m   := m;
+|}.
 
 (*
 Definition eval_mem_regions (st:state): memory_regions := snd st.
@@ -84,23 +97,22 @@ Definition upd_mem_regions (mrs: memory_regions) (st:state): state :=
   let f  := snd (fst st) in
     (m, rs, f, mrs).*)
 
-
 Definition load_mem (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
-  match Mem.loadv chunk (fst (fst st)) ptr with
+  match Mem.loadv chunk (bpf_m st) ptr with
   | Some res => res
   | None => val64_zero
   end.
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) (st: state) :=
-  match Mem.storev chunk (fst (fst st)) ptr v with
-  | Some m => m
-  | None => init_mem
+Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) (st: state): state :=
+  match Mem.storev chunk (bpf_m st) ptr v with
+  | Some m => upd_mem m st
+  | None => upd_mem init_mem st
   end.
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) (st: state) :=
-  match Mem.storev chunk (fst (fst st)) ptr v with
-  | Some m => m
-  | None => init_mem
+Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) (st: state): state :=
+  match Mem.storev chunk (bpf_m st) ptr v with
+  | Some m => upd_mem m st
+  | None => upd_mem init_mem st
   end.
 
 (******************** Dx Related *******************)
