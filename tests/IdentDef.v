@@ -12,6 +12,7 @@ Definition mem_regs_id:   AST.ident := $"memory_regions".
 Definition mem_region_id: AST.ident := $"memory_region".
 Definition start_addr_id: AST.ident := $"start_addr".
 Definition size_id:       AST.ident := $"block_size".
+Definition block_ptr_id:  AST.ident := $"block_ptr_id".
 Definition mem_regions_id:AST.ident := $"memory_regions".
 Definition bpf_ctx_id:    AST.ident := $"bpf_ctx".
 Definition bpf_stk_id:    AST.ident := $"bpf_stk".
