@@ -276,12 +276,19 @@ Proof.
     unfold match_mem in H0.
     destruct H0 as (_ & H0).
     destruct (Globalenvs.Genv.alloc_globals (globalenv p) 
-                                            (eval_mem s) global_definitions) in H0; subst.
-    clear m0.
-    unfold test_is_well_chunk_bool.p, test_is_well_chunk_bool.fn in STEP.
+                                            (eval_mem st) global_definitions) in H0; subst.
     
+    unfold test_is_well_chunk_bool.match_mem in P1.
+    destruct P1 as (Henv_eq & P1); rewrite Henv_eq in P1, STEP.
+
+    unfold test_is_well_chunk_bool.p, test_is_well_chunk_bool.fn in STEP.
+    unfold test_is_well_chunk_bool.match_res, bool_correct in P2.
     assert (Hmem_eq: m = m1). {
       rewrite Hchunk in STEP.
+      eapply Smallstep.star_plus_trans in STEP.
+      eapply Smallstep.plus_right' in STEP.
+      eapply Smallstep.plus_left'; eauto.
+  do 2 econstructor; eauto.
       simpl in STEP.
     }
     
