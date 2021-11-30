@@ -329,11 +329,6 @@ Module MatchCType.
     end.
 End MatchCType.
 
-Definition args (P: Primitive) :=
-  (compilableSymbolArgTypes (primType P)).
-
-Definition ret (P : Primitive) :=  coqType' (compilableSymbolResType (primType P)).
-
 Fixpoint app {l : list Type} {r: Type} (f : arrow_type l r) (a : DList.t (fun x => x) l) : r:=
   match a in (DList.t _ l0) return (arrow_type l0 r -> r) with
   | @DList.DNil _ _ => fun f0 : arrow_type nil r => f0
@@ -352,62 +347,6 @@ Fixpoint app_n {e: Type} {r:Type} (d:e) (n: nat) (f: arrow_n n e r) (l:list e) {
       end
   end f.
 
-Lemma arrow_type_encode : forall P,
-    (arrow_type (List.map coqType (args P)) (ret P)) = (encodeCompilableSymbolType None (primType P)).
-Proof.
-  unfold args,ret.
-  destruct P. simpl.
-  unfold encodeCompilableSymbolType.
-  destruct primType.
-  simpl. clear.
-  induction compilableSymbolArgTypes.
-  - simpl. reflexivity.
-  - simpl.
-    rewrite IHcompilableSymbolArgTypes.
-    reflexivity.
-Defined.
-
-Definition uniq {A: Type} (R : A -> Prop) (a : A)  :=
-  R a /\ forall a', R a' -> a = a'.
-
-Definition is_transl_expr (e: Csyntax.expr) (e': Clight.expr) :=
-  forall g LE, transl_expr For_val e g = Res (nil,e') g LE.
-
-Inductive one_eval_expr (e:Clight.expr) (v:val) : Prop :=
-| EvalExpr_Intro  :
-    forall ge ev te m,
-        eval_expr ge ev te m e v -> one_eval_expr e v.
-
-Definition eval_Csem  (e: Csyntax.expr) (v: val) : Prop:=
-  exists e', uniq (is_transl_expr e) e'  /\
-             uniq (one_eval_expr e') v.
-
-Definition get_typed_args (l: list CompilableType) (la : DList.t (fun x => coqType x * val) l) : list Csyntax.expr :=
-  DList.to_list
-    (fun (x : CompilableType)
-         (tval : coqType x * val) =>
-       Csyntax.Eval (snd tval) (cType x)) la.
-
-Definition correctPrimitive (P: Primitive)
-           (a : DList.t (fun x => coqType x -> val -> Prop) (args P))
-           (r : ret P -> val -> Prop) : Prop :=
-      forall (la: DList.t (fun x => coqType x * val) (args P)),
-        DList.Forall2 (fun (x : CompilableType) (R : coqType x -> val -> Prop) v => R (fst v) (snd v)) a la ->
-        let a  := (DList.MapT (fun x => coqType x) (fun (x:CompilableType) v => fst v) la) in
-        match primCImplem P (get_typed_args (args P) la) with
-        | ResultMonad.Err _ => True
-        | ResultMonad.Ok  e => forall v, eval_Csem  e v ->
-                                         r (app (r:=ret P) (eq_rect_r (fun T : Type => T) (primCoqImplem P) (arrow_type_encode P)) a) v
-  end
-  .
-
-Definition int64_correct (x : int64) (v:val) := Vlong x = v.
-
-Definition args_binary_int64_correct : DList.t (fun x => coqType x -> val -> Prop) (compilableSymbolArgTypes int64Toint64Toint64SymbolType) :=
-  @DList.DCons _ _ int64CompilableType int64_correct _
-               (@DList.DCons _  _
-                             int64CompilableType int64_correct _
-                             (@DList.DNil CompilableType _)).
 
 Ltac car_cdr :=
   repeat match goal with
@@ -421,105 +360,6 @@ Ltac car_cdr :=
   | DL : DList.t _ nil |- _ =>
     rewrite (DList.Dnil_nil _ DL) in *; clear DL
          end.
-
-
-Lemma genv_ex : genv.
-Proof.
-  apply Build_genv.
-  Print Globalenvs.Genv.mkgenv.
-  eapply (@Globalenvs.Genv.mkgenv _ _ nil (Maps.PTree.empty block)
-                                 (Maps.PTree.empty _)
-                                 BinPos.xH
-         ).
-  - intros.
-    rewrite Maps.PTree.gempty in H. discriminate.
-  - intros.
-    rewrite Maps.PTree.gempty in H. discriminate.
-  - intros.
-    rewrite Maps.PTree.gempty in H. discriminate.
-  - apply Maps.PTree.empty.
-Qed.
-
-
-
-
-
-Ltac correctPrimitive_Op OP :=
-  unfold correctPrimitive;
-  cbn;
-  intros;
-  car_cdr;
-  simpl in *;
-  (* Explain that the translation of the Csyntax espression
-     is a Clight expression *)
-  intros v EVAL;
-  unfold eval_Csem in EVAL;
-  destruct EVAL as [e' [Htr Heval]];
-  match goal with
-  | H : _ (fst ?A1) _ /\
-        _ (fst ?A2) (snd _) /\ True |- _ =>
-    let HA1 := fresh "HA1" in
-    let HA2 := fresh "HA2" in
-    destruct H as [HA1 [HA2 _]];
-    assert (e' =
-            (Ebinop OP (Econst_long (fst A1) CoqIntegers.C_U64)
-                    (Econst_long (fst A2) CoqIntegers.C_U64) CoqIntegers.C_U64))
-           by (
-    unfold uniq in Htr;
-    destruct Htr as [Htr1  Htr2];
-    apply Htr2;
-    unfold is_transl_expr;
-    intros;
-    rewrite <- HA1;
-    rewrite <- HA2;
-    simpl;
-    unfold bind2,bind, SimplExpr.ret;
-    simpl; f_equal;
-    apply Axioms.proof_irr
-             );
-    subst; clear Htr;
-  unfold uniq in Heval;
-  destruct Heval as [Heval1 Heval2];
-  symmetry;
-  apply Heval2;
-  apply (EvalExpr_Intro _ _ genv_ex (Maps.PTree.empty _) (Maps.PTree.empty _)
-                        Memory.Mem.empty);
-  repeat econstructor
-  end.
-
-
-Lemma  Const_int64_add_correct : correctPrimitive
-                                   Const_int64_add args_binary_int64_correct int64_correct.
-Proof.
-  correctPrimitive_Op Cop.Oadd.
-Qed.
-
-Lemma  Const_int64_sub_correct : correctPrimitive
-                                   Const_int64_sub args_binary_int64_correct int64_correct.
-Proof.
-  correctPrimitive_Op Cop.Osub.
-Qed.
-
-(*
-
-Lemma  Const_int64_mul_correct : correctPrimitive
-                                   Const_int64_mul args_binary_int64_correct int64_correct.
-Proof.
-  correctPrimitive_Op Cop.Omul.
-Qed.*)
-
-Lemma arrow_type_encode' :
-  forall  Args Res M,
-  (arrow_type (List.map coqType Args) (M (coqType Res)) = encodeCompilableSymbolType (Some M) (MkCompilableSymbolType Args (Some Res))).
-  Proof.
-    unfold encodeCompilableSymbolType.
-    simpl. intros.
-    induction Args.
-    - simpl. reflexivity.
-    - simpl.
-      rewrite IHArgs.
-      reflexivity.
-  Defined.
 
 
 Definition unmodifies_effect (l : list block) (m m' : Memory.Mem.mem) : Prop :=
@@ -555,8 +395,7 @@ Section S.
 
   Variable modifies : list block. (* of the C code *)
 
-  (* [match_mem] related the Coq monadic state and the C memory *)
-  Variable match_mem : stateM -> Memory.Mem.mem -> Prop.
+  Variable match_mem : stateM -> val -> Memory.Mem.mem -> Prop.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Variable match_arg_list : DList.t (fun x => x -> val -> Memory.Mem.mem -> Prop) args.
@@ -573,23 +412,23 @@ Section S.
           | None => True
           | Some (v',st') =>
               (* We prove that we can reach a return state *)
-              forall (lval: DList.t (fun _ => val) args)
+              forall (lval: DList.t (fun _ => val) args) (cst: val)
                      k m,
                 is_call_cont k ->
                 (* they satisfy the invariants *)
-                match_mem st m ->
+                match_mem st cst m ->
                 DList.Forall2 (fun (a:Type) (R: a -> val -> Memory.Mem.mem ->Prop) (X:a * val) => R (fst X) (snd X) m)
-                        match_arg_list (DList.zip a lval) ->
+                              match_arg_list (DList.zip  a lval) ->
                 (* We prove that we can reach a return state *)
-                Forall2 (fun v t => Cop.val_casted v (snd t)) (DList.to_list (fun _ v => v) lval) (fn_params fn) ->
+                Forall2 (fun v t => Cop.val_casted v (snd t)) (cst ::(DList.to_list (fun _ v => v) lval)) (fn_params fn) ->
 
                 exists v m' t,
                 Star (Clight.semantics2 p) (Callstate  (Ctypes.Internal fn)
-                                                 (DList.to_list (fun x v => v) lval)  k m) t
+                                                       (cst ::(DList.to_list (fun x v => v) lval))  k m) t
                      (Returnstate v (call_cont k) m') /\
                   (* The return memory matches the return state *)
                   match_res v' v  m' /\ Cop.val_casted v (fn_return fn) /\
-                  match_mem st' m' /\ unmodifies_effect modifies m m'
+                  match_mem st' cst m' /\ unmodifies_effect modifies m m'
 
               end
       }.
@@ -598,58 +437,6 @@ End S.
 
 
 
-
-
-Section S.
-  (** The program contains our function of interest [fn] *)
-  Variable p : Clight.program.
-
-  (* [Args,Res] provides the mapping between the Coq and the C types *)
-  Variable args : list Type.
-  Variable res : Type.
-
-  (* [f] is a Coq Monadic function with the right type *)
-  Variable f : arrow_type args (M res).
-
-  (* [fn] is the Cligth function which has the same behaviour as [f] *)
-  Variable fn: Clight.function.
-
-  Let nb_arg := List.length (fn_params fn).
-
-  (* [match_arg] is the relation between the Coq and C state *)
-  Variable match_arg : arrow_type args
-                                  (arrow_n nb_arg val
-                                     (stateM -> Memory.Mem.mem -> Prop)).
-
-  (* [match_res] relates the Coq result and the C result *)
-  Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
-
-  Record correct_function2  :=
-    mk_correct_function2
-      {
-        fn_eval_ok2 : forall
-            (a: DList.t (fun x => x) args) (st:stateM),
-          match app (r:=M res) f  a st with
-          | None => True
-          | Some (v',st') =>
-              (* We prove that we can reach a return state *)
-              forall lval
-                     k m,
-                is_call_cont k ->
-                List.length lval = List.length (fn_params fn) ->
-                (* they satisfy the invariants *)
-                app_n (Vfalse) nb_arg (app match_arg a) lval st m ->
-                (* We prove that we can reach a return state *)
-                exists v m' t,
-                Star (Clight.semantics2 p) (Callstate  (Ctypes.Internal fn)
-                                                 lval  k m) t
-                     (Returnstate v (call_cont k) m') /\
-                  (* The return memory matches the return state *)
-                  match_res v' v st'  m'
-              end
-      }.
-
-End S.
 
 
 Fixpoint apply_cont (k:cont) : option (statement * cont) :=
@@ -709,10 +496,10 @@ Definition match_temp_env (dl : list ((AST.ident * Ctypes.type) * (val -> Memory
             : Prop :=
   Forall (match_elt m le) dl.
 
-Definition pre (state_inv : stateM -> Memory.Mem.mem -> Prop)
+Definition pre
            (var_inv : list (positive * Ctypes.type * (val ->Memory.Mem.mem -> Prop)))
-           (st:stateM) (le: temp_env) (m: Memory.Mem.mem) :=
-  state_inv st m /\ match_temp_env var_inv le m.
+            (le: temp_env) (m: Memory.Mem.mem) :=
+  match_temp_env var_inv le m.
 
 Definition post {r: Type} (state_inv : stateM -> Memory.Mem.mem -> Prop)
            (match_res : r -> val -> Memory.Mem.mem -> Prop)
@@ -733,14 +520,15 @@ Section S.
 
   Variable modifies : list block.
 
-  Variable match_mem : stateM -> Memory.Mem.mem -> Prop.
+  Variable match_mem : stateM -> val -> Memory.Mem.mem -> Prop.
 
   Variable match_arg : list ((AST.ident * Ctypes.type) * (val -> Memory.Mem.mem -> Prop)).
 
   Variable match_res : res -> val  -> Memory.Mem.mem -> Prop.
 
-  Definition correct_body (st : stateM) (le:temp_env) (m:Memory.Mem.mem) :=
-    pre match_mem match_arg st le m ->
+  Definition correct_body (st : stateM) (cst:AST.ident * Ctypes.type) (le:temp_env) (m:Memory.Mem.mem) :=
+    match_elt m le (cst, match_mem st) ->
+    match_temp_env match_arg le m ->
     match f st with
           | None => True
           | Some (v',st') =>
@@ -753,7 +541,7 @@ Section S.
                      t
                      (Returnstate v (call_cont k) m') /\
                   (* The return memory matches the return state *)
-                  match_mem st' m' /\
+                  match_elt m' le (cst, match_mem st') /\
                   match_res v' v m' /\ Cop.val_casted v (fn_return fn) /\
                   unmodifies_effect modifies m m'
           end
@@ -790,6 +578,9 @@ Proof.
     congruence.
     tauto.
 Qed.
+
+
+
 
 Lemma match_arg_list_match_init_env :
   forall (targs: list Type)
@@ -872,7 +663,7 @@ Section S.
 
   (* [match_res] relates the Coq result and the C result *)
 *)
-  Variable match_mem : stateM -> Memory.Mem.mem -> Prop.
+  Variable match_mem : stateM -> val -> Memory.Mem.mem -> Prop.
 
   Variable match_res : res -> val -> Memory.Mem.mem -> Prop.
 
@@ -882,10 +673,12 @@ Section S.
       (NOREP1: Coqlib.list_norepet (var_names (fn_params fn)))
       (NOREP :  Coqlib.list_norepet (var_names (fn_vars fn)))
       (NOVAR : fn_vars fn = nil)
-      (HLEN : Datatypes.length (fn_params fn) = Datatypes.length args)
+      (HLEN : Datatypes.length (fn_params fn) = S (Datatypes.length args))
+      pst
+      (HD : List.hd_error (fn_params fn) = Some pst )
       (C : forall st le m a, correct_body p  res (app f a) fn (fn_body fn) modifies
-                                          match_mem (list_rel_arg (fn_params fn) args match_arg_list a)
-                                          match_res st le m)
+                                          match_mem (list_rel_arg (fn_params fn) (stateM::args) (DList.DCons match_mem match_arg_list) (DList.DCons st a))
+                                          match_res st pst le m)
 
     ,
     correct_function3 p args res f fn modifies match_mem  match_arg_list match_res.
@@ -894,15 +687,32 @@ Section S.
     intros.
     destruct (app f a st) eqn: EQ; auto.
     destruct p0 as (v',st').
-    intros lval k m K MM MA MA'.
-    specialize (C st (bind_parameter_temps_s (fn_params fn) ((DList.to_list (fun (_ : Type) (v0 : val) => v0) lval))
+    intros lval cst k m K MM MA MA'.
+    set (all_args := (DList.DCons cst lval :  DList.t (fun x => val) (stateM ::args))).
+    specialize (C st (bind_parameter_temps_s (fn_params fn) ((DList.to_list (fun (_ : Type) (v0 : val) => v0) all_args))
           (create_undef_temps (fn_temps fn))) m a).
     unfold correct_body in C.
     rewrite EQ in C.
     exploit C;eauto.
-    unfold pre.
-    split ; auto.
-    apply match_arg_list_match_init_env;auto.
+    { destruct (fn_params fn) ; try discriminate.
+      simpl.
+      destruct p0.
+      unfold match_elt.
+      simpl.
+      rewrite get_bind_parameter_temps_s.
+      inv HD.
+      rewrite Maps.PTree.gss.
+      split; auto.
+      inv MA'. auto.
+      inv HD.
+      inv NOREP1. auto.
+    }
+    {
+      apply match_arg_list_match_init_env;auto.
+      unfold all_args.
+      simpl.
+      split ; auto.
+    }
     intros (v2& m'& t'& EX & RES).
     do 3 eexists.
     split ; eauto.
@@ -913,6 +723,7 @@ Section S.
       econstructor ; eauto.
     - rewrite bind_parameter_temps_eq.
       reflexivity.
+      simpl.
       rewrite DList.length_to_list.
       auto.
     - eapply star_trans.
@@ -920,7 +731,20 @@ Section S.
       apply star_refl.
       reflexivity.
     - reflexivity.
-    - tauto.
+    - destruct RES as (R1 & R2 & R3 & R4).
+      repeat split ; auto.
+      unfold all_args in R1.
+      unfold match_elt in R1.
+      simpl in R1.
+      destruct (fn_params fn); try discriminate.
+      inv HD.
+      simpl in R1.
+      destruct pst.
+      simpl in R1.
+      rewrite get_bind_parameter_temps_s in R1.
+      rewrite Maps.PTree.gss in R1.
+      tauto.
+      inv NOREP1; auto.
   Qed.
 
 
@@ -1046,7 +870,7 @@ Definition var_inv_preserve (var_inv : list (positive * Ctypes.type * (val ->Mem
            (v : val),
       In (x, t, r) var_inv -> Maps.PTree.get x te = Some v -> r v m -> r v m'.
 
-
+(*
 Section S.
   Variable p : program.
   Variable fn: Clight.function.
@@ -1054,7 +878,7 @@ Section S.
   Lemma correct_statement_call :
     forall  (has_cast : bool) args res (f : arrow_type args (M res)) a loc
            vres fvar targs ti eargs tres  fct modifies
-           (state_inv : stateM -> Memory.Mem.mem -> Prop)
+           (state_inv : stateM -> val -> Memory.Mem.mem -> Prop)
            (FS : Globalenvs.Genv.find_symbol (globalenv (semantics2 p)) fvar = Some loc)
            (FF : Globalenvs.Genv.find_funct (globalenv (semantics2 p))
                                             (Vptr loc Ptrofs.zero) = Some (Ctypes.Internal fct))
@@ -1507,3 +1331,4 @@ Proof.
     rewrite MAP.
     reflexivity.
 Qed.
+*)

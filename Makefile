@@ -32,7 +32,7 @@ COQEXTROPTS := $(shell $(SED) 's/-[RQ]  */&..\//g' _CoqProject) -w all,-extracti
 
 OCAMLINCS := -I extr -I src
 
-COQSOURCES := $(wildcard src/*.v src/*/*.v)
+COQSOURCES := $(wildcard src/*.v src/*/*.v codeTest/*v tests/*.v)
 ifeq ($(strip $(CPRINTERDIR)),)
 COQSOURCES := $(filter-out src/DumpAsC.v,$(COQSOURCES))
 endif
