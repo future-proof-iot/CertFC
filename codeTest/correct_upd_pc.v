@@ -53,21 +53,21 @@ Section Upd_pc.
     - eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
     - simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
     - reflexivity.
-    - simpl. reflexivity.
+    - reflexivity.
     - reflexivity.
     - intros.
       unfold args in *.
       car_cdr.
-      unfold list_rel_arg.
+      unfold app, list_rel_arg.
       simpl.
       unfold correct_body.
       repeat intro.
+      unfold pre in *.
       do 3 eexists.
       ...
       repeat intro.
      reflexivity. repeat econstructor; eauto.
-  - reflexivity.
-  -
+
   Qed.
 
 End Upd_pc.
