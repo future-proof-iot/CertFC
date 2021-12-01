@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
 
 (**
 static void upd_pc(struct bpf_state* st, unsigned long long pc) {
