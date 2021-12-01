@@ -16,9 +16,9 @@ CLIGHTGEN=clightgen
 COQPROJOPTS := $(shell $(CAT) _CoqProject)
 COQDEPOPTS := $(COQPROJOPTS)
 COQCOPTS := $(COQPROJOPTS) -w all,-notation
-COQEXTROPTS := -R $(DXDIR)/src dx -R ../tests dx.tests -w all,-extraction
+COQEXTROPTS :=  -R ../tests dx.tests -w all,-extraction
 
-OCAMLINCS := -I extr -I src
+OCAMLINCS := -I extr # -I src
 
 compile:
 	$(COQC) $(COQCOPTS) tests/Int16.v
@@ -37,18 +37,13 @@ compile:
 	$(COQC) $(COQCOPTS) tests/DxMonad.v
 	$(COQC) $(COQCOPTS) tests/DxAST.v
 	$(COQC) $(COQCOPTS) tests/DxInstructions.v
-	
 	$(COQC) $(COQCOPTS) tests/Tests.v
 	$(COQC) $(COQCOPTS) tests/TestMain.v
-	
 	cd tests/ && $(COQC) $(COQEXTROPTS) ExtrMain.v
 
 # extract:	
-	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests tests/TestMain.mli	
-	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests -c tests/TestMain.ml
-		
-	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -c $(DXDIR)/src/DumpAsC.ml
-	
+	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr  -I tests tests/TestMain.mli	
+	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr  -I tests -c tests/TestMain.ml
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) '{ delete paths ;                                                                 \
 	              for(i = 1; i <= NF; i++) {                                                     \
@@ -61,22 +56,17 @@ compile:
 	                 print "$(COMPCERTSRCDIR)/" p ;                                              \
 	              }                                                                              \
 	            }' > compcertsrc-I	
-		
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
 
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
-	
-	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/src/DumpAsC.cmx tests/TestMain.cmx -o tests/main
-	
+	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx tests/TestMain.cmx -o tests/main
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini tests/compcert.ini
-	
 	cd tests && ./main
 
 clight:
 	cd codeTest && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c
-	
 # clight:
 	cd codeTest && $(CLIGHTGEN) interpreter.c
 
@@ -86,7 +76,13 @@ proof:
 	$(COQC) $(COQCOPTS) codeTest/MatchState.v
 	$(COQC) $(COQCOPTS) codeTest/clight_exec.v
 	$(COQC) $(COQCOPTS) codeTest/Clightlogic.v
-	
+
+clean :
+	find . -name "*\.vo" -exec rm {} \;
+	find . -name "*\.cmi" -exec rm {} \;
+	find . -name "*\.cmx" -exec rm {} \;
+
+
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
