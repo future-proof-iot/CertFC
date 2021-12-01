@@ -54,11 +54,7 @@ compile:
 	cd tests/ && $(COQC) $(COQEXTROPTS) ExtrMain.v
 
 extract:
-	@echo $@	
-	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests tests/TestMain.mli	
-	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests -c tests/TestMain.ml
-		
-	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -c $(DXDIR)/src/DumpAsC.ml
+	@echo $@
 	
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) '{ delete paths ;                                                                 \
@@ -74,7 +70,11 @@ extract:
 	            }' > compcertsrc-I	
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
-
+	
+	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests tests/TestMain.mli	
+	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests -c tests/TestMain.ml
+		
+	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -c $(DXDIR)/src/DumpAsC.ml
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
 	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx tests/TestMain.cmx -o tests/main
@@ -96,6 +96,7 @@ proof:
 	$(COQC) $(COQCOPTS) codeTest/Clightlogic.v
 
 clean :
+	@echo $@
 	find . -name "*\.vo" -exec rm {} \;
 	find . -name "*\.cmi" -exec rm {} \;
 	find . -name "*\.cmx" -exec rm {} \;
