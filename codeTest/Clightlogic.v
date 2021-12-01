@@ -439,7 +439,7 @@ End S.
 
 
 
-Fixpoint apply_cont (k:cont) : option (statement * cont) :=
+Definition apply_cont (k:cont) : option (statement * cont) :=
   match k with
   | Kstop => None
   | Kseq s k => Some(s,k)
