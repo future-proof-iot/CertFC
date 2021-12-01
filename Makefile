@@ -28,7 +28,6 @@ all:
 	@$(MAKE) extract
 	@$(MAKE) clight
 	@$(MAKE) proof 
-	@$(MAKE) clean 
 
 
 compile:
