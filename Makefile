@@ -11,6 +11,8 @@ CC=gcc
 OFLAGS=-Os
 CLIGHTGEN=clightgen
 
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
 # Disable warnings on notations (that are coming from the standard
 # library)
 COQPROJOPTS := $(shell $(CAT) _CoqProject)
@@ -20,7 +22,16 @@ COQEXTROPTS := -R $(DXDIR)/src dx -R ../tests dx.tests -w all,-extraction
 
 OCAMLINCS := -I extr -I src
 
+all:
+	@echo $@
+	@$(MAKE) compile
+	@$(MAKE) extract
+	@$(MAKE) clight
+	@$(MAKE) proof 
+
+
 compile:
+	@echo $@
 	$(COQC) $(COQCOPTS) tests/Int16.v
 	$(COQC) $(COQCOPTS) tests/CoqIntegers.v
 	$(COQC) $(COQCOPTS) tests/InfComp.v
@@ -43,7 +54,8 @@ compile:
 	
 	cd tests/ && $(COQC) $(COQEXTROPTS) ExtrMain.v
 
-# extract:	
+extract:
+	@echo $@	
 	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests tests/TestMain.mli	
 	$(OCAMLOPT) -args $(DXDIR)/compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests -c tests/TestMain.ml
 		
@@ -75,19 +87,19 @@ compile:
 	cd tests && ./main
 
 clight:
+	@echo $@
 	cd codeTest && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c
 	
-# clight:
 	cd codeTest && $(CLIGHTGEN) interpreter.c
 
 proof:
+	@echo $@
 	$(COQC) $(COQCOPTS) codeTest/interpreter.v
 	$(COQC) $(COQCOPTS) codeTest/CommonLemma.v
 	$(COQC) $(COQCOPTS) codeTest/MatchState.v
 	$(COQC) $(COQCOPTS) codeTest/clight_exec.v
 	$(COQC) $(COQCOPTS) codeTest/Clightlogic.v
-	
-# We want to keep the .cmi that were built as we go
+
 .SECONDARY:
 
-.PHONY: compile extract rbpf clight
+.PHONY: all compile extract clight proof
