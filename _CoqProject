@@ -1,3 +1,2 @@
--R src dx
+-R /home/shyuan/GitLab/dx/src dx
 -R tests dx.tests
--R codeTest dx.codeTest
