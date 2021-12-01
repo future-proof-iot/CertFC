@@ -21,16 +21,24 @@ Before installing this repo, making sure that you have installed necessary libs 
 
 _NB: we modify the makefile of the source project_, to run this repo:
 ```shell
-$ git clone https://gitlab.inria.fr/syuan/rbpf-dx.git
-$ cd rbpf-dx
+$ git clone https://gitlab.univ-lille.fr/samuel.hym/dx
+$ cd dx
 $ ./configure ...
 $ ./configure --install-compcert-printer
 $ make
 $ make test
 ```
+```shell
+$ git clone https://gitlab.inria.fr/syuan/rbpf-dx.git
+$ cd rbpf-dx
+$ make compile
+$ make clight
+$ make proof
+```
 Remember:
 1. we must config the compcert-printer function!!!
 2. be careful to use positive as variables' id, because dx/compcert also uses postive numbers to represent variables: there will be a conflict if your positive number is too small and it overlaps with existing variables.
+3. we must run `make test` once, because it will compile some files from `extr` (it should be fixed soon).
 
 #   dx
 
