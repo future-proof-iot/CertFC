@@ -48,20 +48,20 @@ Section Upd_pc.
 
   Lemma correct_function3_upd_pc : correct_function3 p args res f fn modifies match_mem match_arg_list match_res.
   Proof.
-    apply correct_function_from_body.
+    eapply correct_function_from_body.
     - simpl; unfold Coqlib.list_disjoint. simpl; intuition (subst; discriminate).
     - eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
     - simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
     - reflexivity.
-    - simpl. admit.
+    - simpl. reflexivity.
+    - reflexivity.
     - intros.
       unfold args in *.
       car_cdr.
-      unfold app, list_rel_arg.
+      unfold list_rel_arg.
       simpl.
       unfold correct_body.
       repeat intro.
-      unfold pre in *.
       do 3 eexists.
       ...
       repeat intro.
