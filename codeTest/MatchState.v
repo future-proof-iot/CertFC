@@ -3,24 +3,22 @@
 From dx.tests Require Import DxIntegers DxValues DxAST DxMemRegion DxRegs DxState DxFlag.
 From compcert Require Import Coqlib Integers Values AST Clight Memory.
 
-
-
-Definition match_region (f: meminj) (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
-  (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some v /\ Val.inject f (block_ptr mr) v)    /\
-    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some v /\ Val.inject f (start_addr mr) v) /\
-    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some v /\ Val.inject f (block_size mr) v).
+Definition match_region (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
+  (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some v /\ Val.inject inject_id (block_ptr mr) v)    /\
+    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some v /\ Val.inject inject_id (start_addr mr) v) /\
+    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some v /\ Val.inject inject_id (block_size mr) v).
 
 Definition size_of_region  := Ptrofs.repr (3 * 8). (* 3 * 64 bits *)
 
-Fixpoint match_list_region (f: meminj) (m:mem) (bl_regions: block) (ofs:ptrofs) (l:list memory_region) :=
+Fixpoint match_list_region  (m:mem) (bl_regions: block) (ofs:ptrofs) (l:list memory_region) :=
   match l with
   | nil => True
-  | mr :: l' => match_region f mr bl_regions ofs m /\
-                  match_list_region f m bl_regions (Ptrofs.add ofs size_of_region) l'
+  | mr :: l' => match_region  mr bl_regions ofs m /\
+                  match_list_region  m bl_regions (Ptrofs.add ofs size_of_region) l'
   end.
 
-Definition match_regions (f:meminj) (mrs:memory_regions) (bl_regions: block) (m:mem) :=
-    match_list_region f m bl_regions Ptrofs.zero (bpf_ctx mrs :: bpf_stk mrs :: content mrs ::nil).
+Definition match_regions  (mrs:memory_regions) (bl_regions: block) (m:mem) :=
+    match_list_region  m bl_regions Ptrofs.zero (bpf_ctx mrs :: bpf_stk mrs :: content mrs ::nil).
 
 
 Definition id_of_reg (r:reg) : Z :=
@@ -43,10 +41,10 @@ Section S.
   (* [bl_state] is the memory block for the monadic state *)
   Variable bl_state : block.
 
-  Definition match_registers (f : meminj) (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
+  Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
     exists v, Mem.loadv AST.Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some v /\
-                Val.inject f (eval_regmap r rmap) v.
+                Val.inject inject_id (eval_regmap r rmap) v.
 
 
 
@@ -73,17 +71,18 @@ Section S.
 
   Definition size_of_regs := 10 * 8.
 
-  Record match_meminj_state (f : meminj) (st:DxState.state) (m:mem) : Prop :=
+  Record match_state  (st:DxState.state) (m:mem) : Prop :=
     {
-      minj  : Mem.inject f (bpf_m st) m;
+      minj  : Mem.inject (inject_id) (bpf_m st) m;
       mpc   : Mem.loadv AST.Mint64 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vlong  (pc_loc st));
-      mregs : match_registers f (regs_st st) bl_state (Ptrofs.repr 8) m;
+      mregs : match_registers  (regs_st st) bl_state (Ptrofs.repr 8) m;
       mflsgs : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (int_of_flag (flag st)))
     }.
 
 End S.
 
-
+(*
 Inductive match_state (st: DxState.state) (m:mem) :Prop :=
 | MakeMatch : forall f bl_state,
     match_meminj_state bl_state f st m -> match_state st m.
+*)
