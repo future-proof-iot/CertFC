@@ -380,6 +380,16 @@ Proof.
   reflexivity.
 Qed.
 
+Definition all_args (l : list Type) (is_pure: bool) :=
+  if is_pure then l else (unit:Type) :: l.
+
+Definition all_args_list (l : list Type) (is_pure : bool) (dl :DList.t (fun x => x) l) : DList.t (fun x => x) (all_args l is_pure) :=
+  if is_pure as b return (DList.t (fun x : Type => x) (all_args l b))
+  then dl
+  else DList.DCons tt dl.
+
+
+
 Section S.
   (** The program contains our function of interest [fn] *)
   Variable p : Clight.program.
@@ -398,8 +408,10 @@ Section S.
 
 (*  Variable match_mem : stateM -> val -> Memory.Mem.mem -> Prop.*)
 
+  Variable is_pure : bool.
+
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args).
+  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) (all_args args is_pure).
 
   (* [match_res] relates the Coq result and the C result *)
   Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
@@ -413,12 +425,12 @@ Section S.
           | None => True
           | Some (v',st') =>
               (* We prove that we can reach a return state *)
-              forall (lval: DList.t (fun _ => val) ((unit:Type) ::args))
+              forall (lval: DList.t (fun _ => val) (all_args  args is_pure))
                      k m,
                 is_call_cont k ->
                 (* they satisfy the invariants *)
                 DList.Forall2 (fun (a:Type) (R: a -> val -> stateM -> Memory.Mem.mem ->Prop) (X:a * val) => R (fst X) (snd X) st m)
-                              match_arg_list (DList.zip  (DList.DCons tt a) lval) ->
+                              match_arg_list (DList.zip  (all_args_list args is_pure a ) lval) ->
                 (* We prove that we can reach a return state *)
                 Forall2 (fun v t => Cop.val_casted v (snd t)) (DList.to_list (fun _ v => v) lval) (fn_params fn) ->
 
@@ -630,7 +642,6 @@ Qed.
 
 
 
-
 Section S.
   (** The program contains our function of interest [fn] *)
   Variable p : Clight.program.
@@ -647,24 +658,29 @@ Section S.
 
   Variable modifies : list block.
 
+  (* If [is_pure] is true, the C code has no handler to the monadic state *)
+  Variable is_pure : bool.
+
   (* Usually, only the first arguments is using stateM.
      Most of the arguments do not use Memory.Mem.mem either *)
-  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) :: args).
+
+  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) (all_args args is_pure).
 
   Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
+
 
   Lemma correct_function_from_body : forall
       (DIS : Coqlib.list_disjoint (var_names (fn_params fn)) (var_names (fn_temps fn)))
       (NOREP1: Coqlib.list_norepet (var_names (fn_params fn)))
       (NOREP :  Coqlib.list_norepet (var_names (fn_vars fn)))
       (NOVAR : fn_vars fn = nil)
-      (HLEN : Datatypes.length (fn_params fn) = S (Datatypes.length args))
+      (HLEN : Datatypes.length (fn_params fn) = Datatypes.length (all_args args is_pure))
       (C : forall st le m a, correct_body p  res (app f a) fn (fn_body fn) modifies
-                                          (list_rel_arg (fn_params fn) ((unit:Type)::args) match_arg_list (DList.DCons tt  a))
+                                          (list_rel_arg (fn_params fn) (all_args args is_pure) match_arg_list (all_args_list args is_pure  a))
                                           match_res st le m)
 
     ,
-    correct_function3 p args res f fn modifies match_arg_list match_res.
+    correct_function3 p args res f fn modifies is_pure match_arg_list match_res.
   Proof.
     econstructor.
     intros.
@@ -827,7 +843,7 @@ Section S.
   Variable fn: Clight.function.
 
   Lemma correct_statement_call :
-    forall  (has_cast : bool) args res (f : arrow_type args (M res)) a loc
+    forall  (has_cast : bool) args res (f : arrow_type args (M res)) is_pure a loc
            vres fvar targs ti eargs tres  fct modifies
            (FS : Globalenvs.Genv.find_symbol (globalenv (semantics2 p)) fvar = Some loc)
            (FF : Globalenvs.Genv.find_funct (globalenv (semantics2 p))
@@ -835,9 +851,9 @@ Section S.
            (TF : type_of_fundef (Ctypes.Internal fct) =
                    Ctypes.Tfunction targs ti AST.cc_default)
 
-           (match_arg : DList.t (fun x : Type => x -> val -> stateM -> Memory.Mem.mem -> Prop) (@cons Type unit args))
+           (match_arg : DList.t (fun x : Type => x -> val -> stateM -> Memory.Mem.mem -> Prop) (all_args args is_pure))
            (match_res : res -> val  -> stateM -> Memory.Mem.mem -> Prop)
-           (C : correct_function3 p args res f fct modifies  match_arg match_res)
+           (C : correct_function3 p args res f fct modifies is_pure match_arg match_res)
            (var_inv : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
            (le : temp_env) (m : Memory.Mem.mem) (st : stateM)
            (VARINV: var_inv_preserve var_inv match_res modifies  le)
@@ -846,12 +862,12 @@ Section S.
            (TI    : ti = fn_return fct)
            (TARGS : targs = Ctypes.type_of_params lvar)
            (TARGSF: List.map snd lvar = List.map snd (fn_params fct))
-           (VAR : incl (List.combine lvar (list_rel ((unit:Type)::args) match_arg (DList.DCons tt a))) var_inv)
+           (VAR : incl (List.combine lvar (list_rel (all_args args is_pure) match_arg (all_args_list args is_pure a))) var_inv)
            (NOTIN1 : ~In vres   (map  (fun x  => fst (fst x)) var_inv))
            (NOTIN2 : ~In tres   (map  (fun x  => fst (fst x)) var_inv))
            (LVAL  : match_temp_env var_inv le st m ->
                     exists lval, map_opt (fun x => Maps.PTree.get (fst x) le) lvar = Some lval
-                                 /\ List.length lval = S (List.length args))
+                                 /\ List.length lval = (List.length (all_args args is_pure)))
     ,
       correct_statement p res (app f a) fn
     (Ssequence
@@ -872,13 +888,13 @@ Section S.
     intros s' k k' K.
     specialize (LVAL PRE). destruct LVAL as (lval& LVAL & LEN).
     unfold pre in PRE. unfold match_temp_env in PRE.
-    specialize (fn_eval_ok4 (DList.of_list_sl lval (@cons Type unit args) LEN)
+    specialize (fn_eval_ok4 (DList.of_list_sl lval (all_args args is_pure) LEN)
                             (Kcall (Some tres) fn empty_env le
                                    (Kseq (Sset vres (if has_cast
                 then Ecast (Etempvar tres ti) ti
                                                      else Etempvar tres ti)) k)) m I).
     assert (MA : DList.Forall2 (fun (a : Type) (R : a -> val -> stateM -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
-                  (DList.zip (DList.DCons tt a) (DList.of_list_sl lval (@cons Type unit args) LEN))).
+                  (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN))).
     {
       unfold match_temp_env in PRE.
       rewrite Forall_forall in PRE.
@@ -888,10 +904,8 @@ Section S.
       revert lval LEN.
       revert  lvar var_inv.
       revert match_arg.
-      generalize ((DList.DCons tt a)) as a'.
-      change (S (Datatypes.length args)) with
-        (Datatypes.length (@cons Type unit args)).
-      generalize (@cons Type  unit args) as args'.
+      generalize ((all_args_list args is_pure a)) as a'.
+      generalize (all_args args is_pure) as args'.
       induction a'.
       - intros. car_cdr.
         simpl. auto.
@@ -928,8 +942,8 @@ Section S.
       assert (P: incl lvar  (map fst var_inv)).
       {
         revert VAR.
-        rewrite <- (map_fst_combine lvar (list_rel ((unit:Type)::args)
-                                                   match_arg (DList.DCons tt a))) at 2.
+        rewrite <- (map_fst_combine lvar (list_rel (all_args args is_pure)
+                                                   match_arg (all_args_list args is_pure a))) at 2.
         apply incl_map.
         unfold list_rel.
         rewrite DList.length_to_list.
@@ -969,7 +983,7 @@ Section S.
         eapply incl_cons_inv; eauto.
     }
     assert (EQ: lval = (DList.to_list (fun (_ : Type) (v : val) => v)
-                                   (DList.of_list_sl lval ((unit:Type):: args) LEN))).
+                                   (DList.of_list_sl lval (all_args args is_pure) LEN))).
     { apply (DList.to_list_of_list_sl ). }
     assert (MA2:= MA').
     rewrite EQ in MA'.
