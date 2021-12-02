@@ -6,16 +6,13 @@ A testing project for using dx to transform exam_rbpf in Coq to C
 
 The toy project is to use [dx](https://gitlab.univ-lille.fr/samuel.hym/dx) to generate C code from our toy rBPF interpreter (in Coq).
 
-The toy Coq interpreter consists of:
-- lib/\*.v: some libraries we may use.
-- tests/
-    - Asm.v: the syntax of rBPF instruciton set, this toy includes NEG, ADD and EXIT.
-    - Monad.v: our monad information
-    - Sem.v: the semantics part.
-    - Interp.v: the rBPF interpreter in Coq.
-    - ListOp.v, Int16.v: some necessary libraries.
-    - TestMain.v, ExtraMain.v: the existing files of dx
-    - Tests.v: we will reuse this file and add our interpreter information!
+The rBPF Coq interpreter consists of:
+- codeTest: `proof part`.
+- tests: `code generation part`
+    - DxInstructions.v: the semantics of rBPF instruciton set.
+    - DxMonad.v: our monad information
+    - DxList64.v, Int16.v ... : some necessary libraries.
+    - TestMain.v, ExtraMain.v, Tests.v: call dx to extract c code!
 
 Before installing this repo, making sure that you have installed necessary libs of dx (see below: the description of dx)!!!
 
@@ -24,9 +21,8 @@ _NB: we modify the makefile of the source project_, to run this repo:
 $ git clone https://gitlab.univ-lille.fr/samuel.hym/dx
 $ cd dx
 $ ./configure ...
-$ ./configure --install-compcert-printer
+$ ./configure --install-compcert-printer --cprinterdir=YOUR-DX-FOLDER/extr
 $ make
-$ make test
 ```
 ```shell
 $ git clone https://gitlab.inria.fr/syuan/rbpf-dx.git
@@ -34,9 +30,8 @@ $ cd rbpf-dx
 $ make
 ```
 Remember:
-1. we must config the compcert-printer function!!!
+1. The default dx install folder we use is `/home/your-name/.opam/bpf`: making sure that you config the `--compcert-printer` and `--cprinterdir`.
 2. be careful to use positive as variables' id, because dx/compcert also uses postive numbers to represent variables: there will be a conflict if your positive number is too small and it overlaps with existing variables.
-3. we must run `make test` once, because it will compile some files from `extr` (it should be fixed soon).
 
 Makefile command list:
 `make all` = compile rbpf (`make compile`) + extract c code (`make extract`) + generate clight code (`make clight`) + prove Coq2C equivalence `make proof`.
