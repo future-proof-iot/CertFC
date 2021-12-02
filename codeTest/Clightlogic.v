@@ -398,7 +398,7 @@ Section S.
 (*  Variable match_mem : stateM -> val -> Memory.Mem.mem -> Prop.*)
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) (stateM ::args).
+  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args).
 
   (* [match_res] relates the Coq result and the C result *)
   Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
@@ -412,12 +412,12 @@ Section S.
           | None => True
           | Some (v',st') =>
               (* We prove that we can reach a return state *)
-              forall (lval: DList.t (fun _ => val) (stateM ::args))
+              forall (lval: DList.t (fun _ => val) ((unit:Type) ::args))
                      k m,
                 is_call_cont k ->
                 (* they satisfy the invariants *)
                 DList.Forall2 (fun (a:Type) (R: a -> val -> stateM -> Memory.Mem.mem ->Prop) (X:a * val) => R (fst X) (snd X) st m)
-                              match_arg_list (DList.zip  (DList.DCons st a) lval) ->
+                              match_arg_list (DList.zip  (DList.DCons tt a) lval) ->
                 (* We prove that we can reach a return state *)
                 Forall2 (fun v t => Cop.val_casted v (snd t)) (DList.to_list (fun _ v => v) lval) (fn_params fn) ->
 
@@ -649,7 +649,7 @@ Section S.
 
   (* Usually, only the first arguments is using stateM.
      Most of the arguments do not use Memory.Mem.mem either *)
-  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) (stateM :: args).
+  Variable match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) :: args).
 
   Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
 
@@ -660,7 +660,7 @@ Section S.
       (NOVAR : fn_vars fn = nil)
       (HLEN : Datatypes.length (fn_params fn) = S (Datatypes.length args))
       (C : forall st le m a, correct_body p  res (app f a) fn (fn_body fn) modifies
-                                          (list_rel_arg (fn_params fn) (stateM::args) match_arg_list (DList.DCons st  a))
+                                          (list_rel_arg (fn_params fn) ((unit:Type)::args) match_arg_list (DList.DCons tt a))
                                           match_res st le m)
 
     ,
