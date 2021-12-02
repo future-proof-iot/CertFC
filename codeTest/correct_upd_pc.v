@@ -90,9 +90,6 @@ Ltac forward_plus :=
 Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
   Vlong x = v.
 
-Definition stateM_correct (st:stateM) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  st = stm /\ exists b ofs, v = Vptr b ofs.
-
 Section Upd_pc.
 
   (** The program contains our function of interest [fn] *)
@@ -115,8 +112,14 @@ Section Upd_pc.
   (* [match_mem] related the Coq monadic state and the C memory *)
   (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
 
+  
+
+  Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+    v = Vptr state_block Ptrofs.zero.
+
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) (stateM ::args) := DList.DCons stateM_correct (DList.DCons int64_correct (DList.DNil _)).
+  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
+    DList.DCons stateM_correct (DList.DCons int64_correct (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
@@ -147,29 +150,43 @@ Section Upd_pc.
     (**r unfold match_temp_env *)
     unfold match_temp_env, match_elt in H.
     rewrite Forall_forall in H.
-    assert (Hinlist: In (_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr), stateM_correct st)
-[(_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr),stateM_correct st);
- (_pc, Clightdefs.tulong, int64_correct c)]). {
+
+    
+    assert (Hinlist0: In (_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr), stateM_correct tt)
+        [(_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr), stateM_correct tt);
+        (_pc, Clightdefs.tulong, int64_correct c)]). {
       unfold In.
       left; reflexivity.
     }
-    apply H in Hinlist.
-    unfold fst in Hinlist.
-    destruct (Maps.PTree.get _st le) eqn: Hst_get in Hinlist; [idtac | intuition].
-    destruct Hinlist as (Hctype & Hcasted).
-    simpl in Hctype.
-    unfold stateM_correct in Hctype.
-    destruct Hctype as (Hst_eq & b & ofs & Hvptr); rewrite Hvptr in Hst_get.
-    unfold snd in Hcasted.
-    rewrite Hvptr in Hcasted.
+    apply H in Hinlist0.
+    assert (Hinlist1: In (_pc, Clightdefs.tulong, int64_correct c)
+        [(_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr), stateM_correct tt);
+        (_pc, Clightdefs.tulong, int64_correct c)]). {
+      unfold In.
+      right; left; reflexivity.
+    }
+    apply H in Hinlist1.
+    unfold fst in Hinlist0, Hinlist1.
+    destruct (Maps.PTree.get _st le) eqn: Hst_get in Hinlist0; [idtac | intuition].
+    destruct (Maps.PTree.get _pc le) eqn: Hpc_get in Hinlist1; [idtac | intuition].
+    destruct Hinlist0 as (H_st & _).
+    destruct Hinlist1 as (H_pc & _).
+    simpl in H_st, H_pc.
+    unfold stateM_correct in H_st.
+    unfold int64_correct in H_pc.
+    rewrite H_st in Hst_get.
+    rewrite <- H_pc in Hpc_get.
+    (*
     apply Cop.cast_val_casted with (m:=m) in Hcasted.
     unfold Cop.sem_cast in Hcasted.
-    simpl in Hcasted.
+    simpl in Hcasted.    *)
 
-
+    
+    
     unfold pre in *.
     do 3 eexists.
-    repeat split; simpl; unfold step2.
+
+    repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
       apply Smallstep.plus_star.
       repeat forward_plus.
@@ -187,10 +204,25 @@ Section Upd_pc.
               simpl.
               eapply deref_loc_copy. (**r TODO: why is it by-copy? *)
               reflexivity.
-          ** (* goal: typeof (Ederef (Etempvar ... *)
-            reflexivity.
-          ** (* goal: Maps.PTree.get _bpf_state (globalenv p) = Some ?co *)
-            (**r need state_block information maybe *).
+          ** reflexivity.
+          ** reflexivity.
+          ** reflexivity.
+        * (* goal: eval_expr _ _ _ _ (Etempvar *)
+          eapply eval_Etempvar.
+          rewrite Hpc_get; reflexivity.
+        *
+          reflexivity.
+        * (* goal: assign_loc _ (typeof (Efield (Ederef (Etempvar _st ... *)
+          eapply assign_loc_value.
+          ** reflexivity.
+          ** 
+            simpl.
+            unfold Coqlib.align; simpl.
+            rewrite Ptrofs.add_zero_l.
+            rewrite Ptrofs.unsigned_repr.
+            (*state_block: pc+... *)
+          econstructor; eauto.
+          reflexivity.
         *
               econstructor; eauto.
               unfold deref_loc.
