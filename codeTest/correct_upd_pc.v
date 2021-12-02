@@ -87,9 +87,11 @@ Ltac forward_plus :=
          reflexivity] | idtac]
  end.
 
-Definition int64_correct (x:int64_t) (v: val) (m: Memory.Mem.mem) :=
+Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
   Vlong x = v.
 
+Definition stateM_correct (st:stateM) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+  st = stm /\ exists b ofs, v = Vptr b ofs.
 
 Section Upd_pc.
 
@@ -111,21 +113,26 @@ Section Upd_pc.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
   (* [match_mem] related the Coq monadic state and the C memory *)
-  Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.
+  (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> Memory.Mem.mem -> Prop) args := DList.DCons int64_correct (DList.DNil _).
+  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) (stateM ::args) := DList.DCons stateM_correct (DList.DCons int64_correct (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> Memory.Mem.mem -> Prop := fun _ _ _ => True.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
 
-  Lemma correct_function3_upd_pc : correct_function3 p args res f fn modifies match_mem match_arg_list match_res.
-  Proof.
+  Lemma correct_function3_upd_pc : correct_function3 p args res f fn modifies match_arg_list match_res.
+  Proof. (*
+    eapply correct_function_from_body.
+    - simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate).
+    - eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    - simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
+    - reflexivity.
+    - reflexivity.*)
     eapply correct_function_from_body;
     [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
-      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |                             
+      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
       simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      reflexivity |
       reflexivity |
       reflexivity |
       idtac
@@ -137,38 +144,61 @@ Section Upd_pc.
     simpl.
     unfold correct_body.
     repeat intro.
+    (**r unfold match_temp_env *)
+    unfold match_temp_env, match_elt in H.
+    rewrite Forall_forall in H.
+    assert (Hinlist: In (_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr), stateM_correct st)
+[(_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr),stateM_correct st);
+ (_pc, Clightdefs.tulong, int64_correct c)]). {
+      unfold In.
+      left; reflexivity.
+    }
+    apply H in Hinlist.
+    unfold fst in Hinlist.
+    destruct (Maps.PTree.get _st le) eqn: Hst_get in Hinlist; [idtac | intuition].
+    destruct Hinlist as (Hctype & Hcasted).
+    simpl in Hctype.
+    unfold stateM_correct in Hctype.
+    destruct Hctype as (Hst_eq & b & ofs & Hvptr); rewrite Hvptr in Hst_get.
+    unfold snd in Hcasted.
+    rewrite Hvptr in Hcasted.
+    apply Cop.cast_val_casted with (m:=m) in Hcasted.
+    unfold Cop.sem_cast in Hcasted.
+    simpl in Hcasted.
+
+
     unfold pre in *.
     do 3 eexists.
     repeat split; simpl; unfold step2.
-    - 
+    - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
       apply Smallstep.plus_star.
       repeat forward_plus.
-      eapply Smallstep.plus_left'; eauto. (*
-      repeat econstructor; eauto.
-      unfold match_elt in H.
-      unfold match_temp_env in H0.*)
-      simpl in H.
-      eapply step_assign.
-      + eapply eval_Efield_struct.
-        * eapply eval_Elvalue.
-          **
-            eapply eval_Ederef.
-            eapply eval_Etempvar. (**r mark here *)
-            unfold match_temp_env in H0.
-            unfold match_elt in H0, H.
-            rewrite Forall_forall in H0.
-            assert (Hinlist: In (_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr), match_mem st)
-         [(_st, Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr), match_mem st);
-          (_pc, Clightdefs.tulong, int64_correct c)]). {
-              unfold In.
-              left; reflexivity.
-            }
-            apply H0 in Hinlist.
-            unfold fst in Hinlist.
-            destruct (Maps.PTree.get _st le) eqn: Hst_get in Hinlist.
-            destruct Hinlist as (Hctype & Hcased).
-            simpl in Hctype.
-            unfold match_mem in Hctype.
+      eapply Smallstep.plus_left'; eauto.
+      + simpl in H.
+        eapply step_assign. Unshelve.
+        * eapply eval_Efield_struct.
+          ** (* goal: eval_expr _ _ _ _ (Ederef (Etempvar ... *)
+            eapply eval_Elvalue.
+            ++ (* goal: eval_lvalue _ _ _ _ (Ederef (Etempvar ... *)
+              eapply eval_Ederef.
+              eapply eval_Etempvar.
+              rewrite Hst_get; reflexivity.
+            ++ (* goal: deref_loc (typeof (Ederef (Etempvar ... *)
+              simpl.
+              eapply deref_loc_copy. (**r TODO: why is it by-copy? *)
+              reflexivity.
+          ** (* goal: typeof (Ederef (Etempvar ... *)
+            reflexivity.
+          ** (* goal: Maps.PTree.get _bpf_state (globalenv p) = Some ?co *)
+            (**r need state_block information maybe *).
+        *
+              econstructor; eauto.
+              unfold deref_loc.
+              assumption.
+
+
+
+
             apply MakeMatch in Hctype.
             unfold match_meminj_state in Hctype.
             destruct H0 as (Hinlist).
