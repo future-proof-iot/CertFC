@@ -54,7 +54,7 @@ Ltac exec_seq_of_labeled_statement :=
 
 Lemma correct_function_is_well_chunk_bool2 : forall unmod,
   correct_function3
-    p Args Res f fn unmod  true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool).
+    p Args Res f fn unmod true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool).
 Proof.
   intro.
   correct_function_from_body.
