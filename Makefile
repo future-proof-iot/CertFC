@@ -68,7 +68,7 @@ clight:
 	cd codeTest && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c
 	cd codeTest && $(CLIGHTGEN) interpreter.c
 
-PROOF = $(addprefix codeTest/,clight_exec.v Clightlogic.v interpreter.v CommonLemma.v StateBlock.v correct_is_well_chunk_bool.v correct_upd_pc.v)
+PROOF = $(addprefix codeTest/,clight_exec.v Clightlogic.v interpreter.v CommonLemma.v MatchState.v StateBlock.v correct_is_well_chunk_bool.v correct_upd_pc.v)
 
 proof:
 	@echo $@

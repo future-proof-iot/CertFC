@@ -87,3 +87,23 @@ Require Import DxMonad.
 Definition match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region (Ptrofs.mul size_of_region  o) /\
               match_region_at_ofs mr bl_region o m.
+
+Require Import Clightlogic.
+
+Lemma same_memory_match_region :
+  forall bl_region st st' m m' mr v
+         (UMOD : unmodifies_effect nil m m'),
+    match_region bl_region mr v st m ->
+    match_region bl_region mr v st' m'.
+Proof.
+  intros.
+  unfold match_region in *.
+  destruct H as (o & E & MR).
+  exists o.
+  split; auto.
+  unfold match_region_at_ofs in *.
+  unfold unmodifies_effect in UMOD.
+  unfold Mem.loadv.
+  repeat rewrite <- UMOD by (simpl ; tauto).
+  intuition.
+Qed.

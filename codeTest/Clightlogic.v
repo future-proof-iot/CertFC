@@ -65,6 +65,12 @@ Proof.
 Defined.
 
 
+Inductive dpair : Type :=
+  mk {
+      typ : Type;
+      elt: typ
+    }.
+
 Module DList.
   Section A.
     Context {A: Type}.
@@ -125,8 +131,17 @@ Module DList.
       reflexivity.
     Qed.
 
+
   End A.
 
+  Section FROMDP.
+
+    Fixpoint of_list_dp (l : list dpair) : DList.t (fun x => x) (List.map typ l) :=
+      match l as l' return DList.t (fun x => x) (List.map typ l') with
+      | nil => DNil _
+      |  (mk t v) :: l => DList.DCons (fun x => x) v (of_list_dp l)
+      end.
+  End FROMDP.
 
   Section FORALL.
     Context {A: Type}.
@@ -416,7 +431,7 @@ Section S.
   (* [match_res] relates the Coq result and the C result *)
   Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
 
-  Record correct_function3  :=
+  Class correct_function3  :=
     mk_correct_function3
       {
         fn_eval_ok3 : forall
@@ -1255,40 +1270,34 @@ Section S.
 
 End S.
 
-
-(*
-
-
-
-Lemma match_temp_ex :
-  forall l l' le m,
-         match_temp_env l le m ->
-         incl l' (List.map fst l)  ->
+Lemma match_temp_env_ex : forall l' l le st m ,
+    incl l' (List.map fst l) ->
+    match_temp_env l le st m ->
   exists lval : list val,
     map_opt (fun x : positive * Ctypes.type => Maps.PTree.get (fst x) le)
       l' = Some lval.
 Proof.
   induction l'.
-  -
-    simpl. exists nil.
+  - simpl.
+    intros. exists nil.
     reflexivity.
   - intros.
-    apply List.incl_cons_inv in H0.
-    destruct H0 as (IN & INCL).
-    destruct (IHl' _ _ H INCL) as (lval1 & MAP).
-    unfold match_temp_env in H.
-    rewrite Forall_forall in H.
-    rewrite in_map_iff in IN.
-    destruct IN as (v & FST & IN).
-    apply H in IN.
-    unfold match_elt in IN.
-    destruct (Maps.PTree.get (fst (fst v)) le) eqn:E; try tauto.
-    exists (v0 ::lval1).
     simpl.
-    subst.
+    assert (In a (List.map fst l)).
+    apply H. simpl. tauto.
+    apply List.incl_cons_inv in H.
+    destruct H as (IN & INCL).
+    assert (H0':= H0).
+    eapply IHl' in H0'; eauto.
+    destruct H0'.
+    unfold match_temp_env in H0.
+    rewrite Forall_forall in H0.
+    rewrite in_map_iff in IN.
+    destruct IN as (v' & FST & IN).
+    subst. apply H0 in IN.
+    unfold match_elt in IN.
     unfold AST.ident in *.
-    rewrite E in *.
-    rewrite MAP.
-    reflexivity.
+    destruct (Maps.PTree.get (fst (fst v')) le); try tauto.
+    rewrite H.
+    eexists. reflexivity.
 Qed.
-*)

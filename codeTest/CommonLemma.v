@@ -22,6 +22,7 @@ Ltac correct_function_from_body :=
     list_no_repet |
     list_no_repet | reflexivity | reflexivity |idtac].
 
+
 Ltac get_inv_from_list VAR L :=
   match L with
   | nil => fail -1
@@ -55,6 +56,23 @@ Ltac get_invariant VAR :=
           | destruct I as (v &p &c)]
       end
   end.
+
+Ltac correct_body :=
+  intros st le m a;
+  match type of a with
+  | DList.t _ ?A =>
+      unfold A in a
+  end;
+  car_cdr ; unfold list_rel_arg,app;
+  match goal with
+    |- correct_body _ _ _ _ ?B _ ?INV
+                 _ _ _ _ =>
+      let I := fresh "INV" in
+      set (I := INV) ; simpl in I;
+      let B1 := eval simpl in B in
+        change B with B1
+  end.
+
 
 
 (*

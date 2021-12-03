@@ -6,7 +6,6 @@ From compcert Require Import Coqlib Values Clight Memory Integers.
 Require Import StateBlock MatchState.
 Require Import Clightlogic interpreter.
 
-
 Require Import correct_is_well_chunk_bool.
 Require Import clight_exec CommonLemma.
 
@@ -34,180 +33,151 @@ Definition is_vlong (v: val) :=
 Definition val64_correct (v v':val) :=
   v = v'.
 
-Definition match_region (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
-  exists bl_region o, v = Vptr bl_region (Ptrofs.mul size_of_region  o) /\
-              match_region mr bl_region o m.
-
+Variable bl_region : block.
 
 Definition match_arg  :
   DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
   DList.DCons
-    match_region
+    (match_region bl_region)
     (DList.DCons
        (stateless val64_correct)
        (DList.DCons (stateless match_chunk)
                     (DList.DNil _))).
 
-
-Ltac nameK K :=
-  match goal with
-  | |-context[
-          (Callstate _ _ ?k _)] =>
-
-      set (K:= k)
-  end.
-
-(*Lemma bool_correct_Vint : forall r m v,
-    bool_correct r m v <-> v = Vint (if r then Int.one else Int.zero).
-Proof.
-  unfold bool_correct. intros.
-  destruct r;reflexivity.
-Qed.
-*)
 Lemma Int_eq_one_zero :
   Int.eq Int.one Int.zero = false.
 Proof.
   reflexivity.
 Qed.
 
-
-
-
 Record match_res (v1 :val) (v2:val) (st:stateM) (m: Memory.Mem.mem)  :=
   {
     res_eq : v1 = v2
   }.
 
-Lemma same_memory_match_region :
-  forall st st' m m' mr v
-         (UMOD : unmodifies_effect [] m m'),
-    match_region mr v st m ->
-    match_region mr v st' m'.
-Proof.
-  intros.
-  unfold match_region in *.
-  destruct H as (bl_region & o & E & MR).
-  exists bl_region, o.
-  split; auto.
-  unfold MatchState.match_region in *.
-  unfold unmodifies_effect in UMOD.
-  unfold Mem.loadv.
-  repeat rewrite <- UMOD by (simpl ; tauto).
-  intuition.
-Qed.
 
-Lemma match_temp_env_ex : forall l' l le st m ,
-    incl l' (List.map fst l) ->
-    match_temp_env l le st m ->
-  exists lval : list val,
-    map_opt (fun x : positive * Ctypes.type => Maps.PTree.get (fst x) le)
-      l' = Some lval.
-Proof.
-  induction l'.
-  - simpl.
-    intros. exists nil.
-    reflexivity.
-  - intros.
-    simpl.
-    assert (In a (List.map fst l)).
-    apply H. simpl. tauto.
-    apply List.incl_cons_inv in H.
-    destruct H as (IN & INCL).
-    assert (H0':= H0).
-    eapply IHl' in H0'; eauto.
-    destruct H0'.
-    unfold match_temp_env in H0.
-    rewrite Forall_forall in H0.
-    rewrite in_map_iff in IN.
-    destruct IN as (v' & FST & IN).
-    subst. apply H0 in IN.
-    unfold match_elt in IN.
-    unfold AST.ident in *.
-    destruct (Maps.PTree.get (fst (fst v')) le); try tauto.
-    rewrite H.
-    eexists. reflexivity.
-Qed.
+Ltac build_app_aux T :=
+  match T with
+  | ?F ?X => let ty := type of X in
+             let r := build_app_aux F in
+             constr:((mk ty X) :: r)
+  | ?X    => constr:(@nil dpair)
+  end.
 
+Ltac get_function T :=
+  match T with
+  | ?F ?X => get_function F
+  | ?X    => X
+  end.
 
+Ltac build_app T :=
+  let a := build_app_aux T in
+  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
+  let f := get_function T in
+  match type of v with
+  | DList.t _ ?L =>
+      change T with (app (f: arrow_type L _) v)
+  end.
 
+Ltac change_app_for_body :=
+  match goal with
+  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
+    => build_app F
+  end.
+
+Ltac change_app_for_statement :=
+  match goal with
+  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
+    => build_app F
+  end.
+
+Ltac prove_incl :=
+  simpl; unfold incl; simpl; intuition congruence.
+
+Ltac prove_in_inv :=
+  simpl; intuition subst; discriminate.
+
+Ltac correct_forward :=
+  match goal with
+  | |- @correct_body _ _ (bindM ?F1 ?F2)  _
+                     (Ssequence
+                        (Ssequence
+                           (Scall _ _ _)
+                           (Sset ?V ?T))
+                        ?R)
+                     _ _ _ _ _ _  =>
+      eapply correct_statement_seq_body;
+      [ change_app_for_statement ;
+        let b := match T with
+                 | Ecast _ _ => constr:(true)
+                 | _         => constr:(false)
+                 end in
+        eapply correct_statement_call with (has_cast := b);
+        [
+          reflexivity
+          | reflexivity
+          | reflexivity
+          | typeclasses eauto
+          | idtac
+          | reflexivity
+          | reflexivity
+          | reflexivity
+          | reflexivity
+          | prove_incl
+          | prove_in_inv
+          | prove_in_inv
+          | idtac
+         ]
+      |]
+  | |- @correct_body _ _ (match  ?x with true => _ | false => _ end) _
+                     (Sifthenelse _ _ _)
+                     _ _ _ _ _ _  =>
+      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
+  end.
 
 
 Lemma correct_function_check_mem_aux_correct : correct_function3 p args res f fn (nil) true match_arg match_res.
 Proof.
   correct_function_from_body.
-  intros.
-  unfold args in a.
-  car_cdr.
-  unfold list_rel_arg.
-  unfold Clightlogic.app.
-  set (INV := (combine (fn_params fn)
-       (list_rel (all_args args true) match_arg
-          (all_args_list args true
-             (DList.DCons c
-                (DList.DCons c0
-                   (DList.DCons c1 (DList.DNil (fun x : Type => x))))))))).
-  simpl in INV.
+  correct_body.
   unfold f. unfold check_mem_aux.
-  unfold fn at 2.
-  unfold f_check_mem_aux.
-  unfold fn_body.
-  apply correct_statement_seq_body with
-      (match_res1 := stateless match_bool)
-      (vret := _well_chunk) (ti:= Clightdefs.tbool).
-  change (is_well_chunk_bool c1) with (app (is_well_chunk_bool : arrow_type ((AST.memory_chunk:Type)::nil) (M bool)) (DList.DCons c1 (DList.DNil _))).
-    {  eapply correct_statement_call with (has_cast := true).
-    * reflexivity.
-    * reflexivity.
-    * reflexivity.
-    * apply correct_function_is_well_chunk_bool2.
-    * unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      intuition. clear - H2 H.
-      unfold match_elt in *;
-      unfold fst in *.
-      destruct (Maps.PTree.get _mr3 le);auto.
-      simpl in *.
-      destruct H2 ; split; auto.
-      eapply same_memory_match_region;eauto.
-    * reflexivity.
-    * reflexivity.
-    * reflexivity.
-    * reflexivity.
-    * simpl. unfold INV.
-      unfold incl.
-      simpl. intuition congruence.
-    * simpl. intuition subst; discriminate.
-    * simpl. intuition subst; discriminate.
-    * intros.
-      apply match_temp_env_ex with (l':= [(_chunk1, Clightdefs.tuint)]) in H.
-      destruct H.
-      exists x. split; auto.
-      apply length_map_opt in H.
-      rewrite <- H. reflexivity.
-      unfold INV, incl; simpl.
-      intuition subst;discriminate.
-    }
+  correct_forward.
+  { unfold INV.
+    unfold var_inv_preserve.
     intros.
-    eapply correct_statement_if_body.
-    {
-      simpl. tauto.
-    }
-    destruct x.
-    apply correct_statement_seq_body with
-      (match_res1 := stateless val64_correct)
-      (vret := _ptr) (ti:= Clightdefs.tulong).
-    change (getMemRegion_block_ptr c) with
-      (app (getMemRegion_block_ptr : arrow_type ((memory_region:Type)::nil) (M val64_t)) (DList.DCons c (DList.DNil _))).
-    {
-      eapply correct_statement_call with (has_cast := false).
-      - reflexivity.
-      - reflexivity.
-      - reflexivity.
-      - (* TODO *)
+    unfold match_temp_env in *.
+    rewrite Forall_fold_right in *.
+    simpl in *.
+    intuition. clear - H2 H.
+    unfold match_elt in *;
+      unfold fst in *.
+    destruct (Maps.PTree.get _mr3 le);auto.
+    simpl in *.
+    destruct H2 ; split; auto.
+    eapply same_memory_match_region;eauto.
+  }
+  { intros.
+    apply match_temp_env_ex with (l':= [(_chunk1, Clightdefs.tuint)]) in H.
+    destruct H.
+    exists x. split; auto.
+    apply length_map_opt in H.
+    rewrite <- H. reflexivity.
+    unfold INV, incl; simpl.
+    intuition subst;discriminate.
+  }
+  intros.
+  correct_forward.
+  admit.
+  (* TODO *)
+  repeat intro.
+  repeat eexists.
+  eapply Smallstep.star_step;eauto.
+  econstructor ; eauto.
+  econstructor ; eauto.
+  simpl. reflexivity.
+  reflexivity.
+  eapply Smallstep.star_refl.
+  constructor.
 Admitted.
 
 
