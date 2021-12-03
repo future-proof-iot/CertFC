@@ -1,4 +1,4 @@
-From compcert Require Import Coqlib.
+From compcert Require Import Coqlib Clight.
 Require Import Clightlogic.
 
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
@@ -55,3 +55,120 @@ Ltac get_invariant VAR :=
           | destruct I as (v &p &c)]
       end
   end.
+
+
+(*
+Ltac forward_seq :=
+  match goal with
+  | |- Smallstep.plus _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_seq | idtac]
+  end.
+
+Ltac forward_call_one_arg :=
+  match goal with
+  | |- Smallstep.plus _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_call; [reflexivity | eapply eval_Elvalue;[eapply eval_Evar_global; reflexivity | eapply deref_loc_reference; reflexivity] | eapply eval_Econs; [eapply eval_Etempvar; reflexivity | reflexivity | eapply eval_Enil] | econstructor; eauto | reflexivity] | idtac]
+  end.
+
+Ltac forward_returnstate :=
+  match goal with
+  | |- Smallstep.plus _ _ (Returnstate _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | idtac]
+  end.
+
+Ltac forward_skip_seq :=
+  match goal with
+  | |- Smallstep.plus _ _ (State _ Sskip (Kseq _ _) _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | idtac]
+  end.
+
+Ltac forward_if :=
+  match goal with
+  | |- Smallstep.plus _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
+  eapply Smallstep.plus_left'; eauto; [eapply step_ifthenelse; [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity | reflexivity] | idtac]
+  end.*)
+
+Ltac eforward_plus :=
+ match goal with
+  (** forward_seq *)
+  | |- Smallstep.plus _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_seq | idtac]
+  (** forward_call_one_arg *)
+  | |- Smallstep.plus _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto;
+      [eapply step_call;
+        [reflexivity |                                (** goal: classify_fun *)
+         eapply eval_Elvalue;                         (** goal: eval_expr *)
+          [eapply eval_Evar_global; reflexivity |     (** eval_lvalue *)
+           eapply deref_loc_reference; reflexivity] | (** goal: deref_loc *)
+         eapply eval_Econs;                           (** goal: eval_exprlist *)
+          [eapply eval_Etempvar; reflexivity |        (** goal: eval_expr *)
+           reflexivity |                              (** goal: Cop.sem_cast *)
+           eapply eval_Enil] |                        (** goal: eval_exprlist *)
+         econstructor; eauto |                        (** goal: Globalenvs.Genv.find_funct *)
+         reflexivity] |                               (** goal: type_of_fundef *)
+       idtac]
+  (** forward_returnstate *)
+  | |- Smallstep.plus _ _ (Returnstate _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | idtac]
+  (** forward_skip_seq *)
+  | |- Smallstep.plus _ _ (State _ Sskip (Kseq _ _) _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | idtac]
+  (** forward_if *)
+  | |- Smallstep.plus _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
+    eapply Smallstep.plus_left'; eauto;
+    [eapply step_ifthenelse;
+      [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity |
+       reflexivity] |
+     idtac]
+  (** forward_return_some *)
+  | |- Smallstep.plus _ _ (State _ (Sreturn _) _ _ _ _) _ _ =>
+    eapply Smallstep.plus_left'; eauto;
+      [eapply step_return_1;
+        [eapply eval_Econst_long |
+         reflexivity |
+         reflexivity] | idtac]
+ end.
+
+Ltac forward_plus :=
+ match goal with
+  (** forward_seq *)
+  | |- Smallstep.plus _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_seq | idtac | simpl]
+  (** forward_call_one_arg *)
+  | |- Smallstep.plus _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto;
+      [eapply step_call;
+        [reflexivity |                                (** goal: classify_fun *)
+         eapply eval_Elvalue;                         (** goal: eval_expr *)
+          [eapply eval_Evar_global; reflexivity |     (** eval_lvalue *)
+           eapply deref_loc_reference; reflexivity] | (** goal: deref_loc *)
+         eapply eval_Econs;                           (** goal: eval_exprlist *)
+          [eapply eval_Etempvar; reflexivity |        (** goal: eval_expr *)
+           reflexivity |                              (** goal: Cop.sem_cast *)
+           eapply eval_Enil] |                        (** goal: eval_exprlist *)
+         econstructor; eauto |                        (** goal: Globalenvs.Genv.find_funct *)
+         reflexivity] |                               (** goal: type_of_fundef *)
+       idtac | simpl]
+  (** forward_returnstate *)
+  | |- Smallstep.plus _ _ (Returnstate _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | idtac | simpl]
+  (** forward_skip_seq *)
+  | |- Smallstep.plus _ _ (State _ Sskip (Kseq _ _) _ _ _) _ _ =>
+      eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | idtac | simpl]
+  (** forward_if *)
+  | |- Smallstep.plus _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
+    eapply Smallstep.plus_left'; eauto;
+    [eapply step_ifthenelse;
+      [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity |
+       reflexivity] |
+     idtac | simpl]
+  (** forward_return_some *)
+  | |- Smallstep.plus _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
+    eapply Smallstep.plus_left'; eauto;
+      [eapply step_return_1;
+        [eapply eval_Econst_long |
+         reflexivity |
+         reflexivity] | idtac | simpl]
+ end.
+
