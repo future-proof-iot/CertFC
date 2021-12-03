@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-Require Import CoqIntegers DxIntegers DxValues.
+From dx.tests Require Import CoqIntegers DxIntegers DxValues.
 
 Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
   Vlong (Int64.repr (align_chunk chunk)).

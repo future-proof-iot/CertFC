@@ -3,7 +3,7 @@
 From dx.tests Require Import DxIntegers DxValues DxAST DxMemRegion DxRegs DxState DxFlag.
 From compcert Require Import Coqlib Integers Values AST Clight Memory.
 
-Definition match_region (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
+Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
   (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some v /\ Val.inject inject_id (block_ptr mr) v)    /\
     (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some v /\ Val.inject inject_id (start_addr mr) v) /\
     (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some v /\ Val.inject inject_id (block_size mr) v).
@@ -13,7 +13,7 @@ Definition size_of_region  := Ptrofs.repr (3 * 8). (* 3 * 64 bits *)
 Fixpoint match_list_region  (m:mem) (bl_regions: block) (ofs:ptrofs) (l:list memory_region) :=
   match l with
   | nil => True
-  | mr :: l' => match_region  mr bl_regions ofs m /\
+  | mr :: l' => match_region_at_ofs  mr bl_regions ofs m /\
                   match_list_region  m bl_regions (Ptrofs.add ofs size_of_region) l'
   end.
 
@@ -81,8 +81,9 @@ Section S.
 
 End S.
 
-(*
-Inductive match_state (st: DxState.state) (m:mem) :Prop :=
-| MakeMatch : forall f bl_state,
-    match_meminj_state bl_state f st m -> match_state st m.
-*)
+(* Useful matching relations *)
+Require Import DxMonad.
+
+Definition match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
+  exists o, v = Vptr bl_region (Ptrofs.mul size_of_region  o) /\
+              match_region_at_ofs mr bl_region o m.

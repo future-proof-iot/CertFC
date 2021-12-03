@@ -6,6 +6,7 @@ AWK := awk
 COQC := coqc
 COQDEP := coqdep
 OCAMLOPT := ocamlopt
+COQMAKEFILE := coq_makefile
 
 CC=gcc
 OFLAGS=-Os
@@ -30,31 +31,16 @@ all:
 	@$(MAKE) proof 
 
 
+
+COQSRC = $(wildcard tests/*.v)
+
 compile:
 	@echo $@
-	$(COQC) $(COQCOPTS) tests/Int16.v
-	$(COQC) $(COQCOPTS) tests/CoqIntegers.v
-	$(COQC) $(COQCOPTS) tests/InfComp.v
-	$(COQC) $(COQCOPTS) tests/DxIntegers.v
-	$(COQC) $(COQCOPTS) tests/DxFlag.v
-	$(COQC) $(COQCOPTS) tests/DxList64.v
-	$(COQC) $(COQCOPTS) tests/DxValues.v
-	$(COQC) $(COQCOPTS) tests/IdentDef.v
-	$(COQC) $(COQCOPTS) tests/DxRegs.v
-	$(COQC) $(COQCOPTS) tests/DxMemRegion.v
-	$(COQC) $(COQCOPTS) tests/GenMatchable.v
-	$(COQC) $(COQCOPTS) tests/DxOpcode.v
-	$(COQC) $(COQCOPTS) tests/DxState.v
-	$(COQC) $(COQCOPTS) tests/DxMonad.v
-	$(COQC) $(COQCOPTS) tests/DxAST.v
-	$(COQC) $(COQCOPTS) tests/DxInstructions.v
-	$(COQC) $(COQCOPTS) tests/Tests.v
-	$(COQC) $(COQCOPTS) tests/TestMain.v
-	cd tests/ && $(COQC) $(COQEXTROPTS) ExtrMain.v
+	$(COQMAKEFILE) -f _CoqProject $(COQSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
 
 extract:
 	@echo $@
-	
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) '{ delete paths ;                                                                 \
 	              for(i = 1; i <= NF; i++) {                                                     \
@@ -69,10 +55,8 @@ extract:
 	            }' > compcertsrc-I	
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
-	
 	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests tests/TestMain.mli	
 	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I tests -c tests/TestMain.ml
-		
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
 	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx tests/TestMain.cmx -o tests/main
@@ -82,18 +66,14 @@ extract:
 clight:
 	@echo $@
 	cd codeTest && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c
-	
 	cd codeTest && $(CLIGHTGEN) interpreter.c
+
+PROOF = $(addprefix codeTest/,clight_exec.v Clightlogic.v interpreter.v CommonLemma.v StateBlock.v correct_is_well_chunk_bool.v correct_upd_pc.v)
 
 proof:
 	@echo $@
-	$(COQC) $(COQCOPTS) codeTest/interpreter.v
-	$(COQC) $(COQCOPTS) codeTest/CommonLemma.v
-	$(COQC) $(COQCOPTS) codeTest/StateBlock.v
-	$(COQC) $(COQCOPTS) codeTest/clight_exec.v
-	$(COQC) $(COQCOPTS) codeTest/Clightlogic.v
-	$(COQC) $(COQCOPTS) codeTest/correct_is_well_chunk_bool.v
-	$(COQC) $(COQCOPTS) codeTest/correct_upd_pc.v
+	$(COQMAKEFILE) -f _CoqProject $(PROOF) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
+	make -f CoqMakefilePrf
 
 clean :
 	@echo $@
