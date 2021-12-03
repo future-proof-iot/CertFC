@@ -12,14 +12,13 @@ Module Info.
   Definition build_branch := "".
   Definition arch := "x86".
   Definition model := "64".
-  Definition abi := "standard".
+  Definition abi := "macos".
   Definition bitsize := 64.
   Definition big_endian := false.
   Definition source_file := "interpreter.c".
   Definition normalized := false.
 End Info.
 
-Definition ___builtin_ais_annot : ident := $"__builtin_ais_annot".
 Definition ___builtin_annot : ident := $"__builtin_annot".
 Definition ___builtin_annot_intval : ident := $"__builtin_annot_intval".
 Definition ___builtin_bswap : ident := $"__builtin_bswap".
@@ -241,6 +240,17 @@ Definition v___stringlit_2 := {|
   gvar_volatile := false
 |}.
 
+Definition v___stringlit_1 := {|
+  gvar_info := (tarray tschar 10);
+  gvar_init := (Init_int8 (Int.repr 112) :: Init_int8 (Int.repr 99) ::
+                Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
+                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 108) ::
+                Init_int8 (Int.repr 108) :: Init_int8 (Int.repr 117) ::
+                Init_int8 (Int.repr 10) :: Init_int8 (Int.repr 0) :: nil);
+  gvar_readonly := true;
+  gvar_volatile := false
+|}.
+
 Definition v___stringlit_5 := {|
   gvar_info := (tarray tschar 2);
   gvar_init := (Init_int8 (Int.repr 10) :: Init_int8 (Int.repr 0) :: nil);
@@ -257,22 +267,11 @@ Definition v___stringlit_3 := {|
 |}.
 
 Definition v___stringlit_4 := {|
-  gvar_info := (tarray tschar 7);
+  gvar_info := (tarray tschar 8);
   gvar_init := (Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
                 Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 108) ::
-                Init_int8 (Int.repr 117) :: Init_int8 (Int.repr 59) ::
-                Init_int8 (Int.repr 0) :: nil);
-  gvar_readonly := true;
-  gvar_volatile := false
-|}.
-
-Definition v___stringlit_1 := {|
-  gvar_info := (tarray tschar 9);
-  gvar_init := (Init_int8 (Int.repr 112) :: Init_int8 (Int.repr 99) ::
-                Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
-                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 108) ::
-                Init_int8 (Int.repr 117) :: Init_int8 (Int.repr 10) ::
-                Init_int8 (Int.repr 0) :: nil);
+                Init_int8 (Int.repr 108) :: Init_int8 (Int.repr 117) ::
+                Init_int8 (Int.repr 59) :: Init_int8 (Int.repr 0) :: nil);
   gvar_readonly := true;
   gvar_volatile := false
 |}.
@@ -288,7 +287,7 @@ Definition f_print_bpf_state := {|
   (Scall None
     (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
                     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-    ((Evar ___stringlit_1 (tarray tschar 9)) ::
+    ((Evar ___stringlit_1 (tarray tschar 10)) ::
      (Ecast
        (Efield
          (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
@@ -319,7 +318,7 @@ Definition f_print_bpf_state := {|
               (Scall None
                 (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
                                 {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-                ((Evar ___stringlit_4 (tarray tschar 7)) ::
+                ((Evar ___stringlit_4 (tarray tschar 8)) ::
                  (Ecast
                    (Ederef
                      (Ebinop Oadd
@@ -5976,16 +5975,10 @@ Definition composites : list composite_definition :=
 
 Definition global_definitions : list (ident * globdef fundef type) :=
 ((___stringlit_2, Gvar v___stringlit_2) ::
+ (___stringlit_1, Gvar v___stringlit_1) ::
  (___stringlit_5, Gvar v___stringlit_5) ::
  (___stringlit_3, Gvar v___stringlit_3) ::
  (___stringlit_4, Gvar v___stringlit_4) ::
- (___stringlit_1, Gvar v___stringlit_1) ::
- (___builtin_ais_annot,
-   Gfun(External (EF_builtin "__builtin_ais_annot"
-                   (mksignature (AST.Tlong :: nil) AST.Tvoid
-                     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-     (Tcons (tptr tschar) Tnil) tvoid
-     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
  (___builtin_bswap64,
    Gfun(External (EF_builtin "__builtin_bswap64"
                    (mksignature (AST.Tlong :: nil) AST.Tlong cc_default))
@@ -6302,8 +6295,7 @@ Definition public_idents : list ident :=
  ___builtin_fsqrt :: ___builtin_fabsf :: ___builtin_fabs ::
  ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll ::
  ___builtin_clzl :: ___builtin_clz :: ___builtin_bswap16 ::
- ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 ::
- ___builtin_ais_annot :: nil).
+ ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 :: nil).
 
 Definition prog : Clight.program := 
   mkprogram composites global_definitions public_idents _main Logic.I.

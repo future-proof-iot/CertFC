@@ -8,11 +8,11 @@ From compcert Require Import Coqlib.
 Import ListNotations.
 Require Import ZArith.
 
-Require Import clight_exec Clightlogic StateBlock CommonLemma.
+Require Import clight_exec Clightlogic MatchState CommonLemma.
 
 
 Definition match_state (st_block : block) (_ : unit) (v : val) (st: stateM) (m : Memory.Mem.mem) : Prop :=
-  v = Vptr st_block Ptrofs.zero /\ match_state_block st st_block m.
+  v = Vptr st_block Ptrofs.zero /\ match_state st_block st m.
 
 
 Section Is_well_chunk_bool.

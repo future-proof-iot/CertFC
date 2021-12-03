@@ -25,10 +25,12 @@ struct bpf_state {
 *)
 
 Open Scope Z_scope.
-(** state_block:  (ofs : ptrofs) starts from 0 *)
+(** state_block:  (ofs : ptrofs) starts from 0
+    so, the stM should be the initial state before running the functions/operations
+ *)
 Definition match_state_block (stM: stateM) (blk: block) (m: mem) : Prop :=
-  (exists pc, Mem.load Mint64 m blk 0 = Some (Vlong pc)) /\ (**r pc is vlong:load *)
-  (forall v_pc, exists m_pc, Mem.store Mint64 m blk 0 v_pc = Some m_pc) /\ (**r pc is vlong:store *)
+  (Mem.load Mint64 m blk 0 = Some (Vlong (pc_loc stM))) /\ (**r load: the value should be same as the pc_loc value in the rBPF's monadic state *)
+  (forall v_pc, Mem.store Mint64 m blk 0 (Vlong v_pc) = Some (bpf_m stM)) /\ (**r store: v_pc is vlong int64 & the new memory m_pc =  *)
   (exists regs_blk, Mem.load Mint64 m blk 8 = Some (Vptr regs_blk Ptrofs.zero)) /\ (**r regsmap is vlong pointer:load *)
   (forall v_regs, exists m_regs, Mem.store Mint64 m blk 8 v_regs = Some m_regs) /\ (**r regsmap is vlong pointer:store *)
   (exists flag, Mem.load Mint32 m blk 16 = Some (Vint flag)) /\ (**r flag is vint: load *)
