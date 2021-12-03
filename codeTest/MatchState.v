@@ -73,10 +73,11 @@ Section S.
 
   Record match_state  (st:DxState.state) (m:mem) : Prop :=
     {
-      minj  : Mem.inject (inject_id) (bpf_m st) m;
-      mpc   : Mem.loadv AST.Mint64 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vlong  (pc_loc st));
-      mregs : match_registers  (regs_st st) bl_state (Ptrofs.repr 8) m;
-      mflsgs : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (int_of_flag (flag st)))
+      minj     : Mem.inject (inject_id) (bpf_m st) m;
+      mpc_load : Mem.loadv AST.Mint64 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vlong  (pc_loc st));
+      mpc_store: forall pc m1,  Mem.store AST.Mint64 m bl_state 0 (Vlong pc) = Some m1; (** the relation between m1 and st? *)
+      mregs    : match_registers  (regs_st st) bl_state (Ptrofs.repr 8) m;
+      mflsgs  : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (int_of_flag (flag st)))
     }.
 
 End S.

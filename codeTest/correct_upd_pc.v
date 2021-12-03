@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic StateBlock CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
 
 (**
 static void upd_pc(struct bpf_state* st, unsigned long long pc) {
@@ -41,7 +41,7 @@ Section Upd_pc.
 
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state_block stm state_block m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -77,22 +77,19 @@ Section Upd_pc.
     get_invariant _pc.
     destruct c0 as (H_st & Hst_casted).
     destruct c1 as (H_pc & Hpc_casted).
-    unfold stateM_correct, match_state_block in H_st.
+    unfold stateM_correct in H_st.
     unfold int64_correct in H_pc.
-    (*destruct H_st as (Hv_eq & (pc & Hpc_ld) & Hpc_st & (regs_blk & Hregs_blk_mem) & Hregs_st & (flag & Hflag_mem) & Hflag_st & (mrs_blk & Hmrs_blk_mem) & Hmrs_st). *)
-    destruct H_st as (Hv_eq & (pc & Hpc_ld) & Hpc_st & _).
+    destruct H_st as (Hv_eq & Hst).
+    (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
     subst v0 v.
     
-    specialize (Hpc_st (Vlong c)).
-    destruct Hpc_st as (m_pc & Hpc_st).
-
     unfold pre in *.
     (**according to the type of upd_pc:
          static void upd_pc(struct bpf_state* st, unsigned long long pc)
        1. return value should be Vundef (i.e. void)
        2. the new memory should change the value of pc, i.e. m_pc
       *)
-    exists Vundef, m_pc, Events.E0.
+    exists Vundef, (bpf_m st), Events.E0.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
@@ -104,7 +101,14 @@ Section Upd_pc.
       do 4 econstructor; eauto.
       eapply eval_Etempvar; rewrite p1; reflexivity.
       reflexivity.
-      econstructor; eauto; reflexivity.
+      econstructor; eauto. reflexivity.
+      simpl.
+      unfold Coqlib.align, Ctypes.align_attr; simpl.
+      unfold Ptrofs.add, Ptrofs.zero.
+      repeat rewrite Ptrofs.unsigned_repr. simpl.
+      destruct Hst.
+      rewrite Heq. reflexivity.
+      apply (mpc_store state_block st m Hst c).*)
       eforward_plus.
       eapply Smallstep.plus_one; eauto.
       eapply step_return_0.
@@ -115,7 +119,8 @@ Section Upd_pc.
     - unfold unmodifies_effect, modifies, In.
       intros.
       symmetry.
-      apply (Mem.load_store_other AST.Mint64 m state_block 0%Z (Vlong c) m_pc Hpc_st).
+      apply (Mem.load_store_other AST.Mint64 m state_block 0%Z (Vlong c)).
+      assumption.
       left.
       intuition.
 Qed.
