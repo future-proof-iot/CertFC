@@ -9,7 +9,7 @@ Proof.
 Qed.
 
 Ltac list_disjoint :=
-  simpl; unfold Coqlib.list_disjoint; simpl; intuition congruence.
+  simpl; unfold Coqlib.list_disjoint; simpl; intuition subst; try discriminate.
 
 Ltac list_no_repet :=
      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
