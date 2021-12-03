@@ -206,8 +206,6 @@ Definition valU32TovalU32TovalU32SymbolType :=
 
 Instance C_valu32 : CType valu32_t := mkCType _ (cType valU32CompilableType).
 
-Locate binop_expr.
-
 Definition Const_valU32_add := ltac: (mkprimitive Val.add (binop_expr Cop.Oadd C_U32)).
 Definition Const_valU32_sub := ltac: (mkprimitive Val.sub (binop_expr Cop.Osub C_U32)).
 Definition Const_valU32_mul := ltac: (mkprimitive Val.mul (binop_expr Cop.Omul C_U32)).
