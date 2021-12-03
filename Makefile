@@ -89,9 +89,11 @@ proof:
 	@echo $@
 	$(COQC) $(COQCOPTS) codeTest/interpreter.v
 	$(COQC) $(COQCOPTS) codeTest/CommonLemma.v
-	$(COQC) $(COQCOPTS) codeTest/MatchState.v
+	$(COQC) $(COQCOPTS) codeTest/StateBlock.v
 	$(COQC) $(COQCOPTS) codeTest/clight_exec.v
 	$(COQC) $(COQCOPTS) codeTest/Clightlogic.v
+	$(COQC) $(COQCOPTS) codeTest/correct_is_well_chunk_bool.v
+	$(COQC) $(COQCOPTS) codeTest/correct_upd_pc.v
 
 clean :
 	@echo $@
