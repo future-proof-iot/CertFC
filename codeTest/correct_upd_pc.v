@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState StateBlock CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic StateBlock CommonLemma interpreter.
 
 (**
 static void upd_pc(struct bpf_state* st, unsigned long long pc) {
@@ -39,12 +39,9 @@ Section Upd_pc.
   (* [match_mem] related the Coq monadic state and the C memory *)
   (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
 
+
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state_block stm state_block m.
-
-(**
-Mem.store AST.Mint64 m state_block 0 (Vlong c) = Some ?m'
-*)
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
