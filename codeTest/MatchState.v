@@ -74,13 +74,88 @@ Section S.
   Record match_state  (st:DxState.state) (m:mem) : Prop :=
     {
       minj     : Mem.inject (inject_id) (bpf_m st) m;
-      mpc_load : Mem.loadv AST.Mint64 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vlong  (pc_loc st));
-      mpc_store: forall pc m1,  Mem.store AST.Mint64 m bl_state 0 (Vlong pc) = Some m1; (** the relation between m1 and st? *)
+      mpc      : Mem.loadv AST.Mint64 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vlong  (pc_loc st));
       mregs    : match_registers  (regs_st st) bl_state (Ptrofs.repr 8) m;
-      mflsgs  : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (int_of_flag (flag st)))
+      mflags   : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (int_of_flag (flag st)));
+      mperm    : Mem.range_perm m bl_state 0 (size_of_regs + 12) Cur Freeable
     }.
 
 End S.
+
+(* Permission Lemmas: deriving from riot-rbpf/MemInv.v *)
+Lemma range_perm_included:
+  forall m b p lo hi ofs_lo ofs_hi, 
+    lo <= ofs_lo -> ofs_lo < ofs_hi -> ofs_hi <= hi ->  (**r `<` -> `<=` *)
+    Mem.range_perm m b lo hi Cur Freeable ->
+      Mem.range_perm m b ofs_lo ofs_hi Cur p.
+Proof.
+  intros.
+  apply (Mem.range_perm_implies _ _ _ _ _ Freeable _); [idtac | apply perm_F_any].
+  unfold Mem.range_perm in *; intros.
+  apply H2.
+  lia.
+Qed.
+
+(** Permission Lemmas: upd_pc *)
+Lemma upd_pc_write_access:
+  forall m0 blk st
+    (Hst: match_state blk st m0),
+    Mem.valid_access m0 Mint64 blk 0 Writable.
+Proof.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
+  unfold size_chunk, align_chunk.
+  split.
+  - simpl; apply (range_perm_included _ _ Writable _ _ 0 8) in mperm0; [assumption | lia | lia | lia].
+  - apply Z.divide_0_r.
+Qed.
+
+Lemma upd_pc_store:
+  forall m0 blk pc st
+    (Hst: match_state blk st m0),
+    exists m1,
+    Mem.store AST.Mint64 m0 blk 0 (Vlong pc) = Some m1.
+Proof.
+  intros.
+  apply (upd_pc_write_access _ _ _) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vlong pc)) in Hst.
+  destruct Hst as (m2 & Hstore).
+  exists m2; assumption.
+Qed.
+
+
+(** Permission Lemmas: upd_regs *)
+Lemma upd_regs_write_access:
+  forall m0 blk st r
+    (Hst: match_state blk st m0),
+    Mem.valid_access m0 Mint64 blk (8 * (id_of_reg r)) Writable.
+Proof.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
+  unfold id_of_reg.
+  unfold size_chunk, align_chunk.
+  split.
+  - apply (range_perm_included _ _ Writable _ _ (8 * (id_of_reg r)) (8 * (id_of_reg r +1))) in mperm0;
+  destruct r; unfold id_of_reg in *; simpl in *; try lia;
+  simpl; assumption.
+  - apply Z.divide_factor_l.
+Qed.
+
+(** Permission Lemmas: upd_flags *)
+Lemma upd_flags_write_access:
+  forall m0 blk st
+    (Hst: match_state blk st m0),
+    Mem.valid_access m0 Mint32 blk (size_of_regs + 8) Writable.
+Proof.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
+  unfold size_of_regs.
+  unfold size_chunk, align_chunk.
+  split.
+  - simpl.
+    apply (range_perm_included _ _ Writable _ _ 88 92) in mperm0; [assumption | lia | lia | lia].
+  - assert (Heq: 10 * 8 + 8 = 4 * 22). { reflexivity. }
+    rewrite Heq;apply Z.divide_factor_l.
+Qed.
+
+(** Permission Lemmas: upd_mem_regions *)
 
 (* Useful matching relations *)
 Require Import DxMonad.
