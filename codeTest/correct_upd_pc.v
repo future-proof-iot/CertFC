@@ -82,14 +82,19 @@ Section Upd_pc.
     destruct H_st as (Hv_eq & Hst).
     (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
     subst v0 v.
-    
+
+    (** we need to get the proof of `upd_pc` store permission *)
+    apply (upd_pc_store _ _ c _) in Hst as Hstore.
+    destruct Hstore as (m1 & Hstore).
+    (** pc \in [ (state_block,0), (state_block,8) ) *)
+
     unfold pre in *.
     (**according to the type of upd_pc:
          static void upd_pc(struct bpf_state* st, unsigned long long pc)
        1. return value should be Vundef (i.e. void)
        2. the new memory should change the value of pc, i.e. m_pc
       *)
-    exists Vundef, (bpf_m st), Events.E0.
+    exists Vundef, m1, Events.E0.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
@@ -101,14 +106,7 @@ Section Upd_pc.
       do 4 econstructor; eauto.
       eapply eval_Etempvar; rewrite p1; reflexivity.
       reflexivity.
-      econstructor; eauto. reflexivity.
-      simpl.
-      unfold Coqlib.align, Ctypes.align_attr; simpl.
-      unfold Ptrofs.add, Ptrofs.zero.
-      repeat rewrite Ptrofs.unsigned_repr. simpl.
-      destruct Hst.
-(*      rewrite Heq. reflexivity.
-      apply (mpc_store state_block st m Hst c).
+      econstructor; eauto; reflexivity.
       eforward_plus.
       eapply Smallstep.plus_one; eauto.
       eapply step_return_0.
@@ -118,11 +116,15 @@ Section Upd_pc.
       constructor.
     - unfold unmodifies_effect, modifies, In.
       intros.
+      destruct (Pos.eq_dec state_block b).
+      subst b.
+      exfalso.
+      apply H1.
+      left; reflexivity.
+      apply POrderedType.PositiveOrder.neq_sym in n.
       symmetry.
-      apply (Mem.load_store_other AST.Mint64 m state_block 0%Z (Vlong c)).
-      assumption.
-      left.
-      intuition.*)
-Admitted.
+      apply (Mem.load_store_other AST.Mint64 m _ _ _ m1 Hstore chk _ _).
+      left; assumption.
+Qed.
 
 End Upd_pc.
