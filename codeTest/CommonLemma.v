@@ -1,5 +1,6 @@
 From compcert Require Import Coqlib Clight.
 From bpf.proof Require Import Clightlogic.
+From Ltac2 Require Import Ltac2 Message.
 
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
     list_norepet_dec eq_dec l = left H ->
@@ -106,53 +107,11 @@ Ltac forward_if :=
   eapply Smallstep.plus_left'; eauto; [eapply step_ifthenelse; [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity | reflexivity] | idtac]
   end.*)
 
-Ltac eforward_plus :=
- match goal with
-  (** forward_seq *)
-  | |- Smallstep.plus _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_seq | idtac]
-  (** forward_call_one_arg *)
-  | |- Smallstep.plus _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto;
-      [eapply step_call;
-        [reflexivity |                                (** goal: classify_fun *)
-         eapply eval_Elvalue;                         (** goal: eval_expr *)
-          [eapply eval_Evar_global; reflexivity |     (** eval_lvalue *)
-           eapply deref_loc_reference; reflexivity] | (** goal: deref_loc *)
-         eapply eval_Econs;                           (** goal: eval_exprlist *)
-          [eapply eval_Etempvar; reflexivity |        (** goal: eval_expr *)
-           reflexivity |                              (** goal: Cop.sem_cast *)
-           eapply eval_Enil] |                        (** goal: eval_exprlist *)
-         econstructor; eauto |                        (** goal: Globalenvs.Genv.find_funct *)
-         reflexivity] |                               (** goal: type_of_fundef *)
-       idtac]
-  (** forward_returnstate *)
-  | |- Smallstep.plus _ _ (Returnstate _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | idtac]
-  (** forward_skip_seq *)
-  | |- Smallstep.plus _ _ (State _ Sskip (Kseq _ _) _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | idtac]
-  (** forward_if *)
-  | |- Smallstep.plus _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
-    eapply Smallstep.plus_left'; eauto;
-    [eapply step_ifthenelse;
-      [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity |
-       reflexivity] |
-     idtac]
-  (** forward_return_some *)
-  | |- Smallstep.plus _ _ (State _ (Sreturn _) _ _ _ _) _ _ =>
-    eapply Smallstep.plus_left'; eauto;
-      [eapply step_return_1;
-        [eapply eval_Econst_long |
-         reflexivity |
-         reflexivity] | idtac]
- end.
-
 Ltac forward_plus :=
  match goal with
   (** forward_seq *)
   | |- Smallstep.plus _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_seq | idtac | simpl]
+      eapply Smallstep.plus_left'; eauto; [eapply step_seq | try simpl ..]
   (** forward_call_one_arg *)
   | |- Smallstep.plus _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
       eapply Smallstep.plus_left'; eauto;
@@ -167,26 +126,26 @@ Ltac forward_plus :=
            eapply eval_Enil] |                        (** goal: eval_exprlist *)
          econstructor; eauto |                        (** goal: Globalenvs.Genv.find_funct *)
          reflexivity] |                               (** goal: type_of_fundef *)
-       idtac | simpl]
+       try simpl ..]
   (** forward_returnstate *)
   | |- Smallstep.plus _ _ (Returnstate _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | idtac | simpl]
+      eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | try simpl ..]
   (** forward_skip_seq *)
   | |- Smallstep.plus _ _ (State _ Sskip (Kseq _ _) _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | idtac | simpl]
+      eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | try simpl ..]
   (** forward_if *)
   | |- Smallstep.plus _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
     eapply Smallstep.plus_left'; eauto;
     [eapply step_ifthenelse;
       [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity |
        reflexivity] |
-     idtac | simpl]
+     try simpl ..]
   (** forward_return_some *)
   | |- Smallstep.plus _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
     eapply Smallstep.plus_left'; eauto;
       [eapply step_return_1;
         [eapply eval_Econst_long |
          reflexivity |
-         reflexivity] | idtac | simpl]
+         reflexivity] | try simpl ..]
  end.
 
