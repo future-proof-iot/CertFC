@@ -44,7 +44,7 @@ Section S.
   Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
     exists v, Mem.loadv AST.Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some v /\
-                Val.inject inject_id (eval_regmap r rmap) v.
+           Val.inject inject_id (eval_regmap r rmap) v .
 
 
 

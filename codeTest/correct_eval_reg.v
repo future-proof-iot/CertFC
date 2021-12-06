@@ -25,6 +25,7 @@ Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :
   Vlong x = v.
 
 Definition reg_correct (r: reg) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+  complu_lt_32 v (Vint (Int.repr 11)) = true /\ (**r ensured by verifier *)
   match r with
   | R0 => v = Vzero
   | R1 => v = Vone
@@ -77,7 +78,8 @@ Section Eval_reg.
 
   Lemma correct_function3_eval_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
   Proof.
-    eapply correct_function_from_body;
+    correct_function_from_body.
+    eapply correct_function_from_body.
     [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
       eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
       simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
@@ -99,7 +101,9 @@ Section Eval_reg.
     unfold stateM_correct in H_st.
     unfold reg_correct in H_i.
     destruct H_st as (Hv_eq & Hst).
+    destruct H_i as (Hlt & Hi).
     subst v.
+    unfold complu_lt_32 in Hlt.
 
     unfold pre in c.
     (** we need to get the value of reg in the memory *)
@@ -108,6 +112,7 @@ Section Eval_reg.
     specialize (mregs c).
     destruct mregs as (v & Hreg_load & Hreg_casted).
     unfold Mem.loadv in Hreg_load.
+    
     (** pc \in [ (state_block,0), (state_block,8) ) *)
     (**according to the type of eval_reg:
          static unsigned long long eval_reg(struct bpf_state* st, unsigned int i)
@@ -124,6 +129,15 @@ Section Eval_reg.
       econstructor; eauto.
       econstructor; eauto.
       econstructor; eauto.
+      econstructor; eauto.
+      simpl.
+      unfold Cop.sem_cmp.
+      simpl.
+      Transparent Archi.ptr64.
+      unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast, Cop.classify_binarith, Cop.binarith_type.
+      simpl.
+      destruct v0; try congruence.
+      reflexivity.
       econstructor; eauto.
       (** TODO: we need an invariant to say each register should be [0, 11] *)
       simpl. reflexivity.
