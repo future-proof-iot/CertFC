@@ -1,5 +1,5 @@
 From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
-From Coq Require Import List.
+From Coq Require Import List Lia.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
@@ -76,8 +76,8 @@ Section Eval_pc.
 
     (** we need to get the value of pc in the memory *)
     destruct Hst; clear minj mregs mflags mperm.
+    unfold Mem.loadv in mpc.
     (** pc \in [ (state_block,0), (state_block,8) ) *)
-
     (**according to the type of eval_pc:
          unsigned long long eval_pc (struct bpf_state* st)
        1. return value should be Vlong
@@ -88,33 +88,27 @@ Section Eval_pc.
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
       apply Smallstep.plus_star.
-      Admitted.
-      forward_plus.
-
-      eapply Smallstep.plus_left'; eauto.
-      econstructor; eauto.
-      do 4 econstructor; eauto.
-      eapply eval_Etempvar; rewrite p1; reflexivity.
-      reflexivity.
-      econstructor; eauto; reflexivity.
-      eforward_plus.
+      (** TODO: adding Sreturn  more info by Ltac2 *)
       eapply Smallstep.plus_one; eauto.
-      eapply step_return_0.
+      econstructor; eauto.
+      do 2 econstructor; eauto.
+      simpl.
+      do 3 econstructor; eauto.
+      econstructor; eauto.
       reflexivity.
       reflexivity.
+      reflexivity.
+      unfold Coqlib.align; rewrite Ptrofs.add_zero.
+      unfold Ptrofs.zero; simpl.
+      rewrite Ptrofs.unsigned_repr.
+      rewrite <- mpc; reflexivity.
+      unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
+      Transparent Archi.ptr64.
+      simpl.
+      lia.
+      econstructor; eauto.
     - simpl.
       constructor.
-    - unfold unmodifies_effect, modifies, In.
-      intros.
-      destruct (Pos.eq_dec state_block b).
-      subst b.
-      exfalso.
-      apply H1.
-      left; reflexivity.
-      apply POrderedType.PositiveOrder.neq_sym in n.
-      symmetry.
-      apply (Mem.load_store_other AST.Mint64 m _ _ _ m1 Hstore chk _ _).
-      left; assumption.
-Qed.
+  Qed.
 
-End Upd_pc.
+End Eval_pc.
