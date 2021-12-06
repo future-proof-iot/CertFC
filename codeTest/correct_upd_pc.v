@@ -102,16 +102,16 @@ Section Upd_pc.
       repeat forward_plus.
 
       eapply Smallstep.plus_left'; eauto.
-      + eapply step_assign. [do 4 econstructor; eauto | econstructor; eauto | econstructor; eauto| ..]. econstructor; eauto; reflexivity.
+      eapply step_assign; [do 4 econstructor; eauto | econstructor; eauto | econstructor; eauto| ..]. econstructor; eauto; reflexivity. (*
         * do 4 econstructor; eauto. (**r how to do automatically in Ltac? *)
         * econstructor; eauto.
         * econstructor; eauto.
-        * econstructor; eauto; reflexivity.
-      + eforward_plus.
-        eapply Smallstep.plus_one; eauto.
-        eapply step_return_0.
-        reflexivity.
-        reflexivity.
+        * econstructor; eauto; reflexivity.*)
+      forward_plus.
+      eapply Smallstep.plus_one; eauto.
+      eapply step_return_0.
+      reflexivity.
+      reflexivity.
     - simpl.
       constructor.
     - unfold unmodifies_effect, modifies, In.
