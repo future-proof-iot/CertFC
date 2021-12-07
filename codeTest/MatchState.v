@@ -4,9 +4,9 @@ From dx.tests Require Import DxIntegers DxValues DxAST DxMemRegion DxRegs DxStat
 From compcert Require Import Coqlib Integers Values AST Clight Memory.
 
 Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
-  (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some v /\ Val.inject inject_id (block_ptr mr) v)    /\
-    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some v /\ Val.inject inject_id (start_addr mr) v) /\
-    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some v /\ Val.inject inject_id (block_size mr) v).
+  (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some (Vlong vl) /\ Val.inject inject_id (start_addr mr) (Vlong vl))    /\ (**r start_addr mr = Vlong vl*)
+    (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vlong vl) /\ Val.inject inject_id (block_size mr) (Vlong vl)) /\ (**r block_size mr = Vlong vl*)
+    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some v /\ Val.inject inject_id (block_ptr mr) v).
 
 Definition size_of_region  := Ptrofs.repr (3 * 8). (* 3 * 64 bits *)
 
