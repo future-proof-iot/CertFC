@@ -17,18 +17,22 @@ The rBPF Coq interpreter consists of:
 Before installing this repo, making sure that you have installed necessary libs of dx (see below: the description of dx)!!!
 
 _NB: we modify the makefile of the source project_, to run this repo:
+1. install `dx`
 ```shell
 $ git clone https://gitlab.univ-lille.fr/samuel.hym/dx
 $ cd dx
 $ ./configure ...
-$ ./configure --install-compcert-printer --cprinterdir=YOUR-DX-FOLDER/extr
-$ make
+$ ./configure --install-compcert-printer --cprinterdir=/home/YOUR-NAME/.opam/YOUR-BPF-OPAM-SWITCH/lib/coq/user-contrib/dx/extr
+$ make; make install
 ```
+2. download this repo and config  the Makefie.config:
 ```shell
 $ git clone https://gitlab.inria.fr/syuan/rbpf-dx.git
 $ cd rbpf-dx
+$ vim Makefile.config #`OPAMPREFIX := /home/shyuan/.opam/4.11.1` -> `/home/YOUR-NAME/.opam/YOUR-BPF-OPAM-SWITCH`
 $ make
 ```
+
 Remember:
 1. The default dx install folder we use is `/home/your-name/.opam/bpf`: making sure that you config the `--compcert-printer` and `--cprinterdir`.
 2. be careful to use positive as variables' id, because dx/compcert also uses postive numbers to represent variables: there will be a conflict if your positive number is too small and it overlaps with existing variables.
