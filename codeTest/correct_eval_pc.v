@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
 
 (**
 static unsigned long long eval_pc (struct bpf_state* st) {
@@ -14,9 +14,6 @@ static unsigned long long eval_pc (struct bpf_state* st) {
 
 Definition eval_pc: M int64_t := fun st => Some (eval_pc st, st).
  *)
-
-Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  Vlong x = v.
 
 Section Eval_pc.
 
@@ -37,9 +34,6 @@ Section Eval_pc.
   Definition fn: Clight.function := f_eval_pc.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
-  (* [match_mem] related the Coq monadic state and the C memory *)
-  (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
-
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
@@ -51,7 +45,7 @@ Section Eval_pc.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => int64_correct x v st m.
 
-  Lemma correct_function3_eval_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Instance correct_function3_eval_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
   Proof.
     eapply correct_function_from_body;
     [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
@@ -112,3 +106,5 @@ Section Eval_pc.
   Qed.
 
 End Eval_pc.
+
+Existing  Instance correct_function3_eval_pc.

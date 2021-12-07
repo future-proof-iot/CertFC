@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
 
 (**
 static void upd_pc(struct bpf_state* st, unsigned long long pc) {
@@ -13,9 +13,6 @@ static void upd_pc(struct bpf_state* st, unsigned long long pc) {
 }
 Definition upd_pc (p: int64_t): M unit := fun st => Some (tt, upd_pc p st).
  *)
-
-Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  Vlong x = v.
 
 Section Upd_pc.
 
@@ -36,10 +33,7 @@ Section Upd_pc.
   Definition fn: Clight.function := f_upd_pc.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
-  (* [match_mem] related the Coq monadic state and the C memory *)
-  (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
-
-
+  
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
@@ -50,45 +44,26 @@ Section Upd_pc.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
 
-  Lemma correct_function3_upd_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
-  Proof. (*
-    eapply correct_function_from_body.
-    - simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate).
-    - eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-    - simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-    - reflexivity.
-    - reflexivity.*)
-    eapply correct_function_from_body;
-    [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
-      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      reflexivity |
-      reflexivity |
-      idtac
-    ].
-    intros.
-    unfold args in *.
-    car_cdr.
-    unfold list_rel_arg.
-    simpl.
-    unfold correct_body.
+  Instance correct_function3_upd_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Proof.
+    correct_function_from_body.
+    correct_body.
     repeat intro.
-    get_invariant _st.
-    get_invariant _pc.
-    destruct c0 as (H_st & Hst_casted).
-    destruct c1 as (H_pc & Hpc_casted).
-    unfold stateM_correct in H_st.
-    unfold int64_correct in H_pc.
-    destruct H_st as (Hv_eq & Hst).
+    unfold INV in H.
+    get_invariant_more _st.
+    get_invariant_more _pc.
+    unfold stateM_correct in H1.
+    unfold int64_correct in H3.
+    destruct H1 as (Hv_eq & Hst).
     (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
     subst v0 v.
-
+    
     (** we need to get the proof of `upd_pc` store permission *)
     apply (upd_pc_store _ _ c _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** pc \in [ (state_block,0), (state_block,8) ) *)
 
-    unfold pre in *.
+    simpl in c.
     (**according to the type of upd_pc:
          static void upd_pc(struct bpf_state* st, unsigned long long pc)
        1. return value should be Vundef (i.e. void)
@@ -128,3 +103,5 @@ Section Upd_pc.
 Qed.
 
 End Upd_pc.
+
+Existing Instance correct_function3_upd_pc.

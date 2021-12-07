@@ -4,44 +4,17 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
 
 (**
 static unsigned long long eval_reg(struct bpf_state* st, unsigned int i){
-  if (i < 11){
     return ( *st).regsmap[i];
-  }
-  else {
-    ( *st).bpf_flag = BPF_ILLEGAL_REGISTER;
-    return 0; //if here we update the bpf_flag, we must check bpf_flag after eval_reg
-  }
 }
 
 
 Definition eval_reg (r: reg) : M val64_t := fun st => Some (eval_reg r st, st).
  *)
 
-Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  Vlong x = v.
-
-Definition reg_correct (r: reg) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  complu_lt_32 v (Vint (Int.repr 11)) = true /\ (**r ensured by verifier *)
-  match r with
-  | R0 => v = Vzero
-  | R1 => v = Vone
-  | R2 => v = Vint (Int.repr 2)
-  | R3 => v = Vint (Int.repr 3)
-  | R4 => v = Vint (Int.repr 4)
-  | R5 => v = Vint (Int.repr 5)
-  | R6 => v = Vint (Int.repr 6)
-  | R7 => v = Vint (Int.repr 7)
-  | R8 => v = Vint (Int.repr 8)
-  | R9 => v = Vint (Int.repr 9)
-  | R10 => v = Vint (Int.repr 10)
-  end.
-
-Definition val64_correct (x:val64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  x = v. (**r /\ exists y, x = Vlong y *)
 
 Section Eval_reg.
 
@@ -76,89 +49,98 @@ Section Eval_reg.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v st m.
 
-  Lemma correct_function3_eval_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Instance correct_function3_eval_reg : correct_function3 p args res f fn modifies false match_arg_list match_res.
   Proof.
     correct_function_from_body.
-    eapply correct_function_from_body.
-    [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
-      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      reflexivity |
-      reflexivity |
-      idtac
-    ].
-    intros.
-    unfold args in *.
-    car_cdr.
-    unfold list_rel_arg.
-    simpl.
-    unfold correct_body.
-    repeat intro. (**r TODO: a ltac named prepare *)
-    get_invariant _st.
-    get_invariant _i. (**r automatically *)
-    destruct c0 as (H_st & Hst_casted).
-    destruct c1 as (H_i & Hi_casted).
-    unfold stateM_correct in H_st.
-    unfold reg_correct in H_i.
-    destruct H_st as (Hv_eq & Hst).
-    destruct H_i as (Hlt & Hi).
-    subst v.
-    unfold complu_lt_32 in Hlt.
-
-    unfold pre in c.
-    (** we need to get the value of reg in the memory *)
-    destruct Hst; clear minj mpc mflags mperm.
+    correct_body.
+    unfold f, INV.
+    repeat intro.
+    get_invariant_more _st.
+    get_invariant_more _i.
+    unfold stateM_correct in H1.
+    unfold reg_correct in H3.
+    destruct H1 as (Hptr & Hmatch).
+    subst v v0.
+    destruct Hmatch.
+    clear minj mpc mflags mperm.
     unfold match_registers in mregs.
+    simpl in c.
     specialize (mregs c).
-    destruct mregs as (v & Hreg_load & Hreg_casted).
-    unfold Mem.loadv in Hreg_load.
-    
-    (** pc \in [ (state_block,0), (state_block,8) ) *)
-    (**according to the type of eval_reg:
+    destruct mregs as (vl & Hreg_load & Hinj).
+
+    (**according to:
          static unsigned long long eval_reg(struct bpf_state* st, unsigned int i)
-       1. return value should be 
+       1. return value should be v
        2. the memory is same
       *)
-    exists v, m, Events.E0.
-
+    exists (Vlong vl), m, Events.E0.
+    
     repeat split; unfold step2.
-    - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
-      (** TODO: adding Sreturn  more info by Ltac2 *)
-      eapply Smallstep.plus_left'; eauto.
+    - apply Smallstep.plus_star.
+      eapply Smallstep.plus_one; eauto.
       econstructor; eauto.
       econstructor; eauto.
       econstructor; eauto.
       econstructor; eauto.
-      simpl.
-      unfold Cop.sem_cmp.
-      simpl.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      eapply deref_loc_copy. (**r TODO: always deref_loc_copy? could we do something? *)
+      reflexivity.
+      reflexivity.
+      reflexivity.
+      reflexivity.
+      eapply deref_loc_reference. (**r TODO: here is deref_loc_reference, could we do something? *)
+      reflexivity.
+
+      econstructor; eauto.
       Transparent Archi.ptr64.
-      unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast, Cop.classify_binarith, Cop.binarith_type.
+      unfold Cop.sem_cast.
+      reflexivity.
+      econstructor; eauto.
+      reflexivity.
+
+      rewrite Ptrofs.add_zero_l.
+      unfold Coqlib.align; simpl.
+      unfold Mem.loadv in Hreg_load.
+      assert (Heq: Ptrofs.repr (8 * id_of_reg c) = Ptrofs.mul (Ptrofs.repr 8) (Ptrofs.of_intu (Int.repr (id_of_reg c)))). {
+        unfold Ptrofs.mul, Ptrofs.of_intu.
+        unfold Ptrofs.of_int.
+        repeat rewrite Ptrofs.unsigned_repr.
+        rewrite Int.unsigned_repr.
+        reflexivity.
+        unfold Int.max_unsigned, Int.modulus, Int.wordsize, Wordsize_32.wordsize.
+        simpl.
+        unfold id_of_reg; destruct c; lia.
+        unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
+        rewrite Int.unsigned_repr.
+        simpl.
+        unfold id_of_reg; destruct c; lia.
+        unfold Int.max_unsigned, Int.modulus, Int.wordsize, Wordsize_32.wordsize.
+        simpl.
+        unfold id_of_reg; destruct c; lia.
+        unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
+        simpl; lia.
+      }
+      rewrite Heq in Hreg_load.
+      rewrite Hreg_load.
+      reflexivity.
+
+      unfold Cop.sem_cast; simpl.
+      reflexivity.
+    -
+      unfold match_res.
+      unfold val64_correct.
+      unfold DxState.eval_reg.
+      symmetry; assumption.
+    -
       simpl.
-      destruct v0; try congruence.
-      reflexivity.
-      econstructor; eauto.
-      (** TODO: we need an invariant to say each register should be [0, 11] *)
-      simpl. reflexivity.
-      econstructor; eauto.
-      simpl.
-      do 3 econstructor; eauto.
-      econstructor; eauto.
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      unfold Coqlib.align; rewrite Ptrofs.add_zero.
-      unfold Ptrofs.zero; simpl.
-      rewrite Ptrofs.unsigned_repr.
-      rewrite <- mpc; reflexivity.
-      unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
-      Transparent Archi.ptr64.
-      simpl.
-      lia.
-      econstructor; eauto.
-    - simpl.
       constructor.
   Qed.
+  
 
-End Eval_pc.
+End Eval_reg.
+
+Existing Instance correct_function3_eval_reg.
