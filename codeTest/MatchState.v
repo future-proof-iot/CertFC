@@ -43,8 +43,9 @@ Section S.
 
   Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
-    exists v, Mem.loadv AST.Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some v /\
-           Val.inject inject_id (eval_regmap r rmap) v .
+    exists vl, Mem.loadv AST.Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some (Vlong vl) /\ (**r it should be `(eval_regmap r rmap)`*)
+            Vlong vl = eval_regmap r rmap.
+           (*Val.inject inject_id (eval_regmap r rmap) (Vlong vl) . (**r each register is Vlong *)*)
 
 
 
@@ -157,8 +158,17 @@ Qed.
 
 (** Permission Lemmas: upd_mem_regions *)
 
-(* Useful matching relations *)
+(** TODO: *)
+
 Require Import DxMonad.
+
+(** TODO: *)
+
+Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
+  exists o, v = Vptr bl_region o /\
+              match_region_at_ofs mr bl_region o m.
+
+(* Useful matching relations *)
 
 Definition match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region (Ptrofs.mul size_of_region  o) /\
