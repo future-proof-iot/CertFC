@@ -6,7 +6,7 @@ From compcert Require Import Coqlib Values Clight Memory Integers.
 Require Import MatchState.
 Require Import Clightlogic interpreter.
 
-Require Import correct_is_well_chunk_bool.
+Require Import correct_is_well_chunk_bool correct_getMemRegion_block_ptr correct_getMemRegion_start_addr correct_getMemRegion_block_size.
 Require Import clight_exec CommonLemma.
 
 Section Check_mem_aux.
@@ -62,7 +62,7 @@ Ltac build_app_aux T :=
              let r := build_app_aux F in
              constr:((mk ty X) :: r)
   | ?X    => constr:(@nil dpair)
-  end.
+  end.                                    
 
 Ltac get_function T :=
   match T with
@@ -167,7 +167,97 @@ Proof.
   }
   intros.
   correct_forward.
-  unfold getMemRegion_block_ptr.
+  eapply correct_statement_seq_body.
+  change_app_for_statement.
+  eapply correct_statement_call with (has_cast := false).
+  reflexivity.
+  reflexivity.
+  reflexivity.
+  typeclasses eauto.
+  { unfold INV.
+    unfold var_inv_preserve.
+    intros.
+    unfold match_temp_env in *.
+    rewrite Forall_fold_right in *.
+    simpl in *.
+    intuition. clear - H1 H.
+    unfold match_elt in *;
+      unfold fst in *.
+    destruct (Maps.PTree.get _mr3 le0);auto.
+    simpl in *.
+    destruct H1 ; split; auto.
+    eapply same_memory_match_region;eauto.
+  }
+  reflexivity.
+  reflexivity.
+  reflexivity.
+  reflexivity.
+  simpl; unfold incl; simpl.
+  intros.
+  intuition subst.
+  right.
+  left.
+
+  reflexivity.
+  prove_in_inv.
+  prove_in_inv.
+  {
+    intros.
+    apply match_temp_env_ex with (l':= [(_mr3, Clightdefs.tptr (Ctypes.Tstruct _memory_region Ctypes.noattr))]) in H.
+    destruct H.
+    exists x. split; auto.
+    apply length_map_opt in H.
+    rewrite <- H. reflexivity.
+    unfold INV, incl; simpl.
+    intuition subst;discriminate.
+  }.
+
+  [
+          reflexivity
+          | reflexivity
+          | reflexivity
+          | typeclasses eauto
+          | idtac
+          | reflexivity
+          | reflexivity
+          | reflexivity
+          | reflexivity
+          | prove_incl
+          | prove_in_inv
+          | prove_in_inv
+          | idtac
+         ].
+  
+      [ change_app_for_statement ;
+        let b := match T with
+                 | Ecast _ _ => constr:(true)
+                 | _         => constr:(false)
+                 end in
+        eapply correct_statement_call with (has_cast := b);
+        [
+          reflexivity
+          | reflexivity
+          | reflexivity
+          | typeclasses eauto
+          | idtac
+          | reflexivity
+          | reflexivity
+          | reflexivity
+          | reflexivity
+          | prove_incl
+          | prove_in_inv
+          | prove_in_inv
+          | idtac
+         ]
+      |]
+  correct_forward.
+  unfold getMemRegion_block_ptr. Print correct_getMemRegion_block_ptr.correct_function3_getMemRegion_block_ptr.
+  unfold bindM.
+  unfold runM, returnM.
+  
+  match goal with
+    | |- @correct_body _ _ 
+  unfold getMemRegion_start_addr.
   admit.
   (* TODO *)
   repeat intro.
