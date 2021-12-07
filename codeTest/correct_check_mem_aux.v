@@ -3,7 +3,7 @@ Import ListNotations.
 From dx Require Import ResultMonad IR.
 From dx.tests Require Import DxIntegers DxValues DxAST DxMemRegion DxState DxMonad DxInstructions.
 From compcert Require Import Coqlib Values Clight Memory Integers.
-Require Import StateBlock MatchState.
+Require Import MatchState.
 Require Import Clightlogic interpreter.
 
 Require Import correct_is_well_chunk_bool.
@@ -167,6 +167,7 @@ Proof.
   }
   intros.
   correct_forward.
+  unfold getMemRegion_block_ptr.
   admit.
   (* TODO *)
   repeat intro.
