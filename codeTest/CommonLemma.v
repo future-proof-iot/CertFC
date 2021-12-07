@@ -107,6 +107,18 @@ Ltac forward_if :=
   eapply Smallstep.plus_left'; eauto; [eapply step_ifthenelse; [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity | reflexivity] | idtac]
   end.*)
 
+(**copy from cpdt *)
+Ltac completer :=
+  repeat match goal with
+           | [ |- _ /\ _ ] => constructor
+           | [ H : _ /\ _ |- _ ] => destruct H
+           | [ H : ?P -> ?Q, H' : ?P |- _ ] => specialize (H H')
+           | [ |- forall x, _ ] => intro
+           | [ H: exists v, ?P |- _ ] => destruct H
+
+           | [ H : forall x, ?P x -> _, H' : ?P ?X |- _ ] => specialize (H X H')
+         end.
+
 Ltac forward_plus :=
  match goal with
   (** forward_seq *)
@@ -142,10 +154,67 @@ Ltac forward_plus :=
      try simpl ..]
   (** forward_return_some *)
   | |- Smallstep.plus _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
+    eapply Smallstep.plus_one; eauto;
+      [eapply step_return_1;
+        [eapply eval_Econst_long |
+         reflexivity |
+         reflexivity] | try simpl ..] (*
     eapply Smallstep.plus_left'; eauto;
       [eapply step_return_1;
         [eapply eval_Econst_long |
          reflexivity |
-         reflexivity] | try simpl ..]
+         reflexivity] | try simpl ..]*)
  end.
+
+Ltac prepare :=
+  match goal with
+  | |- correct_function3 _ ?args _ _ _ _ _ _ _ =>
+    eapply correct_function_from_body;
+    [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
+      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
+      simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
+      reflexivity |
+      reflexivity |
+      idtac
+    ];
+    intros;
+    unfold args in *;
+    car_cdr;
+    unfold list_rel_arg;
+    simpl;
+    unfold correct_body;
+    repeat intro
+  end.
+
+(**
+match_temp_env
+      [(_x, Clightdefs.tulong, stateless val64_correct c);
+      (_y, Clightdefs.tulong, stateless val64_correct c0)] le st
+      m
+*)
+
+Ltac get_invariant_more VAR :=
+  let E := fresh "ME" in
+  let I := fresh "I" in
+  let v := fresh "v" in
+  let p := fresh "p" in
+  let c := fresh "c" in
+  match goal with
+  | H : match_temp_env ?L ?LE ?ST ?M |- _ =>
+      let tp := get_inv_from_list VAR L in
+      match tp with
+      | (?T,?P) =>
+          assert (I : exists v, Maps.PTree.get VAR LE = Some v /\
+                              P v ST M /\ Cop.val_casted v T);
+          [
+            unfold match_temp_env in H;
+            rewrite Forall_forall in H;
+            assert (E : match_elt ST M LE (VAR,T,P)) by (apply H ; simpl; tauto);
+            unfold match_elt,fst in E;
+            destruct (Maps.PTree.get VAR LE);[|tauto];
+            eexists ; split ; auto
+          | destruct I as (v &p &c)]; completer
+      end
+  end.
+
 
