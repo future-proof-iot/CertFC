@@ -43,7 +43,7 @@ Section GetMemRegion_block_ptr.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => True.
 
-  Lemma correct_function3_eval_pc : correct_function3 p args res f fn (nil) true match_arg_list match_res.
+  Instance correct_function3_getMemRegion_block_ptr : correct_function3 p args res f fn (nil) true match_arg_list match_res.
   Proof.
     correct_function_from_body.
     correct_body.
@@ -83,3 +83,5 @@ Section GetMemRegion_block_ptr.
   Qed.
 
 End GetMemRegion_block_ptr.
+
+Existing Instance correct_function3_getMemRegion_block_ptr.

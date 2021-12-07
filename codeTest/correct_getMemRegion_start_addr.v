@@ -54,10 +54,6 @@ Section GetMemRegion_start_addr.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_getMemRegion_start_addr.
 
-Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
-  exists o, v = Vptr bl_region o /\
-              match_region_at_ofs mr bl_region o m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
     (DList.DCons (my_match_region state_block)
@@ -66,7 +62,7 @@ Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => True.
 
-  Lemma correct_function3_eval_pc : correct_function3 p args res f fn (nil) true match_arg_list match_res.
+  Instance correct_function3_getMemRegion_start_addr : correct_function3 p args res f fn (nil) true match_arg_list match_res.
   Proof.
     correct_function_from_body.
     correct_body.
@@ -121,7 +117,7 @@ Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) 
         unfold Mem.loadv in Haddr_load.
         rewrite <- Haddr_load; reflexivity.
       + Transparent Archi.ptr64.
-        unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_cast. simpl.
         reflexivity.
       + reflexivity.
     - simpl.
@@ -129,3 +125,5 @@ Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) 
   Qed.
 
 End GetMemRegion_start_addr.
+
+Existing Instance correct_function3_getMemRegion_start_addr.

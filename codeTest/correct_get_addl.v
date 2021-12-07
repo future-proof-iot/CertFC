@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
 
 (**
 static unsigned long long get_addl(unsigned long long x, unsigned long long y)
@@ -15,9 +15,6 @@ static unsigned long long get_addl(unsigned long long x, unsigned long long y)
 Definition get_addl (x y: val64_t): M val64_t := returnM (Val.addl x y).
 
 *)
-
-Definition val64_correct (x:val64_t) (v: val) :=
-  x = v /\ exists vl, x = Vlong vl.
 
 Section Get_addl.
 
@@ -46,7 +43,7 @@ Section Get_addl.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
 
-  Lemma correct_function3_eval_pc : correct_function3 p args res f fn (nil) true match_arg_list match_res.
+  Instance correct_function3_get_addl : correct_function3 p args res f fn (nil) true match_arg_list match_res.
   Proof.
     correct_function_from_body.
     correct_body.
@@ -90,3 +87,5 @@ Section Get_addl.
   Qed.
 
 End Get_addl.
+
+Existing Instance correct_function3_get_addl.
