@@ -4,7 +4,7 @@
 #include<stdlib.h>
 #include<stddef.h>
 
-
+/*
 void print_bpf_state(struct bpf_state* st){
   printf("pc= %" PRIu64 "\n", (uint64_t) (*st).state_pc);
   printf("flag= %d\n", (*st).bpf_flag);
@@ -14,7 +14,7 @@ void print_bpf_state(struct bpf_state* st){
   }
   printf("\n");
 }
-
+*/
 
 static unsigned long long eval_pc (struct bpf_state* st) {
   return (*st).state_pc;
@@ -32,23 +32,11 @@ static void upd_pc_incr(struct bpf_state* st) {
 
 
 static unsigned long long eval_reg(struct bpf_state* st, unsigned int i){
-  if (i < 11){
-    return (*st).regsmap[i];
-  }
-  else {
-    (*st).bpf_flag = BPF_ILLEGAL_REGISTER;
-    return 0; //if here we update the bpf_flag, we must check bpf_flag after eval_reg
-  }
+  return (*st).regsmap[i];
 }
 
 static void upd_reg (struct bpf_state* st, unsigned int i, unsigned long long v){
-  if (i < 11){
-    (*st).regsmap[i] = v;
-  }
-  else {
-    (*st).bpf_flag = BPF_ILLEGAL_REGISTER;
-  }
-  return ; //if here we update the bpf_flag, we must check bpf_flag after eval_reg
+  (*st).regsmap[i] = v;
 }
 
 static int eval_flag(struct bpf_state* st){
@@ -970,7 +958,7 @@ void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned 
   for (int i=0; i< fuel1; i++){
     pc1 = eval_pc(st);
     if (pc1 < len1) {
-      step(st, l1, len1); print_bpf_state(st);
+      step(st, l1, len1); /*print_bpf_state(st);*/
       upd_pc_incr(st);
       f1 = eval_flag(st);
       if (f1 == 0) {
