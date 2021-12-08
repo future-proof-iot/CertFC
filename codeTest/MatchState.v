@@ -4,9 +4,9 @@ From dx.tests Require Import DxIntegers DxValues DxAST DxMemRegion DxRegs DxStat
 From compcert Require Import Coqlib Integers Values AST Clight Memory.
 
 Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
-  (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some v /\ Val.inject inject_id (block_ptr mr) v)    /\
-    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some v /\ Val.inject inject_id (start_addr mr) v) /\
-    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some v /\ Val.inject inject_id (block_size mr) v).
+  (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some (Vlong vl) /\ (start_addr mr) = Vlong vl)    /\ (**r start_addr mr = Vlong vl*)
+    (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vlong vl) /\ (block_size mr) = Vlong vl) /\ (**r block_size mr = Vlong vl*)
+    (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some (Vlong vl) /\ (block_ptr mr) = Vlong vl).
 
 Definition size_of_region  := Ptrofs.repr (3 * 8). (* 3 * 64 bits *)
 
@@ -43,8 +43,9 @@ Section S.
 
   Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
-    exists v, Mem.loadv AST.Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some v /\
-                Val.inject inject_id (eval_regmap r rmap) v.
+    exists vl, Mem.loadv AST.Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some (Vlong vl) /\ (**r it should be `(eval_regmap r rmap)`*)
+            Vlong vl = eval_regmap r rmap.
+           (*Val.inject inject_id (eval_regmap r rmap) (Vlong vl) . (**r each register is Vlong *)*)
 
 
 
@@ -69,21 +70,137 @@ Section S.
   Definition int_of_flag (f:bpf_flag)  :=
     Int.repr (Z_of_flag f).
 
-  Definition size_of_regs := 10 * 8.
+  Definition size_of_regs := 11 * 8. (**r we have 11 regs R0 - R10 *)
 
   Record match_state  (st:DxState.state) (m:mem) : Prop :=
     {
       minj     : Mem.inject (inject_id) (bpf_m st) m;
-      mpc_load : Mem.loadv AST.Mint64 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vlong  (pc_loc st));
-      mpc_store: forall pc m1,  Mem.store AST.Mint64 m bl_state 0 (Vlong pc) = Some m1; (** the relation between m1 and st? *)
+      mpc      : Mem.loadv AST.Mint64 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vlong  (pc_loc st));
       mregs    : match_registers  (regs_st st) bl_state (Ptrofs.repr 8) m;
-      mflsgs  : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (int_of_flag (flag st)))
+      mflags   : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (int_of_flag (flag st)));
+      mperm    : Mem.range_perm m bl_state 0 (size_of_regs + 12) Cur Freeable
     }.
 
 End S.
 
-(* Useful matching relations *)
+(* Permission Lemmas: deriving from riot-rbpf/MemInv.v *)
+Lemma range_perm_included:
+  forall m b p lo hi ofs_lo ofs_hi, 
+    lo <= ofs_lo -> ofs_lo < ofs_hi -> ofs_hi <= hi ->  (**r `<` -> `<=` *)
+    Mem.range_perm m b lo hi Cur Freeable ->
+      Mem.range_perm m b ofs_lo ofs_hi Cur p.
+Proof.
+  intros.
+  apply (Mem.range_perm_implies _ _ _ _ _ Freeable _); [idtac | apply perm_F_any].
+  unfold Mem.range_perm in *; intros.
+  apply H2.
+  lia.
+Qed.
+
+(** Permission Lemmas: upd_pc *)
+Lemma upd_pc_write_access:
+  forall m0 blk st
+    (Hst: match_state blk st m0),
+    Mem.valid_access m0 Mint64 blk 0 Writable.
+Proof.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
+  unfold size_chunk, align_chunk.
+  split.
+  - simpl; apply (range_perm_included _ _ Writable _ _ 0 8) in mperm0; [assumption | lia | lia | lia].
+  - apply Z.divide_0_r.
+Qed.
+
+Lemma upd_pc_store:
+  forall m0 blk pc st
+    (Hst: match_state blk st m0),
+    exists m1,
+    Mem.store AST.Mint64 m0 blk 0 (Vlong pc) = Some m1.
+Proof.
+  intros.
+  apply (upd_pc_write_access _ _ _) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vlong pc)) in Hst.
+  destruct Hst as (m2 & Hstore).
+  exists m2; assumption.
+Qed.
+
+
+(** Permission Lemmas: upd_regs *)
+Lemma upd_regs_write_access:
+  forall m0 blk st r
+    (Hst: match_state blk st m0),
+    Mem.valid_access m0 Mint64 blk (8 + (8 * (id_of_reg r))) Writable.
+Proof.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
+  unfold id_of_reg.
+  unfold size_chunk, align_chunk.
+  split.
+  - apply (range_perm_included _ _ Writable _ _ (8 + (8 * (id_of_reg r))) (8 + (8 * (id_of_reg r +1)))) in mperm0;
+  destruct r; unfold id_of_reg in *; simpl in *; try lia;
+  simpl; assumption.
+  - assert (Heq: forall x, 8 + 8 * x = 8 * (1 + x)). {
+      intros.
+      rewrite Zred_factor2.
+      reflexivity.
+    }
+    rewrite Heq.
+    apply Z.divide_factor_l.
+Qed.
+
+Lemma upd_regs_store:
+  forall m0 blk st r v
+    (Hst: match_state blk st m0),
+    exists m1,
+    Mem.store AST.Mint64 m0 blk (8 + (8 * (id_of_reg r))) (Vlong v) = Some m1.
+Proof.
+  intros.
+  apply (upd_regs_write_access _ _ _ r) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vlong v)) in Hst.
+  destruct Hst as (m2 & Hstore).
+  exists m2; assumption.
+Qed.
+
+(** Permission Lemmas: upd_flags *)
+Lemma upd_flags_write_access:
+  forall m0 blk st
+    (Hst: match_state blk st m0),
+    Mem.valid_access m0 Mint32 blk (size_of_regs + 8) Writable.
+Proof.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
+  unfold size_of_regs.
+  unfold size_chunk, align_chunk.
+  split.
+  - simpl.
+    apply (range_perm_included _ _ Writable _ _ 96 100) in mperm0; [assumption | lia | lia | lia].
+  - assert (Heq: 11 * 8 + 8 = 4 * 24). { reflexivity. }
+    rewrite Heq;apply Z.divide_factor_l.
+Qed.
+
+Lemma upd_flags_store:
+  forall m0 blk st v
+    (Hst: match_state blk st m0),
+    exists m1,
+    Mem.store AST.Mint32 m0 blk (size_of_regs + 8) (Vlong v) = Some m1.
+Proof.
+  intros.
+  apply (upd_flags_write_access _ _ ) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vlong v)) in Hst.
+  destruct Hst as (m2 & Hstore).
+  exists m2; assumption.
+Qed.
+
+(** Permission Lemmas: upd_mem_regions *)
+
+(** TODO: *)
+
 Require Import DxMonad.
+
+(** TODO: *)
+
+Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
+  exists o, v = Vptr bl_region o /\
+              match_region_at_ofs mr bl_region o m.
+
+(* Useful matching relations *)
 
 Definition match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region (Ptrofs.mul size_of_region  o) /\
@@ -99,6 +216,24 @@ Lemma same_memory_match_region :
 Proof.
   intros.
   unfold match_region in *.
+  destruct H as (o & E & MR).
+  exists o.
+  split; auto.
+  unfold match_region_at_ofs in *.
+  unfold unmodifies_effect in UMOD.
+  unfold Mem.loadv.
+  repeat rewrite <- UMOD by (simpl ; tauto).
+  intuition.
+Qed.
+
+Lemma same_my_memory_match_region :
+  forall bl_region st st' m m' mr v
+         (UMOD : unmodifies_effect nil m m'),
+    my_match_region bl_region mr v st m ->
+    my_match_region bl_region mr v st' m'.
+Proof.
+  intros.
+  unfold my_match_region in *.
   destruct H as (o & E & MR).
   exists o.
   split; auto.

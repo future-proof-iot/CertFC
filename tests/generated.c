@@ -17,7 +17,7 @@ struct bpf_state {
   unsigned int state_pc;
   unsigned long long regsmap[11];
   int bpf_flag;
-  struct memory_regions *mem_regions;
+  struct memory_regions *mrs;
 };
 
 extern unsigned long long list_get(unsigned long long *, unsigned long long);
@@ -160,10 +160,10 @@ unsigned long long check_mem_aux(struct memory_region *mr3, unsigned long long a
     start = getMemRegion_start_addr(mr3);
     size = getMemRegion_block_size(mr3);
     lo_ofs = get_subl(addr0, start);
-    hi_ofs = get_addl(lo_ofs, chunk1);
+    hi_ofs = get_addl(lo_ofs, (unsigned long long) chunk1);
     if (0LLU <= lo_ofs && hi_ofs < size) {
-      if (lo_ofs <= 18446744073709551615LLU - chunk1
-            && 0LLU == lo_ofs % chunk1) {
+      if (lo_ofs <= 18446744073709551615LLU - (unsigned long long) chunk1
+            && 0LLU == lo_ofs % (unsigned long long) chunk1) {
         return ptr + lo_ofs;
       } else {
         return 0LLU;

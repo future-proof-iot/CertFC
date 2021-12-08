@@ -4,68 +4,73 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
 
 (**
-static void upd_pc(struct bpf_state* st, unsigned long long pc) {
-  ( *st).state_pc = pc;
+static void upd_pc_incr(struct bpf_state* st) {
+  ( *st).state_pc = ( *st).state_pc+1;
   return ;
 }
-Definition upd_pc (p: int64_t): M unit := fun st => Some (tt, upd_pc p st).
+
+Definition upd_pc_incr: M unit := fun st => Some (tt, upd_pc_incr st).
  *)
 
-Section Upd_pc.
+Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+  Vlong x = v.
+
+Section Upd_pc_incr.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(int64_t:Type)].
+  Definition args : list Type := [].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := DxMonad.upd_pc.
+  Definition f : arrow_type args (M res) := DxMonad.upd_pc_incr.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
-  Definition fn: Clight.function := f_upd_pc.
+  Definition fn: Clight.function := f_upd_pc_incr.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
-  
+  (* [match_mem] related the Coq monadic state and the C memory *)
+  (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
+
+
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct (DList.DCons int64_correct (DList.DNil _)).
+    DList.DCons stateM_correct (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
 
-  Instance correct_function3_upd_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Lemma correct_function3_upd_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
   Proof.
     correct_function_from_body.
     correct_body.
     repeat intro.
     unfold INV in H.
-    get_invariant_more _st.
-    get_invariant_more _pc.
-    unfold stateM_correct in H1.
-    unfold int64_correct in H3.
-    destruct H1 as (Hv_eq & Hst).
-    (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
-    subst v0 v.
-    
-    (** we need to get the proof of `upd_pc` store permission *)
-    apply (upd_pc_store _ _ c _) in Hst as Hstore.
+    get_invariant _st.
+    destruct c as (H_st & Hst_casted).
+    unfold stateM_correct in H_st.
+    destruct H_st as (Hv_eq & Hst).
+    subst v.
+
+    (** we need to get the proof of `upd_pc_incr` load/store permission *)
+    apply (upd_pc_store _ _ (Int64.add (pc_loc st) (Cop.cast_int_long Ctypes.Signed (Int.repr 1))) _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
+    destruct Hst; clear minj mregs mflags mperm.
     (** pc \in [ (state_block,0), (state_block,8) ) *)
 
-    simpl in c.
-    (**according to the type of upd_pc:
-         static void upd_pc(struct bpf_state* st, unsigned long long pc)
+    (**according to the type of upd_pc_incr:
+         static void upd_pc_incr(struct bpf_state* st) 
        1. return value should be Vundef (i.e. void)
        2. the new memory should change the value of pc, i.e. m_pc
       *)
@@ -74,21 +79,22 @@ Section Upd_pc.
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
       apply Smallstep.plus_star.
-      repeat forward_plus.
 
       eapply Smallstep.plus_left'; eauto.
-      eapply step_assign; [do 4 econstructor; eauto | econstructor; eauto | econstructor; eauto| ..]. econstructor; eauto; reflexivity. (*
-        * do 4 econstructor; eauto. (**r how to do automatically in Ltac? *)
-        * econstructor; eauto.
-        * econstructor; eauto.
-        * econstructor; eauto; reflexivity.*)
+      econstructor; eauto.
+      eapply Smallstep.plus_left'; eauto.
+      repeat (econstructor; eauto; try deref_loc_tactic).
+      rewrite Ptrofs.add_zero.
+      fold Ptrofs.zero in mpc.
+      rewrite mpc; reflexivity.
+      reflexivity.
+      reflexivity.
       forward_plus.
-      eapply Smallstep.plus_one; eauto.
-      eapply step_return_0.
+      forward_plus.
       reflexivity.
-      reflexivity.
-    - simpl.
-      constructor.
+    -
+      simpl.
+      econstructor.
     - unfold unmodifies_effect, modifies, In.
       intros.
       destruct (Pos.eq_dec state_block b).
@@ -102,6 +108,4 @@ Section Upd_pc.
       left; assumption.
 Qed.
 
-End Upd_pc.
-
-Existing Instance correct_function3_upd_pc.
+End Upd_pc_incr.

@@ -12,13 +12,14 @@ Module Info.
   Definition build_branch := "".
   Definition arch := "x86".
   Definition model := "64".
-  Definition abi := "macos".
+  Definition abi := "standard".
   Definition bitsize := 64.
   Definition big_endian := false.
   Definition source_file := "interpreter.c".
   Definition normalized := false.
 End Info.
 
+Definition ___builtin_ais_annot : ident := $"__builtin_ais_annot".
 Definition ___builtin_annot : ident := $"__builtin_annot".
 Definition ___builtin_annot_intval : ident := $"__builtin_annot_intval".
 Definition ___builtin_bswap : ident := $"__builtin_bswap".
@@ -74,17 +75,12 @@ Definition ___compcert_va_composite : ident := $"__compcert_va_composite".
 Definition ___compcert_va_float64 : ident := $"__compcert_va_float64".
 Definition ___compcert_va_int32 : ident := $"__compcert_va_int32".
 Definition ___compcert_va_int64 : ident := $"__compcert_va_int64".
-Definition ___stringlit_1 : ident := $"__stringlit_1".
-Definition ___stringlit_2 : ident := $"__stringlit_2".
-Definition ___stringlit_3 : ident := $"__stringlit_3".
-Definition ___stringlit_4 : ident := $"__stringlit_4".
-Definition ___stringlit_5 : ident := $"__stringlit_5".
 Definition _addr : ident := $"addr".
 Definition _addr0 : ident := $"addr0".
 Definition _addr1 : ident := $"addr1".
 Definition _addr_dst : ident := $"addr_dst".
 Definition _addr_src : ident := $"addr_src".
-Definition _block_ptr_id : ident := $"block_ptr_id".
+Definition _block_ptr : ident := $"block_ptr".
 Definition _block_size : ident := $"block_size".
 Definition _bpf_ctx : ident := $"bpf_ctx".
 Definition _bpf_flag : ident := $"bpf_flag".
@@ -171,8 +167,6 @@ Definition _ofs : ident := $"ofs".
 Definition _op : ident := $"op".
 Definition _pc : ident := $"pc".
 Definition _pc1 : ident := $"pc1".
-Definition _print_bpf_state : ident := $"print_bpf_state".
-Definition _printf : ident := $"printf".
 Definition _ptr : ident := $"ptr".
 Definition _regsmap : ident := $"regsmap".
 Definition _size : ident := $"size".
@@ -228,114 +222,6 @@ Definition _t'6 : ident := 133%positive.
 Definition _t'7 : ident := 134%positive.
 Definition _t'8 : ident := 135%positive.
 Definition _t'9 : ident := 136%positive.
-
-Definition v___stringlit_2 := {|
-  gvar_info := (tarray tschar 10);
-  gvar_init := (Init_int8 (Int.repr 102) :: Init_int8 (Int.repr 108) ::
-                Init_int8 (Int.repr 97) :: Init_int8 (Int.repr 103) ::
-                Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
-                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 100) ::
-                Init_int8 (Int.repr 10) :: Init_int8 (Int.repr 0) :: nil);
-  gvar_readonly := true;
-  gvar_volatile := false
-|}.
-
-Definition v___stringlit_1 := {|
-  gvar_info := (tarray tschar 10);
-  gvar_init := (Init_int8 (Int.repr 112) :: Init_int8 (Int.repr 99) ::
-                Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
-                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 108) ::
-                Init_int8 (Int.repr 108) :: Init_int8 (Int.repr 117) ::
-                Init_int8 (Int.repr 10) :: Init_int8 (Int.repr 0) :: nil);
-  gvar_readonly := true;
-  gvar_volatile := false
-|}.
-
-Definition v___stringlit_5 := {|
-  gvar_info := (tarray tschar 2);
-  gvar_init := (Init_int8 (Int.repr 10) :: Init_int8 (Int.repr 0) :: nil);
-  gvar_readonly := true;
-  gvar_volatile := false
-|}.
-
-Definition v___stringlit_3 := {|
-  gvar_info := (tarray tschar 4);
-  gvar_init := (Init_int8 (Int.repr 82) :: Init_int8 (Int.repr 37) ::
-                Init_int8 (Int.repr 100) :: Init_int8 (Int.repr 0) :: nil);
-  gvar_readonly := true;
-  gvar_volatile := false
-|}.
-
-Definition v___stringlit_4 := {|
-  gvar_info := (tarray tschar 8);
-  gvar_init := (Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
-                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 108) ::
-                Init_int8 (Int.repr 108) :: Init_int8 (Int.repr 117) ::
-                Init_int8 (Int.repr 59) :: Init_int8 (Int.repr 0) :: nil);
-  gvar_readonly := true;
-  gvar_volatile := false
-|}.
-
-Definition f_print_bpf_state := {|
-  fn_return := tvoid;
-  fn_callconv := cc_default;
-  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: nil);
-  fn_vars := nil;
-  fn_temps := ((_i, tint) :: nil);
-  fn_body :=
-(Ssequence
-  (Scall None
-    (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
-                    {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-    ((Evar ___stringlit_1 (tarray tschar 10)) ::
-     (Ecast
-       (Efield
-         (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-           (Tstruct _bpf_state noattr)) _state_pc tulong) tulong) :: nil))
-  (Ssequence
-    (Scall None
-      (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
-                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-      ((Evar ___stringlit_2 (tarray tschar 10)) ::
-       (Efield
-         (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-           (Tstruct _bpf_state noattr)) _bpf_flag tint) :: nil))
-    (Ssequence
-      (Ssequence
-        (Sset _i (Econst_int (Int.repr 0) tint))
-        (Sloop
-          (Ssequence
-            (Sifthenelse (Ebinop Olt (Etempvar _i tint)
-                           (Econst_int (Int.repr 11) tint) tint)
-              Sskip
-              Sbreak)
-            (Ssequence
-              (Scall None
-                (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
-                                {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-                ((Evar ___stringlit_3 (tarray tschar 4)) ::
-                 (Etempvar _i tint) :: nil))
-              (Scall None
-                (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
-                                {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-                ((Evar ___stringlit_4 (tarray tschar 8)) ::
-                 (Ecast
-                   (Ederef
-                     (Ebinop Oadd
-                       (Efield
-                         (Ederef
-                           (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                           (Tstruct _bpf_state noattr)) _regsmap
-                         (tarray tulong 11)) (Etempvar _i tint)
-                       (tptr tulong)) tulong) tulong) :: nil))))
-          (Sset _i
-            (Ebinop Oadd (Etempvar _i tint) (Econst_int (Int.repr 1) tint)
-              tint))))
-      (Scall None
-        (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
-                        {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-        ((Evar ___stringlit_5 (tarray tschar 2)) :: nil)))))
-|}.
 
 Definition f_eval_pc := {|
   fn_return := tulong;
@@ -393,23 +279,14 @@ Definition f_eval_reg := {|
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Sifthenelse (Ebinop Olt (Etempvar _i tuint) (Econst_int (Int.repr 11) tint)
-               tint)
-  (Sreturn (Some (Ederef
-                   (Ebinop Oadd
-                     (Efield
-                       (Ederef
-                         (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                         (Tstruct _bpf_state noattr)) _regsmap
-                       (tarray tulong 11)) (Etempvar _i tuint) (tptr tulong))
-                   tulong)))
-  (Ssequence
-    (Sassign
-      (Efield
-        (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-          (Tstruct _bpf_state noattr)) _bpf_flag tint)
-      (Econst_int (Int.repr (-6)) tint))
-    (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
+(Sreturn (Some (Ederef
+                 (Ebinop Oadd
+                   (Efield
+                     (Ederef
+                       (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+                       (Tstruct _bpf_state noattr)) _regsmap
+                     (tarray tulong 11)) (Etempvar _i tuint) (tptr tulong))
+                 tulong)))
 |}.
 
 Definition f_upd_reg := {|
@@ -421,20 +298,13 @@ Definition f_upd_reg := {|
   fn_temps := nil;
   fn_body :=
 (Ssequence
-  (Sifthenelse (Ebinop Olt (Etempvar _i tuint)
-                 (Econst_int (Int.repr 11) tint) tint)
-    (Sassign
-      (Ederef
-        (Ebinop Oadd
-          (Efield
-            (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-              (Tstruct _bpf_state noattr)) _regsmap (tarray tulong 11))
-          (Etempvar _i tuint) (tptr tulong)) tulong) (Etempvar _v tulong))
-    (Sassign
-      (Efield
-        (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-          (Tstruct _bpf_state noattr)) _bpf_flag tint)
-      (Econst_int (Int.repr (-6)) tint)))
+  (Sassign
+    (Ederef
+      (Ebinop Oadd
+        (Efield
+          (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+            (Tstruct _bpf_state noattr)) _regsmap (tarray tulong 11))
+        (Etempvar _i tuint) (tptr tulong)) tulong) (Etempvar _v tulong))
   (Sreturn None))
 |}.
 
@@ -806,8 +676,8 @@ Definition f_check_mem_aux := {|
                   (Evar _get_addl (Tfunction
                                     (Tcons tulong (Tcons tulong Tnil)) tulong
                                     cc_default))
-                  ((Etempvar _lo_ofs tulong) :: (Etempvar _chunk1 tuint) ::
-                   nil))
+                  ((Etempvar _lo_ofs tulong) ::
+                   (Ecast (Etempvar _chunk1 tuint) tulong) :: nil))
                 (Sset _hi_ofs (Etempvar _t'6 tulong)))
               (Ssequence
                 (Sifthenelse (Ebinop Ole (Econst_long (Int64.repr 0) tulong)
@@ -822,12 +692,14 @@ Definition f_check_mem_aux := {|
                     (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tulong)
                                    (Ebinop Osub
                                      (Econst_long (Int64.repr (-1)) tulong)
-                                     (Etempvar _chunk1 tuint) tulong) tint)
+                                     (Ecast (Etempvar _chunk1 tuint) tulong)
+                                     tulong) tint)
                       (Sset _t'7
                         (Ecast
                           (Ebinop Oeq (Econst_long (Int64.repr 0) tulong)
                             (Ebinop Omod (Etempvar _lo_ofs tulong)
-                              (Etempvar _chunk1 tuint) tulong) tint) tbool))
+                              (Ecast (Etempvar _chunk1 tuint) tulong) tulong)
+                            tint) tbool))
                       (Sset _t'7 (Econst_int (Int.repr 0) tint)))
                     (Sifthenelse (Etempvar _t'7 tint)
                       (Sreturn (Some (Ebinop Oadd (Etempvar _ptr tulong)
@@ -5852,33 +5724,25 @@ Definition f_bpf_interpreter_aux := {|
                  nil))
               (Ssequence
                 (Scall None
-                  (Evar _print_bpf_state (Tfunction
-                                           (Tcons
-                                             (tptr (Tstruct _bpf_state noattr))
-                                             Tnil) tvoid cc_default))
+                  (Evar _upd_pc_incr (Tfunction
+                                       (Tcons
+                                         (tptr (Tstruct _bpf_state noattr))
+                                         Tnil) tvoid cc_default))
                   ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
                 (Ssequence
-                  (Scall None
-                    (Evar _upd_pc_incr (Tfunction
+                  (Ssequence
+                    (Scall (Some _t'2)
+                      (Evar _eval_flag (Tfunction
                                          (Tcons
                                            (tptr (Tstruct _bpf_state noattr))
-                                           Tnil) tvoid cc_default))
-                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                     nil))
-                  (Ssequence
-                    (Ssequence
-                      (Scall (Some _t'2)
-                        (Evar _eval_flag (Tfunction
-                                           (Tcons
-                                             (tptr (Tstruct _bpf_state noattr))
-                                             Tnil) tint cc_default))
-                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                         nil))
-                      (Sset _f1 (Etempvar _t'2 tint)))
-                    (Sifthenelse (Ebinop Oeq (Etempvar _f1 tint)
-                                   (Econst_int (Int.repr 0) tint) tint)
-                      Scontinue
-                      (Sreturn None))))))
+                                           Tnil) tint cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       nil))
+                    (Sset _f1 (Etempvar _t'2 tint)))
+                  (Sifthenelse (Ebinop Oeq (Etempvar _f1 tint)
+                                 (Econst_int (Int.repr 0) tint) tint)
+                    Scontinue
+                    (Sreturn None)))))
             (Ssequence
               (Scall None
                 (Evar _upd_flag (Tfunction
@@ -5959,8 +5823,8 @@ Definition f_bpf_interpreter := {|
 
 Definition composites : list composite_definition :=
 (Composite _memory_region Struct
-   ((_start_addr, tulong) :: (_block_size, tulong) ::
-    (_block_ptr_id, tulong) :: nil)
+   ((_start_addr, tulong) :: (_block_size, tulong) :: (_block_ptr, tulong) ::
+    nil)
    noattr ::
  Composite _memory_regions Struct
    ((_bpf_ctx, (tptr (Tstruct _memory_region noattr))) ::
@@ -5974,11 +5838,12 @@ Definition composites : list composite_definition :=
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=
-((___stringlit_2, Gvar v___stringlit_2) ::
- (___stringlit_1, Gvar v___stringlit_1) ::
- (___stringlit_5, Gvar v___stringlit_5) ::
- (___stringlit_3, Gvar v___stringlit_3) ::
- (___stringlit_4, Gvar v___stringlit_4) ::
+((___builtin_ais_annot,
+   Gfun(External (EF_builtin "__builtin_ais_annot"
+                   (mksignature (AST.Tlong :: nil) AST.Tvoid
+                     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+     (Tcons (tptr tschar) Tnil) tvoid
+     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
  (___builtin_bswap64,
    Gfun(External (EF_builtin "__builtin_bswap64"
                    (mksignature (AST.Tlong :: nil) AST.Tlong cc_default))
@@ -6240,13 +6105,6 @@ Definition global_definitions : list (ident * globdef fundef type) :=
                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
      (Tcons tint Tnil) tvoid
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
- (_printf,
-   Gfun(External (EF_external "printf"
-                   (mksignature (AST.Tlong :: nil) AST.Tint
-                     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
-     (Tcons (tptr tschar) Tnil) tint
-     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
- (_print_bpf_state, Gfun(Internal f_print_bpf_state)) ::
  (_eval_pc, Gfun(Internal f_eval_pc)) ::
  (_upd_pc, Gfun(Internal f_upd_pc)) ::
  (_upd_pc_incr, Gfun(Internal f_upd_pc_incr)) ::
@@ -6276,26 +6134,26 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (_bpf_interpreter, Gfun(Internal f_bpf_interpreter)) :: nil).
 
 Definition public_idents : list ident :=
-(_bpf_interpreter :: _bpf_interpreter_aux :: _step :: _print_bpf_state ::
- _printf :: ___builtin_debug :: ___builtin_write32_reversed ::
- ___builtin_write16_reversed :: ___builtin_read32_reversed ::
- ___builtin_read16_reversed :: ___builtin_fnmsub :: ___builtin_fnmadd ::
- ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_fmin ::
- ___builtin_fmax :: ___compcert_i64_umulh :: ___compcert_i64_smulh ::
- ___compcert_i64_sar :: ___compcert_i64_shr :: ___compcert_i64_shl ::
- ___compcert_i64_umod :: ___compcert_i64_smod :: ___compcert_i64_udiv ::
- ___compcert_i64_sdiv :: ___compcert_i64_utof :: ___compcert_i64_stof ::
- ___compcert_i64_utod :: ___compcert_i64_stod :: ___compcert_i64_dtou ::
- ___compcert_i64_dtos :: ___builtin_expect :: ___builtin_unreachable ::
- ___compcert_va_composite :: ___compcert_va_float64 ::
- ___compcert_va_int64 :: ___compcert_va_int32 :: ___builtin_va_end ::
- ___builtin_va_copy :: ___builtin_va_arg :: ___builtin_va_start ::
- ___builtin_membar :: ___builtin_annot_intval :: ___builtin_annot ::
- ___builtin_sel :: ___builtin_memcpy_aligned :: ___builtin_sqrt ::
- ___builtin_fsqrt :: ___builtin_fabsf :: ___builtin_fabs ::
- ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll ::
- ___builtin_clzl :: ___builtin_clz :: ___builtin_bswap16 ::
- ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 :: nil).
+(_bpf_interpreter :: _bpf_interpreter_aux :: _step :: ___builtin_debug ::
+ ___builtin_write32_reversed :: ___builtin_write16_reversed ::
+ ___builtin_read32_reversed :: ___builtin_read16_reversed ::
+ ___builtin_fnmsub :: ___builtin_fnmadd :: ___builtin_fmsub ::
+ ___builtin_fmadd :: ___builtin_fmin :: ___builtin_fmax ::
+ ___compcert_i64_umulh :: ___compcert_i64_smulh :: ___compcert_i64_sar ::
+ ___compcert_i64_shr :: ___compcert_i64_shl :: ___compcert_i64_umod ::
+ ___compcert_i64_smod :: ___compcert_i64_udiv :: ___compcert_i64_sdiv ::
+ ___compcert_i64_utof :: ___compcert_i64_stof :: ___compcert_i64_utod ::
+ ___compcert_i64_stod :: ___compcert_i64_dtou :: ___compcert_i64_dtos ::
+ ___builtin_expect :: ___builtin_unreachable :: ___compcert_va_composite ::
+ ___compcert_va_float64 :: ___compcert_va_int64 :: ___compcert_va_int32 ::
+ ___builtin_va_end :: ___builtin_va_copy :: ___builtin_va_arg ::
+ ___builtin_va_start :: ___builtin_membar :: ___builtin_annot_intval ::
+ ___builtin_annot :: ___builtin_sel :: ___builtin_memcpy_aligned ::
+ ___builtin_sqrt :: ___builtin_fsqrt :: ___builtin_fabsf ::
+ ___builtin_fabs :: ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz ::
+ ___builtin_clzll :: ___builtin_clzl :: ___builtin_clz ::
+ ___builtin_bswap16 :: ___builtin_bswap32 :: ___builtin_bswap ::
+ ___builtin_bswap64 :: ___builtin_ais_annot :: nil).
 
 Definition prog : Clight.program := 
   mkprogram composites global_definitions public_idents _main Logic.I.
