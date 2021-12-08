@@ -70,7 +70,7 @@ Section S.
   Definition int_of_flag (f:bpf_flag)  :=
     Int.repr (Z_of_flag f).
 
-  Definition size_of_regs := 10 * 8.
+  Definition size_of_regs := 11 * 8. (**r we have 11 regs R0 - R10 *)
 
   Record match_state  (st:DxState.state) (m:mem) : Prop :=
     {
@@ -128,16 +128,35 @@ Qed.
 Lemma upd_regs_write_access:
   forall m0 blk st r
     (Hst: match_state blk st m0),
-    Mem.valid_access m0 Mint64 blk (8 * (id_of_reg r)) Writable.
+    Mem.valid_access m0 Mint64 blk (8 + (8 * (id_of_reg r))) Writable.
 Proof.
   intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
   unfold id_of_reg.
   unfold size_chunk, align_chunk.
   split.
-  - apply (range_perm_included _ _ Writable _ _ (8 * (id_of_reg r)) (8 * (id_of_reg r +1))) in mperm0;
+  - apply (range_perm_included _ _ Writable _ _ (8 + (8 * (id_of_reg r))) (8 + (8 * (id_of_reg r +1)))) in mperm0;
   destruct r; unfold id_of_reg in *; simpl in *; try lia;
   simpl; assumption.
-  - apply Z.divide_factor_l.
+  - assert (Heq: forall x, 8 + 8 * x = 8 * (1 + x)). {
+      intros.
+      rewrite Zred_factor2.
+      reflexivity.
+    }
+    rewrite Heq.
+    apply Z.divide_factor_l.
+Qed.
+
+Lemma upd_regs_store:
+  forall m0 blk st r v
+    (Hst: match_state blk st m0),
+    exists m1,
+    Mem.store AST.Mint64 m0 blk (8 + (8 * (id_of_reg r))) (Vlong v) = Some m1.
+Proof.
+  intros.
+  apply (upd_regs_write_access _ _ _ r) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vlong v)) in Hst.
+  destruct Hst as (m2 & Hstore).
+  exists m2; assumption.
 Qed.
 
 (** Permission Lemmas: upd_flags *)
@@ -151,9 +170,22 @@ Proof.
   unfold size_chunk, align_chunk.
   split.
   - simpl.
-    apply (range_perm_included _ _ Writable _ _ 88 92) in mperm0; [assumption | lia | lia | lia].
-  - assert (Heq: 10 * 8 + 8 = 4 * 22). { reflexivity. }
+    apply (range_perm_included _ _ Writable _ _ 96 100) in mperm0; [assumption | lia | lia | lia].
+  - assert (Heq: 11 * 8 + 8 = 4 * 24). { reflexivity. }
     rewrite Heq;apply Z.divide_factor_l.
+Qed.
+
+Lemma upd_flags_store:
+  forall m0 blk st v
+    (Hst: match_state blk st m0),
+    exists m1,
+    Mem.store AST.Mint32 m0 blk (size_of_regs + 8) (Vlong v) = Some m1.
+Proof.
+  intros.
+  apply (upd_flags_write_access _ _ ) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vlong v)) in Hst.
+  destruct Hst as (m2 & Hstore).
+  exists m2; assumption.
 Qed.
 
 (** Permission Lemmas: upd_mem_regions *)
