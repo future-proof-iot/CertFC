@@ -37,6 +37,7 @@ static unsigned long long eval_reg(struct bpf_state* st, unsigned int i){
 
 static void upd_reg (struct bpf_state* st, unsigned int i, unsigned long long v){
   (*st).regsmap[i] = v;
+  return ;
 }
 
 static int eval_flag(struct bpf_state* st){

@@ -297,13 +297,15 @@ Definition f_upd_reg := {|
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Sassign
-  (Ederef
-    (Ebinop Oadd
-      (Efield
-        (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-          (Tstruct _bpf_state noattr)) _regsmap (tarray tulong 11))
-      (Etempvar _i tuint) (tptr tulong)) tulong) (Etempvar _v tulong))
+(Ssequence
+  (Sassign
+    (Ederef
+      (Ebinop Oadd
+        (Efield
+          (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+            (Tstruct _bpf_state noattr)) _regsmap (tarray tulong 11))
+        (Etempvar _i tuint) (tptr tulong)) tulong) (Etempvar _v tulong))
+  (Sreturn None))
 |}.
 
 Definition f_eval_flag := {|
