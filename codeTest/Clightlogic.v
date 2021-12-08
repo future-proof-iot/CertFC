@@ -859,7 +859,7 @@ Section S.
 
   Lemma correct_statement_call :
     forall  (has_cast : bool) args res (f : arrow_type args (M res)) is_pure a loc
-           vres fvar targs ti eargs tres  fct modifies
+           vres fvar targs ti tj eargs tres  fct modifies
            (FS : Globalenvs.Genv.find_symbol (globalenv (semantics2 p)) fvar = Some loc)
            (FF : Globalenvs.Genv.find_funct (globalenv (semantics2 p))
                                             (Vptr loc Ptrofs.zero) = Some (Ctypes.Internal fct))
@@ -877,6 +877,9 @@ Section S.
            (TI    : ti = fn_return fct)
            (TARGS : targs = Ctypes.type_of_params lvar)
            (TARGSF: List.map snd lvar = List.map snd (fn_params fct))
+           (CASTRET : forall v1 m, Cop.val_casted v1 (fn_return fct) ->
+                                 Cop.sem_cast v1 (fn_return fct) tj m = Some v1)
+
            (VAR : incl (List.combine lvar (list_rel (all_args args is_pure) match_arg (all_args_list args is_pure a))) var_inv)
            (NOTIN1 : ~In vres   (map  (fun x  => fst (fst x)) var_inv))
            (NOTIN2 : ~In tres   (map  (fun x  => fst (fst x)) var_inv))
@@ -891,7 +894,7 @@ Section S.
              (Ctypes.Tfunction targs ti AST.cc_default))
           eargs)
        (Sset vres (if has_cast then
-          (Ecast (Etempvar tres ti) ti) else Etempvar tres ti)))
+          (Ecast (Etempvar tres ti) tj) else Etempvar tres ti)))
     modifies (pre  var_inv) (post  match_res var_inv (vres,ti)) st le m.
   Proof.
     repeat intro.
@@ -906,7 +909,7 @@ Section S.
     specialize (fn_eval_ok4 (DList.of_list_sl lval (all_args args is_pure) LEN)
                             (Kcall (Some tres) fn empty_env le
                                    (Kseq (Sset vres (if has_cast
-                then Ecast (Etempvar tres ti) ti
+                then Ecast (Etempvar tres ti) tj
                                                      else Etempvar tres ti)) k)) m I).
     assert (MA : DList.Forall2 (fun (a : Type) (R : a -> val -> stateM -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
                   (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN))).
@@ -1081,8 +1084,10 @@ Section S.
       unfold set_opttemp.
       rewrite Maps.PTree.gss. reflexivity.
       simpl.
-      apply Cop.cast_val_casted; auto.
-      subst. auto.
+      subst.
+      apply CASTRET;auto.
+      (*      apply Cop.cast_val_casted; auto.*)
+      (*subst. auto.*)
       econstructor; eauto.
       unfold set_opttemp.
       rewrite Maps.PTree.gss. reflexivity.
