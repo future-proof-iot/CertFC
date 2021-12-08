@@ -17,7 +17,7 @@ struct bpf_state {
   unsigned int state_pc;
   unsigned long long regsmap[11];
   int bpf_flag;
-  struct memory_regions *$757165;
+  struct memory_regions *mrs;
 };
 
 extern unsigned long long list_get(unsigned long long *, unsigned long long);
