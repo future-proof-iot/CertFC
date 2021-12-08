@@ -179,11 +179,11 @@ Lemma upd_flags_store:
   forall m0 blk st v
     (Hst: match_state blk st m0),
     exists m1,
-    Mem.store AST.Mint32 m0 blk (size_of_regs + 8) (Vlong v) = Some m1.
+    Mem.store AST.Mint32 m0 blk (size_of_regs + 8) (Vint v) = Some m1.
 Proof.
   intros.
   apply (upd_flags_write_access _ _ ) in Hst.
-  apply (Mem.valid_access_store _ _ _ _ (Vlong v)) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vint v)) in Hst.
   destruct Hst as (m2 & Hstore).
   exists m2; assumption.
 Qed.
