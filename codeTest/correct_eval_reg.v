@@ -1,8 +1,7 @@
 From dx.tests Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxInstructions.
-From Coq Require Import List Lia.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
 From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
 
@@ -35,9 +34,6 @@ Section Eval_reg.
   Definition fn: Clight.function := f_eval_reg.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
-  (* [match_mem] related the Coq monadic state and the C memory *)
-  (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
-
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
@@ -47,7 +43,7 @@ Section Eval_reg.
     DList.DCons stateM_correct (DList.DCons reg_correct (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v st m.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
 
   Instance correct_function3_eval_reg : correct_function3 p args res f fn modifies false match_arg_list match_res.
   Proof.
@@ -74,33 +70,12 @@ Section Eval_reg.
        2. the memory is same
       *)
     exists (Vlong vl), m, Events.E0.
-    
     repeat split; unfold step2.
     - apply Smallstep.plus_star.
       eapply Smallstep.plus_one; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      eapply deref_loc_copy. (**r TODO: always deref_loc_copy? could we do something? *)
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      eapply deref_loc_reference. (**r TODO: here is deref_loc_reference, could we do something? *)
-      reflexivity.
+      repeat (econstructor; eauto; try (deref_loc_tactic)).
 
-      econstructor; eauto.
       Transparent Archi.ptr64.
-      unfold Cop.sem_cast.
-      reflexivity.
-      econstructor; eauto.
-      reflexivity.
 
       rewrite Ptrofs.add_zero_l.
       unfold Coqlib.align; simpl.
@@ -111,30 +86,27 @@ Section Eval_reg.
         repeat rewrite Ptrofs.unsigned_repr.
         rewrite Int.unsigned_repr.
         reflexivity.
-        unfold Int.max_unsigned, Int.modulus, Int.wordsize, Wordsize_32.wordsize.
-        simpl.
+        rewrite Int_max_unsigned_eq64.
         unfold id_of_reg; destruct c; lia.
-        unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
+        rewrite Ptrofs_max_unsigned_eq64.
         rewrite Int.unsigned_repr.
-        simpl.
         unfold id_of_reg; destruct c; lia.
-        unfold Int.max_unsigned, Int.modulus, Int.wordsize, Wordsize_32.wordsize.
-        simpl.
+        rewrite Int_max_unsigned_eq64.
         unfold id_of_reg; destruct c; lia.
-        unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
-        simpl; lia.
+        rewrite Ptrofs_max_unsigned_eq64.
+        lia.
       }
       rewrite Heq in Hreg_load.
       rewrite Hreg_load.
       reflexivity.
 
-      unfold Cop.sem_cast; simpl.
-      reflexivity.
+      unfold Cop.sem_cast; reflexivity.
     -
       unfold match_res.
       unfold val64_correct.
       unfold DxState.eval_reg.
       symmetry; assumption.
+    - unfold DxState.eval_reg; exists vl; symmetry; assumption.
     -
       simpl.
       constructor.

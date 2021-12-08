@@ -52,28 +52,11 @@ Section Upd_pc_incr.
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
 
   Lemma correct_function3_upd_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
-  Proof. (*
-    eapply correct_function_from_body.
-    - simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate).
-    - eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-    - simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
-    - reflexivity.
-    - reflexivity.*)
-    eapply correct_function_from_body;
-    [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
-      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      reflexivity |
-      reflexivity |
-      idtac
-    ].
-    intros.
-    unfold args in *.
-    car_cdr.
-    unfold list_rel_arg.
-    simpl.
-    unfold correct_body.
+  Proof.
+    correct_function_from_body.
+    correct_body.
     repeat intro.
+    unfold INV in H.
     get_invariant _st.
     destruct c as (H_st & Hst_casted).
     unfold stateM_correct in H_st.
@@ -100,30 +83,14 @@ Section Upd_pc_incr.
       eapply Smallstep.plus_left'; eauto.
       econstructor; eauto.
       eapply Smallstep.plus_left'; eauto.
-      econstructor; eauto.
-      do 4 econstructor; eauto. (**why repeat will fail and do 4 sucess *)
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      eapply deref_loc_copy.
+      repeat (econstructor; eauto; try deref_loc_tactic).
+      rewrite Ptrofs.add_zero.
+      fold Ptrofs.zero in mpc.
+      rewrite mpc; reflexivity.
       reflexivity.
       reflexivity.
-      reflexivity.
-      reflexivity.
-      econstructor; eauto.
-      reflexivity.
-      econstructor; eauto.
-      reflexivity.
-      reflexivity.
-      econstructor; eauto.
-      reflexivity.
-      eapply Smallstep.plus_left'; eauto.
-      econstructor; eauto.
-      eapply Smallstep.plus_one; eauto.
-      econstructor; eauto.
+      forward_plus.
+      forward_plus.
       reflexivity.
     -
       simpl.

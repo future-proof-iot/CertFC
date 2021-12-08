@@ -92,24 +92,7 @@ Section GetMemRegion_start_addr.
       eapply Smallstep.plus_one; eauto.
       eapply step_return_1.
       +
-        econstructor; eauto.
-        econstructor; eauto.
-        econstructor; eauto.
-        econstructor; eauto.
-        econstructor; eauto.
-        eapply deref_loc_copy. (**r TODO: always deref_loc_copy? could we do something? *)
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity. (*Compute (Ctypes.access_mode (typeof
-     (Efield
-        (Ederef
-           (Etempvar _mr1
-              (Clightdefs.tptr (Ctypes.Tstruct _memory_region Ctypes.noattr)))
-           (Ctypes.Tstruct _memory_region Ctypes.noattr)) _start_addr
-        Clightdefs.tulong))).*)
-        eapply deref_loc_value. (**r TODO: here is deref_loc_value, could we do something? *)
-        reflexivity.
+        repeat (econstructor; eauto; try deref_loc_tactic).
         unfold Coqlib.align.
         simpl.
         fold Ptrofs.zero.

@@ -1,4 +1,4 @@
-From compcert Require Import Coqlib Clight.
+From compcert Require Import Coqlib Clight Integers Ctypes.
 From bpf.proof Require Import Clightlogic.
 From Ltac2 Require Import Ltac2 Message.
 
@@ -143,7 +143,7 @@ Ltac forward_plus :=
   | |- Smallstep.plus _ _ (Returnstate _ _ _) _ _ =>
       eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | try simpl ..]
   (** forward_skip_seq *)
-  | |- Smallstep.plus _ _ (State _ Sskip (Kseq _ _) _ _ _) _ _ =>
+  | |- Smallstep.plus _ _ (State _ Sskip _ _ _ _) _ _ =>
       eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | try simpl ..]
   (** forward_if *)
   | |- Smallstep.plus _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
@@ -155,15 +155,15 @@ Ltac forward_plus :=
   (** forward_return_some *)
   | |- Smallstep.plus _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
     eapply Smallstep.plus_one; eauto;
-      [eapply step_return_1;
-        [eapply eval_Econst_long |
-         reflexivity |
-         reflexivity] | try simpl ..] (*
+      [eapply step_return_1 | try simpl ..] (*
     eapply Smallstep.plus_left'; eauto;
       [eapply step_return_1;
         [eapply eval_Econst_long |
          reflexivity |
          reflexivity] | try simpl ..]*)
+  (** forward_return_none *)
+  | |- Smallstep.plus _ _ (State _ (Sreturn None) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_one; eauto; eapply step_return_0; try reflexivity
  end.
 
 Ltac prepare :=
@@ -216,5 +216,34 @@ Ltac get_invariant_more VAR :=
           | destruct I as (v &p &c)]; completer
       end
   end.
+Ltac deref_loc_tactic :=
+  match goal with
+  | |- deref_loc ?t _ _ _ _ =>
+    let r := eval compute in (access_mode t) in
+      match r with
+      | By_value _ => eapply deref_loc_value
+      | By_reference => eapply deref_loc_reference
+      | By_copy => eapply deref_loc_copy
+      | By_nothing => fail "deref_loc nothing"
+      end
+  end.
 
+(** Integer.max_unsigned *)
+
+Lemma Int_max_unsigned_eq64:
+  Int.max_unsigned = 4294967295%Z.
+Proof.
+  Transparent Archi.ptr64.
+  unfold Int.max_unsigned, Int.modulus, Int.wordsize, Wordsize_32.wordsize.
+  reflexivity.
+Qed.
+
+
+Lemma Ptrofs_max_unsigned_eq64:
+  Ptrofs.max_unsigned = 18446744073709551615%Z.
+Proof.
+  unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
+  Transparent Archi.ptr64.
+  reflexivity.
+Qed.
 

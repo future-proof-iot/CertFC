@@ -47,21 +47,10 @@ Section Eval_pc.
 
   Instance correct_function3_eval_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
   Proof.
-    eapply correct_function_from_body;
-    [ simpl; unfold Coqlib.list_disjoint; simpl; intuition (subst; discriminate) |
-      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      simpl; eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity |
-      reflexivity |
-      reflexivity |
-      idtac
-    ].
-    intros.
-    unfold args in *.
-    car_cdr.
-    unfold list_rel_arg.
-    simpl.
-    unfold correct_body.
+    correct_function_from_body.
+    correct_body.
     repeat intro.
+    unfold INV in H.
     get_invariant _st.
     destruct c as (H_st & Hst_casted).
     unfold stateM_correct in H_st.
@@ -96,9 +85,7 @@ Section Eval_pc.
       unfold Ptrofs.zero; simpl.
       rewrite Ptrofs.unsigned_repr.
       rewrite <- mpc; reflexivity.
-      unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
-      Transparent Archi.ptr64.
-      simpl.
+      rewrite Ptrofs_max_unsigned_eq64.
       lia.
       econstructor; eauto.
     - simpl.
