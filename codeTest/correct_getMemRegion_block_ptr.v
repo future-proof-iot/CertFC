@@ -37,7 +37,7 @@ Section GetMemRegion_block_ptr.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (match_region state_block)
+    (DList.DCons (my_match_region state_block)
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)

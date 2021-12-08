@@ -753,6 +753,7 @@ Qed.
 Definition is_tmp_expr (e : expr) : option (AST.ident * Ctypes.type) :=
   match e with
   | Etempvar v t => Some(v,t)
+  (*| Ecast (Etempvar v t0) t1 => Some (v, t0) (**r t0 or t1 or None? *)*)
   | _           => None
   end.
 

@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
 
 (**
 
@@ -53,7 +53,7 @@ Section GetMemRegion_block_size.
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => True.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
 
   Instance correct_function3_getMemRegion_block_size : correct_function3 p args res f fn (nil) true match_arg_list match_res.
   Proof.
@@ -116,6 +116,8 @@ Section GetMemRegion_block_size.
         unfold Cop.sem_cast; simpl.
         reflexivity.
       + reflexivity.
+    - assumption.
+    - exists vsize; assumption.
     - simpl.
       constructor.
   Qed.

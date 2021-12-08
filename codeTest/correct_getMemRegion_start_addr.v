@@ -4,7 +4,7 @@ From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
 
 (**
 
@@ -60,7 +60,7 @@ Section GetMemRegion_start_addr.
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => True.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
 
   Instance correct_function3_getMemRegion_start_addr : correct_function3 p args res f fn (nil) true match_arg_list match_res.
   Proof.
@@ -117,9 +117,11 @@ Section GetMemRegion_start_addr.
         unfold Mem.loadv in Haddr_load.
         rewrite <- Haddr_load; reflexivity.
       + Transparent Archi.ptr64.
-        unfold Cop.sem_cast. simpl.
+        unfold Cop.sem_cast; simpl.
         reflexivity.
       + reflexivity.
+    - assumption.
+    - exists vaddr; assumption.
     - simpl.
       constructor.
   Qed.

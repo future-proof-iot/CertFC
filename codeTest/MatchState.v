@@ -4,9 +4,9 @@ From dx.tests Require Import DxIntegers DxValues DxAST DxMemRegion DxRegs DxStat
 From compcert Require Import Coqlib Integers Values AST Clight Memory.
 
 Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
-  (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some (Vlong vl) /\ Val.inject inject_id (start_addr mr) (Vlong vl))    /\ (**r start_addr mr = Vlong vl*)
-    (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vlong vl) /\ Val.inject inject_id (block_size mr) (Vlong vl)) /\ (**r block_size mr = Vlong vl*)
-    (exists v,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some v /\ Val.inject inject_id (block_ptr mr) v).
+  (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions ofs) = Some (Vlong vl) /\ (start_addr mr) = Vlong vl)    /\ (**r start_addr mr = Vlong vl*)
+    (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vlong vl) /\ (block_size mr) = Vlong vl) /\ (**r block_size mr = Vlong vl*)
+    (exists vl,  Mem.loadv AST.Mint64 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 16))) = Some (Vlong vl) /\ (block_ptr mr) = Vlong vl).
 
 Definition size_of_region  := Ptrofs.repr (3 * 8). (* 3 * 64 bits *)
 
@@ -184,6 +184,24 @@ Lemma same_memory_match_region :
 Proof.
   intros.
   unfold match_region in *.
+  destruct H as (o & E & MR).
+  exists o.
+  split; auto.
+  unfold match_region_at_ofs in *.
+  unfold unmodifies_effect in UMOD.
+  unfold Mem.loadv.
+  repeat rewrite <- UMOD by (simpl ; tauto).
+  intuition.
+Qed.
+
+Lemma same_my_memory_match_region :
+  forall bl_region st st' m m' mr v
+         (UMOD : unmodifies_effect nil m m'),
+    my_match_region bl_region mr v st m ->
+    my_match_region bl_region mr v st' m'.
+Proof.
+  intros.
+  unfold my_match_region in *.
   destruct H as (o & E & MR).
   exists o.
   split; auto.

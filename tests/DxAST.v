@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-From dx.tests Require Import CoqIntegers DxIntegers DxValues.
+Require Import CoqIntegers DxIntegers DxValues.
 
 Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
   Vlong (Int64.repr (align_chunk chunk)).
@@ -75,7 +75,7 @@ Definition Const_memory_chunk_to_val64 :=
   MkPrimitive memoryChunkToval64SymbolType
                 memory_chunk_to_val64
                 (fun es => match es with
-                           | [e1] => Ok e1
+                           | [e1] => Ok (Csyntax.Ecast  e1 C_U64) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -83,7 +83,7 @@ Definition Const_memory_chunk_to_val64_upbound :=
   MkPrimitive memoryChunkToval64SymbolType
                 memory_chunk_to_val64_upbound
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ebinop Cop.Osub C_U64_max_unsigned e1 C_U64)
+                           | [e1] => Ok (Csyntax.Ebinop Cop.Osub C_U64_max_unsigned (Csyntax.Ecast  e1 C_U64) C_U64) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 

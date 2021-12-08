@@ -80,7 +80,7 @@ Definition _addr0 : ident := $"addr0".
 Definition _addr1 : ident := $"addr1".
 Definition _addr_dst : ident := $"addr_dst".
 Definition _addr_src : ident := $"addr_src".
-Definition _block_ptr_id : ident := $"block_ptr_id".
+Definition _block_ptr : ident := $"block_ptr".
 Definition _block_size : ident := $"block_size".
 Definition _bpf_ctx : ident := $"bpf_ctx".
 Definition _bpf_flag : ident := $"bpf_flag".
@@ -674,8 +674,8 @@ Definition f_check_mem_aux := {|
                   (Evar _get_addl (Tfunction
                                     (Tcons tulong (Tcons tulong Tnil)) tulong
                                     cc_default))
-                  ((Etempvar _lo_ofs tulong) :: (Etempvar _chunk1 tuint) ::
-                   nil))
+                  ((Etempvar _lo_ofs tulong) ::
+                   (Ecast (Etempvar _chunk1 tuint) tulong) :: nil))
                 (Sset _hi_ofs (Etempvar _t'6 tulong)))
               (Ssequence
                 (Sifthenelse (Ebinop Ole (Econst_long (Int64.repr 0) tulong)
@@ -690,12 +690,14 @@ Definition f_check_mem_aux := {|
                     (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tulong)
                                    (Ebinop Osub
                                      (Econst_long (Int64.repr (-1)) tulong)
-                                     (Etempvar _chunk1 tuint) tulong) tint)
+                                     (Ecast (Etempvar _chunk1 tuint) tulong)
+                                     tulong) tint)
                       (Sset _t'7
                         (Ecast
                           (Ebinop Oeq (Econst_long (Int64.repr 0) tulong)
                             (Ebinop Omod (Etempvar _lo_ofs tulong)
-                              (Etempvar _chunk1 tuint) tulong) tint) tbool))
+                              (Ecast (Etempvar _chunk1 tuint) tulong) tulong)
+                            tint) tbool))
                       (Sset _t'7 (Econst_int (Int.repr 0) tint)))
                     (Sifthenelse (Etempvar _t'7 tint)
                       (Sreturn (Some (Ebinop Oadd (Etempvar _ptr tulong)
@@ -5819,8 +5821,8 @@ Definition f_bpf_interpreter := {|
 
 Definition composites : list composite_definition :=
 (Composite _memory_region Struct
-   ((_start_addr, tulong) :: (_block_size, tulong) ::
-    (_block_ptr_id, tulong) :: nil)
+   ((_start_addr, tulong) :: (_block_size, tulong) :: (_block_ptr, tulong) ::
+    nil)
    noattr ::
  Composite _memory_regions Struct
    ((_bpf_ctx, (tptr (Tstruct _memory_region noattr))) ::

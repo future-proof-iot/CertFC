@@ -8,7 +8,7 @@ From compcert Require Import Coqlib.
 Import ListNotations.
 Require Import ZArith.
 
-Require Import clight_exec Clightlogic MatchState CommonLemma.
+Require Import clight_exec Clightlogic CorrectRel MatchState CommonLemma.
 
 
 Definition match_state (st_block : block) (_ : unit) (v : val) (st: stateM) (m : Memory.Mem.mem) : Prop :=
@@ -31,15 +31,6 @@ Definition f := is_well_chunk_bool.
 (* [fn] is the Cligth function which has the same behaviour as [f] *)
 Definition fn: Clight.function := f_is_well_chunk_bool.
 
-Definition match_chunk (x : memory_chunk) (b: val) :=
-  b = Vint (
-          match x with
-          | Mint8unsigned => Integers.Int.one
-          | Mint16unsigned => Integers.Int.repr 2
-          | Mint32 => Integers.Int.repr 4
-          | Mint64 => Integers.Int.repr 8
-          | _ => Integers.Int.repr 0
-          end).
 
 
 Ltac exec_seq_of_labeled_statement :=
@@ -48,8 +39,6 @@ Ltac exec_seq_of_labeled_statement :=
       let x := (eval simpl in (seq_of_labeled_statement X)) in
       change (seq_of_labeled_statement X) with x
   end.
-
-
 
 
 Instance correct_function_is_well_chunk_bool2 : forall unmod,
