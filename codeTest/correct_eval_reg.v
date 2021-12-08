@@ -40,7 +40,9 @@ Section Eval_reg.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct (DList.DCons reg_correct (DList.DNil _)).
+    DList.DCons stateM_correct
+                (DList.DCons (stateless reg_correct)
+                             (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
@@ -54,7 +56,7 @@ Section Eval_reg.
     get_invariant_more _st.
     get_invariant_more _i.
     unfold stateM_correct in H1.
-    unfold reg_correct in H3.
+    unfold stateless, reg_correct in H3.
     destruct H1 as (Hptr & Hmatch).
     subst v v0.
     destruct Hmatch.

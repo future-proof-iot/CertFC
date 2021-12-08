@@ -39,7 +39,9 @@ Section Upd_pc.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct (DList.DCons int64_correct (DList.DNil _)).
+    DList.DCons stateM_correct
+                (DList.DCons (stateless int64_correct)
+                             (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
@@ -53,7 +55,7 @@ Section Upd_pc.
     get_invariant_more _st.
     get_invariant_more _pc.
     unfold stateM_correct in H1.
-    unfold int64_correct in H3.
+    unfold stateless, int64_correct in H3.
     destruct H1 as (Hv_eq & Hst).
     (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
     subst v0 v.

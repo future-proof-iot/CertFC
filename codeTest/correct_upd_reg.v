@@ -41,7 +41,7 @@ Section Upd_reg.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
-      (DList.DCons reg_correct
+      (DList.DCons (stateless reg_correct)
         (DList.DCons (stateless val64_correct)
           (DList.DNil _))).
 
@@ -58,7 +58,7 @@ Section Upd_reg.
     get_invariant_more _i.
     get_invariant_more _v.
     unfold stateM_correct in H1.
-    unfold reg_correct in H3.
+    unfold stateless, reg_correct in H3.
     unfold stateless, val64_correct in H5.
     destruct H1 as (Hv_eq & Hst).
     destruct H5 as (Hc_eq & (vl & Hvl_eq)).
