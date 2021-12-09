@@ -750,11 +750,12 @@ Proof.
   - econstructor;eauto.
 Qed.
 
-Definition is_tmp_expr (e : expr) : option (AST.ident * Ctypes.type) :=
+Definition var_expr (e : expr) : option (AST.ident * Ctypes.type) :=
   match e with
   | Etempvar v t => Some(v,t)
+  | Ecast (Etempvar v t) _ => Some (v, t)
   | _           => None
-  end.
+end.
 
 Fixpoint map_opt {A B : Type} (F : A -> option B) (l : list A) : option (list B) :=
   match l with
@@ -852,6 +853,890 @@ Definition var_inv_preserve {res: Type} (var_inv : list (positive * Ctypes.type 
     match_temp_env var_inv te st m  ->
     match_temp_env var_inv te st' m'.
 
+Definition  exec_deref_loc (ty : Ctypes.type) (m : Memory.Mem.mem) (b : block) (ofs : ptrofs) : option val :=
+  match Ctypes.access_mode ty with
+  | Ctypes.By_value chk => Memory.Mem.loadv chk m (Vptr b ofs)
+  | Ctypes.By_reference => Some (Vptr b ofs)
+  | Ctypes.By_copy => Some (Vptr b ofs)
+  | Ctypes.By_nothing => None
+  end.
+
+Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr) {struct e} : option val :=
+  match e with
+  | Econst_int i t    => Some (Vint  i)
+  | Econst_float f _  => Some (Vfloat f)
+  | Econst_single f _ => Some (Vsingle f)
+  | Econst_long  l _  => Some (Vlong l)
+  | Evar v  t        => match Maps.PTree.get v ev with
+                        | Some (b,t') =>
+                            if Ctypes.type_eq t t' then
+                              exec_deref_loc t m b  Ptrofs.zero
+                            else None
+                        | None   =>
+                            match (Globalenvs.Genv.find_symbol ge v) with
+                            | None => None
+                            | Some b => exec_deref_loc t m b  Ptrofs.zero
+                            end
+                        end
+  | Etempvar id t     => Maps.PTree.get id le
+  | Ederef _ _        => None
+  | Eaddrof _ _       => None
+  | Eunop o e t       => match exec_expr ge ev le m e with
+                         | None => None
+                         | Some v => Cop.sem_unary_operation o v (typeof e) m
+                         end
+  | Ebinop o e1 e2 t    => match exec_expr ge ev le m e1 , exec_expr ge ev le m e2 with
+                           | Some v1 , Some v2 => Cop.sem_binary_operation ge o v1 (typeof e1) v2 (typeof e2) m
+                           | _ , _ => None
+                           end
+  | Ecast e ty        => match exec_expr ge ev le m e with
+                         | None => None
+                         | Some v => Cop.sem_cast v (typeof e) ty m
+                         end
+  | Efield _ _ _      => None
+  | Esizeof _ _       => None
+  | Ealignof _ _      => None
+  end.
+
+Lemma deref_loc_var : forall t m b v,
+    exec_deref_loc t m b Ptrofs.zero = Some v ->
+    deref_loc t m b Ptrofs.zero v.
+Proof.
+  intros.
+  unfold exec_deref_loc in H.
+  destruct (Ctypes.access_mode t) eqn:AM.
+  eapply deref_loc_value; eauto.
+  inv H. eapply deref_loc_reference; eauto.
+  inv H. eapply deref_loc_copy; eauto.
+  discriminate.
+Qed.
+
+
+Lemma eval_expr_eval : forall ge ev te m e v,
+    exec_expr ge ev te m e = Some v ->
+    eval_expr ge ev te m e v.
+Proof.
+  induction e.
+  - simpl. intros. inv H.
+    econstructor.
+  - simpl. intros. inv H.
+    econstructor.
+  - simpl. intros. inv H.
+    econstructor.
+  - simpl. intros. inv H.
+    econstructor.
+  - simpl. intros.
+    destruct (Maps.PTree.get i ev) eqn:G.
+    + destruct p.
+      destruct (Ctypes.type_eq t t0).
+      * subst.
+        econstructor. eauto.
+        econstructor.
+        eauto.
+        apply deref_loc_var. auto.
+      * discriminate.
+    +
+      destruct (Globalenvs.Genv.find_symbol ge i) eqn:FS; try discriminate.
+      simpl in H. inv H.
+      econstructor.
+      eapply eval_Evar_global;eauto.
+      apply deref_loc_var. auto.
+  - simpl. intros.
+    econstructor ; eauto.
+  - intros ; discriminate.
+  - intros ; discriminate.
+  - simpl.
+    intros.
+    destruct (exec_expr ge ev te m e) eqn:EE.
+    econstructor.
+    eauto. auto.
+    discriminate.
+  - intros.
+    simpl in H.
+    destruct (exec_expr ge ev te m e1) eqn:E1; try discriminate.
+    destruct (exec_expr ge ev te m e2) eqn:E2; try discriminate.
+    econstructor ; eauto.
+  - intros.
+    simpl in H.
+    destruct (exec_expr ge ev te m e) eqn:E; try discriminate.
+    inv H. econstructor.
+    eauto. auto.
+  - intros.
+    discriminate.
+  - discriminate.
+  - discriminate.
+Qed.
+
+Definition is_Vint (t: Ctypes.type) : bool :=
+  match t with
+  | Ctypes.Tint Ctypes.I32 si attr => true
+  | Ctypes.Tpointer ty attr    => negb Archi.ptr64
+  | Ctypes.Tvoid
+  |   _  => false
+  end.
+
+
+Definition is_VBool (t: Ctypes.type) : bool :=
+  match t with
+  | Ctypes.Tint Ctypes.IBool si attr => true
+  |   _  => false
+  end.
+
+Lemma val_casted_is_VBool : forall b t,
+    is_VBool t = true ->
+    Cop.val_casted (Val.of_bool b) t.
+Proof.
+  destruct t ; try discriminate.
+  simpl. destruct i; try discriminate.
+  destruct b; constructor.
+  reflexivity. reflexivity.
+Qed.
+
+Definition is_Vfloat (t: Ctypes.type) : bool :=
+  match t with
+  | Ctypes.Tfloat Ctypes.F64 attr => true
+  | Ctypes.Tvoid
+  | _  => false
+  end.
+
+Definition is_Vsingle (t: Ctypes.type) : bool :=
+  match t with
+  |Ctypes.Tfloat Ctypes.F32 attr => true
+  | Ctypes.Tvoid
+  | _  => false
+  end.
+
+Definition is_Vlong (t: Ctypes.type) : bool :=
+  match t with
+  | Ctypes.Tlong si attr  => true
+  | Ctypes.Tpointer ty attr    => Archi.ptr64
+  | Ctypes.Tvoid
+  | _ => false
+  end.
+
+Definition is_Vptr (t : Ctypes.type) : bool :=
+  match t with
+  | Ctypes.Tpointer ty attr => true
+  | Ctypes.Tlong si attr    => Archi.ptr64
+  | Ctypes.Tint Ctypes.I32 si attr => negb Archi.ptr64
+  | Ctypes.Tvoid => true
+  | _    => false
+  end.
+
+Definition is_Vundef (t : Ctypes.type) : bool :=
+  match t with
+  | Ctypes.Tvoid => true
+  | _    => false
+  end.
+
+
+Ltac discr_bool := match goal with
+                   | H : false = true |- _ => discriminate H
+                   end.
+
+
+Lemma is_Vint_casted : forall i t,
+    is_Vint t = true ->
+    Cop.val_casted (Vint i) t.
+Proof.
+  destruct t; simpl ; intros; try discr_bool.
+  destruct i0; try discr_bool.
+  constructor. reflexivity.
+  constructor.
+  rewrite negb_true_iff in H.
+  auto.
+Qed.
+
+Lemma is_Vfloat_casted : forall i t,
+    is_Vfloat t = true ->
+    Cop.val_casted (Vfloat i) t.
+Proof.
+  destruct t; simpl ; intros; try discr_bool.
+  destruct f; try discr_bool.
+  constructor.
+Qed.
+
+
+Lemma is_Vsingle_casted : forall i t,
+    is_Vsingle t = true ->
+    Cop.val_casted (Vsingle i) t.
+Proof.
+  destruct t; simpl ; intros; try discr_bool.
+  destruct f; try discr_bool.
+  constructor.
+Qed.
+
+Lemma is_Vlong_casted : forall i t,
+    is_Vlong t = true ->
+    Cop.val_casted (Vlong i) t.
+Proof.
+  destruct t; simpl ; intros; try discr_bool.
+  constructor.
+  constructor. auto.
+Qed.
+
+Lemma is_Vptr_casted : forall b o t,
+    is_Vptr t = true ->
+    Cop.val_casted (Vptr b o) t.
+Proof.
+  destruct t; simpl ; intros; try discr_bool.
+  constructor.
+  destruct i; try discr_bool.
+  constructor.   rewrite negb_true_iff in H.   auto.
+  constructor;auto. constructor.
+Qed.
+
+Import Cop.
+
+
+
+Definition vc_binary_operation_casted (o: Cop.binary_operation) (t1 t2: Ctypes.type) (r :Ctypes.type): bool :=
+  match o with
+  | Oadd => match classify_add t1 t2 with
+            | add_default => Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1 &&
+                               Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2 &&
+                               Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) r
+
+            |  _          => false
+            end
+  | Osub => match classify_sub t1 t2 with
+            | sub_default => Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1 &&
+                               Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2 &&
+                               Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) r
+
+            |  _          => false
+            end
+  | Omul   | Odiv | Omod   | Oand
+  | Oor | Oxor  => Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1 &&
+                               Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2 &&
+                               Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) r
+
+  | Oshl | Oshr => match classify_shift t1 t2 with
+                   | shift_case_ii _ => Ctypes.type_eq t1 r && Ctypes.type_eq t2 r && is_Vint r
+                   | shift_case_ll _ => Ctypes.type_eq t1 r && Ctypes.type_eq t2 r   && is_Vlong r
+                   | shift_case_il  _ => is_Vint t1 && is_Vlong t2 && is_Vint r
+                   | shift_case_li _  => is_Vlong t1 && is_Vint t2 && is_Vlong r
+                   | shift_default     => false
+                   end
+  | Oeq | One | Olt | Ogt | Ole | Oge  => is_VBool r
+  end.
+
+
+Definition var_casted_list (l: list (positive * Ctypes.type)) (le: temp_env) : Prop:=
+  forall i t v,  In (i, t) l ->
+               Maps.PTree.get i le = Some v ->
+               Cop.val_casted v t.
+
+Lemma val_casted_sem_binarith :
+  forall f1 f2 f3 f4 v1 v2 t m v
+         (BC : binarith_type (classify_binarith t t) = t)
+         (SB : sem_binarith f1 f2 f3 f4 v1 t v2 t m = Some v)
+         (WC1: forall s x y r,
+             Ctypes.Tint Ctypes.I32 s Ctypes.noattr = t ->
+             val_casted (Vint x) t ->
+             val_casted (Vint y) t -> f1 s x y = Some r ->
+             val_casted r t)
+         (WC2: forall s x y r,
+             Ctypes.Tlong s Ctypes.noattr = t ->
+             val_casted (Vlong x) t ->
+             val_casted (Vlong y) t -> f2 s x y = Some r ->
+             val_casted r t)
+         (WC3: forall x y r,
+             Ctypes.Tfloat Ctypes.F64 Ctypes.noattr = t ->
+             val_casted (Vfloat x) t ->
+             val_casted (Vfloat y) t -> f3 x y = Some r ->
+             val_casted r t)
+         (WC4: forall x y r,
+             Ctypes.Tfloat Ctypes.F32 Ctypes.noattr = t ->
+             val_casted (Vsingle x) t ->
+             val_casted (Vsingle y) t -> f4 x y = Some r ->
+             val_casted r t),
+    val_casted v1 t ->
+    val_casted v2 t ->
+    val_casted v t.
+Proof.
+  unfold sem_binarith.
+  intros.
+  rewrite BC in SB.
+  rewrite! cast_val_casted in SB by auto.
+  destruct (classify_binarith t t).
+  - destruct v1,v2; try congruence.
+    simpl in BC.
+    apply WC1 in SB; auto.
+  - destruct v1,v2; try congruence.
+    simpl in BC.
+    apply WC2 in SB;auto.
+  - destruct v1,v2; try congruence.
+    simpl in BC.
+    apply WC3 in SB; auto.
+  - destruct v1,v2; try congruence.
+    simpl in BC.
+    apply WC4 in SB; auto.
+  - discriminate.
+Qed.
+
+Lemma val_casted_cmp_ptr : forall m c v1 v2 v t,
+    is_VBool t = true ->
+    cmp_ptr m c v1 v2 = Some v ->
+  val_casted v t.
+Proof.
+  unfold cmp_ptr.
+  intros.
+  destruct Archi.ptr64.
+  destruct (Val.cmplu_bool (Memory.Mem.valid_pointer m) c v1 v2); try discriminate.
+  inv H0. apply val_casted_is_VBool; auto.
+  destruct (Val.cmpu_bool (Memory.Mem.valid_pointer m) c v1 v2); try discriminate.
+  inv H0. apply val_casted_is_VBool; auto.
+Qed.
+
+Lemma val_casted_sem_cmp :
+  forall o (v1 : val) (t1 : Ctypes.type) (v2 : val) (t2 t : Ctypes.type) (v : val) (m : Memory.Mem.mem),
+    val_casted v1 t1 -> val_casted v2 t2 -> is_VBool t = true -> sem_cmp o v1 t1 v2 t2 m = Some v -> val_casted v t.
+Proof.
+  unfold sem_cmp. intros.
+  destruct Archi.ptr64.
+  destruct (classify_cmp t1 t2);
+    try (eapply val_casted_cmp_ptr;eauto;fail).
+  destruct v2 ; try discriminate ; eapply val_casted_cmp_ptr;eauto.
+  destruct v1 ; try discriminate ; eapply val_casted_cmp_ptr;eauto.
+  destruct v2 ; try discriminate ; eapply val_casted_cmp_ptr;eauto.
+  destruct v1 ; try discriminate ; eapply val_casted_cmp_ptr;eauto.
+  unfold sem_binarith in H2.
+  destruct (sem_cast v1 t1 (binarith_type (classify_binarith t1 t2)) m);
+    destruct (sem_cast v2 t2 (binarith_type (classify_binarith t1 t2)) m);
+    destruct (classify_binarith t1 t2); try discriminate.
+  - destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+  - destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+  - destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+  - destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+  - destruct (classify_cmp t1 t2).
+    eapply val_casted_cmp_ptr;eauto.
+    destruct v2 ; try discriminate;
+      eapply val_casted_cmp_ptr;eauto.
+    destruct v1 ; try discriminate;
+      eapply val_casted_cmp_ptr;eauto.
+    destruct v2 ; try discriminate;
+      eapply val_casted_cmp_ptr;eauto.
+    destruct v1 ; try discriminate;
+      eapply val_casted_cmp_ptr;eauto.
+  unfold sem_binarith in H2.
+  destruct (sem_cast v1 t1 (binarith_type (classify_binarith t1 t2)) m);
+    destruct (sem_cast v2 t2 (binarith_type (classify_binarith t1 t2)) m);
+    destruct (classify_binarith t1 t2); try discriminate.
+  + destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+  + destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+  + destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+  + destruct v0,v3 ; try discriminate. inv H2.
+  eapply val_casted_is_VBool;eauto.
+Qed.
+
+Lemma vc_casted_binary_operation_correct : forall ge o v1 t1 v2 t2 t v m,
+    Cop.val_casted v1 t1 ->
+    Cop.val_casted v2 t2 ->
+    vc_binary_operation_casted o t1 t2 t = true ->
+    Cop.sem_binary_operation ge o v1 t1 v2 t2 m = Some v ->
+  Cop.val_casted v t.
+Proof.
+  destruct o; simpl.
+  - intros.
+    unfold sem_add in H2.
+    destruct (classify_add t1 t2) eqn:CL; try congruence.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+  - intros.
+    unfold sem_sub in H2.
+    destruct (classify_sub t1 t2) eqn:CL; try congruence.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+  - intros.
+    unfold sem_mul in H2.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+  - intros.
+    unfold sem_div in H2.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      destruct s.
+      destruct (Int.eq y Int.zero || Int.eq x (Int.repr Int.min_signed) && Int.eq y Int.mone); try congruence.
+      inv H7. constructor. reflexivity.
+      destruct (Int.eq y Int.zero) ; try congruence.
+      inv H7. constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      destruct s.
+      destruct (Int64.eq y Int64.zero || Int64.eq x (Int64.repr Int64.min_signed) && Int64.eq y Int64.mone); try congruence.
+      inv H7. constructor.
+      destruct (Int64.eq y Int64.zero) ; try congruence.
+      inv H7. constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7.
+      constructor.
+  - intros.
+    unfold sem_mod in H2.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      destruct s.
+      destruct (Int.eq y Int.zero || Int.eq x (Int.repr Int.min_signed) && Int.eq y Int.mone); try congruence.
+      inv H7. constructor. reflexivity.
+      destruct (Int.eq y Int.zero) ; try congruence.
+      inv H7. constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      destruct s.
+      destruct (Int64.eq y Int64.zero || Int64.eq x (Int64.repr Int64.min_signed) && Int64.eq y Int64.mone); try congruence.
+      inv H7. constructor.
+      destruct (Int64.eq y Int64.zero) ; try congruence.
+      inv H7. constructor.
+    + intros. simpl in H7. discriminate.
+    + intros. simpl in H7. discriminate.
+  - intros.
+    unfold sem_and in H2.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7. constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7. constructor.
+    + intros. simpl in H7. discriminate.
+    + intros. simpl in H7. discriminate.
+  - intros.
+    unfold sem_or in H2.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7. constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7. constructor.
+    + intros. simpl in H7. discriminate.
+    + intros. simpl in H7. discriminate.
+  - intros.
+    unfold sem_xor in H2.
+    rewrite andb_true_iff in H1.
+    destruct H1 as (T1 & T2).
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2); try discriminate;
+    destruct (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t); try discriminate.
+    assert (t1 = t2) by congruence.
+    rewrite H1 in *.
+    assert (t2 = t) by congruence.
+    rewrite H3 in *.
+    eapply val_casted_sem_binarith ;eauto.
+    congruence.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7. constructor. reflexivity.
+    + intros. simpl in H7. rewrite <- H4 in *.
+      inv H7. constructor.
+    + intros. simpl in H7. discriminate.
+    + intros. simpl in H7. discriminate.
+  - unfold sem_shl.
+    unfold sem_shift. intros.
+    destruct (classify_shift t1 t2) eqn:CS.
+    + rewrite! andb_true_iff in H1;
+    destruct H1 as ((C1 & C2) & C3).
+    destruct (Ctypes.type_eq t1 t); try discriminate;
+    destruct (Ctypes.type_eq t2 t); try discriminate.
+    destruct v1,v2 ; try discriminate.
+    destruct (Int.ltu i0 Int.iwordsize); try discriminate.
+    inv H2. apply is_Vint_casted; auto.
+    + rewrite! andb_true_iff in H1;
+        destruct H1 as ((C1 & C2) & C3).
+      destruct v1,v2 ; try discriminate.
+      destruct (Int64.ltu i0 Int64.iwordsize); try discriminate.
+      inv H2. apply is_Vlong_casted; auto.
+    + rewrite! andb_true_iff in H1;
+        destruct H1 as ((C1 & C2) & C3).
+      destruct v1,v2 ; try discriminate.
+      destruct (Int64.ltu i0 (Int64.repr 32)); try discriminate.
+      inv H2. apply is_Vint_casted; auto.
+    + rewrite! andb_true_iff in H1;
+        destruct H1 as ((C1 & C2) & C3).
+      destruct v1,v2 ; try discriminate.
+      destruct (Int.ltu i0 (Int64.iwordsize')); try discriminate.
+      inv H2. apply is_Vlong_casted; auto.
+    +  discriminate.
+  - unfold sem_shr.
+    unfold sem_shift. intros.
+    destruct (classify_shift t1 t2) eqn:CS.
+    + rewrite! andb_true_iff in H1;
+    destruct H1 as ((C1 & C2) & C3).
+    destruct (Ctypes.type_eq t1 t); try discriminate;
+    destruct (Ctypes.type_eq t2 t); try discriminate.
+    destruct v1,v2 ; try discriminate.
+    destruct (Int.ltu i0 Int.iwordsize); try discriminate.
+      destruct s ; inv H2; apply is_Vint_casted; auto.
+    + rewrite! andb_true_iff in H1;
+        destruct H1 as ((C1 & C2) & C3).
+      destruct v1,v2 ; try discriminate.
+      destruct (Int64.ltu i0 Int64.iwordsize); try discriminate.
+      inv H2. apply is_Vlong_casted; auto.
+    + rewrite! andb_true_iff in H1;
+        destruct H1 as ((C1 & C2) & C3).
+      destruct v1,v2 ; try discriminate.
+      destruct (Int64.ltu i0 (Int64.repr 32)); try discriminate.
+      inv H2. apply is_Vint_casted; auto.
+    + rewrite! andb_true_iff in H1;
+        destruct H1 as ((C1 & C2) & C3).
+      destruct v1,v2 ; try discriminate.
+      destruct (Int.ltu i0 (Int64.iwordsize')); try discriminate.
+      inv H2. apply is_Vlong_casted; auto.
+    +  discriminate.
+  - intros.
+    eapply val_casted_sem_cmp in H2; eauto.
+  - intros.
+    eapply val_casted_sem_cmp in H2; eauto.
+  - intros.
+    eapply val_casted_sem_cmp in H2; eauto.
+  - intros.
+    eapply val_casted_sem_cmp in H2; eauto.
+  - intros.
+    eapply val_casted_sem_cmp in H2; eauto.
+  - intros.
+    eapply val_casted_sem_cmp in H2; eauto.
+Qed.
+
+Definition vc_cast_casted (o:Ctypes.type) (d:Ctypes.type) :=
+  match classify_cast o d with
+  | cast_case_pointer => is_Vptr d
+  | cast_case_i2l si  => true
+  | _                 => false
+  end.
+
+Lemma val_casted_sem_cast : forall t1 t v v' m,
+    vc_cast_casted t1 t = true ->
+    sem_cast v t1 t m = Some v' ->
+  val_casted v' t.
+Proof.
+  intros.
+  unfold vc_cast_casted in H.
+  unfold sem_cast in H0.
+  destruct (classify_cast t1 t) eqn:CC; try discriminate.
+  - destruct v ; try congruence.
+    destruct Archi.ptr64 eqn:A; try congruence.
+    inv H0.
+    destruct t ; simpl in H ; try congruence.
+    constructor. rewrite A in H.
+    destruct i0; try congruence. constructor.
+    reflexivity.
+    constructor. auto.
+    destruct Archi.ptr64 eqn:A; try congruence.
+    inv H0.
+    destruct t ; simpl in H ; try congruence.
+    constructor. rewrite A in H.
+    destruct i0; try congruence. discriminate H.
+    constructor. constructor;auto.
+    inv H0.
+    eapply is_Vptr_casted; eauto.
+  - destruct v; try congruence.
+    inv H0.
+    unfold classify_cast in CC.
+    destruct t1; try discriminate.
+    + destruct t; try discriminate.
+      destruct i0; discriminate.
+      destruct f; discriminate.
+    + destruct t; try congruence.
+      destruct i1;try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      constructor.
+      destruct f; discriminate.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      econstructor; assumption.
+    + destruct t ;
+        try discriminate CC.
+      destruct i0;
+        try discriminate CC.
+      destruct f; try discriminate.
+    + destruct t ;
+        try discriminate CC.
+      destruct i0;
+        try discriminate CC.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f0; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+    + destruct t ;
+        try congruence.
+      destruct i0;
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      destruct (Ctypes.intsize_eq
+                  Ctypes.I8 Ctypes.I32);
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      destruct (Ctypes.intsize_eq
+           Ctypes.I16
+           Ctypes.I32)
+      ;
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      destruct (Ctypes.intsize_eq
+           Ctypes.I32
+           Ctypes.I32); try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      constructor.
+      destruct f. discriminate.
+      discriminate.
+    +  destruct t ; try congruence.
+       destruct i0 ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       destruct (Ctypes.intsize_eq
+           Ctypes.I8 Ctypes.I32); try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       destruct (Ctypes.intsize_eq Ctypes.I16 Ctypes.I32) ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       destruct (Ctypes.intsize_eq Ctypes.I32 Ctypes.I32); try congruence.
+       destruct Archi.ptr64 ;congruence.
+       constructor.
+       destruct f; congruence.
+    + destruct t ; try congruence.
+       destruct i0 ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+      destruct (Ctypes.intsize_eq Ctypes.I8 Ctypes.I32); try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       destruct (Ctypes.intsize_eq Ctypes.I16 Ctypes.I32) ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       destruct (Ctypes.intsize_eq Ctypes.I32 Ctypes.I32); try congruence.
+       destruct Archi.ptr64 ;congruence.
+       constructor.
+       destruct f; congruence.
+    + destruct t ; try congruence.
+       destruct i1 ; try congruence.
+      destruct f; try congruence.
+    +        destruct t ; try congruence.
+             destruct i1 ; try congruence.
+             destruct f ; try congruence.
+Qed.
+
+
+Fixpoint vc_casted (inv: list (positive * Ctypes.type)) (e:expr) :=
+  match e with
+  | Econst_int _ t    => is_Vint t
+  | Econst_float _ t  => is_Vfloat t
+  | Econst_single _ t => is_Vsingle t
+  | Econst_long _ t  => is_Vlong t
+  | Evar _ _         => false
+  | Etempvar v t     => existsb (fun x => if Ctypes.type_eq t (snd x) then Pos.eqb v (fst x) else false) inv
+  | Ederef _ _        => false
+  | Eaddrof _ _       => false
+  | Eunop o e t       => false
+  | Ebinop o e1 e2 t    => vc_casted inv e1 && vc_casted inv e2 &&
+                             vc_binary_operation_casted o (typeof e1) (typeof e2) t
+  | Ecast e ty        => vc_casted inv e &&
+                           vc_cast_casted (typeof e) ty
+  | Efield _ _ _      => false
+  | Esizeof _ _       => false
+  | Ealignof _ _      => false
+  end.
+
+Lemma vc_casted_correct :
+  forall inv ge le m a v
+         (INV : var_casted_list inv le),
+    vc_casted inv a = true ->
+    exec_expr ge empty_env le m a = Some v ->
+    Cop.val_casted v (typeof a).
+Proof.
+  induction a; simpl in *; try discriminate.
+  - intros. inv H0.
+    apply is_Vint_casted; auto.
+  - intros. inv H0.
+    apply is_Vfloat_casted; auto.
+  - intros. inv H0.
+    apply is_Vsingle_casted; auto.
+  - intros. inv H0.
+    apply is_Vlong_casted; auto.
+  - intros.
+    rewrite existsb_exists in H.
+    destruct H as ((i',t'),(IN,P)).
+    simpl in P.
+    destruct (Ctypes.type_eq t t'); try congruence.
+    apply Peqb_true_eq in P. subst.
+    eapply INV;eauto.
+  - intros.
+    destruct (exec_expr ge empty_env le m a1) eqn:E1; try discriminate.
+    destruct (exec_expr ge empty_env le m a2) eqn:E2; try discriminate.
+    repeat rewrite andb_true_iff in H.
+    destruct H as ((H1 , H2), H3).
+    eapply vc_casted_binary_operation_correct in H0; eauto.
+  - intros.
+    destruct (exec_expr ge empty_env le m a) eqn:E1; try discriminate.
+    repeat rewrite andb_true_iff in H.
+    destruct H as (H1 , H2).
+    specialize (IHa _ INV H1 eq_refl).
+    eapply val_casted_sem_cast in H0; eauto.
+Qed.
+
+Lemma check_cast : forall ge le inv m eargs lval targs
+                          (INV   : var_casted_list inv le)
+                          (LVAL : map_opt (exec_expr ge empty_env le m) eargs = Some lval)
+                          (TARGS : List.map typeof eargs = List.map snd targs)
+                          (CAST  : List.forallb (vc_casted inv) eargs = true)
+  ,
+    Forall2 (fun (v : val) (t : AST.ident * Ctypes.type) => Cop.val_casted v (snd t)) lval targs.
+Proof.
+  induction eargs.
+  - simpl. intros. inv TARGS.
+    inv LVAL. destruct targs. constructor.
+    discriminate.
+  - intros.
+    simpl in TARGS. simpl in LVAL.
+    destruct (exec_expr ge empty_env le m a) eqn:E ; try discriminate.
+    destruct (map_opt (exec_expr ge empty_env le m) eargs) eqn:M ; try discriminate.
+    inv LVAL. destruct targs. discriminate.
+    inv TARGS.
+    simpl in CAST.
+    rewrite andb_true_iff in CAST.
+    destruct CAST as (C1 & C2).
+    econstructor ; eauto.
+    rewrite <- H0.
+    eapply vc_casted_correct;eauto.
+Qed.
+
+Lemma var_casted_list_map_fst : forall st m le var_inv,
+    Forall (match_elt st m le) var_inv ->
+  var_casted_list (map fst var_inv) le.
+Proof.
+ unfold var_casted_list.
+ intros.
+ rewrite Forall_forall in H.
+ rewrite in_map_iff in H0.
+ destruct H0 as (((i1,t1),r1), (EQ , IN)).
+ simpl in EQ. inv EQ.
+ apply H in IN.
+ unfold match_elt in IN.
+ simpl in IN.
+ rewrite H1 in IN.
+ tauto.
+Qed.
+
+Fixpoint type_of_list (l : list Ctypes.type) : Ctypes.typelist :=
+  match l with
+  | nil => Ctypes.Tnil
+  | cons e l => Ctypes.Tcons e (type_of_list l)
+  end.
 
 Section S.
   Variable p : program.
@@ -872,17 +1757,20 @@ Section S.
            (var_inv : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
            (le : temp_env) (m : Memory.Mem.mem) (st : stateM)
            (VARINV: var_inv_preserve var_inv match_res modifies  le)
-           (lvar : list (positive * Ctypes.type))
-           (EARGS : map_opt is_tmp_expr eargs = Some lvar)
            (TI    : ti = fn_return fct)
-           (TARGS : targs = Ctypes.type_of_params lvar)
-           (TARGSF: List.map snd lvar = List.map snd (fn_params fct))
-           (VAR : incl (List.combine lvar (list_rel (all_args args is_pure) match_arg (all_args_list args is_pure a))) var_inv)
+           (TARGS : targs = type_of_list (map typeof eargs))
+           (TARGS1 : map typeof eargs = map snd (fn_params fct))
            (NOTIN1 : ~In vres   (map  (fun x  => fst (fst x)) var_inv))
            (NOTIN2 : ~In tres   (map  (fun x  => fst (fst x)) var_inv))
-           (LVAL  : match_temp_env var_inv le st m ->
-                    exists lval, map_opt (fun x => Maps.PTree.get (fst x) le) lvar = Some lval
-                                 /\ List.length lval = (List.length (all_args args is_pure)))
+           (CASTED  : List.forallb (vc_casted (List.map fst var_inv)) eargs = true)
+           (LENEARGS : List.length eargs = (List.length (all_args args is_pure)))
+           (LVAL  :
+             Forall (match_elt st m le) var_inv ->
+             exists lval,
+               map_opt (exec_expr (Clight.globalenv p) empty_env le m) eargs = Some lval
+            /\ forall (LEN :List.length lval = (List.length (all_args args is_pure))),
+      DList.Forall2 (fun (a : Type) (R : a -> val -> stateM -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
+                    (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
     ,
       correct_statement p res (app f a) fn
     (Ssequence
@@ -901,13 +1789,23 @@ Section S.
     destruct (app f a st); try congruence.
     destruct p0 as (v',st').
     intros s' k k' K.
-    specialize (LVAL PRE). destruct LVAL as (lval& LVAL & LEN).
     unfold pre in PRE. unfold match_temp_env in PRE.
-    specialize (fn_eval_ok4 (DList.of_list_sl lval (all_args args is_pure) LEN)
+    destruct (LVAL PRE) as (lval & MAP & ALL).
+    clear LVAL.
+    assert (LEN : Datatypes.length lval = Datatypes.length (all_args args is_pure)).
+    {
+      apply length_map_opt in MAP.
+      rewrite <- MAP.
+      rewrite LENEARGS.
+      reflexivity.
+      }
+      specialize (ALL LEN).
+      specialize (fn_eval_ok4 (DList.of_list_sl lval (all_args args is_pure) LEN)
                             (Kcall (Some tres) fn empty_env le
                                    (Kseq (Sset vres (if has_cast
                 then Ecast (Etempvar tres ti) ti
                                                      else Etempvar tres ti)) k)) m I).
+(*
     assert (MA : DList.Forall2 (fun (a : Type) (R : a -> val -> stateM -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
                   (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN))).
     {
@@ -996,11 +1894,11 @@ Section S.
         tauto.
         apply IHlvar; auto.
         eapply incl_cons_inv; eauto.
-    }
+    } *)
     assert (EQ: lval = (DList.to_list (fun (_ : Type) (v : val) => v)
                                    (DList.of_list_sl lval (all_args args is_pure) LEN))).
     { apply (DList.to_list_of_list_sl ). }
-    assert (MA2:= MA').
+(*    assert (MA2:= MA').
     rewrite EQ in MA'.
     assert (MA'' : Forall2
           (fun (v : val) (t : AST.ident * Ctypes.type) =>
@@ -1020,9 +1918,16 @@ Section S.
         unfold AST.ident in *.
         rewrite H0 in H4;auto.
         eapply IHl;eauto.
+    } *)
+    (*rewrite EQ in MA''.*)
+    assert (ALLCASTED : Forall2 (fun (v : val) (t : AST.ident * Ctypes.type) => val_casted v (snd t))
+    lval (fn_params fct)).
+    {
+      eapply check_cast; eauto.
+      eapply var_casted_list_map_fst; eauto.
     }
-    rewrite EQ in MA''.
-    destruct (fn_eval_ok4 MA MA'') as (v1 & m1 & t1 & STAR & RES' &CAST  &MOD).
+    destruct (fn_eval_ok4 ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD).
+    rewrite <- EQ. assumption.
     do 3 eexists.
     split.
     eapply star_step.
@@ -1037,31 +1942,24 @@ Section S.
     eapply deref_loc_reference.
     simpl; reflexivity.
     { instantiate (1:= lval).
-      revert MA2 TARGS EARGS LVAL.
-      clear.
-      revert lval targs lvar.
+      revert PRE CASTED TARGS MAP.
+      clear. intro. revert lval targs.
       induction eargs.
-      - simpl. intros. inv EARGS.
-        simpl in LVAL. inv LVAL.
+      - simpl. intros. inv MAP.
         constructor.
       - simpl.
-        intros.
-        destruct (is_tmp_expr a) eqn:TMP; try congruence.
-        destruct a ; simpl in TMP ; try congruence.
-        inv TMP.
-        destruct (map_opt is_tmp_expr eargs) eqn:M; try discriminate.
-        inv EARGS.
-        simpl in LVAL.
-        destruct (Maps.PTree.get i le) eqn:G ; try discriminate.
-        destruct (map_opt (fun x : positive * Ctypes.type => Maps.PTree.get (fst x) le) l) eqn:M2; try discriminate.
-        inv LVAL.
-        simpl. econstructor ; eauto.
-        econstructor ; eauto.
-        simpl.
-        inv MA2.
-        apply Cop.cast_val_casted. auto.
-        inv MA2.
-        eapply IHeargs; eauto.
+        intros. subst.
+        destruct (exec_expr (Clight.globalenv p) empty_env le m a) eqn:E; try congruence.
+        destruct (map_opt (exec_expr (Clight.globalenv p) empty_env le m) eargs) eqn:MO; try discriminate.
+        inv MAP.
+        rewrite andb_true_iff in CASTED.
+        destruct CASTED as (C1 & C2).
+        econstructor; eauto.
+        apply eval_expr_eval in E.
+        eauto.
+        apply Cop.cast_val_casted.
+        eapply vc_casted_correct; eauto.
+        eapply var_casted_list_map_fst; eauto.
     }
     eapply star_trans.
     rewrite <- EQ in STAR.
@@ -1111,6 +2009,8 @@ Section S.
       eauto.
   Qed.
 End S.
+
+
 
 Section S.
   (** The program contains our function of interest [fn] *)
