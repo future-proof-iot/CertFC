@@ -6,6 +6,8 @@ Require Import ZArith.
 
 From bpf.proof Require Import Clightlogic MatchState.
 
+Open Scope Z_scope.
+
 Definition int64_correct (x:int64_t) (v: val) :=
   Vlong x = v.
 
@@ -15,7 +17,11 @@ Definition val64_correct (x:val64_t) (v: val) :=
 
 Definition reg_correct (r: reg) (v: val) :=
   (*complu_lt_32 v (Vint (Int.repr 11)) = true /\ (**r ensured by verifier *) *)
-    v = Vint (Int.repr (id_of_reg r)).
+  v = Vint (Int.repr (id_of_reg r)).
+
+Definition reg_int64_correct (x:int64_t) (v: val) :=
+  Vlong x = v /\
+    0 <= (Int64.unsigned (Int64.shru (Int64.and x (Int64.repr 4095)) (Int64.repr 8))) <= 10.
 
 
 Definition match_chunk (x : memory_chunk) (b: val) :=
@@ -30,3 +36,5 @@ Definition match_chunk (x : memory_chunk) (b: val) :=
 
 Definition flag_correct (f: bpf_flag) (v: val) :=
   v = Vint (int_of_flag f).
+
+Close Scope Z_scope.
