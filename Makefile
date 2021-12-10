@@ -7,6 +7,7 @@ COQC := coqc
 COQDEP := coqdep
 OCAMLOPT := ocamlopt
 COQMAKEFILE := coq_makefile
+CP := cp
 
 CC=gcc
 OFLAGS=-Os
@@ -23,6 +24,12 @@ COQEXTROPTS :=  -R ../tests dx.tests -w all,-extraction
 
 OCAMLINCS := -I extr # -I src
 
+test:
+	@echo $@
+	@$(MAKE) compile
+	@$(MAKE) extract
+	@$(MAKE) repatch
+
 all:
 	@echo $@
 	@$(MAKE) compile
@@ -38,8 +45,8 @@ compile:
 	@echo $@
 	$(COQMAKEFILE) -f _CoqProject $(COQSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
-	cp TestMain.ml tests # mv -> cp to avoid when running `make` again, it doesn't find the two files
-	cp TestMain.mli tests
+	$(CP) TestMain.ml tests # mv -> cp to avoid when running `make` again, it doesn't find the two files
+	$(CP) TestMain.mli tests
 
 extract:
 	@echo $@
@@ -65,6 +72,11 @@ extract:
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini tests/compcert.ini
 	cd tests && ./main
 
+repatch:
+	@echo $@
+	$(CP) tests/generated.c repatch
+	cd repatch && $(CC) -o $@ repatch.c && ./repatch
+
 clight:
 	@echo $@
 	cd codeTest && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c
@@ -87,4 +99,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all compile extract clight proof clean
+.PHONY: all compile extract repatch clight proof clean
