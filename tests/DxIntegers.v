@@ -13,6 +13,13 @@ Require Import CoqIntegers Int16 InfComp.
 (******************** UInt8 *******************)
 Definition int8_t := byte.
 
+(** masking operation *)
+Definition int8_0xf0 := Byte.repr 0xf0.
+Definition int8_0x07 := Byte.repr 0x07.
+Definition int8_0xff := Byte.repr 0xff.
+Definition int8_0x08 := Byte.repr 0x08.
+Definition int8_zero := Byte.zero.
+
 (******************** UInt16 *******************)
 Definition uint16_t := int16.
 
@@ -36,6 +43,12 @@ Definition int32_10 := Int.repr 10.
 Definition int32_16 := Int.repr 16.
 Definition int32_32 := Int.repr 32.
 Definition int32_64 := Int.repr 64.
+
+(** masking operations *)
+Definition int32_0xf0 := Int.repr 0xf0.
+Definition int32_0x07 := Int.repr 0x07.
+Definition int32_0xff := Int.repr 0xff.
+Definition int32_0x08 := Int.repr 0x08.
 
 (******************** SInt32 *******************)
 Definition sint32_t := int. (**r here we should define two types for C: sint32_t and uint32_t, then we should use those two types to define rbpf functions *)
@@ -107,6 +120,57 @@ Definition C_U8_one: Csyntax.expr :=
 
 Definition int8CompilableType :=
   MkCompilableType int8_t C_U8.
+
+(**r masking operations *)
+Definition C_U8_0xf0: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0xf0) C_U8.
+
+Definition C_U8_0x07: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0x07) C_U8.
+
+Definition C_U8_0xff: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0xff) C_U8.
+
+Definition C_U8_0x08: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0x08) C_U8.
+
+Definition int8SymbolType :=
+  MkCompilableSymbolType nil (Some int8CompilableType).
+
+Definition Const_int8_0xf0 := constant int8SymbolType int8_0xf0 C_U8_0xf0.
+Definition Const_int8_0x07 := constant int8SymbolType int8_0x07 C_U8_0x07.
+Definition Const_int8_0xff := constant int8SymbolType int8_0xff C_U8_0xff.
+Definition Const_int8_0x08 := constant int8SymbolType int8_0x08 C_U8_0x08.
+Definition Const_int8_zero := constant int8SymbolType int8_zero C_U8_zero.
+
+
+Definition int8Toint8ToboolSymbolType :=
+  MkCompilableSymbolType [int8CompilableType; int8CompilableType] (Some boolCompilableType).
+
+Definition C_U8_eq (x y: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oeq x y C_U8.
+
+Definition Const_int8_eq :=
+  MkPrimitive int8Toint8ToboolSymbolType
+                Byte.eq
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U8_eq e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition int8Toint8Toint8SymbolType :=
+  MkCompilableSymbolType [int8CompilableType; int8CompilableType] (Some int8CompilableType).
+
+Definition C_U8_and (x y: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oand x y C_U8.
+
+Definition Const_int8_and :=
+  MkPrimitive int8Toint8Toint8SymbolType
+                Byte.and
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U8_and e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
 
 (******************** UInt16 *******************)
 
@@ -673,6 +737,16 @@ Definition Const_int64_to_sint32 :=
 
 Module Exports.
   Definition int8CompilableType    := int8CompilableType.
+
+  (** masking operation *)
+  Definition Const_int8_0xf0       := Const_int8_0xf0.
+  Definition Const_int8_0x07       := Const_int8_0x07.
+  Definition Const_int8_0xff       := Const_int8_0xff.
+  Definition Const_int8_0x08       := Const_int8_0x08.
+  Definition Const_int8_eq         := Const_int8_eq.
+  Definition Const_int8_and        := Const_int8_and.
+  Definition Const_int8_zero       := Const_int8_zero.
+
   Definition uint16CompilableType  := uint16CompilableType.
   Definition Const_uint16_zero     := Const_uint16_zero.
   Definition Const_uint16_one      := Const_uint16_one.
