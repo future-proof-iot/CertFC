@@ -8,16 +8,6 @@ From dx.Type Require Import Bool Nat.
 Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag DxAST DxMemRegion.
 
 
-(**
-void step(struct bpf_state* st, unsigned long long *l, unsigned long long len)
-{
-  
-
-}
-
-*)
-
-
 (** TODO: regarding the decode function: from int64 to bpf_instruction
   from: https://github.com/bergzand/RIOT/blob/10cecc628e89442777f2a798f6763e3f55ac9731/sys/include/bpf/instruction.h#L89
 
@@ -97,6 +87,10 @@ Definition is_well_chunk_bool (chunk0: memory_chunk) : M bool :=
   | _ => returnM false
   end.
 
+
+Definition test_complex (dst64: val64_t) (imm: sint32_t): M val64_t :=
+  do res <- get_addl dst64 (Val.longofintu (sint32_to_vint imm));
+  returnM res.
 
 Definition check_mem_aux (mr3: memory_region) (addr0: val64_t) (chunk1: memory_chunk): M val64_t :=
   do well_chunk <- is_well_chunk_bool chunk1;

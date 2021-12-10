@@ -11,6 +11,7 @@ From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
 Require Import DxIntegers DxList64 DxValues DxRegs DxState DxOpcode DxMonad DxFlag DxInstructions DxAST DxMemRegion.
 
+
 (***************************************)
 
 
@@ -55,6 +56,7 @@ GenerateIntermediateRepresentation SymbolIRs
   step
   bpf_interpreter_aux
   bpf_interpreter
+  test_complex
 .
 (*
 Definition dxModuleTest := makeDXModuleWithDefaults SymbolIRs. *)

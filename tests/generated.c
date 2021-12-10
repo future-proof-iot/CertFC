@@ -54,6 +54,8 @@ extern void bpf_interpreter_aux(struct memory_regions *, unsigned long long *, u
 
 extern unsigned long long bpf_interpreter(struct memory_regions *, unsigned long long *, unsigned long long, unsigned int);
 
+extern unsigned long long test_complex(unsigned long long, int);
+
 extern unsigned long long eval_pc(void);
 
 extern void upd_pc(unsigned long long);
@@ -954,6 +956,13 @@ unsigned long long bpf_interpreter(struct memory_regions *mrs7, unsigned long lo
   } else {
     return 0LLU;
   }
+}
+
+unsigned long long test_complex(unsigned long long dst64$206, int imm$208)
+{
+  unsigned long long res;
+  res = get_addl(dst64$206, (unsigned long long) imm$208);
+  return res;
 }
 
 
