@@ -14,6 +14,9 @@ Definition int64_correct (x:int64_t) (v: val) :=
 Definition val64_correct (x:val64_t) (v: val) :=
   x = v /\ exists vl, x = Vlong vl.
 
+Definition sint32_correct (x: sint32_t) (v: val) :=
+  Vint x = v.
+
 
 Definition reg_correct (r: reg) (v: val) :=
   (*complu_lt_32 v (Vint (Int.repr 11)) = true /\ (**r ensured by verifier *) *)

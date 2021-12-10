@@ -160,124 +160,246 @@ Proof.
     intros. simpl.
     tauto.
   -
-  intros.
-  (** goal: correct_body _ _ (if x then ... *)
-  correct_forward.
-  (** goal: correct_body _ _ (bindM (getMemRegion_block_ptr ... *)
-  eapply correct_statement_seq_body.
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
     intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    intuition. clear - H1 H.
-    unfold match_elt in *;
-      unfold fst in *.
-    destruct (Maps.PTree.get _mr3 le0);auto.
-    simpl in *.
-    destruct H1 ; split; auto.
-    eapply same_my_memory_match_region;eauto.
-  }
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
-  intros.
-  {
+    (** goal: correct_body _ _ (if x then ... *)
+    correct_forward.
+    (** goal: correct_body _ _ (bindM (getMemRegion_block_ptr ... *)
+    eapply correct_statement_seq_body.
+    change_app_for_statement.
+    eapply correct_statement_call with (has_cast := false).
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    typeclasses eauto.
+    { unfold INV.
+      unfold var_inv_preserve.
+      intros.
+      unfold match_temp_env in *.
+      rewrite Forall_fold_right in *.
+      simpl in *.
+      intuition. clear - H1 H.
+      unfold match_elt in *;
+        unfold fst in *.
+      destruct (Maps.PTree.get _mr3 le0);auto.
+      simpl in *.
+      destruct H1 ; split; auto.
+      eapply same_my_memory_match_region;eauto.
+    }
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    prove_in_inv.
+    prove_in_inv.
+    reflexivity.
+    reflexivity.
     intros.
-    change (match_temp_env (((_well_chunk, Clightdefs.tbool, stateless match_bool true) :: INV)) le0 st0 m0) in H.
+    {
+      intros.
+      change (match_temp_env (((_well_chunk, Clightdefs.tbool, stateless match_bool true) :: INV)) le0 st0 m0) in H.
+      unfold INV in H.
+      get_invariant _mr3.
+      exists (v::nil).
+      split.
+      unfold map_opt. unfold exec_expr. rewrite p0.
+      reflexivity.
+      intros. simpl.
+      intuition. eauto.
+    }
+    intros.
+    (** goal: correct_body _ _ (bindM (getMemRegion_start_addr ... *)
+    eapply correct_statement_seq_body.
+    change_app_for_statement.
+    eapply correct_statement_call with (has_cast := false).
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    typeclasses eauto.
+    { unfold INV.
+      unfold var_inv_preserve.
+      intros.
+      unfold match_temp_env in *.
+      rewrite Forall_fold_right in *.
+      simpl in *.
+      intuition. clear - H3 H.
+      unfold match_elt in *;
+        unfold fst in *.
+      destruct (Maps.PTree.get _mr3 le1);auto.
+      simpl in *.
+      destruct H3 ; split; auto.
+      eapply same_my_memory_match_region;eauto.
+    }
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    prove_in_inv.
+    prove_in_inv.
+    reflexivity.
+    reflexivity.
+    intros.
+    change (match_temp_env ((_ptr, Clightdefs.tulong, correct_getMemRegion_block_ptr.match_res x)
+                              :: (_well_chunk, Clightdefs.tbool, stateless match_bool true) :: INV) le1 st1 m1) in H.
     unfold INV in H.
     get_invariant _mr3.
     exists (v::nil).
     split.
-    unfold map_opt. unfold exec_expr. rewrite p0.
+    unfold map_opt,exec_expr.
+    rewrite p0.
     reflexivity.
-    intros. simpl.
-    intuition. eauto.
-  }
-  intros.
-  (** goal: correct_body _ _ (bindM (getMemRegion_start_addr ... *)
-  eapply correct_statement_seq_body.
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
+    simpl. intros.
+    intuition eauto.
     intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    intuition. clear - H3 H.
-    unfold match_elt in *;
-      unfold fst in *.
-    destruct (Maps.PTree.get _mr3 le1);auto.
-    simpl in *.
-    destruct H3 ; split; auto.
-    eapply same_my_memory_match_region;eauto.
-  }
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
-  intros.
-  change (match_temp_env ((_ptr, Clightdefs.tulong, correct_getMemRegion_block_ptr.match_res x)
-         :: (_well_chunk, Clightdefs.tbool, stateless match_bool true) :: INV) le1 st1 m1) in H.
-  unfold INV in H.
-  get_invariant _mr3.
-  exists (v::nil).
-  split.
-  unfold map_opt,exec_expr.
-  rewrite p0.
-  reflexivity.
-  simpl. intros.
-  intuition eauto.
-  intros.
-  (** goal: correct_body _ _ (bindM (getMemRegion_block_size ... *)
-  eapply correct_statement_seq_body.
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
+    (** goal: correct_body _ _ (bindM (getMemRegion_block_size ... *)
+    eapply correct_statement_seq_body.
+    change_app_for_statement.
+    eapply correct_statement_call with (has_cast := false).
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    typeclasses eauto.
+    { unfold INV.
+      unfold var_inv_preserve.
+      intros.
+      unfold match_temp_env in *.
+      rewrite Forall_fold_right in *.
+      simpl in *.
+      intuition. clear - H4 H.
+      unfold match_elt in *;
+        unfold fst in *.
+      destruct (Maps.PTree.get _mr3 le2); auto.
+      simpl in *.
+      destruct H4; split; auto.
+      eapply same_my_memory_match_region;eauto.
+    }
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    prove_in_inv.
+    prove_in_inv.
+    reflexivity.
+    reflexivity.
     intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    intuition. clear - H4 H.
-    unfold match_elt in *;
-      unfold fst in *.
-    destruct (Maps.PTree.get _mr3 le2); auto.
-    simpl in *.
-    destruct H4; split; auto.
-    eapply same_my_memory_match_region;eauto.
-  }
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
-  intros.
+    change (match_temp_env ((_start, Clightdefs.tulong, correct_getMemRegion_start_addr.match_res x0)
+         :: (_ptr, Clightdefs.tulong, correct_getMemRegion_block_ptr.match_res x)
+         :: (_well_chunk, Clightdefs.tbool, stateless match_bool true) :: INV) le2 st2 m2) in H.
+    unfold INV in H.
+    get_invariant _mr3.
+    (**  exists lval : list val, _ [Etempvar _mr3 _] = Some lval *)
+    exists (v::nil).
+    split.
+    unfold map_opt, exec_expr.
+    rewrite p0; reflexivity.
+    simpl;intros.
+    intuition eauto.
+    intros.
+    (** goal:  correct_body _ _ (bindM (get_subl c0 x0) ... *)
+    eapply correct_statement_seq_body.
+    change_app_for_statement.
+    eapply correct_statement_call with (has_cast := false).
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    typeclasses eauto.
+    { unfold INV.
+      unfold var_inv_preserve.
+      intros.
+      unfold match_temp_env in *.
+      rewrite Forall_fold_right in *.
+      simpl in *.
+      intuition. clear - H5 H.
+      unfold match_elt in *;
+        unfold fst in *.
+      destruct (Maps.PTree.get _mr3 le3); auto.
+      simpl in *.
+      destruct H5; split; auto.
+      eapply same_my_memory_match_region;eauto.
+    }
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    prove_in_inv.
+    prove_in_inv.
+    reflexivity.
+    reflexivity.
+    intros.
+    change (match_temp_env ((_size, Clightdefs.tulong, correct_getMemRegion_block_size.match_res x1)
+         :: (_start, Clightdefs.tulong, correct_getMemRegion_start_addr.match_res x0)
+            :: (_ptr, Clightdefs.tulong, correct_getMemRegion_block_ptr.match_res x)
+               :: (_well_chunk, Clightdefs.tbool, stateless match_bool true) :: INV) le3 st3 m3) in H.
+    unfold INV in H.
+    get_invariant _addr0.
+    get_invariant _start.
+    (**  exists lval : list val, _ [(Etempvar _addr0 _); (Etempvar _start _)] = Some lval *)
+    exists ([v; v0]).
+    split.
+    unfold map_opt, exec_expr.
+    rewrite p0, p1; reflexivity.
+    simpl;intros.
+    intuition eauto.
+    intros.
+    (** goal:  correct_body _ _ (bindM (get_addl x2 (memory_chunk_to_val64 c1)) ... *)
+    unfold memory_chunk_to_val64.
+    eapply correct_statement_seq_body.
+    change_app_for_statement.
+    eapply correct_statement_call with (has_cast := false).
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    typeclasses eauto.
+    { unfold INV.
+      unfold var_inv_preserve.
+      intros.
+      unfold match_temp_env in *.
+      rewrite Forall_fold_right in *.
+      simpl in *.
+      intuition. clear - H6 H.
+      unfold match_elt in *;
+        unfold fst in *.
+      destruct (Maps.PTree.get _mr3 le4); auto.
+      simpl in *.
+      destruct H6; split; auto.
+      eapply same_my_memory_match_region;eauto.
+    }
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    prove_in_inv.
+    prove_in_inv.
+    reflexivity.
+    reflexivity.
+    intros.
+    change (match_temp_env ((_lo_ofs, Clightdefs.tulong, correct_get_subl.match_res x2)
+         :: (_size, Clightdefs.tulong, correct_getMemRegion_block_size.match_res x1)
+            :: (_start, Clightdefs.tulong, correct_getMemRegion_start_addr.match_res x0)
+               :: (_ptr, Clightdefs.tulong, correct_getMemRegion_block_ptr.match_res x)
+                  :: (_well_chunk, Clightdefs.tbool, stateless match_bool true) :: INV) le4 st4 m4) in H.
+    unfold INV in H.
+    get_invariant _lo_ofs.
+    get_invariant _chunk1.
+    unfold map_opt, exec_expr.
+    rewrite p0, p1.
+    unfold typeof.
+    unfold stateless, match_chunk in c3.
+    destruct c3 as (Hv0_eq & Hv0_casted).
+    rewrite Hv0_eq in *.
+    simpl.
+    eexists.
+    split.
+    reflexivity.
+    simpl.
+    (**  exists lval : list val, _ [Etempvar _lo_ofs _; Ecast (Etempvar _chunk1 _) _] = Some lval *)
+    exists ([v; (Vlong (v0)]).
+    split.
+   
+    rewrite p0, p1.
+    simpl.
+    unfold Cop.sem_cast; simpl. (**r `Maps.PTree.get _chunk1 le4 = Some v0` where v0 should be Vint *)
+    unfold Int.one. (** Vlong vs vint: we could generate u64 chunk by dx *)
+    destruct c1; rewrite Int.unsigned_repr. reflexivity.
+    reflexivity.
+    simpl;intros.
+    intuition eauto.
+
+    
   admit.
   intros.
   (** goal: correct_body _ _ (bindM (get_subl ... *)

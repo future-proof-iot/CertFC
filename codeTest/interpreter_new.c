@@ -922,7 +922,6 @@ void step(struct bpf_state* st, unsigned long long *l0, unsigned long long len0)
   }
 }
 
-/*
 void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned long long len1, unsigned int fuel1)
 {
   unsigned int fuel0;
@@ -935,7 +934,7 @@ void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned 
     fuel0 = fuel1 - 1U;
     pc1 = eval_pc(st);
     if (pc1 < len1) {
-      step(st, l1, len1); print_bpf_state(st);
+      step(st, l1, len1); 
       upd_pc_incr(st);
       f1 = eval_flag(st);
       if (f1 == 0) {
@@ -949,8 +948,8 @@ void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned 
       return;
     }
   }
-} */
-
+}
+/*
 void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned long long len1, unsigned int fuel1)
 {
   unsigned int fuel0;
@@ -959,7 +958,7 @@ void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned 
   for (int i=0; i< fuel1; i++){
     pc1 = eval_pc(st);
     if (pc1 < len1) {
-      step(st, l1, len1); /*print_bpf_state(st);*/
+      step(st, l1, len1); 
       upd_pc_incr(st);
       f1 = eval_flag(st);
       if (f1 == 0) {
@@ -975,6 +974,7 @@ void bpf_interpreter_aux(struct bpf_state *st, unsigned long long *l1, unsigned 
   upd_flag(st, -5);
   return;
 }
+*/
 
 unsigned long long bpf_interpreter(struct bpf_state *st, unsigned long long *l2, unsigned long long len2, unsigned int fuel2)
 {
