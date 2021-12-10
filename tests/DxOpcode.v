@@ -868,16 +868,16 @@ Definition Const_int64_to_opcode_mem_st_reg :=
 Close Scope Z_scope.
 
 Module Exports.
-  Definition opcode_alu64_immCompilableType  := opcode_alu64_immCompilableType.
-  Definition opcode_alu64_regCompilableType  := opcode_alu64_regCompilableType.
-  Definition opcode_alu32_immCompilableType  := opcode_alu32_immCompilableType.
-  Definition opcode_alu32_regCompilableType  := opcode_alu32_regCompilableType.
-  Definition opcode_branch_immCompilableType := opcode_branch_immCompilableType.
-  Definition opcode_branch_regCompilableType := opcode_branch_regCompilableType.
-  Definition opcode_mem_ld_immCompilableType := opcode_mem_ld_immCompilableType.
-  Definition opcode_mem_ld_regCompilableType := opcode_mem_ld_regCompilableType.
-  Definition opcode_mem_st_immCompilableType := opcode_mem_st_immCompilableType.
-  Definition opcode_mem_st_regCompilableType := opcode_mem_st_regCompilableType.
+  Definition opcode_alu64_immCompilableTypeMatchableType  := opcode_alu64_immCompilableTypeMatchableType.
+  Definition opcode_alu64_regCompilableTypeMatchableType  := opcode_alu64_regCompilableTypeMatchableType.
+  Definition opcode_alu32_immCompilableTypeMatchableType  := opcode_alu32_immCompilableTypeMatchableType.
+  Definition opcode_alu32_regCompilableTypeMatchableType  := opcode_alu32_regCompilableTypeMatchableType.
+  Definition opcode_branch_immCompilableTypeMatchableType := opcode_branch_immCompilableTypeMatchableType.
+  Definition opcode_branch_regCompilableTypeMatchableType := opcode_branch_regCompilableTypeMatchableType.
+  Definition opcode_mem_ld_immCompilableTypeMatchableType := opcode_mem_ld_immCompilableTypeMatchableType.
+  Definition opcode_mem_ld_regCompilableTypeMatchableType := opcode_mem_ld_regCompilableTypeMatchableType.
+  Definition opcode_mem_st_immCompilableTypeMatchableType := opcode_mem_st_immCompilableTypeMatchableType.
+  Definition opcode_mem_st_regCompilableTypeMatchableType := opcode_mem_st_regCompilableTypeMatchableType.
   Definition opcodeMatchableType             := opcodeMatchableType.
   Definition Const_int64_to_opcode_alu64_imm := Const_int64_to_opcode_alu64_imm.
   Definition Const_int64_to_opcode_alu64_reg := Const_int64_to_opcode_alu64_reg.

@@ -88,14 +88,15 @@ Definition upd_mem (m: Mem.mem) (st: state): state := {|
   bpf_m   := m;
 |}.
 
-(*
-Definition eval_mem_regions (st:state): memory_regions := snd st.
+Definition eval_mem_regions (st:state): memory_regions := bpf_mrs st.
 
-Definition upd_mem_regions (mrs: memory_regions) (st:state): state :=
-  let m  := fst (fst (fst st)) in
-  let rs := snd (fst (fst st)) in
-  let f  := snd (fst st) in
-    (m, rs, f, mrs).*)
+Definition upd_mem_regions (mrs: memory_regions) (st:state): state :={|
+  pc_loc  := pc_loc st;
+  regs_st := regs_st st;
+  flag    := flag st;
+  bpf_mrs := mrs;
+  bpf_m   := bpf_m st;
+|}.
 
 Definition load_mem (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
   match Mem.loadv chunk (bpf_m st) ptr with

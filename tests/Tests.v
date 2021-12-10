@@ -34,16 +34,31 @@ GenerateIntermediateRepresentation SymbolIRs
   upd_reg
   eval_flag
   upd_flag
+  eval_mem_regions
+  upd_mem_regions
   load_mem
   store_mem_imm
   store_mem_reg
   __
   list_get
-  get_opcode
   get_dst
+  reg64_to_reg32
   get_src
   get_offset
+  eval_offset
   get_immediate
+  eval_immediate
+  get_opcode_alu64_imm
+  get_opcode_alu64_reg
+  get_opcode_alu32_imm
+  get_opcode_alu32_reg
+  get_opcode_branch_imm
+  get_opcode_branch_reg
+  get_opcode_mem_ld_imm
+  get_opcode_mem_ld_reg
+  get_opcode_mem_st_imm
+  get_opcode_mem_st_reg
+  get_opcode
   get_addl
   get_subl
   getMemRegion_block_ptr
@@ -52,6 +67,16 @@ GenerateIntermediateRepresentation SymbolIRs
   is_well_chunk_bool
   check_mem_aux
   check_mem
+  step_opcode_alu64_imm
+  step_opcode_alu64_reg
+  step_opcode_alu32_imm
+  step_opcode_alu32_reg
+  step_opcode_branch_imm
+  step_opcode_branch_reg
+  step_opcode_mem_ld_imm
+  step_opcode_mem_ld_reg
+  step_opcode_mem_st_imm
+  step_opcode_mem_st_reg
   step
   bpf_interpreter_aux
   bpf_interpreter
