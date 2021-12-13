@@ -17,7 +17,11 @@ Require Import Int16 CoqIntegers DxIntegers InfComp.
 
 Definition valu32_t := val.
 
-Definition val32_32 := Vint int32_32.
+Definition val32_zero := Vint int32_0. (**r ==> Nonempty *)
+Definition val32_one  := Vint int32_1.   (**r ==> Readable *)
+Definition val32_2    := Vint int32_2. (**r ==> Writable *)
+Definition val32_3    := Vint int32_3. (**r ==> Freeable *)
+Definition val32_32   := Vint int32_32.
 
 (** Type signature: val -> val -> option val
     we use `val32_divu` to replace `Val.divu`
@@ -182,7 +186,10 @@ Definition valU32CompilableType :=
 Definition valU32SymbolType :=
   MkCompilableSymbolType nil (Some valU32CompilableType).
 
-Definition Const_val32_zero := constant valU32SymbolType Vzero C_U32_zero.
+Definition Const_val32_zero := constant valU32SymbolType val32_zero C_U32_zero.
+Definition Const_val32_one  := constant valU32SymbolType val32_one  C_U32_one.
+Definition Const_val32_2    := constant valU32SymbolType val32_2    C_U32_2.
+Definition Const_val32_3    := constant valU32SymbolType val32_3    C_U32_3.
 
 Definition Const_val32_32 := constant valU32SymbolType val32_32 C_U32_32.
 
@@ -424,6 +431,9 @@ Definition Const_valU32Toval64 :=
 Module Exports.
   Definition valU32CompilableType   := valU32CompilableType.
   Definition Const_val32_zero       := Const_val32_zero.
+  Definition Const_val32_one        := Const_val32_one.
+  Definition Const_val32_2          := Const_val32_2.
+  Definition Const_val32_3          := Const_val32_3.
   Definition Const_val32_32         := Const_val32_32.
   Definition Const_valU32_neg       := Const_valU32_neg.
   Definition Const_valU32_add       := Const_valU32_add.

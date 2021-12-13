@@ -75,11 +75,15 @@ Definition ___compcert_va_composite : ident := $"__compcert_va_composite".
 Definition ___compcert_va_float64 : ident := $"__compcert_va_float64".
 Definition ___compcert_va_int32 : ident := $"__compcert_va_int32".
 Definition ___compcert_va_int64 : ident := $"__compcert_va_int64".
+Definition ___stringlit_1 : ident := $"__stringlit_1".
+Definition ___stringlit_2 : ident := $"__stringlit_2".
+Definition ___stringlit_3 : ident := $"__stringlit_3".
+Definition ___stringlit_4 : ident := $"__stringlit_4".
+Definition ___stringlit_5 : ident := $"__stringlit_5".
+Definition _add_mem_region : ident := $"add_mem_region".
+Definition _add_mem_region_ctx : ident := $"add_mem_region_ctx".
 Definition _addr : ident := $"addr".
-Definition _addr0 : ident := $"addr0".
-Definition _addr1 : ident := $"addr1".
-Definition _addr_dst : ident := $"addr_dst".
-Definition _addr_src : ident := $"addr_src".
+Definition _block_perm : ident := $"block_perm".
 Definition _block_ptr : ident := $"block_ptr".
 Definition _block_size : ident := $"block_size".
 Definition _bpf_ctx : ident := $"bpf_ctx".
@@ -87,96 +91,96 @@ Definition _bpf_flag : ident := $"bpf_flag".
 Definition _bpf_interpreter : ident := $"bpf_interpreter".
 Definition _bpf_interpreter_aux : ident := $"bpf_interpreter_aux".
 Definition _bpf_state : ident := $"bpf_state".
-Definition _bpf_stk : ident := $"bpf_stk".
-Definition _check_ldxb : ident := $"check_ldxb".
-Definition _check_ldxdw : ident := $"check_ldxdw".
-Definition _check_ldxh : ident := $"check_ldxh".
-Definition _check_ldxw : ident := $"check_ldxw".
+Definition _check_ld : ident := $"check_ld".
 Definition _check_mem : ident := $"check_mem".
+Definition _check_mem__1 : ident := $"check_mem__1".
 Definition _check_mem_aux : ident := $"check_mem_aux".
-Definition _check_mem_content : ident := $"check_mem_content".
-Definition _check_mem_ctx : ident := $"check_mem_ctx".
-Definition _check_mem_stk : ident := $"check_mem_stk".
-Definition _check_stb : ident := $"check_stb".
-Definition _check_stdw : ident := $"check_stdw".
-Definition _check_sth : ident := $"check_sth".
-Definition _check_stw : ident := $"check_stw".
-Definition _check_stxb : ident := $"check_stxb".
-Definition _check_stxdw : ident := $"check_stxdw".
-Definition _check_stxh : ident := $"check_stxh".
-Definition _check_stxw : ident := $"check_stxw".
+Definition _check_mem_aux2 : ident := $"check_mem_aux2".
+Definition _check_st : ident := $"check_st".
 Definition _chunk : ident := $"chunk".
-Definition _chunk0 : ident := $"chunk0".
-Definition _chunk1 : ident := $"chunk1".
-Definition _chunk2 : ident := $"chunk2".
-Definition _content : ident := $"content".
+Definition _comp_and_0x08_byte : ident := $"comp_and_0x08_byte".
+Definition _cur_mr : ident := $"cur_mr".
+Definition _d : ident := $"d".
 Definition _dst : ident := $"dst".
+Definition _dst32 : ident := $"dst32".
 Definition _dst64 : ident := $"dst64".
 Definition _eval_flag : ident := $"eval_flag".
+Definition _eval_immediate : ident := $"eval_immediate".
+Definition _eval_mem_num : ident := $"eval_mem_num".
+Definition _eval_mem_regions : ident := $"eval_mem_regions".
 Definition _eval_pc : ident := $"eval_pc".
 Definition _eval_reg : ident := $"eval_reg".
 Definition _f : ident := $"f".
-Definition _f1 : ident := $"f1".
-Definition _f2 : ident := $"f2".
+Definition _fuel : ident := $"fuel".
 Definition _fuel0 : ident := $"fuel0".
-Definition _fuel1 : ident := $"fuel1".
-Definition _fuel2 : ident := $"fuel2".
-Definition _getMemRegion_block_ptr : ident := $"getMemRegion_block_ptr".
-Definition _getMemRegion_block_size : ident := $"getMemRegion_block_size".
-Definition _getMemRegion_start_addr : ident := $"getMemRegion_start_addr".
 Definition _get_addl : ident := $"get_addl".
 Definition _get_dst : ident := $"get_dst".
 Definition _get_immediate : ident := $"get_immediate".
+Definition _get_mem_region : ident := $"get_mem_region".
 Definition _get_offset : ident := $"get_offset".
 Definition _get_opcode : ident := $"get_opcode".
+Definition _get_opcode_alu32 : ident := $"get_opcode_alu32".
+Definition _get_opcode_alu64 : ident := $"get_opcode_alu64".
+Definition _get_opcode_branch : ident := $"get_opcode_branch".
+Definition _get_opcode_ins : ident := $"get_opcode_ins".
+Definition _get_opcode_mem_ld_imm : ident := $"get_opcode_mem_ld_imm".
+Definition _get_opcode_mem_ld_reg : ident := $"get_opcode_mem_ld_reg".
+Definition _get_opcode_mem_st_imm : ident := $"get_opcode_mem_st_imm".
+Definition _get_opcode_mem_st_reg : ident := $"get_opcode_mem_st_reg".
 Definition _get_src : ident := $"get_src".
 Definition _get_subl : ident := $"get_subl".
 Definition _hi_ofs : ident := $"hi_ofs".
 Definition _i : ident := $"i".
-Definition _i0 : ident := $"i0".
-Definition _i1 : ident := $"i1".
-Definition _idx0 : ident := $"idx0".
+Definition _idx : ident := $"idx".
 Definition _imm : ident := $"imm".
+Definition _imm64 : ident := $"imm64".
 Definition _ins : ident := $"ins".
-Definition _ins0 : ident := $"ins0".
-Definition _ins1 : ident := $"ins1".
-Definition _ins2 : ident := $"ins2".
+Definition _is_imm : ident := $"is_imm".
 Definition _is_well_chunk_bool : ident := $"is_well_chunk_bool".
 Definition _l : ident := $"l".
-Definition _l0 : ident := $"l0".
-Definition _l1 : ident := $"l1".
-Definition _l2 : ident := $"l2".
-Definition _len0 : ident := $"len0".
-Definition _len1 : ident := $"len1".
-Definition _len2 : ident := $"len2".
+Definition _len : ident := $"len".
 Definition _list_get : ident := $"list_get".
 Definition _lo_ofs : ident := $"lo_ofs".
 Definition _load_mem : ident := $"load_mem".
 Definition _main : ident := $"main".
+Definition _mem_num : ident := $"mem_num".
+Definition _mem_reg_num : ident := $"mem_reg_num".
 Definition _memory_region : ident := $"memory_region".
-Definition _memory_regions : ident := $"memory_regions".
-Definition _mr0 : ident := $"mr0".
-Definition _mr1 : ident := $"mr1".
-Definition _mr2 : ident := $"mr2".
-Definition _mr3 : ident := $"mr3".
+Definition _mr : ident := $"mr".
 Definition _mrs : ident := $"mrs".
-Definition _mrs4 : ident := $"mrs4".
+Definition _n : ident := $"n".
 Definition _next_imm : ident := $"next_imm".
 Definition _next_ins : ident := $"next_ins".
+Definition _num : ident := $"num".
 Definition _ofs : ident := $"ofs".
+Definition _ofs64 : ident := $"ofs64".
 Definition _op : ident := $"op".
+Definition _opc : ident := $"opc".
+Definition _opcode_alu32 : ident := $"opcode_alu32".
+Definition _opcode_alu64 : ident := $"opcode_alu64".
+Definition _opcode_jmp : ident := $"opcode_jmp".
+Definition _opcode_ld : ident := $"opcode_ld".
+Definition _opcode_st : ident := $"opcode_st".
 Definition _pc : ident := $"pc".
-Definition _pc1 : ident := $"pc1".
-Definition _ptr : ident := $"ptr".
+Definition _perm : ident := $"perm".
+Definition _print_bpf_state : ident := $"print_bpf_state".
+Definition _printf : ident := $"printf".
+Definition _reg64_to_reg32 : ident := $"reg64_to_reg32".
 Definition _regsmap : ident := $"regsmap".
-Definition _size : ident := $"size".
 Definition _src : ident := $"src".
+Definition _src32 : ident := $"src32".
 Definition _src64 : ident := $"src64".
 Definition _st : ident := $"st".
-Definition _start : ident := $"start".
 Definition _start_addr : ident := $"start_addr".
 Definition _state_pc : ident := $"state_pc".
 Definition _step : ident := $"step".
+Definition _step_opcode_alu32 : ident := $"step_opcode_alu32".
+Definition _step_opcode_alu64 : ident := $"step_opcode_alu64".
+Definition _step_opcode_branch : ident := $"step_opcode_branch".
+Definition _step_opcode_mem_ld_imm : ident := $"step_opcode_mem_ld_imm".
+Definition _step_opcode_mem_ld_reg : ident := $"step_opcode_mem_ld_reg".
+Definition _step_opcode_mem_st_imm : ident := $"step_opcode_mem_st_imm".
+Definition _step_opcode_mem_st_reg : ident := $"step_opcode_mem_st_reg".
 Definition _store_mem_imm : ident := $"store_mem_imm".
 Definition _store_mem_reg : ident := $"store_mem_reg".
 Definition _upd_flag : ident := $"upd_flag".
@@ -184,15 +188,9 @@ Definition _upd_pc : ident := $"upd_pc".
 Definition _upd_pc_incr : ident := $"upd_pc_incr".
 Definition _upd_reg : ident := $"upd_reg".
 Definition _v : ident := $"v".
-Definition _v_xb : ident := $"v_xb".
-Definition _v_xdw : ident := $"v_xdw".
-Definition _v_xh : ident := $"v_xh".
-Definition _v_xw : ident := $"v_xw".
 Definition _well_chunk : ident := $"well_chunk".
 Definition _x : ident := $"x".
-Definition _x1 : ident := $"x1".
 Definition _y : ident := $"y".
-Definition _y1 : ident := $"y1".
 Definition _t'1 : ident := 128%positive.
 Definition _t'10 : ident := 137%positive.
 Definition _t'11 : ident := 138%positive.
@@ -216,12 +214,141 @@ Definition _t'27 : ident := 154%positive.
 Definition _t'28 : ident := 155%positive.
 Definition _t'29 : ident := 156%positive.
 Definition _t'3 : ident := 130%positive.
+Definition _t'30 : ident := 157%positive.
+Definition _t'31 : ident := 158%positive.
+Definition _t'32 : ident := 159%positive.
+Definition _t'33 : ident := 160%positive.
+Definition _t'34 : ident := 161%positive.
+Definition _t'35 : ident := 162%positive.
+Definition _t'36 : ident := 163%positive.
+Definition _t'37 : ident := 164%positive.
+Definition _t'38 : ident := 165%positive.
+Definition _t'39 : ident := 166%positive.
 Definition _t'4 : ident := 131%positive.
+Definition _t'40 : ident := 167%positive.
+Definition _t'41 : ident := 168%positive.
+Definition _t'42 : ident := 169%positive.
+Definition _t'43 : ident := 170%positive.
+Definition _t'44 : ident := 171%positive.
+Definition _t'45 : ident := 172%positive.
+Definition _t'46 : ident := 173%positive.
+Definition _t'47 : ident := 174%positive.
+Definition _t'48 : ident := 175%positive.
+Definition _t'49 : ident := 176%positive.
 Definition _t'5 : ident := 132%positive.
+Definition _t'50 : ident := 177%positive.
 Definition _t'6 : ident := 133%positive.
 Definition _t'7 : ident := 134%positive.
 Definition _t'8 : ident := 135%positive.
 Definition _t'9 : ident := 136%positive.
+
+Definition v___stringlit_2 := {|
+  gvar_info := (tarray tschar 10);
+  gvar_init := (Init_int8 (Int.repr 102) :: Init_int8 (Int.repr 108) ::
+                Init_int8 (Int.repr 97) :: Init_int8 (Int.repr 103) ::
+                Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
+                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 100) ::
+                Init_int8 (Int.repr 10) :: Init_int8 (Int.repr 0) :: nil);
+  gvar_readonly := true;
+  gvar_volatile := false
+|}.
+
+Definition v___stringlit_5 := {|
+  gvar_info := (tarray tschar 2);
+  gvar_init := (Init_int8 (Int.repr 10) :: Init_int8 (Int.repr 0) :: nil);
+  gvar_readonly := true;
+  gvar_volatile := false
+|}.
+
+Definition v___stringlit_3 := {|
+  gvar_info := (tarray tschar 4);
+  gvar_init := (Init_int8 (Int.repr 82) :: Init_int8 (Int.repr 37) ::
+                Init_int8 (Int.repr 100) :: Init_int8 (Int.repr 0) :: nil);
+  gvar_readonly := true;
+  gvar_volatile := false
+|}.
+
+Definition v___stringlit_4 := {|
+  gvar_info := (tarray tschar 7);
+  gvar_init := (Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
+                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 108) ::
+                Init_int8 (Int.repr 117) :: Init_int8 (Int.repr 59) ::
+                Init_int8 (Int.repr 0) :: nil);
+  gvar_readonly := true;
+  gvar_volatile := false
+|}.
+
+Definition v___stringlit_1 := {|
+  gvar_info := (tarray tschar 9);
+  gvar_init := (Init_int8 (Int.repr 112) :: Init_int8 (Int.repr 99) ::
+                Init_int8 (Int.repr 61) :: Init_int8 (Int.repr 32) ::
+                Init_int8 (Int.repr 37) :: Init_int8 (Int.repr 108) ::
+                Init_int8 (Int.repr 117) :: Init_int8 (Int.repr 10) ::
+                Init_int8 (Int.repr 0) :: nil);
+  gvar_readonly := true;
+  gvar_volatile := false
+|}.
+
+Definition f_print_bpf_state := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_i, tint) :: nil);
+  fn_body :=
+(Ssequence
+  (Scall None
+    (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
+                    {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+    ((Evar ___stringlit_1 (tarray tschar 9)) ::
+     (Ecast
+       (Efield
+         (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+           (Tstruct _bpf_state noattr)) _state_pc tuint) tulong) :: nil))
+  (Ssequence
+    (Scall None
+      (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
+                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+      ((Evar ___stringlit_2 (tarray tschar 10)) ::
+       (Efield
+         (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+           (Tstruct _bpf_state noattr)) _bpf_flag tint) :: nil))
+    (Ssequence
+      (Ssequence
+        (Sset _i (Econst_int (Int.repr 0) tint))
+        (Sloop
+          (Ssequence
+            (Sifthenelse (Ebinop Olt (Etempvar _i tint)
+                           (Econst_int (Int.repr 11) tint) tint)
+              Sskip
+              Sbreak)
+            (Ssequence
+              (Scall None
+                (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
+                                {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+                ((Evar ___stringlit_3 (tarray tschar 4)) ::
+                 (Etempvar _i tint) :: nil))
+              (Scall None
+                (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
+                                {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+                ((Evar ___stringlit_4 (tarray tschar 7)) ::
+                 (Ecast
+                   (Ederef
+                     (Ebinop Oadd
+                       (Efield
+                         (Ederef
+                           (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+                           (Tstruct _bpf_state noattr)) _regsmap
+                         (tarray tulong 11)) (Etempvar _i tint)
+                       (tptr tulong)) tulong) tulong) :: nil))))
+          (Sset _i
+            (Ebinop Oadd (Etempvar _i tint) (Econst_int (Int.repr 1) tint)
+              tint))))
+      (Scall None
+        (Evar _printf (Tfunction (Tcons (tptr tschar) Tnil) tint
+                        {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+        ((Evar ___stringlit_5 (tarray tschar 2)) :: nil)))))
+|}.
 
 Definition f_eval_pc := {|
   fn_return := tulong;
@@ -232,7 +359,7 @@ Definition f_eval_pc := {|
   fn_body :=
 (Sreturn (Some (Efield
                  (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                   (Tstruct _bpf_state noattr)) _state_pc tulong)))
+                   (Tstruct _bpf_state noattr)) _state_pc tuint)))
 |}.
 
 Definition f_upd_pc := {|
@@ -247,7 +374,7 @@ Definition f_upd_pc := {|
   (Sassign
     (Efield
       (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-        (Tstruct _bpf_state noattr)) _state_pc tulong) (Etempvar _pc tulong))
+        (Tstruct _bpf_state noattr)) _state_pc tuint) (Etempvar _pc tulong))
   (Sreturn None))
 |}.
 
@@ -262,12 +389,12 @@ Definition f_upd_pc_incr := {|
   (Sassign
     (Efield
       (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-        (Tstruct _bpf_state noattr)) _state_pc tulong)
+        (Tstruct _bpf_state noattr)) _state_pc tuint)
     (Ebinop Oadd
       (Efield
         (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-          (Tstruct _bpf_state noattr)) _state_pc tulong)
-      (Econst_int (Int.repr 1) tint) tulong))
+          (Tstruct _bpf_state noattr)) _state_pc tuint)
+      (Econst_int (Int.repr 1) tint) tuint))
   (Sreturn None))
 |}.
 
@@ -334,6 +461,97 @@ Definition f_upd_flag := {|
       (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
         (Tstruct _bpf_state noattr)) _bpf_flag tint) (Etempvar _f tint))
   (Sreturn None))
+|}.
+
+Definition f_eval_mem_num := {|
+  fn_return := tuint;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Efield
+                 (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+                   (Tstruct _bpf_state noattr)) _mem_num tuint)))
+|}.
+
+Definition f_eval_mem_regions := {|
+  fn_return := (tptr (Tstruct _memory_region noattr));
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Efield
+                 (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+                   (Tstruct _bpf_state noattr)) _mrs
+                 (tptr (Tstruct _memory_region noattr)))))
+|}.
+
+Definition f_add_mem_region := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
+                (_mr, (tptr (Tstruct _memory_region noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Ssequence
+  (Sassign
+    (Ederef
+      (Ebinop Oadd
+        (Efield
+          (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+            (Tstruct _bpf_state noattr)) _mrs
+          (tptr (Tstruct _memory_region noattr)))
+        (Efield
+          (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+            (Tstruct _bpf_state noattr)) _mem_num tuint)
+        (tptr (Tstruct _memory_region noattr)))
+      (Tstruct _memory_region noattr))
+    (Ederef (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+      (Tstruct _memory_region noattr)))
+  (Ssequence
+    (Sassign
+      (Efield
+        (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+          (Tstruct _bpf_state noattr)) _mem_num tuint)
+      (Ebinop Oadd
+        (Efield
+          (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+            (Tstruct _bpf_state noattr)) _mem_num tuint)
+        (Econst_int (Int.repr 1) tint) tuint))
+    (Sreturn None)))
+|}.
+
+Definition f_add_mem_region_ctx := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
+                (_mr, (tptr (Tstruct _memory_region noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Ssequence
+  (Sassign
+    (Ederef
+      (Ebinop Oadd
+        (Efield
+          (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+            (Tstruct _bpf_state noattr)) _mrs
+          (tptr (Tstruct _memory_region noattr)))
+        (Econst_int (Int.repr 0) tint)
+        (tptr (Tstruct _memory_region noattr)))
+      (Tstruct _memory_region noattr))
+    (Ederef (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+      (Tstruct _memory_region noattr)))
+  (Ssequence
+    (Sassign
+      (Efield
+        (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
+          (Tstruct _bpf_state noattr)) _mem_num tuint)
+      (Econst_int (Int.repr 1) tint))
+    (Sreturn None)))
 |}.
 
 Definition f_load_mem := {|
@@ -465,79 +683,222 @@ Definition f_store_mem_imm := {|
 Definition f_list_get := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_l, (tptr tulong)) :: (_idx0, tulong) :: nil);
+  fn_params := ((_l, (tptr tulong)) :: (_idx, tint) :: nil);
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
 (Sreturn (Some (Ederef
                  (Ebinop Oadd (Etempvar _l (tptr tulong))
-                   (Etempvar _idx0 tulong) (tptr tulong)) tulong)))
+                   (Etempvar _idx tint) (tptr tulong)) tulong)))
 |}.
 
-Definition f_get_opcode := {|
-  fn_return := tuchar;
+Definition f_get_mem_region := {|
+  fn_return := (tptr (Tstruct _memory_region noattr));
   fn_callconv := cc_default;
-  fn_params := ((_ins0, tulong) :: nil);
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_n, tuint) ::
+                nil);
   fn_vars := nil;
-  fn_temps := nil;
+  fn_temps := ((_mrs, (tptr (Tstruct _memory_region noattr))) ::
+               (_t'1, (tptr (Tstruct _memory_region noattr))) :: nil);
   fn_body :=
-(Sreturn (Some (Ecast
-                 (Ebinop Oand (Etempvar _ins0 tulong)
-                   (Econst_long (Int64.repr 255) tulong) tulong) tuchar)))
+(Ssequence
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _eval_mem_regions (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  Tnil)
+                                (tptr (Tstruct _memory_region noattr))
+                                cc_default))
+      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+    (Sset _mrs (Etempvar _t'1 (tptr (Tstruct _memory_region noattr)))))
+  (Sreturn (Some (Ebinop Oadd
+                   (Etempvar _mrs (tptr (Tstruct _memory_region noattr)))
+                   (Etempvar _n tuint)
+                   (tptr (Tstruct _memory_region noattr))))))
 |}.
 
 Definition f_get_dst := {|
   fn_return := tuint;
   fn_callconv := cc_default;
-  fn_params := ((_ins1, tulong) :: nil);
+  fn_params := ((_ins, tulong) :: nil);
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
 (Sreturn (Some (Ecast
                  (Ebinop Oshr
-                   (Ebinop Oand (Etempvar _ins1 tulong)
+                   (Ebinop Oand (Etempvar _ins tulong)
                      (Econst_long (Int64.repr 4095) tulong) tulong)
                    (Econst_long (Int64.repr 8) tulong) tulong) tuint)))
+|}.
+
+Definition f_reg64_to_reg32 := {|
+  fn_return := tuint;
+  fn_callconv := cc_default;
+  fn_params := ((_d, tulong) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast (Etempvar _d tulong) tuint)))
 |}.
 
 Definition f_get_src := {|
   fn_return := tuint;
   fn_callconv := cc_default;
-  fn_params := ((_ins2, tulong) :: nil);
+  fn_params := ((_ins, tulong) :: nil);
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
 (Sreturn (Some (Ecast
                  (Ebinop Oshr
-                   (Ebinop Oand (Etempvar _ins2 tulong)
+                   (Ebinop Oand (Etempvar _ins tulong)
                      (Econst_long (Int64.repr 65535) tulong) tulong)
                    (Econst_long (Int64.repr 12) tulong) tulong) tuint)))
 |}.
 
 Definition f_get_offset := {|
-  fn_return := tshort;
+  fn_return := tint;
   fn_callconv := cc_default;
-  fn_params := ((_i0, tulong) :: nil);
+  fn_params := ((_ins, tulong) :: nil);
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
 (Sreturn (Some (Ecast
-                 (Ebinop Oshr
-                   (Ebinop Oshl (Etempvar _i0 tulong)
-                     (Econst_long (Int64.repr 32) tulong) tulong)
-                   (Econst_long (Int64.repr 48) tulong) tulong) tshort)))
+                 (Ecast
+                   (Ebinop Oshr
+                     (Ebinop Oshl (Etempvar _ins tulong)
+                       (Econst_long (Int64.repr 32) tulong) tulong)
+                     (Econst_long (Int64.repr 48) tulong) tulong) tshort)
+                 tint)))
 |}.
 
 Definition f_get_immediate := {|
   fn_return := tint;
   fn_callconv := cc_default;
-  fn_params := ((_i1, tulong) :: nil);
+  fn_params := ((_ins, tulong) :: nil);
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
 (Sreturn (Some (Ecast
-                 (Ebinop Oshr (Etempvar _i1 tulong)
+                 (Ebinop Oshr (Etempvar _ins tulong)
                    (Econst_long (Int64.repr 32) tulong) tulong) tint)))
+|}.
+
+Definition f_eval_immediate := {|
+  fn_return := tulong;
+  fn_callconv := cc_default;
+  fn_params := ((_ins, tint) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast (Etempvar _ins tint) tulong)))
+|}.
+
+Definition f_get_opcode_ins := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_ins, tulong) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _ins tulong)
+                   (Econst_long (Int64.repr 255) tulong) tulong) tuchar)))
+|}.
+
+Definition f_get_opcode_alu64 := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 240) tint) tint) tuchar)))
+|}.
+
+Definition f_get_opcode_alu32 := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 240) tint) tint) tuchar)))
+|}.
+
+Definition f_get_opcode_branch := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 240) tint) tint) tuchar)))
+|}.
+
+Definition f_get_opcode_mem_ld_imm := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 255) tint) tint) tuchar)))
+|}.
+
+Definition f_get_opcode_mem_ld_reg := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 255) tint) tint) tuchar)))
+|}.
+
+Definition f_get_opcode_mem_st_imm := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 255) tint) tint) tuchar)))
+|}.
+
+Definition f_get_opcode_mem_st_reg := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 255) tint) tint) tuchar)))
+|}.
+
+Definition f_get_opcode := {|
+  fn_return := tuchar;
+  fn_callconv := cc_default;
+  fn_params := ((_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ecast
+                 (Ebinop Oand (Etempvar _op tuchar)
+                   (Econst_int (Int.repr 7) tint) tint) tuchar)))
 |}.
 
 Definition f_get_addl := {|
@@ -553,58 +914,21 @@ Definition f_get_addl := {|
 Definition f_get_subl := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_x1, tulong) :: (_y1, tulong) :: nil);
+  fn_params := ((_x, tulong) :: (_y, tulong) :: nil);
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Sreturn (Some (Ebinop Osub (Etempvar _x1 tulong) (Etempvar _y1 tulong)
-                 tulong)))
-|}.
-
-Definition f_getMemRegion_block_ptr := {|
-  fn_return := tulong;
-  fn_callconv := cc_default;
-  fn_params := ((_mr0, (tptr (Tstruct _memory_region noattr))) :: nil);
-  fn_vars := nil;
-  fn_temps := nil;
-  fn_body :=
-(Sreturn (Some (Econst_long (Int64.repr 1) tulong)))
-|}.
-
-Definition f_getMemRegion_start_addr := {|
-  fn_return := tulong;
-  fn_callconv := cc_default;
-  fn_params := ((_mr1, (tptr (Tstruct _memory_region noattr))) :: nil);
-  fn_vars := nil;
-  fn_temps := nil;
-  fn_body :=
-(Sreturn (Some (Efield
-                 (Ederef
-                   (Etempvar _mr1 (tptr (Tstruct _memory_region noattr)))
-                   (Tstruct _memory_region noattr)) _start_addr tulong)))
-|}.
-
-Definition f_getMemRegion_block_size := {|
-  fn_return := tulong;
-  fn_callconv := cc_default;
-  fn_params := ((_mr2, (tptr (Tstruct _memory_region noattr))) :: nil);
-  fn_vars := nil;
-  fn_temps := nil;
-  fn_body :=
-(Sreturn (Some (Efield
-                 (Ederef
-                   (Etempvar _mr2 (tptr (Tstruct _memory_region noattr)))
-                   (Tstruct _memory_region noattr)) _block_size tulong)))
+(Sreturn (Some (Ebinop Osub (Etempvar _x tulong) (Etempvar _y tulong) tulong)))
 |}.
 
 Definition f_is_well_chunk_bool := {|
   fn_return := tbool;
   fn_callconv := cc_default;
-  fn_params := ((_chunk0, tuint) :: nil);
+  fn_params := ((_chunk, tuint) :: nil);
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Sswitch (Etempvar _chunk0 tuint)
+(Sswitch (Etempvar _chunk tuint)
   (LScons (Some 1)
     (Sreturn (Some (Econst_int (Int.repr 1) tint)))
     (LScons (Some 2)
@@ -616,303 +940,482 @@ Definition f_is_well_chunk_bool := {|
           (LScons None (Sreturn (Some (Econst_int (Int.repr 0) tint))) LSnil))))))
 |}.
 
-Definition f_check_mem_aux := {|
+Definition f_check_mem_aux2 := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_mr3, (tptr (Tstruct _memory_region noattr))) ::
-                (_addr0, tulong) :: (_chunk1, tuint) :: nil);
+  fn_params := ((_mr, (tptr (Tstruct _memory_region noattr))) ::
+                (_addr, tulong) :: (_chunk, tuint) :: nil);
   fn_vars := nil;
-  fn_temps := ((_well_chunk, tbool) :: (_ptr, tulong) :: (_start, tulong) ::
-               (_size, tulong) :: (_lo_ofs, tulong) :: (_hi_ofs, tulong) ::
-               (_t'8, tint) :: (_t'7, tint) :: (_t'6, tulong) ::
-               (_t'5, tulong) :: (_t'4, tulong) :: (_t'3, tulong) ::
-               (_t'2, tulong) :: (_t'1, tbool) :: nil);
+  fn_temps := ((_well_chunk, tbool) :: (_lo_ofs, tulong) ::
+               (_hi_ofs, tulong) :: (_t'5, tint) :: (_t'4, tint) ::
+               (_t'3, tulong) :: (_t'2, tulong) :: (_t'1, tbool) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
     (Scall (Some _t'1)
       (Evar _is_well_chunk_bool (Tfunction (Tcons tuint Tnil) tbool
                                   cc_default))
-      ((Etempvar _chunk1 tuint) :: nil))
+      ((Etempvar _chunk tuint) :: nil))
     (Sset _well_chunk (Ecast (Etempvar _t'1 tbool) tbool)))
   (Sifthenelse (Etempvar _well_chunk tbool)
     (Ssequence
       (Ssequence
         (Scall (Some _t'2)
-          (Evar _getMemRegion_block_ptr (Tfunction
-                                          (Tcons
-                                            (tptr (Tstruct _memory_region noattr))
-                                            Tnil) tulong cc_default))
-          ((Etempvar _mr3 (tptr (Tstruct _memory_region noattr))) :: nil))
-        (Sset _ptr (Etempvar _t'2 tulong)))
+          (Evar _get_subl (Tfunction (Tcons tulong (Tcons tulong Tnil))
+                            tulong cc_default))
+          ((Etempvar _addr tulong) ::
+           (Efield
+             (Ederef (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+               (Tstruct _memory_region noattr)) _start_addr tulong) :: nil))
+        (Sset _lo_ofs (Etempvar _t'2 tulong)))
       (Ssequence
         (Ssequence
           (Scall (Some _t'3)
-            (Evar _getMemRegion_start_addr (Tfunction
-                                             (Tcons
-                                               (tptr (Tstruct _memory_region noattr))
-                                               Tnil) tulong cc_default))
-            ((Etempvar _mr3 (tptr (Tstruct _memory_region noattr))) :: nil))
-          (Sset _start (Etempvar _t'3 tulong)))
+            (Evar _get_addl (Tfunction (Tcons tulong (Tcons tulong Tnil))
+                              tulong cc_default))
+            ((Etempvar _lo_ofs tulong) ::
+             (Ecast (Etempvar _chunk tuint) tulong) :: nil))
+          (Sset _hi_ofs (Etempvar _t'3 tulong)))
+        (Ssequence
+          (Sifthenelse (Ebinop Ole (Econst_long (Int64.repr 0) tulong)
+                         (Etempvar _lo_ofs tulong) tint)
+            (Sset _t'5
+              (Ecast
+                (Ebinop Olt (Etempvar _hi_ofs tulong)
+                  (Efield
+                    (Ederef
+                      (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+                      (Tstruct _memory_region noattr)) _block_size tuint)
+                  tint) tbool))
+            (Sset _t'5 (Econst_int (Int.repr 0) tint)))
+          (Sifthenelse (Etempvar _t'5 tint)
+            (Ssequence
+              (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tulong)
+                             (Ebinop Osub
+                               (Econst_long (Int64.repr (-1)) tulong)
+                               (Ecast (Etempvar _chunk tuint) tulong) tulong)
+                             tint)
+                (Sset _t'4
+                  (Ecast
+                    (Ebinop Oeq (Econst_long (Int64.repr 0) tulong)
+                      (Ebinop Omod (Etempvar _lo_ofs tulong)
+                        (Ecast (Etempvar _chunk tuint) tulong) tulong) tint)
+                    tbool))
+                (Sset _t'4 (Econst_int (Int.repr 0) tint)))
+              (Sifthenelse (Etempvar _t'4 tint)
+                (Sreturn (Some (Ebinop Oadd
+                                 (Econst_long (Int64.repr 1) tulong)
+                                 (Etempvar _lo_ofs tulong) tulong)))
+                (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
+            (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))))
+    (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
+|}.
+
+Definition f_check_mem_aux := {|
+  fn_return := tulong;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_num, tuint) ::
+                (_perm, tuint) :: (_chunk, tuint) :: (_addr, tulong) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_n, tuint) ::
+               (_cur_mr, (tptr (Tstruct _memory_region noattr))) ::
+               (_check_mem__1, tulong) :: (_t'4, tulong) :: (_t'3, tulong) ::
+               (_t'2, tulong) ::
+               (_t'1, (tptr (Tstruct _memory_region noattr))) :: nil);
+  fn_body :=
+(Sifthenelse (Ebinop Oeq (Etempvar _num tuint)
+               (Econst_int (Int.repr 0) tuint) tint)
+  (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))
+  (Ssequence
+    (Sset _n
+      (Ebinop Osub (Etempvar _num tuint) (Econst_int (Int.repr 1) tuint)
+        tuint))
+    (Ssequence
+      (Ssequence
+        (Scall (Some _t'1)
+          (Evar _get_mem_region (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tuint Tnil))
+                                  (tptr (Tstruct _memory_region noattr))
+                                  cc_default))
+          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+           (Etempvar _n tuint) :: nil))
+        (Sset _cur_mr (Etempvar _t'1 (tptr (Tstruct _memory_region noattr)))))
+      (Sifthenelse (Ebinop Oge
+                     (Efield
+                       (Ederef
+                         (Etempvar _cur_mr (tptr (Tstruct _memory_region noattr)))
+                         (Tstruct _memory_region noattr)) _block_perm tuint)
+                     (Etempvar _perm tuint) tint)
         (Ssequence
           (Ssequence
-            (Scall (Some _t'4)
-              (Evar _getMemRegion_block_size (Tfunction
-                                               (Tcons
-                                                 (tptr (Tstruct _memory_region noattr))
-                                                 Tnil) tulong cc_default))
-              ((Etempvar _mr3 (tptr (Tstruct _memory_region noattr))) :: nil))
-            (Sset _size (Etempvar _t'4 tulong)))
-          (Ssequence
+            (Scall (Some _t'2)
+              (Evar _check_mem_aux2 (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _memory_region noattr))
+                                        (Tcons tulong (Tcons tuint Tnil)))
+                                      tulong cc_default))
+              ((Etempvar _cur_mr (tptr (Tstruct _memory_region noattr))) ::
+               (Etempvar _addr tulong) :: (Etempvar _chunk tuint) :: nil))
+            (Sset _check_mem__1 (Etempvar _t'2 tulong)))
+          (Sifthenelse (Ebinop Oeq (Etempvar _check_mem__1 tulong)
+                         (Econst_long (Int64.repr 0) tulong) tint)
             (Ssequence
-              (Scall (Some _t'5)
-                (Evar _get_subl (Tfunction (Tcons tulong (Tcons tulong Tnil))
-                                  tulong cc_default))
-                ((Etempvar _addr0 tulong) :: (Etempvar _start tulong) :: nil))
-              (Sset _lo_ofs (Etempvar _t'5 tulong)))
-            (Ssequence
-              (Ssequence
-                (Scall (Some _t'6)
-                  (Evar _get_addl (Tfunction
-                                    (Tcons tulong (Tcons tulong Tnil)) tulong
-                                    cc_default))
-                  ((Etempvar _lo_ofs tulong) ::
-                   (Ecast (Etempvar _chunk1 tuint) tulong) :: nil))
-                (Sset _hi_ofs (Etempvar _t'6 tulong)))
-              (Ssequence
-                (Sifthenelse (Ebinop Ole (Econst_long (Int64.repr 0) tulong)
-                               (Etempvar _lo_ofs tulong) tint)
-                  (Sset _t'8
-                    (Ecast
-                      (Ebinop Olt (Etempvar _hi_ofs tulong)
-                        (Etempvar _size tulong) tint) tbool))
-                  (Sset _t'8 (Econst_int (Int.repr 0) tint)))
-                (Sifthenelse (Etempvar _t'8 tint)
-                  (Ssequence
-                    (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tulong)
-                                   (Ebinop Osub
-                                     (Econst_long (Int64.repr (-1)) tulong)
-                                     (Ecast (Etempvar _chunk1 tuint) tulong)
-                                     tulong) tint)
-                      (Sset _t'7
-                        (Ecast
-                          (Ebinop Oeq (Econst_long (Int64.repr 0) tulong)
-                            (Ebinop Omod (Etempvar _lo_ofs tulong)
-                              (Ecast (Etempvar _chunk1 tuint) tulong) tulong)
-                            tint) tbool))
-                      (Sset _t'7 (Econst_int (Int.repr 0) tint)))
-                    (Sifthenelse (Etempvar _t'7 tint)
-                      (Sreturn (Some (Ebinop Oadd (Etempvar _ptr tulong)
-                                       (Etempvar _lo_ofs tulong) tulong)))
-                      (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
-                  (Sreturn (Some (Econst_long (Int64.repr 0) tulong))))))))))
-    (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
+              (Scall (Some _t'3)
+                (Evar _check_mem_aux (Tfunction
+                                       (Tcons
+                                         (tptr (Tstruct _bpf_state noattr))
+                                         (Tcons tuint
+                                           (Tcons tuint
+                                             (Tcons tuint
+                                               (Tcons tulong Tnil))))) tulong
+                                       cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Etempvar _n tuint) :: (Etempvar _perm tuint) ::
+                 (Etempvar _chunk tuint) :: (Etempvar _addr tulong) :: nil))
+              (Sreturn (Some (Etempvar _t'3 tulong))))
+            (Sreturn (Some (Etempvar _check_mem__1 tulong)))))
+        (Ssequence
+          (Scall (Some _t'4)
+            (Evar _check_mem_aux (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint
+                                       (Tcons tuint
+                                         (Tcons tuint (Tcons tulong Tnil)))))
+                                   tulong cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Etempvar _n tuint) :: (Etempvar _perm tuint) ::
+             (Etempvar _chunk tuint) :: (Etempvar _addr tulong) :: nil))
+          (Sreturn (Some (Etempvar _t'4 tulong))))))))
 |}.
 
 Definition f_check_mem := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_mrs4, (tptr (Tstruct _memory_regions noattr))) ::
-                (_addr1, tulong) :: (_chunk2, tuint) :: nil);
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
+                (_perm, tuint) :: (_chunk, tuint) :: (_addr, tulong) :: nil);
   fn_vars := nil;
-  fn_temps := ((_check_mem_ctx, tulong) :: (_check_mem_stk, tulong) ::
-               (_check_mem_content, tulong) :: (_t'3, tulong) ::
-               (_t'2, tulong) :: (_t'1, tulong) :: nil);
+  fn_temps := ((_well_chunk, tbool) :: (_mem_reg_num, tuint) ::
+               (_check_mem__1, tulong) :: (_t'3, tulong) :: (_t'2, tuint) ::
+               (_t'1, tbool) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
     (Scall (Some _t'1)
-      (Evar _check_mem_aux (Tfunction
-                             (Tcons (tptr (Tstruct _memory_region noattr))
-                               (Tcons tulong (Tcons tuint Tnil))) tulong
-                             cc_default))
-      ((Efield
-         (Ederef (Etempvar _mrs4 (tptr (Tstruct _memory_regions noattr)))
-           (Tstruct _memory_regions noattr)) _bpf_ctx
-         (tptr (Tstruct _memory_region noattr))) ::
-       (Etempvar _addr1 tulong) :: (Etempvar _chunk2 tuint) :: nil))
-    (Sset _check_mem_ctx (Etempvar _t'1 tulong)))
-  (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_ctx tulong)
-                 (Econst_long (Int64.repr 0) tulong) tint)
+      (Evar _is_well_chunk_bool (Tfunction (Tcons tuint Tnil) tbool
+                                  cc_default))
+      ((Etempvar _chunk tuint) :: nil))
+    (Sset _well_chunk (Ecast (Etempvar _t'1 tbool) tbool)))
+  (Sifthenelse (Etempvar _well_chunk tbool)
     (Ssequence
       (Ssequence
         (Scall (Some _t'2)
-          (Evar _check_mem_aux (Tfunction
-                                 (Tcons
-                                   (tptr (Tstruct _memory_region noattr))
-                                   (Tcons tulong (Tcons tuint Tnil))) tulong
-                                 cc_default))
-          ((Efield
-             (Ederef (Etempvar _mrs4 (tptr (Tstruct _memory_regions noattr)))
-               (Tstruct _memory_regions noattr)) _bpf_stk
-             (tptr (Tstruct _memory_region noattr))) ::
-           (Etempvar _addr1 tulong) :: (Etempvar _chunk2 tuint) :: nil))
-        (Sset _check_mem_stk (Etempvar _t'2 tulong)))
-      (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_stk tulong)
-                     (Econst_long (Int64.repr 0) tulong) tint)
+          (Evar _eval_mem_num (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  Tnil) tuint cc_default))
+          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+        (Sset _mem_reg_num (Etempvar _t'2 tuint)))
+      (Ssequence
         (Ssequence
-          (Ssequence
-            (Scall (Some _t'3)
-              (Evar _check_mem_aux (Tfunction
-                                     (Tcons
-                                       (tptr (Tstruct _memory_region noattr))
-                                       (Tcons tulong (Tcons tuint Tnil)))
-                                     tulong cc_default))
-              ((Efield
-                 (Ederef
-                   (Etempvar _mrs4 (tptr (Tstruct _memory_regions noattr)))
-                   (Tstruct _memory_regions noattr)) _content
-                 (tptr (Tstruct _memory_region noattr))) ::
-               (Etempvar _addr1 tulong) :: (Etempvar _chunk2 tuint) :: nil))
-            (Sset _check_mem_content (Etempvar _t'3 tulong)))
-          (Sifthenelse (Ebinop Oeq (Etempvar _check_mem_content tulong)
-                         (Econst_long (Int64.repr 0) tulong) tint)
-            (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))
-            (Sreturn (Some (Etempvar _check_mem_content tulong)))))
-        (Sreturn (Some (Etempvar _check_mem_stk tulong)))))
-    (Sreturn (Some (Etempvar _check_mem_ctx tulong)))))
+          (Scall (Some _t'3)
+            (Evar _check_mem_aux (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint
+                                       (Tcons tuint
+                                         (Tcons tuint (Tcons tulong Tnil)))))
+                                   tulong cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Etempvar _mem_reg_num tuint) :: (Etempvar _perm tuint) ::
+             (Etempvar _chunk tuint) :: (Etempvar _addr tulong) :: nil))
+          (Sset _check_mem__1 (Etempvar _t'3 tulong)))
+        (Sifthenelse (Ebinop Oeq (Etempvar _check_mem__1 tulong)
+                       (Econst_long (Int64.repr 0) tulong) tint)
+          (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))
+          (Sreturn (Some (Etempvar _check_mem__1 tulong))))))
+    (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))
 |}.
 
-Definition f_step := {|
+Definition f_comp_and_0x08_byte := {|
+  fn_return := tbool;
+  fn_callconv := cc_default;
+  fn_params := ((_x, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Ebinop Oeq (Econst_int (Int.repr 0) tint)
+                 (Ebinop Oand (Etempvar _x tuchar)
+                   (Econst_int (Int.repr 8) tint) tint) tint)))
+|}.
+
+Definition f_step_opcode_alu64 := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
-  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
-                (_l0, (tptr tulong)) :: (_len0, tulong) :: nil);
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_dst, tuint) ::
+                (_dst64, tulong) :: (_src64, tulong) :: (_op, tuchar) :: nil);
   fn_vars := nil;
-  fn_temps := ((_pc, tulong) :: (_ins, tulong) :: (_op, tuchar) ::
-               (_dst, tuint) :: (_src, tuint) :: (_dst64, tulong) ::
-               (_src64, tulong) :: (_ofs, tshort) :: (_imm, tint) ::
-               (_addr_dst, tulong) :: (_addr_src, tulong) ::
-               (_next_ins, tulong) :: (_next_imm, tint) ::
-               (_check_ldxw, tulong) :: (_v_xw, tulong) ::
-               (_check_ldxh, tulong) :: (_v_xh, tulong) ::
-               (_check_ldxb, tulong) :: (_v_xb, tulong) ::
-               (_check_ldxdw, tulong) :: (_v_xdw, tulong) ::
-               (_check_stw, tulong) :: (_check_sth, tulong) ::
-               (_check_stb, tulong) :: (_check_stdw, tulong) ::
-               (_check_stxw, tulong) :: (_check_stxh, tulong) ::
-               (_check_stxb, tulong) :: (_check_stxdw, tulong) ::
-               (_t'29, tulong) :: (_t'28, tulong) :: (_t'27, tulong) ::
-               (_t'26, tulong) :: (_t'25, tulong) :: (_t'24, tulong) ::
-               (_t'23, tulong) :: (_t'22, tulong) :: (_t'21, tulong) ::
-               (_t'20, tulong) :: (_t'19, tulong) :: (_t'18, tulong) ::
-               (_t'17, tulong) :: (_t'16, tulong) :: (_t'15, tulong) ::
-               (_t'14, tulong) :: (_t'13, tint) :: (_t'12, tulong) ::
-               (_t'11, tulong) :: (_t'10, tulong) :: (_t'9, tint) ::
-               (_t'8, tshort) :: (_t'7, tulong) :: (_t'6, tulong) ::
-               (_t'5, tuint) :: (_t'4, tuint) :: (_t'3, tuchar) ::
-               (_t'2, tulong) :: (_t'1, tulong) :: nil);
+  fn_temps := ((_opcode_alu64, tuchar) :: (_src32, tuint) :: (_t'5, tuint) ::
+               (_t'4, tuint) :: (_t'3, tuint) :: (_t'2, tuint) ::
+               (_t'1, tuchar) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
     (Scall (Some _t'1)
-      (Evar _eval_pc (Tfunction
-                       (Tcons (tptr (Tstruct _bpf_state noattr)) Tnil) tulong
-                       cc_default))
-      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
-    (Sset _pc (Etempvar _t'1 tulong)))
-  (Ssequence
-    (Ssequence
-      (Scall (Some _t'2)
-        (Evar _list_get (Tfunction (Tcons (tptr tulong) (Tcons tulong Tnil))
-                          tulong cc_default))
-        ((Etempvar _l0 (tptr tulong)) :: (Etempvar _pc tulong) :: nil))
-      (Sset _ins (Etempvar _t'2 tulong)))
-    (Ssequence
+      (Evar _get_opcode_alu64 (Tfunction (Tcons tuchar Tnil) tuchar
+                                cc_default)) ((Etempvar _op tuchar) :: nil))
+    (Sset _opcode_alu64 (Ecast (Etempvar _t'1 tuchar) tuchar)))
+  (Sswitch (Etempvar _opcode_alu64 tuchar)
+    (LScons (Some 0)
       (Ssequence
-        (Scall (Some _t'3)
-          (Evar _get_opcode (Tfunction (Tcons tulong Tnil) tuchar cc_default))
-          ((Etempvar _ins tulong) :: nil))
-        (Sset _op (Ecast (Etempvar _t'3 tuchar) tuchar)))
-      (Ssequence
+        (Scall None
+          (Evar _upd_reg (Tfunction
+                           (Tcons (tptr (Tstruct _bpf_state noattr))
+                             (Tcons tuint (Tcons tulong Tnil))) tvoid
+                           cc_default))
+          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+           (Etempvar _dst tuint) ::
+           (Ebinop Oadd (Etempvar _dst64 tulong) (Etempvar _src64 tulong)
+             tulong) :: nil))
         (Ssequence
-          (Scall (Some _t'4)
-            (Evar _get_dst (Tfunction (Tcons tulong Tnil) tuint cc_default))
-            ((Etempvar _ins tulong) :: nil))
-          (Sset _dst (Etempvar _t'4 tuint)))
+          (Scall None
+            (Evar _upd_flag (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tint Tnil)) tvoid cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Econst_int (Int.repr 0) tint) :: nil))
+          (Sreturn None)))
+      (LScons (Some 16)
         (Ssequence
+          (Scall None
+            (Evar _upd_reg (Tfunction
+                             (Tcons (tptr (Tstruct _bpf_state noattr))
+                               (Tcons tuint (Tcons tulong Tnil))) tvoid
+                             cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Etempvar _dst tuint) ::
+             (Ebinop Osub (Etempvar _dst64 tulong) (Etempvar _src64 tulong)
+               tulong) :: nil))
           (Ssequence
-            (Scall (Some _t'5)
-              (Evar _get_src (Tfunction (Tcons tulong Tnil) tuint cc_default))
-              ((Etempvar _ins tulong) :: nil))
-            (Sset _src (Etempvar _t'5 tuint)))
+            (Scall None
+              (Evar _upd_flag (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tint Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 0) tint) :: nil))
+            (Sreturn None)))
+        (LScons (Some 32)
           (Ssequence
+            (Scall None
+              (Evar _upd_reg (Tfunction
+                               (Tcons (tptr (Tstruct _bpf_state noattr))
+                                 (Tcons tuint (Tcons tulong Tnil))) tvoid
+                               cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Etempvar _dst tuint) ::
+               (Ebinop Omul (Etempvar _dst64 tulong) (Etempvar _src64 tulong)
+                 tulong) :: nil))
             (Ssequence
-              (Scall (Some _t'6)
-                (Evar _eval_reg (Tfunction
+              (Scall None
+                (Evar _upd_flag (Tfunction
                                   (Tcons (tptr (Tstruct _bpf_state noattr))
-                                    (Tcons tuint Tnil)) tulong cc_default))
+                                    (Tcons tint Tnil)) tvoid cc_default))
                 ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                 (Etempvar _dst tuint) :: nil))
-              (Sset _dst64 (Etempvar _t'6 tulong)))
-            (Ssequence
+                 (Econst_int (Int.repr 0) tint) :: nil))
+              (Sreturn None)))
+          (LScons (Some 48)
+            (Sifthenelse (Ebinop One (Etempvar _src64 tulong)
+                           (Econst_long (Int64.repr 0) tulong) tint)
               (Ssequence
-                (Scall (Some _t'7)
-                  (Evar _eval_reg (Tfunction
-                                    (Tcons (tptr (Tstruct _bpf_state noattr))
-                                      (Tcons tuint Tnil)) tulong cc_default))
+                (Scall None
+                  (Evar _upd_reg (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint (Tcons tulong Tnil))) tvoid
+                                   cc_default))
                   ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                   (Etempvar _src tuint) :: nil))
-                (Sset _src64 (Etempvar _t'7 tulong)))
+                   (Etempvar _dst tuint) ::
+                   (Ebinop Odiv (Etempvar _dst64 tulong)
+                     (Etempvar _src64 tulong) tulong) :: nil))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))
               (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 9) tint) tint) :: nil))
+                (Sreturn None)))
+            (LScons (Some 64)
+              (Ssequence
+                (Scall None
+                  (Evar _upd_reg (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint (Tcons tulong Tnil))) tvoid
+                                   cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Etempvar _dst tuint) ::
+                   (Ebinop Oor (Etempvar _dst64 tulong)
+                     (Etempvar _src64 tulong) tulong) :: nil))
                 (Ssequence
-                  (Scall (Some _t'8)
-                    (Evar _get_offset (Tfunction (Tcons tulong Tnil) tshort
-                                        cc_default))
-                    ((Etempvar _ins tulong) :: nil))
-                  (Sset _ofs (Ecast (Etempvar _t'8 tshort) tshort)))
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))
+              (LScons (Some 80)
                 (Ssequence
+                  (Scall None
+                    (Evar _upd_reg (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint (Tcons tulong Tnil)))
+                                     tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Etempvar _dst tuint) ::
+                     (Ebinop Oand (Etempvar _dst64 tulong)
+                       (Etempvar _src64 tulong) tulong) :: nil))
                   (Ssequence
-                    (Scall (Some _t'9)
-                      (Evar _get_immediate (Tfunction (Tcons tulong Tnil)
-                                             tint cc_default))
-                      ((Etempvar _ins tulong) :: nil))
-                    (Sset _imm (Etempvar _t'9 tint)))
+                    (Scall None
+                      (Evar _upd_flag (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tint Tnil)) tvoid
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 0) tint) :: nil))
+                    (Sreturn None)))
+                (LScons (Some 96)
                   (Ssequence
                     (Ssequence
-                      (Scall (Some _t'10)
-                        (Evar _get_addl (Tfunction
-                                          (Tcons tulong (Tcons tulong Tnil))
-                                          tulong cc_default))
-                        ((Etempvar _dst64 tulong) ::
-                         (Etempvar _ofs tshort) :: nil))
-                      (Sset _addr_dst (Etempvar _t'10 tulong)))
+                      (Scall (Some _t'2)
+                        (Evar _reg64_to_reg32 (Tfunction (Tcons tulong Tnil)
+                                                tuint cc_default))
+                        ((Etempvar _src64 tulong) :: nil))
+                      (Sset _src32 (Etempvar _t'2 tuint)))
+                    (Sifthenelse (Ebinop Olt (Etempvar _src64 tulong)
+                                   (Econst_long (Int64.repr 64) tulong) tint)
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_reg (Tfunction
+                                           (Tcons
+                                             (tptr (Tstruct _bpf_state noattr))
+                                             (Tcons tuint
+                                               (Tcons tulong Tnil))) tvoid
+                                           cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Etempvar _dst tuint) ::
+                           (Ebinop Oshl (Etempvar _dst64 tulong)
+                             (Etempvar _src32 tuint) tulong) :: nil))
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_flag (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tint Tnil)) tvoid
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Econst_int (Int.repr 0) tint) :: nil))
+                          (Sreturn None)))
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_flag (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tint Tnil)) tvoid
+                                            cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Eunop Oneg (Econst_int (Int.repr 10) tint) tint) ::
+                           nil))
+                        (Sreturn None))))
+                  (LScons (Some 112)
                     (Ssequence
                       (Ssequence
-                        (Scall (Some _t'11)
-                          (Evar _get_addl (Tfunction
-                                            (Tcons tulong
-                                              (Tcons tulong Tnil)) tulong
-                                            cc_default))
-                          ((Etempvar _src64 tulong) ::
-                           (Etempvar _ofs tshort) :: nil))
-                        (Sset _addr_src (Etempvar _t'11 tulong)))
-                      (Sswitch (Etempvar _op tuchar)
-                        (LScons (Some 7)
+                        (Scall (Some _t'3)
+                          (Evar _reg64_to_reg32 (Tfunction
+                                                  (Tcons tulong Tnil) tuint
+                                                  cc_default))
+                          ((Etempvar _src64 tulong) :: nil))
+                        (Sset _src32 (Etempvar _t'3 tuint)))
+                      (Sifthenelse (Ebinop Olt (Etempvar _src64 tulong)
+                                     (Econst_long (Int64.repr 64) tulong)
+                                     tint)
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_reg (Tfunction
+                                             (Tcons
+                                               (tptr (Tstruct _bpf_state noattr))
+                                               (Tcons tuint
+                                                 (Tcons tulong Tnil))) tvoid
+                                             cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Etempvar _dst tuint) ::
+                             (Ebinop Oshr (Etempvar _dst64 tulong)
+                               (Etempvar _src32 tuint) tulong) :: nil))
                           (Ssequence
                             (Scall None
-                              (Evar _upd_reg (Tfunction
-                                               (Tcons
-                                                 (tptr (Tstruct _bpf_state noattr))
-                                                 (Tcons tuint
-                                                   (Tcons tulong Tnil)))
-                                               tvoid cc_default))
+                              (Evar _upd_flag (Tfunction
+                                                (Tcons
+                                                  (tptr (Tstruct _bpf_state noattr))
+                                                  (Tcons tint Tnil)) tvoid
+                                                cc_default))
                               ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                               (Etempvar _dst tuint) ::
-                               (Ebinop Oadd (Etempvar _dst64 tulong)
-                                 (Ecast (Etempvar _imm tint) tulong) tulong) ::
-                               nil))
-                            (Ssequence
-                              (Scall None
-                                (Evar _upd_flag (Tfunction
-                                                  (Tcons
-                                                    (tptr (Tstruct _bpf_state noattr))
-                                                    (Tcons tint Tnil)) tvoid
-                                                  cc_default))
-                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                 (Econst_int (Int.repr 0) tint) :: nil))
-                              (Sreturn None)))
-                          (LScons (Some 15)
+                               (Econst_int (Int.repr 0) tint) :: nil))
+                            (Sreturn None)))
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_flag (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tint Tnil)) tvoid
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Eunop Oneg (Econst_int (Int.repr 10) tint)
+                               tint) :: nil))
+                          (Sreturn None))))
+                    (LScons (Some 128)
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_reg (Tfunction
+                                           (Tcons
+                                             (tptr (Tstruct _bpf_state noattr))
+                                             (Tcons tuint
+                                               (Tcons tulong Tnil))) tvoid
+                                           cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Etempvar _dst tuint) ::
+                           (Eunop Oneg (Etempvar _dst64 tulong) tulong) ::
+                           nil))
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_flag (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tint Tnil)) tvoid
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Econst_int (Int.repr 0) tint) :: nil))
+                          (Sreturn None)))
+                      (LScons (Some 144)
+                        (Ssequence
+                          (Ssequence
+                            (Scall (Some _t'4)
+                              (Evar _reg64_to_reg32 (Tfunction
+                                                      (Tcons tulong Tnil)
+                                                      tuint cc_default))
+                              ((Etempvar _src64 tulong) :: nil))
+                            (Sset _src32 (Etempvar _t'4 tuint)))
+                          (Sifthenelse (Ebinop One (Etempvar _src64 tulong)
+                                         (Econst_long (Int64.repr 0) tulong)
+                                         tint)
                             (Ssequence
                               (Scall None
                                 (Evar _upd_reg (Tfunction
@@ -923,8 +1426,8 @@ Definition f_step := {|
                                                  tvoid cc_default))
                                 ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                                  (Etempvar _dst tuint) ::
-                                 (Ebinop Oadd (Etempvar _dst64 tulong)
-                                   (Etempvar _src64 tulong) tulong) :: nil))
+                                 (Ebinop Omod (Etempvar _dst64 tulong)
+                                   (Etempvar _src32 tuint) tulong) :: nil))
                               (Ssequence
                                 (Scall None
                                   (Evar _upd_flag (Tfunction
@@ -935,55 +1438,76 @@ Definition f_step := {|
                                   ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                                    (Econst_int (Int.repr 0) tint) :: nil))
                                 (Sreturn None)))
-                            (LScons (Some 23)
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_flag (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tint Tnil)) tvoid
+                                                  cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Eunop Oneg (Econst_int (Int.repr 9) tint)
+                                   tint) :: nil))
+                              (Sreturn None))))
+                        (LScons (Some 160)
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_reg (Tfunction
+                                               (Tcons
+                                                 (tptr (Tstruct _bpf_state noattr))
+                                                 (Tcons tuint
+                                                   (Tcons tulong Tnil)))
+                                               tvoid cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Etempvar _dst tuint) ::
+                               (Ebinop Oxor (Etempvar _dst64 tulong)
+                                 (Etempvar _src64 tulong) tulong) :: nil))
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_flag (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tint Tnil)) tvoid
+                                                  cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Econst_int (Int.repr 0) tint) :: nil))
+                              (Sreturn None)))
+                          (LScons (Some 176)
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_reg (Tfunction
+                                                 (Tcons
+                                                   (tptr (Tstruct _bpf_state noattr))
+                                                   (Tcons tuint
+                                                     (Tcons tulong Tnil)))
+                                                 tvoid cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Etempvar _dst tuint) ::
+                                 (Etempvar _src64 tulong) :: nil))
                               (Ssequence
                                 (Scall None
-                                  (Evar _upd_reg (Tfunction
-                                                   (Tcons
-                                                     (tptr (Tstruct _bpf_state noattr))
-                                                     (Tcons tuint
-                                                       (Tcons tulong Tnil)))
-                                                   tvoid cc_default))
+                                  (Evar _upd_flag (Tfunction
+                                                    (Tcons
+                                                      (tptr (Tstruct _bpf_state noattr))
+                                                      (Tcons tint Tnil))
+                                                    tvoid cc_default))
                                   ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                   (Etempvar _dst tuint) ::
-                                   (Ebinop Osub (Etempvar _dst64 tulong)
-                                     (Ecast (Etempvar _imm tint) tulong)
-                                     tulong) :: nil))
+                                   (Econst_int (Int.repr 0) tint) :: nil))
+                                (Sreturn None)))
+                            (LScons (Some 192)
+                              (Ssequence
                                 (Ssequence
-                                  (Scall None
-                                    (Evar _upd_flag (Tfunction
-                                                      (Tcons
-                                                        (tptr (Tstruct _bpf_state noattr))
-                                                        (Tcons tint Tnil))
-                                                      tvoid cc_default))
-                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                     (Econst_int (Int.repr 0) tint) :: nil))
-                                  (Sreturn None)))
-                              (LScons (Some 31)
-                                (Ssequence
-                                  (Scall None
-                                    (Evar _upd_reg (Tfunction
-                                                     (Tcons
-                                                       (tptr (Tstruct _bpf_state noattr))
-                                                       (Tcons tuint
-                                                         (Tcons tulong Tnil)))
-                                                     tvoid cc_default))
-                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                     (Etempvar _dst tuint) ::
-                                     (Ebinop Osub (Etempvar _dst64 tulong)
-                                       (Etempvar _src64 tulong) tulong) ::
-                                     nil))
-                                  (Ssequence
-                                    (Scall None
-                                      (Evar _upd_flag (Tfunction
-                                                        (Tcons
-                                                          (tptr (Tstruct _bpf_state noattr))
-                                                          (Tcons tint Tnil))
-                                                        tvoid cc_default))
-                                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                       (Econst_int (Int.repr 0) tint) :: nil))
-                                    (Sreturn None)))
-                                (LScons (Some 39)
+                                  (Scall (Some _t'5)
+                                    (Evar _reg64_to_reg32 (Tfunction
+                                                            (Tcons tulong
+                                                              Tnil) tuint
+                                                            cc_default))
+                                    ((Etempvar _src64 tulong) :: nil))
+                                  (Sset _src32 (Etempvar _t'5 tuint)))
+                                (Sifthenelse (Ebinop Olt
+                                               (Etempvar _src64 tulong)
+                                               (Econst_long (Int64.repr 64) tulong)
+                                               tint)
                                   (Ssequence
                                     (Scall None
                                       (Evar _upd_reg (Tfunction
@@ -995,9 +1519,10 @@ Definition f_step := {|
                                                        cc_default))
                                       ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                                        (Etempvar _dst tuint) ::
-                                       (Ebinop Omul (Etempvar _dst64 tulong)
-                                         (Ecast (Etempvar _imm tint) tulong)
-                                         tulong) :: nil))
+                                       (Ebinop Oshr
+                                         (Ecast (Etempvar _dst64 tulong)
+                                           tlong) (Etempvar _src32 tuint)
+                                         tlong) :: nil))
                                     (Ssequence
                                       (Scall None
                                         (Evar _upd_flag (Tfunction
@@ -1009,4719 +1534,892 @@ Definition f_step := {|
                                          (Econst_int (Int.repr 0) tint) ::
                                          nil))
                                       (Sreturn None)))
-                                  (LScons (Some 47)
-                                    (Ssequence
-                                      (Scall None
-                                        (Evar _upd_reg (Tfunction
-                                                         (Tcons
-                                                           (tptr (Tstruct _bpf_state noattr))
-                                                           (Tcons tuint
-                                                             (Tcons tulong
-                                                               Tnil))) tvoid
-                                                         cc_default))
-                                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                         (Etempvar _dst tuint) ::
-                                         (Ebinop Omul
-                                           (Etempvar _dst64 tulong)
-                                           (Etempvar _src64 tulong) tulong) ::
-                                         nil))
-                                      (Ssequence
-                                        (Scall None
-                                          (Evar _upd_flag (Tfunction
-                                                            (Tcons
-                                                              (tptr (Tstruct _bpf_state noattr))
-                                                              (Tcons tint
-                                                                Tnil)) tvoid
-                                                            cc_default))
-                                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                           (Econst_int (Int.repr 0) tint) ::
-                                           nil))
-                                        (Sreturn None)))
-                                    (LScons (Some 55)
-                                      (Sifthenelse (Ebinop One
-                                                     (Ecast
-                                                       (Etempvar _imm tint)
-                                                       tulong)
-                                                     (Econst_long (Int64.repr 0) tulong)
-                                                     tint)
-                                        (Ssequence
-                                          (Scall None
-                                            (Evar _upd_reg (Tfunction
-                                                             (Tcons
-                                                               (tptr (Tstruct _bpf_state noattr))
-                                                               (Tcons tuint
-                                                                 (Tcons
-                                                                   tulong
-                                                                   Tnil)))
-                                                             tvoid
-                                                             cc_default))
-                                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                             (Etempvar _dst tuint) ::
-                                             (Ebinop Odiv
-                                               (Etempvar _dst64 tulong)
-                                               (Ecast (Etempvar _imm tint)
-                                                 tulong) tulong) :: nil))
-                                          (Ssequence
-                                            (Scall None
-                                              (Evar _upd_flag (Tfunction
-                                                                (Tcons
-                                                                  (tptr (Tstruct _bpf_state noattr))
-                                                                  (Tcons tint
-                                                                    Tnil))
-                                                                tvoid
-                                                                cc_default))
-                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                               (Econst_int (Int.repr 0) tint) ::
-                                               nil))
-                                            (Sreturn None)))
-                                        (Ssequence
-                                          (Scall None
-                                            (Evar _upd_flag (Tfunction
-                                                              (Tcons
-                                                                (tptr (Tstruct _bpf_state noattr))
-                                                                (Tcons tint
-                                                                  Tnil))
-                                                              tvoid
-                                                              cc_default))
-                                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                             (Eunop Oneg
-                                               (Econst_int (Int.repr 9) tint)
-                                               tint) :: nil))
-                                          (Sreturn None)))
-                                      (LScons (Some 63)
-                                        (Sifthenelse (Ebinop One
-                                                       (Etempvar _src64 tulong)
-                                                       (Econst_long (Int64.repr 0) tulong)
-                                                       tint)
-                                          (Ssequence
-                                            (Scall None
-                                              (Evar _upd_reg (Tfunction
-                                                               (Tcons
-                                                                 (tptr (Tstruct _bpf_state noattr))
-                                                                 (Tcons tuint
-                                                                   (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                               tvoid
-                                                               cc_default))
-                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                               (Etempvar _dst tuint) ::
-                                               (Ebinop Odiv
-                                                 (Etempvar _dst64 tulong)
-                                                 (Etempvar _src64 tulong)
-                                                 tulong) :: nil))
-                                            (Ssequence
-                                              (Scall None
-                                                (Evar _upd_flag (Tfunction
-                                                                  (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                  tvoid
-                                                                  cc_default))
-                                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                 (Econst_int (Int.repr 0) tint) ::
-                                                 nil))
-                                              (Sreturn None)))
-                                          (Ssequence
-                                            (Scall None
-                                              (Evar _upd_flag (Tfunction
-                                                                (Tcons
-                                                                  (tptr (Tstruct _bpf_state noattr))
-                                                                  (Tcons tint
-                                                                    Tnil))
-                                                                tvoid
-                                                                cc_default))
-                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                               (Eunop Oneg
-                                                 (Econst_int (Int.repr 9) tint)
-                                                 tint) :: nil))
-                                            (Sreturn None)))
-                                        (LScons (Some 71)
-                                          (Ssequence
-                                            (Scall None
-                                              (Evar _upd_reg (Tfunction
-                                                               (Tcons
-                                                                 (tptr (Tstruct _bpf_state noattr))
-                                                                 (Tcons tuint
-                                                                   (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                               tvoid
-                                                               cc_default))
-                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                               (Etempvar _dst tuint) ::
-                                               (Ebinop Oor
-                                                 (Etempvar _dst64 tulong)
-                                                 (Ecast (Etempvar _imm tint)
-                                                   tulong) tulong) :: nil))
-                                            (Ssequence
-                                              (Scall None
-                                                (Evar _upd_flag (Tfunction
-                                                                  (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                  tvoid
-                                                                  cc_default))
-                                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                 (Econst_int (Int.repr 0) tint) ::
-                                                 nil))
-                                              (Sreturn None)))
-                                          (LScons (Some 79)
-                                            (Ssequence
-                                              (Scall None
-                                                (Evar _upd_reg (Tfunction
-                                                                 (Tcons
-                                                                   (tptr (Tstruct _bpf_state noattr))
-                                                                   (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                 tvoid
-                                                                 cc_default))
-                                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                 (Etempvar _dst tuint) ::
-                                                 (Ebinop Oor
-                                                   (Etempvar _dst64 tulong)
-                                                   (Etempvar _src64 tulong)
-                                                   tulong) :: nil))
-                                              (Ssequence
-                                                (Scall None
-                                                  (Evar _upd_flag (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                   (Econst_int (Int.repr 0) tint) ::
-                                                   nil))
-                                                (Sreturn None)))
-                                            (LScons (Some 87)
-                                              (Ssequence
-                                                (Scall None
-                                                  (Evar _upd_reg (Tfunction
-                                                                   (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                   tvoid
-                                                                   cc_default))
-                                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                   (Etempvar _dst tuint) ::
-                                                   (Ebinop Oand
-                                                     (Etempvar _dst64 tulong)
-                                                     (Ecast
-                                                       (Etempvar _imm tint)
-                                                       tulong) tulong) ::
-                                                   nil))
-                                                (Ssequence
-                                                  (Scall None
-                                                    (Evar _upd_flag (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                     (Econst_int (Int.repr 0) tint) ::
-                                                     nil))
-                                                  (Sreturn None)))
-                                              (LScons (Some 95)
-                                                (Ssequence
-                                                  (Scall None
-                                                    (Evar _upd_reg (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                     (Etempvar _dst tuint) ::
-                                                     (Ebinop Oand
-                                                       (Etempvar _dst64 tulong)
-                                                       (Etempvar _src64 tulong)
-                                                       tulong) :: nil))
-                                                  (Ssequence
-                                                    (Scall None
-                                                      (Evar _upd_flag 
-                                                      (Tfunction
+                                  (Ssequence
+                                    (Scall None
+                                      (Evar _upd_flag (Tfunction
                                                         (Tcons
                                                           (tptr (Tstruct _bpf_state noattr))
                                                           (Tcons tint Tnil))
                                                         tvoid cc_default))
-                                                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                       (Econst_int (Int.repr 0) tint) ::
-                                                       nil))
-                                                    (Sreturn None)))
-                                                (LScons (Some 103)
-                                                  (Sifthenelse (Ebinop Olt
-                                                                 (Ecast
-                                                                   (Etempvar _imm tint)
-                                                                   tulong)
-                                                                 (Econst_long (Int64.repr 64) tulong)
-                                                                 tint)
-                                                    (Ssequence
-                                                      (Scall None
-                                                        (Evar _upd_reg 
-                                                        (Tfunction
-                                                          (Tcons
-                                                            (tptr (Tstruct _bpf_state noattr))
-                                                            (Tcons tuint
-                                                              (Tcons tulong
-                                                                Tnil))) tvoid
-                                                          cc_default))
-                                                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                         (Etempvar _dst tuint) ::
-                                                         (Ebinop Oshl
-                                                           (Etempvar _dst64 tulong)
-                                                           (Etempvar _imm tint)
-                                                           tulong) :: nil))
-                                                      (Ssequence
-                                                        (Scall None
-                                                          (Evar _upd_flag 
-                                                          (Tfunction
-                                                            (Tcons
-                                                              (tptr (Tstruct _bpf_state noattr))
-                                                              (Tcons tint
-                                                                Tnil)) tvoid
-                                                            cc_default))
-                                                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                           (Econst_int (Int.repr 0) tint) ::
-                                                           nil))
-                                                        (Sreturn None)))
-                                                    (Ssequence
-                                                      (Scall None
-                                                        (Evar _upd_flag 
-                                                        (Tfunction
-                                                          (Tcons
-                                                            (tptr (Tstruct _bpf_state noattr))
-                                                            (Tcons tint Tnil))
-                                                          tvoid cc_default))
-                                                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                         (Eunop Oneg
-                                                           (Econst_int (Int.repr 10) tint)
-                                                           tint) :: nil))
-                                                      (Sreturn None)))
-                                                  (LScons (Some 111)
-                                                    (Sifthenelse (Ebinop Olt
-                                                                   (Etempvar _src64 tulong)
-                                                                   (Econst_long (Int64.repr 64) tulong)
-                                                                   tint)
-                                                      (Ssequence
-                                                        (Scall None
-                                                          (Evar _upd_reg 
-                                                          (Tfunction
-                                                            (Tcons
-                                                              (tptr (Tstruct _bpf_state noattr))
-                                                              (Tcons tuint
-                                                                (Tcons tulong
-                                                                  Tnil)))
-                                                            tvoid cc_default))
-                                                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                           (Etempvar _dst tuint) ::
-                                                           (Ebinop Oshl
-                                                             (Etempvar _dst64 tulong)
-                                                             (Ecast
-                                                               (Etempvar _src64 tulong)
-                                                               tuint) tulong) ::
-                                                           nil))
-                                                        (Ssequence
-                                                          (Scall None
-                                                            (Evar _upd_flag 
-                                                            (Tfunction
-                                                              (Tcons
-                                                                (tptr (Tstruct _bpf_state noattr))
-                                                                (Tcons tint
-                                                                  Tnil))
-                                                              tvoid
-                                                              cc_default))
-                                                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                             (Econst_int (Int.repr 0) tint) ::
-                                                             nil))
-                                                          (Sreturn None)))
-                                                      (Ssequence
-                                                        (Scall None
-                                                          (Evar _upd_flag 
-                                                          (Tfunction
-                                                            (Tcons
-                                                              (tptr (Tstruct _bpf_state noattr))
-                                                              (Tcons tint
-                                                                Tnil)) tvoid
-                                                            cc_default))
-                                                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                           (Eunop Oneg
-                                                             (Econst_int (Int.repr 10) tint)
-                                                             tint) :: nil))
-                                                        (Sreturn None)))
-                                                    (LScons (Some 119)
-                                                      (Sifthenelse (Ebinop Olt
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    (Econst_long (Int64.repr 64) tulong)
-                                                                    tint)
-                                                        (Ssequence
-                                                          (Scall None
-                                                            (Evar _upd_reg 
-                                                            (Tfunction
-                                                              (Tcons
-                                                                (tptr (Tstruct _bpf_state noattr))
-                                                                (Tcons tuint
-                                                                  (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                              tvoid
-                                                              cc_default))
-                                                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                             (Etempvar _dst tuint) ::
-                                                             (Ebinop Oshr
-                                                               (Etempvar _dst64 tulong)
-                                                               (Etempvar _imm tint)
-                                                               tulong) ::
-                                                             nil))
-                                                          (Ssequence
-                                                            (Scall None
-                                                              (Evar _upd_flag 
-                                                              (Tfunction
-                                                                (Tcons
-                                                                  (tptr (Tstruct _bpf_state noattr))
-                                                                  (Tcons tint
-                                                                    Tnil))
-                                                                tvoid
-                                                                cc_default))
-                                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                               (Econst_int (Int.repr 0) tint) ::
-                                                               nil))
-                                                            (Sreturn None)))
-                                                        (Ssequence
-                                                          (Scall None
-                                                            (Evar _upd_flag 
-                                                            (Tfunction
-                                                              (Tcons
-                                                                (tptr (Tstruct _bpf_state noattr))
-                                                                (Tcons tint
-                                                                  Tnil))
-                                                              tvoid
-                                                              cc_default))
-                                                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                             (Eunop Oneg
-                                                               (Econst_int (Int.repr 10) tint)
-                                                               tint) :: nil))
-                                                          (Sreturn None)))
-                                                      (LScons (Some 127)
-                                                        (Sifthenelse 
-                                                          (Ebinop Olt
-                                                            (Etempvar _src64 tulong)
-                                                            (Econst_long (Int64.repr 64) tulong)
-                                                            tint)
-                                                          (Ssequence
-                                                            (Scall None
-                                                              (Evar _upd_reg 
-                                                              (Tfunction
-                                                                (Tcons
-                                                                  (tptr (Tstruct _bpf_state noattr))
-                                                                  (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                tvoid
-                                                                cc_default))
-                                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                               (Etempvar _dst tuint) ::
-                                                               (Ebinop Oshr
-                                                                 (Etempvar _dst64 tulong)
-                                                                 (Ecast
-                                                                   (Etempvar _src64 tulong)
-                                                                   tuint)
-                                                                 tulong) ::
-                                                               nil))
-                                                            (Ssequence
-                                                              (Scall None
-                                                                (Evar _upd_flag 
-                                                                (Tfunction
-                                                                  (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                  tvoid
-                                                                  cc_default))
-                                                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                 (Econst_int (Int.repr 0) tint) ::
-                                                                 nil))
-                                                              (Sreturn None)))
-                                                          (Ssequence
-                                                            (Scall None
-                                                              (Evar _upd_flag 
-                                                              (Tfunction
-                                                                (Tcons
-                                                                  (tptr (Tstruct _bpf_state noattr))
-                                                                  (Tcons tint
-                                                                    Tnil))
-                                                                tvoid
-                                                                cc_default))
-                                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                               (Eunop Oneg
-                                                                 (Econst_int (Int.repr 10) tint)
-                                                                 tint) ::
-                                                               nil))
-                                                            (Sreturn None)))
-                                                        (LScons (Some 135)
-                                                          (Ssequence
-                                                            (Scall None
-                                                              (Evar _upd_reg 
-                                                              (Tfunction
-                                                                (Tcons
-                                                                  (tptr (Tstruct _bpf_state noattr))
-                                                                  (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                tvoid
-                                                                cc_default))
-                                                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                               (Etempvar _dst tuint) ::
-                                                               (Eunop Oneg
-                                                                 (Etempvar _dst64 tulong)
-                                                                 tulong) ::
-                                                               nil))
-                                                            (Ssequence
-                                                              (Scall None
-                                                                (Evar _upd_flag 
-                                                                (Tfunction
-                                                                  (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                  tvoid
-                                                                  cc_default))
-                                                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                 (Econst_int (Int.repr 0) tint) ::
-                                                                 nil))
-                                                              (Sreturn None)))
-                                                          (LScons (Some 151)
-                                                            (Sifthenelse 
-                                                              (Ebinop One
-                                                                (Ecast
-                                                                  (Etempvar _imm tint)
-                                                                  tulong)
-                                                                (Econst_long (Int64.repr 0) tulong)
-                                                                tint)
-                                                              (Ssequence
-                                                                (Scall None
-                                                                  (Evar _upd_reg 
-                                                                  (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                   (Etempvar _dst tuint) ::
-                                                                   (Ebinop Omod
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _imm tint)
-                                                                    tulong) ::
-                                                                   nil))
-                                                                (Ssequence
-                                                                  (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                  (Sreturn None)))
-                                                              (Ssequence
-                                                                (Scall None
-                                                                  (Evar _upd_flag 
-                                                                  (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                   (Eunop Oneg
-                                                                    (Econst_int (Int.repr 9) tint)
-                                                                    tint) ::
-                                                                   nil))
-                                                                (Sreturn None)))
-                                                            (LScons (Some 159)
-                                                              (Sifthenelse 
-                                                                (Ebinop One
-                                                                  (Etempvar _src64 tulong)
-                                                                  (Econst_long (Int64.repr 0) tulong)
-                                                                  tint)
-                                                                (Ssequence
-                                                                  (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ebinop Omod
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                  (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                (Ssequence
-                                                                  (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 9) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                  (Sreturn None)))
-                                                              (LScons (Some 167)
-                                                                (Ssequence
-                                                                  (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ebinop Oxor
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                  (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                (LScons (Some 175)
-                                                                  (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ebinop Oxor
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                  (LScons (Some 183)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 191)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Etempvar _src64 tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 199)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    (Econst_long (Int64.repr 64) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ebinop Oshr
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Etempvar _imm tint)
-                                                                    tlong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 207)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Etempvar _src64 tulong)
-                                                                    (Econst_long (Int64.repr 64) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ebinop Oshr
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tlong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 4)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oadd
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 12)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oadd
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 20)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Osub
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 28)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Osub
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 36)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Omul
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 44)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Omul
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 52)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Etempvar _imm tint)
-                                                                    (Econst_int (Int.repr 0) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Odiv
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 9) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 60)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    (Econst_int (Int.repr 0) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Odiv
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 9) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 68)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oor
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 76)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oor
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 84)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oand
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 92)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oand
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 100)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Etempvar _imm tint)
-                                                                    (Econst_int (Int.repr 32) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oshl
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 108)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    (Econst_int (Int.repr 32) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oshl
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 116)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Etempvar _imm tint)
-                                                                    (Econst_int (Int.repr 32) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oshr
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 124)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    (Econst_int (Int.repr 32) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oshr
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 132)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Eunop Oneg
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 148)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Etempvar _imm tint)
-                                                                    (Econst_int (Int.repr 0) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Omod
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 9) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 156)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    (Econst_int (Int.repr 0) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Omod
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 9) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 164)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oxor
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 172)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oxor
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tuint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 180)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Etempvar _imm tint) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 188)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 196)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Etempvar _imm tint)
-                                                                    (Econst_int (Int.repr 32) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oshr
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    tint)
-                                                                    (Etempvar _imm tint)
-                                                                    tint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 204)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    (Econst_int (Int.repr 32) tuint)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ecast
-                                                                    (Ebinop Oshr
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tuint)
-                                                                    tint)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tuint)
-                                                                    tint)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 10) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 5)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 21)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 29)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 37)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ogt
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 45)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ogt
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 53)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oge
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 61)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oge
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 165)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 173)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 181)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ole
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 189)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ole
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 69)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Ebinop Oand
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 77)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Ebinop Oand
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 85)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 93)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop One
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Etempvar _src64 tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 101)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ogt
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 109)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ogt
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 117)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oge
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 125)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oge
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 197)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 205)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 213)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ole
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 221)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Ole
-                                                                    (Ecast
-                                                                    (Etempvar _dst64 tulong)
-                                                                    tlong)
-                                                                    (Ecast
-                                                                    (Etempvar _src64 tulong)
-                                                                    tlong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 24)
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Olt
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Econst_long (Int64.repr 1) tulong)
-                                                                    tulong)
-                                                                    (Etempvar _len0 tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'12)
-                                                                    (Evar _list_get 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr tulong)
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Etempvar _l0 (tptr tulong)) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _pc tulong)
-                                                                    (Econst_long (Int64.repr 1) tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Sset _next_ins
-                                                                    (Etempvar _t'12 tulong)))
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'13)
-                                                                    (Evar _get_immediate 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)
-                                                                    tint
-                                                                    cc_default))
-                                                                    ((Etempvar _next_ins tulong) ::
-                                                                    nil))
-                                                                    (Sset _next_imm
-                                                                    (Etempvar _t'13 tint)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Ebinop Oor
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _imm tint)
-                                                                    tuint)
-                                                                    tulong)
-                                                                    (Ebinop Oshl
-                                                                    (Ecast
-                                                                    (Ecast
-                                                                    (Etempvar _next_imm tint)
-                                                                    tuint)
-                                                                    tulong)
-                                                                    (Econst_int (Int.repr 32) tuint)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_pc_incr 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    Tnil)
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))))))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 5) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))
-                                                                    (LScons (Some 97)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'14)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_src tulong) ::
-                                                                    (Econst_int (Int.repr 4) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_ldxw
-                                                                    (Etempvar _t'14 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_ldxw tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'15)
-                                                                    (Evar _load_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 4) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _src64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Sset _v_xw
-                                                                    (Etempvar _t'15 tulong)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Etempvar _v_xw tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))))))
-                                                                    (LScons (Some 105)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'16)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_src tulong) ::
-                                                                    (Econst_int (Int.repr 2) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_ldxh
-                                                                    (Etempvar _t'16 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_ldxh tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'17)
-                                                                    (Evar _load_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 2) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _src64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Sset _v_xh
-                                                                    (Etempvar _t'17 tulong)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Etempvar _v_xh tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))))))
-                                                                    (LScons (Some 113)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'18)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_src tulong) ::
-                                                                    (Econst_int (Int.repr 1) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_ldxb
-                                                                    (Etempvar _t'18 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_ldxb tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'19)
-                                                                    (Evar _load_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 1) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _src64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Sset _v_xb
-                                                                    (Etempvar _t'19 tulong)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Etempvar _v_xb tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))))))
-                                                                    (LScons (Some 121)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'20)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_src tulong) ::
-                                                                    (Econst_int (Int.repr 8) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_ldxdw
-                                                                    (Etempvar _t'20 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_ldxdw tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'21)
-                                                                    (Evar _load_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 8) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _src64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    nil))
-                                                                    (Sset _v_xdw
-                                                                    (Etempvar _t'21 tulong)))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil)))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Etempvar _dst tuint) ::
-                                                                    (Etempvar _v_xdw tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))))))
-                                                                    (LScons (Some 98)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'22)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 4) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_stw
-                                                                    (Etempvar _t'22 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_stw tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_imm 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 4) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _imm tint) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 106)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'23)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 2) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_sth
-                                                                    (Etempvar _t'23 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_sth tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_imm 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 2) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _imm tint) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 114)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'24)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 1) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_stb
-                                                                    (Etempvar _t'24 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_stb tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_imm 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 1) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _imm tint) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 122)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'25)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 8) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_stdw
-                                                                    (Etempvar _t'25 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_stdw tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_imm 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 8) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _imm tint) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 99)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'26)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 4) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_stxw
-                                                                    (Etempvar _t'26 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_stxw tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 4) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _src64 tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 107)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'27)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 2) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_stxh
-                                                                    (Etempvar _t'27 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_stxh tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 2) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _src64 tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 115)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'28)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 1) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_stxb
-                                                                    (Etempvar _t'28 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_stxb tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 1) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _src64 tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 123)
-                                                                    (Ssequence
-                                                                    (Ssequence
-                                                                    (Scall (Some _t'29)
-                                                                    (Evar _check_mem 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _memory_regions noattr))
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tuint
-                                                                    Tnil)))
-                                                                    tulong
-                                                                    cc_default))
-                                                                    ((Efield
-                                                                    (Ederef
-                                                                    (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                                                                    (Tstruct _bpf_state noattr))
-                                                                    _mrs
-                                                                    (tptr (Tstruct _memory_regions noattr))) ::
-                                                                    (Etempvar _addr_dst tulong) ::
-                                                                    (Econst_int (Int.repr 8) tuint) ::
-                                                                    nil))
-                                                                    (Sset _check_stxdw
-                                                                    (Etempvar _t'29 tulong)))
-                                                                    (Sifthenelse 
-                                                                    (Ebinop Oeq
-                                                                    (Etempvar _check_stxdw tulong)
-                                                                    (Econst_long (Int64.repr 0) tulong)
-                                                                    tint)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 2) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _store_mem_reg 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tuint
-                                                                    (Tcons
-                                                                    tulong
-                                                                    (Tcons
-                                                                    tulong
-                                                                    Tnil))))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 8) tuint) ::
-                                                                    (Ebinop Oadd
-                                                                    (Etempvar _dst64 tulong)
-                                                                    (Ecast
-                                                                    (Etempvar _ofs tshort)
-                                                                    tulong)
-                                                                    tulong) ::
-                                                                    (Etempvar _src64 tulong) ::
-                                                                    nil))
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 0) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None)))))
-                                                                    (LScons (Some 149)
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Econst_int (Int.repr 1) tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    (LScons None
-                                                                    (Ssequence
-                                                                    (Scall None
-                                                                    (Evar _upd_flag 
-                                                                    (Tfunction
-                                                                    (Tcons
-                                                                    (tptr (Tstruct _bpf_state noattr))
-                                                                    (Tcons
-                                                                    tint
-                                                                    Tnil))
-                                                                    tvoid
-                                                                    cc_default))
-                                                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                                                                    (Eunop Oneg
-                                                                    (Econst_int (Int.repr 1) tint)
-                                                                    tint) ::
-                                                                    nil))
-                                                                    (Sreturn None))
-                                                                    LSnil))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+                                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                       (Eunop Oneg
+                                         (Econst_int (Int.repr 10) tint)
+                                         tint) :: nil))
+                                    (Sreturn None))))
+                              (LScons None
+                                (Ssequence
+                                  (Scall None
+                                    (Evar _upd_flag (Tfunction
+                                                      (Tcons
+                                                        (tptr (Tstruct _bpf_state noattr))
+                                                        (Tcons tint Tnil))
+                                                      tvoid cc_default))
+                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                     (Eunop Oneg
+                                       (Econst_int (Int.repr 1) tint) tint) ::
+                                     nil))
+                                  (Sreturn None))
+                                LSnil))))))))))))))))
 |}.
 
-Definition f_bpf_interpreter_aux := {|
+Definition f_step_opcode_alu32 := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
-  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
-                (_l1, (tptr tulong)) :: (_len1, tulong) :: (_fuel1, tuint) ::
-                nil);
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_dst, tuint) ::
+                (_dst32, tuint) :: (_src32, tuint) :: (_op, tuchar) :: nil);
   fn_vars := nil;
-  fn_temps := ((_fuel0, tuint) :: (_pc1, tulong) :: (_f1, tint) ::
-               (_i, tint) :: (_t'2, tint) :: (_t'1, tulong) :: nil);
+  fn_temps := ((_opcode_alu32, tuchar) :: (_t'1, tuchar) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
-    (Sset _i (Econst_int (Int.repr 0) tint))
-    (Sloop
+    (Scall (Some _t'1)
+      (Evar _get_opcode_alu32 (Tfunction (Tcons tuchar Tnil) tuchar
+                                cc_default)) ((Etempvar _op tuchar) :: nil))
+    (Sset _opcode_alu32 (Ecast (Etempvar _t'1 tuchar) tuchar)))
+  (Sswitch (Etempvar _opcode_alu32 tuchar)
+    (LScons (Some 0)
       (Ssequence
-        (Sifthenelse (Ebinop Olt (Etempvar _i tint) (Etempvar _fuel1 tuint)
-                       tint)
-          Sskip
-          Sbreak)
+        (Scall None
+          (Evar _upd_reg (Tfunction
+                           (Tcons (tptr (Tstruct _bpf_state noattr))
+                             (Tcons tuint (Tcons tulong Tnil))) tvoid
+                           cc_default))
+          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+           (Etempvar _dst tuint) ::
+           (Ecast
+             (Ebinop Oadd (Etempvar _dst32 tuint) (Etempvar _src32 tuint)
+               tuint) tulong) :: nil))
         (Ssequence
+          (Scall None
+            (Evar _upd_flag (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tint Tnil)) tvoid cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Econst_int (Int.repr 0) tint) :: nil))
+          (Sreturn None)))
+      (LScons (Some 16)
+        (Ssequence
+          (Scall None
+            (Evar _upd_reg (Tfunction
+                             (Tcons (tptr (Tstruct _bpf_state noattr))
+                               (Tcons tuint (Tcons tulong Tnil))) tvoid
+                             cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Etempvar _dst tuint) ::
+             (Ecast
+               (Ebinop Osub (Etempvar _dst32 tuint) (Etempvar _src32 tuint)
+                 tuint) tulong) :: nil))
           (Ssequence
-            (Scall (Some _t'1)
-              (Evar _eval_pc (Tfunction
+            (Scall None
+              (Evar _upd_flag (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tint Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 0) tint) :: nil))
+            (Sreturn None)))
+        (LScons (Some 32)
+          (Ssequence
+            (Scall None
+              (Evar _upd_reg (Tfunction
                                (Tcons (tptr (Tstruct _bpf_state noattr))
-                                 Tnil) tulong cc_default))
-              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
-            (Sset _pc1 (Etempvar _t'1 tulong)))
-          (Sifthenelse (Ebinop Olt (Etempvar _pc1 tulong)
-                         (Etempvar _len1 tulong) tint)
+                                 (Tcons tuint (Tcons tulong Tnil))) tvoid
+                               cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Etempvar _dst tuint) ::
+               (Ecast
+                 (Ebinop Omul (Etempvar _dst32 tuint) (Etempvar _src32 tuint)
+                   tuint) tulong) :: nil))
             (Ssequence
               (Scall None
-                (Evar _step (Tfunction
-                              (Tcons (tptr (Tstruct _bpf_state noattr))
-                                (Tcons (tptr tulong) (Tcons tulong Tnil)))
-                              tvoid cc_default))
+                (Evar _upd_flag (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tint Tnil)) tvoid cc_default))
                 ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                 (Etempvar _l1 (tptr tulong)) :: (Etempvar _len1 tulong) ::
+                 (Econst_int (Int.repr 0) tint) :: nil))
+              (Sreturn None)))
+          (LScons (Some 48)
+            (Sifthenelse (Ebinop One (Etempvar _src32 tuint)
+                           (Econst_int (Int.repr 0) tuint) tint)
+              (Ssequence
+                (Scall None
+                  (Evar _upd_reg (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint (Tcons tulong Tnil))) tvoid
+                                   cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Etempvar _dst tuint) ::
+                   (Ecast
+                     (Ebinop Odiv (Etempvar _dst32 tuint)
+                       (Etempvar _src32 tuint) tuint) tulong) :: nil))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 9) tint) tint) :: nil))
+                (Sreturn None)))
+            (LScons (Some 64)
+              (Ssequence
+                (Scall None
+                  (Evar _upd_reg (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint (Tcons tulong Tnil))) tvoid
+                                   cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Etempvar _dst tuint) ::
+                   (Ecast
+                     (Ebinop Oor (Etempvar _dst32 tuint)
+                       (Etempvar _src32 tuint) tuint) tulong) :: nil))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))
+              (LScons (Some 80)
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_reg (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint (Tcons tulong Tnil)))
+                                     tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Etempvar _dst tuint) ::
+                     (Ecast
+                       (Ebinop Oand (Etempvar _dst32 tuint)
+                         (Etempvar _src32 tuint) tuint) tulong) :: nil))
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_flag (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tint Tnil)) tvoid
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 0) tint) :: nil))
+                    (Sreturn None)))
+                (LScons (Some 96)
+                  (Sifthenelse (Ebinop Olt (Etempvar _src32 tuint)
+                                 (Econst_int (Int.repr 32) tuint) tint)
+                    (Ssequence
+                      (Scall None
+                        (Evar _upd_reg (Tfunction
+                                         (Tcons
+                                           (tptr (Tstruct _bpf_state noattr))
+                                           (Tcons tuint (Tcons tulong Tnil)))
+                                         tvoid cc_default))
+                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                         (Etempvar _dst tuint) ::
+                         (Ecast
+                           (Ebinop Oshl (Etempvar _dst32 tuint)
+                             (Etempvar _src32 tuint) tuint) tulong) :: nil))
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_flag (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tint Tnil)) tvoid
+                                            cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Econst_int (Int.repr 0) tint) :: nil))
+                        (Sreturn None)))
+                    (Ssequence
+                      (Scall None
+                        (Evar _upd_flag (Tfunction
+                                          (Tcons
+                                            (tptr (Tstruct _bpf_state noattr))
+                                            (Tcons tint Tnil)) tvoid
+                                          cc_default))
+                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                         (Eunop Oneg (Econst_int (Int.repr 10) tint) tint) ::
+                         nil))
+                      (Sreturn None)))
+                  (LScons (Some 112)
+                    (Sifthenelse (Ebinop Olt (Etempvar _src32 tuint)
+                                   (Econst_int (Int.repr 32) tuint) tint)
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_reg (Tfunction
+                                           (Tcons
+                                             (tptr (Tstruct _bpf_state noattr))
+                                             (Tcons tuint
+                                               (Tcons tulong Tnil))) tvoid
+                                           cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Etempvar _dst tuint) ::
+                           (Ecast
+                             (Ebinop Oshr (Etempvar _dst32 tuint)
+                               (Etempvar _src32 tuint) tuint) tulong) :: nil))
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_flag (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tint Tnil)) tvoid
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Econst_int (Int.repr 0) tint) :: nil))
+                          (Sreturn None)))
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_flag (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tint Tnil)) tvoid
+                                            cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Eunop Oneg (Econst_int (Int.repr 10) tint) tint) ::
+                           nil))
+                        (Sreturn None)))
+                    (LScons (Some 128)
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_reg (Tfunction
+                                           (Tcons
+                                             (tptr (Tstruct _bpf_state noattr))
+                                             (Tcons tuint
+                                               (Tcons tulong Tnil))) tvoid
+                                           cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Etempvar _dst tuint) ::
+                           (Ecast (Eunop Oneg (Etempvar _dst32 tuint) tuint)
+                             tulong) :: nil))
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_flag (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tint Tnil)) tvoid
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Econst_int (Int.repr 0) tint) :: nil))
+                          (Sreturn None)))
+                      (LScons (Some 144)
+                        (Sifthenelse (Ebinop One (Etempvar _src32 tuint)
+                                       (Econst_int (Int.repr 0) tuint) tint)
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_reg (Tfunction
+                                               (Tcons
+                                                 (tptr (Tstruct _bpf_state noattr))
+                                                 (Tcons tuint
+                                                   (Tcons tulong Tnil)))
+                                               tvoid cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Etempvar _dst tuint) ::
+                               (Ecast
+                                 (Ebinop Omod (Etempvar _dst32 tuint)
+                                   (Etempvar _src32 tuint) tuint) tulong) ::
+                               nil))
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_flag (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tint Tnil)) tvoid
+                                                  cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Econst_int (Int.repr 0) tint) :: nil))
+                              (Sreturn None)))
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_flag (Tfunction
+                                                (Tcons
+                                                  (tptr (Tstruct _bpf_state noattr))
+                                                  (Tcons tint Tnil)) tvoid
+                                                cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Eunop Oneg (Econst_int (Int.repr 9) tint)
+                                 tint) :: nil))
+                            (Sreturn None)))
+                        (LScons (Some 160)
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_reg (Tfunction
+                                               (Tcons
+                                                 (tptr (Tstruct _bpf_state noattr))
+                                                 (Tcons tuint
+                                                   (Tcons tulong Tnil)))
+                                               tvoid cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Etempvar _dst tuint) ::
+                               (Ecast
+                                 (Ebinop Oxor (Etempvar _dst32 tuint)
+                                   (Etempvar _src32 tuint) tuint) tulong) ::
+                               nil))
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_flag (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tint Tnil)) tvoid
+                                                  cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Econst_int (Int.repr 0) tint) :: nil))
+                              (Sreturn None)))
+                          (LScons (Some 176)
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_reg (Tfunction
+                                                 (Tcons
+                                                   (tptr (Tstruct _bpf_state noattr))
+                                                   (Tcons tuint
+                                                     (Tcons tulong Tnil)))
+                                                 tvoid cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Etempvar _dst tuint) ::
+                                 (Etempvar _src32 tuint) :: nil))
+                              (Ssequence
+                                (Scall None
+                                  (Evar _upd_flag (Tfunction
+                                                    (Tcons
+                                                      (tptr (Tstruct _bpf_state noattr))
+                                                      (Tcons tint Tnil))
+                                                    tvoid cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Econst_int (Int.repr 0) tint) :: nil))
+                                (Sreturn None)))
+                            (LScons (Some 192)
+                              (Sifthenelse (Ebinop Olt
+                                             (Etempvar _src32 tuint)
+                                             (Econst_int (Int.repr 32) tuint)
+                                             tint)
+                                (Ssequence
+                                  (Scall None
+                                    (Evar _upd_reg (Tfunction
+                                                     (Tcons
+                                                       (tptr (Tstruct _bpf_state noattr))
+                                                       (Tcons tuint
+                                                         (Tcons tulong Tnil)))
+                                                     tvoid cc_default))
+                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                     (Etempvar _dst tuint) ::
+                                     (Ecast
+                                       (Ebinop Oshr
+                                         (Ecast (Etempvar _dst32 tuint) tint)
+                                         (Etempvar _src32 tuint) tint)
+                                       tulong) :: nil))
+                                  (Ssequence
+                                    (Scall None
+                                      (Evar _upd_flag (Tfunction
+                                                        (Tcons
+                                                          (tptr (Tstruct _bpf_state noattr))
+                                                          (Tcons tint Tnil))
+                                                        tvoid cc_default))
+                                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                       (Econst_int (Int.repr 0) tint) :: nil))
+                                    (Sreturn None)))
+                                (Ssequence
+                                  (Scall None
+                                    (Evar _upd_flag (Tfunction
+                                                      (Tcons
+                                                        (tptr (Tstruct _bpf_state noattr))
+                                                        (Tcons tint Tnil))
+                                                      tvoid cc_default))
+                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                     (Eunop Oneg
+                                       (Econst_int (Int.repr 10) tint) tint) ::
+                                     nil))
+                                  (Sreturn None)))
+                              (LScons None
+                                (Ssequence
+                                  (Scall None
+                                    (Evar _upd_flag (Tfunction
+                                                      (Tcons
+                                                        (tptr (Tstruct _bpf_state noattr))
+                                                        (Tcons tint Tnil))
+                                                      tvoid cc_default))
+                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                     (Eunop Oneg
+                                       (Econst_int (Int.repr 1) tint) tint) ::
+                                     nil))
+                                  (Sreturn None))
+                                LSnil))))))))))))))))
+|}.
+
+Definition f_step_opcode_branch := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_pc, tint) ::
+                (_ofs, tint) :: (_dst64, tulong) :: (_src64, tulong) ::
+                (_op, tuchar) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_opcode_jmp, tuchar) :: (_t'1, tuchar) :: nil);
+  fn_body :=
+(Ssequence
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _get_opcode_branch (Tfunction (Tcons tuchar Tnil) tuchar
+                                 cc_default)) ((Etempvar _op tuchar) :: nil))
+    (Sset _opcode_jmp (Ecast (Etempvar _t'1 tuchar) tuchar)))
+  (Sswitch (Etempvar _opcode_jmp tuchar)
+    (LScons (Some 0)
+      (Ssequence
+        (Scall None
+          (Evar _upd_pc (Tfunction
+                          (Tcons (tptr (Tstruct _bpf_state noattr))
+                            (Tcons tulong Tnil)) tvoid cc_default))
+          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+           (Ebinop Oadd (Etempvar _pc tint) (Etempvar _ofs tint) tint) ::
+           nil))
+        (Ssequence
+          (Scall None
+            (Evar _upd_flag (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tint Tnil)) tvoid cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Econst_int (Int.repr 0) tint) :: nil))
+          (Sreturn None)))
+      (LScons (Some 16)
+        (Sifthenelse (Ebinop Oeq (Etempvar _dst64 tulong)
+                       (Etempvar _src64 tulong) tint)
+          (Ssequence
+            (Scall None
+              (Evar _upd_pc (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tulong Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Ebinop Oadd (Etempvar _pc tint) (Etempvar _ofs tint) tint) ::
+               nil))
+            (Ssequence
+              (Scall None
+                (Evar _upd_flag (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tint Tnil)) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 0) tint) :: nil))
+              (Sreturn None)))
+          (Ssequence
+            (Scall None
+              (Evar _upd_flag (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tint Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 0) tint) :: nil))
+            (Sreturn None)))
+        (LScons (Some 32)
+          (Sifthenelse (Ebinop Ogt (Etempvar _dst64 tulong)
+                         (Etempvar _src64 tulong) tint)
+            (Ssequence
+              (Scall None
+                (Evar _upd_pc (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tulong Tnil)) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Ebinop Oadd (Etempvar _pc tint) (Etempvar _ofs tint) tint) ::
                  nil))
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 0) tint) :: nil))
+                (Sreturn None)))
+            (Ssequence
+              (Scall None
+                (Evar _upd_flag (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tint Tnil)) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 0) tint) :: nil))
+              (Sreturn None)))
+          (LScons (Some 48)
+            (Sifthenelse (Ebinop Oge (Etempvar _dst64 tulong)
+                           (Etempvar _src64 tulong) tint)
+              (Ssequence
+                (Scall None
+                  (Evar _upd_pc (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tulong Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Ebinop Oadd (Etempvar _pc tint) (Etempvar _ofs tint)
+                     tint) :: nil))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 0) tint) :: nil))
+                (Sreturn None)))
+            (LScons (Some 160)
+              (Sifthenelse (Ebinop Olt (Etempvar _dst64 tulong)
+                             (Etempvar _src64 tulong) tint)
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_pc (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tulong Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Ebinop Oadd (Etempvar _pc tint) (Etempvar _ofs tint)
+                       tint) :: nil))
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_flag (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tint Tnil)) tvoid
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 0) tint) :: nil))
+                    (Sreturn None)))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))
+              (LScons (Some 176)
+                (Sifthenelse (Ebinop Ole (Etempvar _dst64 tulong)
+                               (Etempvar _src64 tulong) tint)
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_pc (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tulong Tnil)) tvoid
+                                      cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Ebinop Oadd (Etempvar _pc tint) (Etempvar _ofs tint)
+                         tint) :: nil))
+                    (Ssequence
+                      (Scall None
+                        (Evar _upd_flag (Tfunction
+                                          (Tcons
+                                            (tptr (Tstruct _bpf_state noattr))
+                                            (Tcons tint Tnil)) tvoid
+                                          cc_default))
+                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                         (Econst_int (Int.repr 0) tint) :: nil))
+                      (Sreturn None)))
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_flag (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tint Tnil)) tvoid
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 0) tint) :: nil))
+                    (Sreturn None)))
+                (LScons (Some 64)
+                  (Sifthenelse (Ebinop One
+                                 (Ebinop Oand (Etempvar _dst64 tulong)
+                                   (Etempvar _src64 tulong) tulong)
+                                 (Econst_long (Int64.repr 0) tulong) tint)
+                    (Ssequence
+                      (Scall None
+                        (Evar _upd_pc (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tulong Tnil)) tvoid
+                                        cc_default))
+                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                         (Ebinop Oadd (Etempvar _pc tint)
+                           (Etempvar _ofs tint) tint) :: nil))
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_flag (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tint Tnil)) tvoid
+                                            cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Econst_int (Int.repr 0) tint) :: nil))
+                        (Sreturn None)))
+                    (Ssequence
+                      (Scall None
+                        (Evar _upd_flag (Tfunction
+                                          (Tcons
+                                            (tptr (Tstruct _bpf_state noattr))
+                                            (Tcons tint Tnil)) tvoid
+                                          cc_default))
+                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                         (Econst_int (Int.repr 0) tint) :: nil))
+                      (Sreturn None)))
+                  (LScons (Some 80)
+                    (Sifthenelse (Ebinop One (Etempvar _dst64 tulong)
+                                   (Etempvar _src64 tulong) tint)
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_pc (Tfunction
+                                          (Tcons
+                                            (tptr (Tstruct _bpf_state noattr))
+                                            (Tcons tulong Tnil)) tvoid
+                                          cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Ebinop Oadd (Etempvar _pc tint)
+                             (Etempvar _ofs tint) tint) :: nil))
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_flag (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tint Tnil)) tvoid
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Econst_int (Int.repr 0) tint) :: nil))
+                          (Sreturn None)))
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_flag (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tint Tnil)) tvoid
+                                            cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Econst_int (Int.repr 0) tint) :: nil))
+                        (Sreturn None)))
+                    (LScons (Some 96)
+                      (Sifthenelse (Ebinop Ogt
+                                     (Ecast (Etempvar _dst64 tulong) tlong)
+                                     (Ecast (Etempvar _src64 tulong) tlong)
+                                     tint)
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_pc (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tulong Tnil)) tvoid
+                                            cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Ebinop Oadd (Etempvar _pc tint)
+                               (Etempvar _ofs tint) tint) :: nil))
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_flag (Tfunction
+                                                (Tcons
+                                                  (tptr (Tstruct _bpf_state noattr))
+                                                  (Tcons tint Tnil)) tvoid
+                                                cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Econst_int (Int.repr 0) tint) :: nil))
+                            (Sreturn None)))
+                        (Ssequence
+                          (Scall None
+                            (Evar _upd_flag (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tint Tnil)) tvoid
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Econst_int (Int.repr 0) tint) :: nil))
+                          (Sreturn None)))
+                      (LScons (Some 112)
+                        (Sifthenelse (Ebinop Oge
+                                       (Ecast (Etempvar _dst64 tulong) tlong)
+                                       (Ecast (Etempvar _src64 tulong) tlong)
+                                       tint)
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_pc (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tulong Tnil)) tvoid
+                                              cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Ebinop Oadd (Etempvar _pc tint)
+                                 (Etempvar _ofs tint) tint) :: nil))
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_flag (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tint Tnil)) tvoid
+                                                  cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Econst_int (Int.repr 0) tint) :: nil))
+                              (Sreturn None)))
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_flag (Tfunction
+                                                (Tcons
+                                                  (tptr (Tstruct _bpf_state noattr))
+                                                  (Tcons tint Tnil)) tvoid
+                                                cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Econst_int (Int.repr 0) tint) :: nil))
+                            (Sreturn None)))
+                        (LScons (Some 192)
+                          (Sifthenelse (Ebinop Olt
+                                         (Ecast (Etempvar _dst64 tulong)
+                                           tlong)
+                                         (Ecast (Etempvar _src64 tulong)
+                                           tlong) tint)
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_pc (Tfunction
+                                                (Tcons
+                                                  (tptr (Tstruct _bpf_state noattr))
+                                                  (Tcons tulong Tnil)) tvoid
+                                                cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Ebinop Oadd (Etempvar _pc tint)
+                                   (Etempvar _ofs tint) tint) :: nil))
+                              (Ssequence
+                                (Scall None
+                                  (Evar _upd_flag (Tfunction
+                                                    (Tcons
+                                                      (tptr (Tstruct _bpf_state noattr))
+                                                      (Tcons tint Tnil))
+                                                    tvoid cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Econst_int (Int.repr 0) tint) :: nil))
+                                (Sreturn None)))
+                            (Ssequence
+                              (Scall None
+                                (Evar _upd_flag (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tint Tnil)) tvoid
+                                                  cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Econst_int (Int.repr 0) tint) :: nil))
+                              (Sreturn None)))
+                          (LScons (Some 208)
+                            (Sifthenelse (Ebinop Ole
+                                           (Ecast (Etempvar _dst64 tulong)
+                                             tlong)
+                                           (Ecast (Etempvar _src64 tulong)
+                                             tlong) tint)
+                              (Ssequence
+                                (Scall None
+                                  (Evar _upd_pc (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tulong Tnil))
+                                                  tvoid cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Ebinop Oadd (Etempvar _pc tint)
+                                     (Etempvar _ofs tint) tint) :: nil))
+                                (Ssequence
+                                  (Scall None
+                                    (Evar _upd_flag (Tfunction
+                                                      (Tcons
+                                                        (tptr (Tstruct _bpf_state noattr))
+                                                        (Tcons tint Tnil))
+                                                      tvoid cc_default))
+                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                     (Econst_int (Int.repr 0) tint) :: nil))
+                                  (Sreturn None)))
+                              (Ssequence
+                                (Scall None
+                                  (Evar _upd_flag (Tfunction
+                                                    (Tcons
+                                                      (tptr (Tstruct _bpf_state noattr))
+                                                      (Tcons tint Tnil))
+                                                    tvoid cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Econst_int (Int.repr 0) tint) :: nil))
+                                (Sreturn None)))
+                            (LScons (Some 144)
+                              (Ssequence
+                                (Scall None
+                                  (Evar _upd_flag (Tfunction
+                                                    (Tcons
+                                                      (tptr (Tstruct _bpf_state noattr))
+                                                      (Tcons tint Tnil))
+                                                    tvoid cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Econst_int (Int.repr 1) tint) :: nil))
+                                (Sreturn None))
+                              (LScons None
+                                (Ssequence
+                                  (Scall None
+                                    (Evar _upd_flag (Tfunction
+                                                      (Tcons
+                                                        (tptr (Tstruct _bpf_state noattr))
+                                                        (Tcons tint Tnil))
+                                                      tvoid cc_default))
+                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                     (Eunop Oneg
+                                       (Econst_int (Int.repr 1) tint) tint) ::
+                                     nil))
+                                  (Sreturn None))
+                                LSnil))))))))))))))))
+|}.
+
+Definition f_step_opcode_mem_ld_imm := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_pc, tint) ::
+                (_len, tint) :: (_dst, tuint) :: (_dst64, tulong) ::
+                (_imm, tint) :: (_op, tuchar) :: (_l, (tptr tulong)) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_opcode_ld, tuchar) :: (_next_ins, tulong) ::
+               (_next_imm, tint) :: (_t'3, tint) :: (_t'2, tulong) ::
+               (_t'1, tuchar) :: nil);
+  fn_body :=
+(Ssequence
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _get_opcode_mem_ld_imm (Tfunction (Tcons tuchar Tnil) tuchar
+                                     cc_default))
+      ((Etempvar _op tuchar) :: nil))
+    (Sset _opcode_ld (Ecast (Etempvar _t'1 tuchar) tuchar)))
+  (Sswitch (Etempvar _opcode_ld tuchar)
+    (LScons (Some 24)
+      (Sifthenelse (Ebinop Olt
+                     (Ebinop Oadd (Etempvar _pc tint)
+                       (Econst_int (Int.repr 1) tint) tint)
+                     (Etempvar _len tint) tint)
+        (Ssequence
+          (Ssequence
+            (Scall (Some _t'2)
+              (Evar _list_get (Tfunction
+                                (Tcons (tptr tulong) (Tcons tint Tnil))
+                                tulong cc_default))
+              ((Etempvar _l (tptr tulong)) ::
+               (Ebinop Oadd (Etempvar _pc tint)
+                 (Econst_int (Int.repr 1) tint) tint) :: nil))
+            (Sset _next_ins (Etempvar _t'2 tulong)))
+          (Ssequence
+            (Ssequence
+              (Scall (Some _t'3)
+                (Evar _get_immediate (Tfunction (Tcons tulong Tnil) tint
+                                       cc_default))
+                ((Etempvar _next_ins tulong) :: nil))
+              (Sset _next_imm (Etempvar _t'3 tint)))
+            (Ssequence
+              (Scall None
+                (Evar _upd_reg (Tfunction
+                                 (Tcons (tptr (Tstruct _bpf_state noattr))
+                                   (Tcons tuint (Tcons tulong Tnil))) tvoid
+                                 cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Etempvar _dst tuint) ::
+                 (Ebinop Oor
+                   (Ecast (Ecast (Etempvar _imm tint) tuint) tulong)
+                   (Ebinop Oshl
+                     (Ecast (Ecast (Etempvar _next_imm tint) tuint) tulong)
+                     (Econst_int (Int.repr 32) tuint) tulong) tulong) :: nil))
               (Ssequence
                 (Scall None
                   (Evar _upd_pc_incr (Tfunction
@@ -5730,29 +2428,1442 @@ Definition f_bpf_interpreter_aux := {|
                                          Tnil) tvoid cc_default))
                   ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
                 (Ssequence
-                  (Ssequence
-                    (Scall (Some _t'2)
-                      (Evar _eval_flag (Tfunction
-                                         (Tcons
-                                           (tptr (Tstruct _bpf_state noattr))
-                                           Tnil) tint cc_default))
-                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                       nil))
-                    (Sset _f1 (Etempvar _t'2 tint)))
-                  (Sifthenelse (Ebinop Oeq (Etempvar _f1 tint)
-                                 (Econst_int (Int.repr 0) tint) tint)
-                    Scontinue
-                    (Sreturn None)))))
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None))))))
+        (Ssequence
+          (Scall None
+            (Evar _upd_flag (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tint Tnil)) tvoid cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Eunop Oneg (Econst_int (Int.repr 5) tint) tint) :: nil))
+          (Sreturn None)))
+      (LScons None
+        (Ssequence
+          (Scall None
+            (Evar _upd_flag (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tint Tnil)) tvoid cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Eunop Oneg (Econst_int (Int.repr 1) tint) tint) :: nil))
+          (Sreturn None))
+        LSnil))))
+|}.
+
+Definition f_step_opcode_mem_ld_reg := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_pc, tint) ::
+                (_dst, tuint) :: (_dst64, tulong) :: (_src64, tulong) ::
+                (_op, tuchar) :: (_ofs64, tulong) :: (_addr, tulong) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_opcode_ld, tuchar) :: (_check_ld, tulong) :: (_v, tulong) ::
+               (_t'9, tulong) :: (_t'8, tulong) :: (_t'7, tulong) ::
+               (_t'6, tulong) :: (_t'5, tulong) :: (_t'4, tulong) ::
+               (_t'3, tulong) :: (_t'2, tulong) :: (_t'1, tuchar) :: nil);
+  fn_body :=
+(Ssequence
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _get_opcode_mem_ld_reg (Tfunction (Tcons tuchar Tnil) tuchar
+                                     cc_default))
+      ((Etempvar _op tuchar) :: nil))
+    (Sset _opcode_ld (Ecast (Etempvar _t'1 tuchar) tuchar)))
+  (Sswitch (Etempvar _opcode_ld tuchar)
+    (LScons (Some 97)
+      (Ssequence
+        (Ssequence
+          (Scall (Some _t'2)
+            (Evar _check_mem (Tfunction
+                               (Tcons (tptr (Tstruct _bpf_state noattr))
+                                 (Tcons tuint
+                                   (Tcons tuint (Tcons tulong Tnil)))) tulong
+                               cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Econst_int (Int.repr 1) tuint) ::
+             (Econst_int (Int.repr 4) tuint) :: (Etempvar _addr tulong) ::
+             nil))
+          (Sset _check_ld (Etempvar _t'2 tulong)))
+        (Sifthenelse (Ebinop Oeq (Etempvar _check_ld tulong)
+                       (Econst_long (Int64.repr 0) tulong) tint)
+          (Ssequence
+            (Scall None
+              (Evar _upd_flag (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tint Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+            (Sreturn None))
+          (Ssequence
+            (Ssequence
+              (Scall (Some _t'3)
+                (Evar _load_mem (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tuint (Tcons tulong Tnil))) tulong
+                                  cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 4) tuint) ::
+                 (Ebinop Oadd (Etempvar _src64 tulong)
+                   (Etempvar _ofs64 tulong) tulong) :: nil))
+              (Sset _v (Etempvar _t'3 tulong)))
+            (Ssequence
+              (Scall None
+                (Evar _upd_reg (Tfunction
+                                 (Tcons (tptr (Tstruct _bpf_state noattr))
+                                   (Tcons tuint (Tcons tulong Tnil))) tvoid
+                                 cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Etempvar _dst tuint) :: (Etempvar _v tulong) :: nil))
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 0) tint) :: nil))
+                (Sreturn None))))))
+      (LScons (Some 105)
+        (Ssequence
+          (Ssequence
+            (Scall (Some _t'4)
+              (Evar _check_mem (Tfunction
+                                 (Tcons (tptr (Tstruct _bpf_state noattr))
+                                   (Tcons tuint
+                                     (Tcons tuint (Tcons tulong Tnil))))
+                                 tulong cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 1) tuint) ::
+               (Econst_int (Int.repr 2) tuint) :: (Etempvar _addr tulong) ::
+               nil))
+            (Sset _check_ld (Etempvar _t'4 tulong)))
+          (Sifthenelse (Ebinop Oeq (Etempvar _check_ld tulong)
+                         (Econst_long (Int64.repr 0) tulong) tint)
             (Ssequence
               (Scall None
                 (Evar _upd_flag (Tfunction
                                   (Tcons (tptr (Tstruct _bpf_state noattr))
                                     (Tcons tint Tnil)) tvoid cc_default))
                 ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                 (Eunop Oneg (Econst_int (Int.repr 5) tint) tint) :: nil))
+                 (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+              (Sreturn None))
+            (Ssequence
+              (Ssequence
+                (Scall (Some _t'5)
+                  (Evar _load_mem (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tuint (Tcons tulong Tnil)))
+                                    tulong cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 2) tuint) ::
+                   (Ebinop Oadd (Etempvar _src64 tulong)
+                     (Etempvar _ofs64 tulong) tulong) :: nil))
+                (Sset _v (Etempvar _t'5 tulong)))
+              (Ssequence
+                (Scall None
+                  (Evar _upd_reg (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint (Tcons tulong Tnil))) tvoid
+                                   cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Etempvar _dst tuint) :: (Etempvar _v tulong) :: nil))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None))))))
+        (LScons (Some 113)
+          (Ssequence
+            (Ssequence
+              (Scall (Some _t'6)
+                (Evar _check_mem (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint
+                                       (Tcons tuint (Tcons tulong Tnil))))
+                                   tulong cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 1) tuint) ::
+                 (Econst_int (Int.repr 1) tuint) ::
+                 (Etempvar _addr tulong) :: nil))
+              (Sset _check_ld (Etempvar _t'6 tulong)))
+            (Sifthenelse (Ebinop Oeq (Etempvar _check_ld tulong)
+                           (Econst_long (Int64.repr 0) tulong) tint)
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+                (Sreturn None))
+              (Ssequence
+                (Ssequence
+                  (Scall (Some _t'7)
+                    (Evar _load_mem (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tuint (Tcons tulong Tnil)))
+                                      tulong cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 1) tuint) ::
+                     (Ebinop Oadd (Etempvar _src64 tulong)
+                       (Etempvar _ofs64 tulong) tulong) :: nil))
+                  (Sset _v (Etempvar _t'7 tulong)))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_reg (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint (Tcons tulong Tnil)))
+                                     tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Etempvar _dst tuint) :: (Etempvar _v tulong) :: nil))
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_flag (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tint Tnil)) tvoid
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 0) tint) :: nil))
+                    (Sreturn None))))))
+          (LScons (Some 121)
+            (Ssequence
+              (Ssequence
+                (Scall (Some _t'8)
+                  (Evar _check_mem (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint
+                                         (Tcons tuint (Tcons tulong Tnil))))
+                                     tulong cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 1) tuint) ::
+                   (Econst_int (Int.repr 8) tuint) ::
+                   (Etempvar _addr tulong) :: nil))
+                (Sset _check_ld (Etempvar _t'8 tulong)))
+              (Sifthenelse (Ebinop Oeq (Etempvar _check_ld tulong)
+                             (Econst_long (Int64.repr 0) tulong) tint)
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+                  (Sreturn None))
+                (Ssequence
+                  (Ssequence
+                    (Scall (Some _t'9)
+                      (Evar _load_mem (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tuint (Tcons tulong Tnil)))
+                                        tulong cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 8) tuint) ::
+                       (Ebinop Oadd (Etempvar _src64 tulong)
+                         (Etempvar _ofs64 tulong) tulong) :: nil))
+                    (Sset _v (Etempvar _t'9 tulong)))
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_reg (Tfunction
+                                       (Tcons
+                                         (tptr (Tstruct _bpf_state noattr))
+                                         (Tcons tuint (Tcons tulong Tnil)))
+                                       tvoid cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Etempvar _dst tuint) :: (Etempvar _v tulong) :: nil))
+                    (Ssequence
+                      (Scall None
+                        (Evar _upd_flag (Tfunction
+                                          (Tcons
+                                            (tptr (Tstruct _bpf_state noattr))
+                                            (Tcons tint Tnil)) tvoid
+                                          cc_default))
+                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                         (Econst_int (Int.repr 0) tint) :: nil))
+                      (Sreturn None))))))
+            (LScons None
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 1) tint) tint) :: nil))
+                (Sreturn None))
+              LSnil)))))))
+|}.
+
+Definition f_step_opcode_mem_st_imm := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_pc, tint) ::
+                (_dst, tuint) :: (_dst64, tulong) :: (_imm, tint) ::
+                (_op, tuchar) :: (_ofs64, tulong) :: (_addr, tulong) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_opcode_st, tuchar) :: (_check_st, tulong) ::
+               (_t'5, tulong) :: (_t'4, tulong) :: (_t'3, tulong) ::
+               (_t'2, tulong) :: (_t'1, tuchar) :: nil);
+  fn_body :=
+(Ssequence
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _get_opcode_mem_st_imm (Tfunction (Tcons tuchar Tnil) tuchar
+                                     cc_default))
+      ((Etempvar _op tuchar) :: nil))
+    (Sset _opcode_st (Ecast (Etempvar _t'1 tuchar) tuchar)))
+  (Sswitch (Etempvar _opcode_st tuchar)
+    (LScons (Some 98)
+      (Ssequence
+        (Ssequence
+          (Scall (Some _t'2)
+            (Evar _check_mem (Tfunction
+                               (Tcons (tptr (Tstruct _bpf_state noattr))
+                                 (Tcons tuint
+                                   (Tcons tuint (Tcons tulong Tnil)))) tulong
+                               cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Econst_int (Int.repr 2) tuint) ::
+             (Econst_int (Int.repr 4) tuint) :: (Etempvar _addr tulong) ::
+             nil))
+          (Sset _check_st (Etempvar _t'2 tulong)))
+        (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                       (Econst_long (Int64.repr 0) tulong) tint)
+          (Ssequence
+            (Scall None
+              (Evar _upd_flag (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tint Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+            (Sreturn None))
+          (Ssequence
+            (Scall None
+              (Evar _store_mem_imm (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint
+                                         (Tcons tulong (Tcons tint Tnil))))
+                                     tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 4) tuint) ::
+               (Ebinop Oadd (Etempvar _dst64 tulong) (Etempvar _ofs64 tulong)
+                 tulong) :: (Etempvar _imm tint) :: nil))
+            (Ssequence
+              (Scall None
+                (Evar _upd_flag (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tint Tnil)) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 0) tint) :: nil))
               (Sreturn None)))))
-      (Sset _i
-        (Ebinop Oadd (Etempvar _i tint) (Econst_int (Int.repr 1) tint) tint))))
+      (LScons (Some 106)
+        (Ssequence
+          (Ssequence
+            (Scall (Some _t'3)
+              (Evar _check_mem (Tfunction
+                                 (Tcons (tptr (Tstruct _bpf_state noattr))
+                                   (Tcons tuint
+                                     (Tcons tuint (Tcons tulong Tnil))))
+                                 tulong cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 2) tuint) ::
+               (Econst_int (Int.repr 2) tuint) :: (Etempvar _addr tulong) ::
+               nil))
+            (Sset _check_st (Etempvar _t'3 tulong)))
+          (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                         (Econst_long (Int64.repr 0) tulong) tint)
+            (Ssequence
+              (Scall None
+                (Evar _upd_flag (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tint Tnil)) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+              (Sreturn None))
+            (Ssequence
+              (Scall None
+                (Evar _store_mem_imm (Tfunction
+                                       (Tcons
+                                         (tptr (Tstruct _bpf_state noattr))
+                                         (Tcons tuint
+                                           (Tcons tulong (Tcons tint Tnil))))
+                                       tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 2) tuint) ::
+                 (Ebinop Oadd (Etempvar _dst64 tulong)
+                   (Etempvar _ofs64 tulong) tulong) ::
+                 (Etempvar _imm tint) :: nil))
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 0) tint) :: nil))
+                (Sreturn None)))))
+        (LScons (Some 114)
+          (Ssequence
+            (Ssequence
+              (Scall (Some _t'4)
+                (Evar _check_mem (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint
+                                       (Tcons tuint (Tcons tulong Tnil))))
+                                   tulong cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 2) tuint) ::
+                 (Econst_int (Int.repr 1) tuint) ::
+                 (Etempvar _addr tulong) :: nil))
+              (Sset _check_st (Etempvar _t'4 tulong)))
+            (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                           (Econst_long (Int64.repr 0) tulong) tint)
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+                (Sreturn None))
+              (Ssequence
+                (Scall None
+                  (Evar _store_mem_imm (Tfunction
+                                         (Tcons
+                                           (tptr (Tstruct _bpf_state noattr))
+                                           (Tcons tuint
+                                             (Tcons tulong (Tcons tint Tnil))))
+                                         tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 1) tuint) ::
+                   (Ebinop Oadd (Etempvar _dst64 tulong)
+                     (Etempvar _ofs64 tulong) tulong) ::
+                   (Etempvar _imm tint) :: nil))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))))
+          (LScons (Some 122)
+            (Ssequence
+              (Ssequence
+                (Scall (Some _t'5)
+                  (Evar _check_mem (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint
+                                         (Tcons tuint (Tcons tulong Tnil))))
+                                     tulong cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 2) tuint) ::
+                   (Econst_int (Int.repr 8) tuint) ::
+                   (Etempvar _addr tulong) :: nil))
+                (Sset _check_st (Etempvar _t'5 tulong)))
+              (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                             (Econst_long (Int64.repr 0) tulong) tint)
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+                  (Sreturn None))
+                (Ssequence
+                  (Scall None
+                    (Evar _store_mem_imm (Tfunction
+                                           (Tcons
+                                             (tptr (Tstruct _bpf_state noattr))
+                                             (Tcons tuint
+                                               (Tcons tulong
+                                                 (Tcons tint Tnil)))) tvoid
+                                           cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 8) tuint) ::
+                     (Ebinop Oadd (Etempvar _dst64 tulong)
+                       (Etempvar _ofs64 tulong) tulong) ::
+                     (Etempvar _imm tint) :: nil))
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_flag (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tint Tnil)) tvoid
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 0) tint) :: nil))
+                    (Sreturn None)))))
+            (LScons None
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 1) tint) tint) :: nil))
+                (Sreturn None))
+              LSnil)))))))
+|}.
+
+Definition f_step_opcode_mem_st_reg := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_pc, tint) ::
+                (_dst, tuint) :: (_dst64, tulong) :: (_src64, tulong) ::
+                (_op, tuchar) :: (_ofs64, tulong) :: (_addr, tulong) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_opcode_st, tuchar) :: (_check_st, tulong) ::
+               (_t'5, tulong) :: (_t'4, tulong) :: (_t'3, tulong) ::
+               (_t'2, tulong) :: (_t'1, tuchar) :: nil);
+  fn_body :=
+(Ssequence
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _get_opcode_mem_st_reg (Tfunction (Tcons tuchar Tnil) tuchar
+                                     cc_default))
+      ((Etempvar _op tuchar) :: nil))
+    (Sset _opcode_st (Ecast (Etempvar _t'1 tuchar) tuchar)))
+  (Sswitch (Etempvar _opcode_st tuchar)
+    (LScons (Some 99)
+      (Ssequence
+        (Ssequence
+          (Scall (Some _t'2)
+            (Evar _check_mem (Tfunction
+                               (Tcons (tptr (Tstruct _bpf_state noattr))
+                                 (Tcons tuint
+                                   (Tcons tuint (Tcons tulong Tnil)))) tulong
+                               cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+             (Econst_int (Int.repr 2) tuint) ::
+             (Econst_int (Int.repr 4) tuint) :: (Etempvar _addr tulong) ::
+             nil))
+          (Sset _check_st (Etempvar _t'2 tulong)))
+        (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                       (Econst_long (Int64.repr 0) tulong) tint)
+          (Ssequence
+            (Scall None
+              (Evar _upd_flag (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tint Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+            (Sreturn None))
+          (Ssequence
+            (Scall None
+              (Evar _store_mem_reg (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint
+                                         (Tcons tulong (Tcons tulong Tnil))))
+                                     tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 4) tuint) ::
+               (Ebinop Oadd (Etempvar _dst64 tulong) (Etempvar _ofs64 tulong)
+                 tulong) :: (Etempvar _src64 tulong) :: nil))
+            (Ssequence
+              (Scall None
+                (Evar _upd_flag (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tint Tnil)) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 0) tint) :: nil))
+              (Sreturn None)))))
+      (LScons (Some 107)
+        (Ssequence
+          (Ssequence
+            (Scall (Some _t'3)
+              (Evar _check_mem (Tfunction
+                                 (Tcons (tptr (Tstruct _bpf_state noattr))
+                                   (Tcons tuint
+                                     (Tcons tuint (Tcons tulong Tnil))))
+                                 tulong cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 2) tuint) ::
+               (Econst_int (Int.repr 2) tuint) :: (Etempvar _addr tulong) ::
+               nil))
+            (Sset _check_st (Etempvar _t'3 tulong)))
+          (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                         (Econst_long (Int64.repr 0) tulong) tint)
+            (Ssequence
+              (Scall None
+                (Evar _upd_flag (Tfunction
+                                  (Tcons (tptr (Tstruct _bpf_state noattr))
+                                    (Tcons tint Tnil)) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+              (Sreturn None))
+            (Ssequence
+              (Scall None
+                (Evar _store_mem_reg (Tfunction
+                                       (Tcons
+                                         (tptr (Tstruct _bpf_state noattr))
+                                         (Tcons tuint
+                                           (Tcons tulong (Tcons tulong Tnil))))
+                                       tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 2) tuint) ::
+                 (Ebinop Oadd (Etempvar _dst64 tulong)
+                   (Etempvar _ofs64 tulong) tulong) ::
+                 (Etempvar _src64 tulong) :: nil))
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 0) tint) :: nil))
+                (Sreturn None)))))
+        (LScons (Some 115)
+          (Ssequence
+            (Ssequence
+              (Scall (Some _t'4)
+                (Evar _check_mem (Tfunction
+                                   (Tcons (tptr (Tstruct _bpf_state noattr))
+                                     (Tcons tuint
+                                       (Tcons tuint (Tcons tulong Tnil))))
+                                   tulong cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                 (Econst_int (Int.repr 2) tuint) ::
+                 (Econst_int (Int.repr 1) tuint) ::
+                 (Etempvar _addr tulong) :: nil))
+              (Sset _check_st (Etempvar _t'4 tulong)))
+            (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                           (Econst_long (Int64.repr 0) tulong) tint)
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+                (Sreturn None))
+              (Ssequence
+                (Scall None
+                  (Evar _store_mem_reg (Tfunction
+                                         (Tcons
+                                           (tptr (Tstruct _bpf_state noattr))
+                                           (Tcons tuint
+                                             (Tcons tulong
+                                               (Tcons tulong Tnil)))) tvoid
+                                         cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 1) tuint) ::
+                   (Ebinop Oadd (Etempvar _dst64 tulong)
+                     (Etempvar _ofs64 tulong) tulong) ::
+                   (Etempvar _src64 tulong) :: nil))
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 0) tint) :: nil))
+                  (Sreturn None)))))
+          (LScons (Some 123)
+            (Ssequence
+              (Ssequence
+                (Scall (Some _t'5)
+                  (Evar _check_mem (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tuint
+                                         (Tcons tuint (Tcons tulong Tnil))))
+                                     tulong cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Econst_int (Int.repr 2) tuint) ::
+                   (Econst_int (Int.repr 8) tuint) ::
+                   (Etempvar _addr tulong) :: nil))
+                (Sset _check_st (Etempvar _t'5 tulong)))
+              (Sifthenelse (Ebinop Oeq (Etempvar _check_st tulong)
+                             (Econst_long (Int64.repr 0) tulong) tint)
+                (Ssequence
+                  (Scall None
+                    (Evar _upd_flag (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tint Tnil)) tvoid cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Eunop Oneg (Econst_int (Int.repr 2) tint) tint) :: nil))
+                  (Sreturn None))
+                (Ssequence
+                  (Scall None
+                    (Evar _store_mem_reg (Tfunction
+                                           (Tcons
+                                             (tptr (Tstruct _bpf_state noattr))
+                                             (Tcons tuint
+                                               (Tcons tulong
+                                                 (Tcons tulong Tnil)))) tvoid
+                                           cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Econst_int (Int.repr 8) tuint) ::
+                     (Ebinop Oadd (Etempvar _dst64 tulong)
+                       (Etempvar _ofs64 tulong) tulong) ::
+                     (Etempvar _src64 tulong) :: nil))
+                  (Ssequence
+                    (Scall None
+                      (Evar _upd_flag (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tint Tnil)) tvoid
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Econst_int (Int.repr 0) tint) :: nil))
+                    (Sreturn None)))))
+            (LScons None
+              (Ssequence
+                (Scall None
+                  (Evar _upd_flag (Tfunction
+                                    (Tcons (tptr (Tstruct _bpf_state noattr))
+                                      (Tcons tint Tnil)) tvoid cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Eunop Oneg (Econst_int (Int.repr 1) tint) tint) :: nil))
+                (Sreturn None))
+              LSnil)))))))
+|}.
+
+Definition f_step := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_len, tint) ::
+                (_l, (tptr tulong)) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_pc, tint) :: (_ins, tulong) :: (_op, tuchar) ::
+               (_opc, tuchar) :: (_dst, tuint) :: (_dst64, tulong) ::
+               (_is_imm, tbool) :: (_imm, tint) :: (_imm64, tulong) ::
+               (_src, tuint) :: (_src64, tulong) :: (_dst32, tuint) ::
+               (_src32, tuint) :: (_ofs, tint) :: (_ofs64, tulong) ::
+               (_addr, tulong) :: (_t'50, tulong) :: (_t'49, tulong) ::
+               (_t'48, tint) :: (_t'47, tulong) :: (_t'46, tuint) ::
+               (_t'45, tulong) :: (_t'44, tuint) :: (_t'43, tulong) ::
+               (_t'42, tint) :: (_t'41, tulong) :: (_t'40, tint) ::
+               (_t'39, tulong) :: (_t'38, tuint) :: (_t'37, tulong) ::
+               (_t'36, tulong) :: (_t'35, tint) :: (_t'34, tulong) ::
+               (_t'33, tuint) :: (_t'32, tulong) :: (_t'31, tuint) ::
+               (_t'30, tint) :: (_t'29, tulong) :: (_t'28, tuint) ::
+               (_t'27, tulong) :: (_t'26, tuint) :: (_t'25, tulong) ::
+               (_t'24, tint) :: (_t'23, tbool) :: (_t'22, tint) ::
+               (_t'21, tulong) :: (_t'20, tuint) :: (_t'19, tuint) ::
+               (_t'18, tulong) :: (_t'17, tuint) :: (_t'16, tint) ::
+               (_t'15, tbool) :: (_t'14, tuint) :: (_t'13, tulong) ::
+               (_t'12, tuint) :: (_t'11, tulong) :: (_t'10, tuint) ::
+               (_t'9, tulong) :: (_t'8, tint) :: (_t'7, tbool) ::
+               (_t'6, tulong) :: (_t'5, tuint) :: (_t'4, tuchar) ::
+               (_t'3, tuchar) :: (_t'2, tulong) :: (_t'1, tulong) :: nil);
+  fn_body :=
+(Ssequence
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _eval_pc (Tfunction
+                       (Tcons (tptr (Tstruct _bpf_state noattr)) Tnil) tulong
+                       cc_default))
+      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+    (Sset _pc (Ecast (Etempvar _t'1 tulong) tint)))
+  (Ssequence
+    (Ssequence
+      (Scall (Some _t'2)
+        (Evar _list_get (Tfunction (Tcons (tptr tulong) (Tcons tint Tnil))
+                          tulong cc_default))
+        ((Etempvar _l (tptr tulong)) :: (Etempvar _pc tint) :: nil))
+      (Sset _ins (Etempvar _t'2 tulong)))
+    (Ssequence
+      (Ssequence
+        (Scall (Some _t'3)
+          (Evar _get_opcode_ins (Tfunction (Tcons tulong Tnil) tuchar
+                                  cc_default))
+          ((Etempvar _ins tulong) :: nil))
+        (Sset _op (Ecast (Etempvar _t'3 tuchar) tuchar)))
+      (Ssequence
+        (Ssequence
+          (Scall (Some _t'4)
+            (Evar _get_opcode (Tfunction (Tcons tuchar Tnil) tuchar
+                                cc_default)) ((Etempvar _op tuchar) :: nil))
+          (Sset _opc (Ecast (Etempvar _t'4 tuchar) tuchar)))
+        (Sswitch (Etempvar _opc tuchar)
+          (LScons (Some 7)
+            (Ssequence
+              (Ssequence
+                (Scall (Some _t'5)
+                  (Evar _get_dst (Tfunction (Tcons tulong Tnil) tuint
+                                   cc_default))
+                  ((Etempvar _ins tulong) :: nil))
+                (Sset _dst (Etempvar _t'5 tuint)))
+              (Ssequence
+                (Ssequence
+                  (Scall (Some _t'6)
+                    (Evar _eval_reg (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _bpf_state noattr))
+                                        (Tcons tuint Tnil)) tulong
+                                      cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     (Etempvar _dst tuint) :: nil))
+                  (Sset _dst64 (Etempvar _t'6 tulong)))
+                (Ssequence
+                  (Ssequence
+                    (Scall (Some _t'7)
+                      (Evar _comp_and_0x08_byte (Tfunction
+                                                  (Tcons tuchar Tnil) tbool
+                                                  cc_default))
+                      ((Etempvar _op tuchar) :: nil))
+                    (Sset _is_imm (Ecast (Etempvar _t'7 tbool) tbool)))
+                  (Sifthenelse (Etempvar _is_imm tbool)
+                    (Ssequence
+                      (Ssequence
+                        (Scall (Some _t'8)
+                          (Evar _get_immediate (Tfunction (Tcons tulong Tnil)
+                                                 tint cc_default))
+                          ((Etempvar _ins tulong) :: nil))
+                        (Sset _imm (Etempvar _t'8 tint)))
+                      (Ssequence
+                        (Ssequence
+                          (Scall (Some _t'9)
+                            (Evar _eval_immediate (Tfunction
+                                                    (Tcons tint Tnil) tulong
+                                                    cc_default))
+                            ((Etempvar _imm tint) :: nil))
+                          (Sset _imm64 (Etempvar _t'9 tulong)))
+                        (Ssequence
+                          (Scall None
+                            (Evar _step_opcode_alu64 (Tfunction
+                                                       (Tcons
+                                                         (tptr (Tstruct _bpf_state noattr))
+                                                         (Tcons tuint
+                                                           (Tcons tulong
+                                                             (Tcons tulong
+                                                               (Tcons tuchar
+                                                                 Tnil)))))
+                                                       tvoid cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Etempvar _dst tuint) ::
+                             (Etempvar _dst64 tulong) ::
+                             (Etempvar _imm64 tulong) ::
+                             (Etempvar _op tuchar) :: nil))
+                          (Sreturn None))))
+                    (Ssequence
+                      (Ssequence
+                        (Scall (Some _t'10)
+                          (Evar _get_src (Tfunction (Tcons tulong Tnil) tuint
+                                           cc_default))
+                          ((Etempvar _ins tulong) :: nil))
+                        (Sset _src (Etempvar _t'10 tuint)))
+                      (Ssequence
+                        (Ssequence
+                          (Scall (Some _t'11)
+                            (Evar _eval_reg (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tuint Tnil)) tulong
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Etempvar _src tuint) :: nil))
+                          (Sset _src64 (Etempvar _t'11 tulong)))
+                        (Ssequence
+                          (Scall None
+                            (Evar _step_opcode_alu64 (Tfunction
+                                                       (Tcons
+                                                         (tptr (Tstruct _bpf_state noattr))
+                                                         (Tcons tuint
+                                                           (Tcons tulong
+                                                             (Tcons tulong
+                                                               (Tcons tuchar
+                                                                 Tnil)))))
+                                                       tvoid cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Etempvar _dst tuint) ::
+                             (Etempvar _dst64 tulong) ::
+                             (Etempvar _src64 tulong) ::
+                             (Etempvar _op tuchar) :: nil))
+                          (Sreturn None))))))))
+            (LScons (Some 4)
+              (Ssequence
+                (Ssequence
+                  (Scall (Some _t'12)
+                    (Evar _get_dst (Tfunction (Tcons tulong Tnil) tuint
+                                     cc_default))
+                    ((Etempvar _ins tulong) :: nil))
+                  (Sset _dst (Etempvar _t'12 tuint)))
+                (Ssequence
+                  (Ssequence
+                    (Scall (Some _t'13)
+                      (Evar _eval_reg (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _bpf_state noattr))
+                                          (Tcons tuint Tnil)) tulong
+                                        cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Etempvar _dst tuint) :: nil))
+                    (Sset _dst64 (Etempvar _t'13 tulong)))
+                  (Ssequence
+                    (Ssequence
+                      (Scall (Some _t'14)
+                        (Evar _reg64_to_reg32 (Tfunction (Tcons tulong Tnil)
+                                                tuint cc_default))
+                        ((Etempvar _dst64 tulong) :: nil))
+                      (Sset _dst32 (Etempvar _t'14 tuint)))
+                    (Ssequence
+                      (Ssequence
+                        (Scall (Some _t'15)
+                          (Evar _comp_and_0x08_byte (Tfunction
+                                                      (Tcons tuchar Tnil)
+                                                      tbool cc_default))
+                          ((Etempvar _op tuchar) :: nil))
+                        (Sset _is_imm (Ecast (Etempvar _t'15 tbool) tbool)))
+                      (Sifthenelse (Etempvar _is_imm tbool)
+                        (Ssequence
+                          (Ssequence
+                            (Scall (Some _t'16)
+                              (Evar _get_immediate (Tfunction
+                                                     (Tcons tulong Tnil) tint
+                                                     cc_default))
+                              ((Etempvar _ins tulong) :: nil))
+                            (Sset _imm (Etempvar _t'16 tint)))
+                          (Ssequence
+                            (Scall None
+                              (Evar _step_opcode_alu32 (Tfunction
+                                                         (Tcons
+                                                           (tptr (Tstruct _bpf_state noattr))
+                                                           (Tcons tuint
+                                                             (Tcons tuint
+                                                               (Tcons tuint
+                                                                 (Tcons
+                                                                   tuchar
+                                                                   Tnil)))))
+                                                         tvoid cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Etempvar _pc tint) ::
+                               (Etempvar _dst32 tuint) ::
+                               (Etempvar _imm tint) ::
+                               (Etempvar _op tuchar) :: nil))
+                            (Sreturn None)))
+                        (Ssequence
+                          (Ssequence
+                            (Scall (Some _t'17)
+                              (Evar _get_src (Tfunction (Tcons tulong Tnil)
+                                               tuint cc_default))
+                              ((Etempvar _ins tulong) :: nil))
+                            (Sset _src (Etempvar _t'17 tuint)))
+                          (Ssequence
+                            (Ssequence
+                              (Scall (Some _t'18)
+                                (Evar _eval_reg (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tuint Tnil))
+                                                  tulong cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Etempvar _src tuint) :: nil))
+                              (Sset _src64 (Etempvar _t'18 tulong)))
+                            (Ssequence
+                              (Ssequence
+                                (Scall (Some _t'19)
+                                  (Evar _reg64_to_reg32 (Tfunction
+                                                          (Tcons tulong Tnil)
+                                                          tuint cc_default))
+                                  ((Etempvar _src64 tulong) :: nil))
+                                (Sset _src32 (Etempvar _t'19 tuint)))
+                              (Ssequence
+                                (Scall None
+                                  (Evar _step_opcode_alu32 (Tfunction
+                                                             (Tcons
+                                                               (tptr (Tstruct _bpf_state noattr))
+                                                               (Tcons tuint
+                                                                 (Tcons tuint
+                                                                   (Tcons
+                                                                    tuint
+                                                                    (Tcons
+                                                                    tuchar
+                                                                    Tnil)))))
+                                                             tvoid
+                                                             cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Etempvar _pc tint) ::
+                                   (Etempvar _dst32 tuint) ::
+                                   (Etempvar _src32 tuint) ::
+                                   (Etempvar _op tuchar) :: nil))
+                                (Sreturn None))))))))))
+              (LScons (Some 5)
+                (Ssequence
+                  (Ssequence
+                    (Scall (Some _t'20)
+                      (Evar _get_dst (Tfunction (Tcons tulong Tnil) tuint
+                                       cc_default))
+                      ((Etempvar _ins tulong) :: nil))
+                    (Sset _dst (Etempvar _t'20 tuint)))
+                  (Ssequence
+                    (Ssequence
+                      (Scall (Some _t'21)
+                        (Evar _eval_reg (Tfunction
+                                          (Tcons
+                                            (tptr (Tstruct _bpf_state noattr))
+                                            (Tcons tuint Tnil)) tulong
+                                          cc_default))
+                        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                         (Etempvar _dst tuint) :: nil))
+                      (Sset _dst64 (Etempvar _t'21 tulong)))
+                    (Ssequence
+                      (Ssequence
+                        (Scall (Some _t'22)
+                          (Evar _get_offset (Tfunction (Tcons tulong Tnil)
+                                              tint cc_default))
+                          ((Etempvar _ins tulong) :: nil))
+                        (Sset _ofs (Etempvar _t'22 tint)))
+                      (Ssequence
+                        (Ssequence
+                          (Scall (Some _t'23)
+                            (Evar _comp_and_0x08_byte (Tfunction
+                                                        (Tcons tuchar Tnil)
+                                                        tbool cc_default))
+                            ((Etempvar _op tuchar) :: nil))
+                          (Sset _is_imm (Ecast (Etempvar _t'23 tbool) tbool)))
+                        (Sifthenelse (Etempvar _is_imm tbool)
+                          (Ssequence
+                            (Ssequence
+                              (Scall (Some _t'24)
+                                (Evar _get_immediate (Tfunction
+                                                       (Tcons tulong Tnil)
+                                                       tint cc_default))
+                                ((Etempvar _ins tulong) :: nil))
+                              (Sset _imm (Etempvar _t'24 tint)))
+                            (Ssequence
+                              (Ssequence
+                                (Scall (Some _t'25)
+                                  (Evar _eval_immediate (Tfunction
+                                                          (Tcons tint Tnil)
+                                                          tulong cc_default))
+                                  ((Etempvar _imm tint) :: nil))
+                                (Sset _imm64 (Etempvar _t'25 tulong)))
+                              (Ssequence
+                                (Scall None
+                                  (Evar _step_opcode_branch (Tfunction
+                                                              (Tcons
+                                                                (tptr (Tstruct _bpf_state noattr))
+                                                                (Tcons tint
+                                                                  (Tcons tint
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tuchar
+                                                                    Tnil))))))
+                                                              tvoid
+                                                              cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Etempvar _pc tint) ::
+                                   (Etempvar _ofs tint) ::
+                                   (Etempvar _dst64 tulong) ::
+                                   (Etempvar _imm64 tulong) ::
+                                   (Etempvar _op tuchar) :: nil))
+                                (Sreturn None))))
+                          (Ssequence
+                            (Ssequence
+                              (Scall (Some _t'26)
+                                (Evar _get_src (Tfunction (Tcons tulong Tnil)
+                                                 tuint cc_default))
+                                ((Etempvar _ins tulong) :: nil))
+                              (Sset _src (Etempvar _t'26 tuint)))
+                            (Ssequence
+                              (Ssequence
+                                (Scall (Some _t'27)
+                                  (Evar _eval_reg (Tfunction
+                                                    (Tcons
+                                                      (tptr (Tstruct _bpf_state noattr))
+                                                      (Tcons tuint Tnil))
+                                                    tulong cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Etempvar _src tuint) :: nil))
+                                (Sset _src64 (Etempvar _t'27 tulong)))
+                              (Ssequence
+                                (Scall None
+                                  (Evar _step_opcode_branch (Tfunction
+                                                              (Tcons
+                                                                (tptr (Tstruct _bpf_state noattr))
+                                                                (Tcons tint
+                                                                  (Tcons tint
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tuchar
+                                                                    Tnil))))))
+                                                              tvoid
+                                                              cc_default))
+                                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                   (Etempvar _pc tint) ::
+                                   (Etempvar _ofs tint) ::
+                                   (Etempvar _dst64 tulong) ::
+                                   (Etempvar _src64 tulong) ::
+                                   (Etempvar _op tuchar) :: nil))
+                                (Sreturn None)))))))))
+                (LScons (Some 0)
+                  (Ssequence
+                    (Ssequence
+                      (Scall (Some _t'28)
+                        (Evar _get_dst (Tfunction (Tcons tulong Tnil) tuint
+                                         cc_default))
+                        ((Etempvar _ins tulong) :: nil))
+                      (Sset _dst (Etempvar _t'28 tuint)))
+                    (Ssequence
+                      (Ssequence
+                        (Scall (Some _t'29)
+                          (Evar _eval_reg (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tuint Tnil)) tulong
+                                            cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Etempvar _dst tuint) :: nil))
+                        (Sset _dst64 (Etempvar _t'29 tulong)))
+                      (Ssequence
+                        (Ssequence
+                          (Scall (Some _t'30)
+                            (Evar _get_immediate (Tfunction
+                                                   (Tcons tulong Tnil) tint
+                                                   cc_default))
+                            ((Etempvar _ins tulong) :: nil))
+                          (Sset _imm (Etempvar _t'30 tint)))
+                        (Ssequence
+                          (Scall None
+                            (Evar _step_opcode_mem_ld_imm (Tfunction
+                                                            (Tcons
+                                                              (tptr (Tstruct _bpf_state noattr))
+                                                              (Tcons tint
+                                                                (Tcons tint
+                                                                  (Tcons
+                                                                    tuint
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tint
+                                                                    (Tcons
+                                                                    tuchar
+                                                                    (Tcons
+                                                                    (tptr tulong)
+                                                                    Tnil))))))))
+                                                            tvoid cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Etempvar _pc tint) :: (Etempvar _len tint) ::
+                             (Etempvar _dst tuint) ::
+                             (Etempvar _dst64 tulong) ::
+                             (Etempvar _imm tint) :: (Etempvar _op tuchar) ::
+                             (Etempvar _l (tptr tulong)) :: nil))
+                          (Sreturn None)))))
+                  (LScons (Some 1)
+                    (Ssequence
+                      (Ssequence
+                        (Scall (Some _t'31)
+                          (Evar _get_dst (Tfunction (Tcons tulong Tnil) tuint
+                                           cc_default))
+                          ((Etempvar _ins tulong) :: nil))
+                        (Sset _dst (Etempvar _t'31 tuint)))
+                      (Ssequence
+                        (Ssequence
+                          (Scall (Some _t'32)
+                            (Evar _eval_reg (Tfunction
+                                              (Tcons
+                                                (tptr (Tstruct _bpf_state noattr))
+                                                (Tcons tuint Tnil)) tulong
+                                              cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Etempvar _dst tuint) :: nil))
+                          (Sset _dst64 (Etempvar _t'32 tulong)))
+                        (Ssequence
+                          (Ssequence
+                            (Scall (Some _t'33)
+                              (Evar _get_src (Tfunction (Tcons tulong Tnil)
+                                               tuint cc_default))
+                              ((Etempvar _ins tulong) :: nil))
+                            (Sset _src (Etempvar _t'33 tuint)))
+                          (Ssequence
+                            (Ssequence
+                              (Scall (Some _t'34)
+                                (Evar _eval_reg (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tuint Tnil))
+                                                  tulong cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Etempvar _src tuint) :: nil))
+                              (Sset _src64 (Etempvar _t'34 tulong)))
+                            (Ssequence
+                              (Ssequence
+                                (Scall (Some _t'35)
+                                  (Evar _get_offset (Tfunction
+                                                      (Tcons tulong Tnil)
+                                                      tint cc_default))
+                                  ((Etempvar _ins tulong) :: nil))
+                                (Sset _ofs (Etempvar _t'35 tint)))
+                              (Ssequence
+                                (Ssequence
+                                  (Scall (Some _t'36)
+                                    (Evar _eval_immediate (Tfunction
+                                                            (Tcons tint Tnil)
+                                                            tulong
+                                                            cc_default))
+                                    ((Etempvar _ofs tint) :: nil))
+                                  (Sset _ofs64 (Etempvar _t'36 tulong)))
+                                (Ssequence
+                                  (Ssequence
+                                    (Scall (Some _t'37)
+                                      (Evar _get_addl (Tfunction
+                                                        (Tcons tulong
+                                                          (Tcons tulong Tnil))
+                                                        tulong cc_default))
+                                      ((Etempvar _src64 tulong) ::
+                                       (Etempvar _ofs64 tulong) :: nil))
+                                    (Sset _addr (Etempvar _t'37 tulong)))
+                                  (Ssequence
+                                    (Scall None
+                                      (Evar _step_opcode_mem_ld_reg (Tfunction
+                                                                    (Tcons
+                                                                    (tptr (Tstruct _bpf_state noattr))
+                                                                    (Tcons
+                                                                    tint
+                                                                    (Tcons
+                                                                    tuint
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tuchar
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tulong
+                                                                    Tnil))))))))
+                                                                    tvoid
+                                                                    cc_default))
+                                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                       (Etempvar _pc tint) ::
+                                       (Etempvar _dst tuint) ::
+                                       (Etempvar _dst64 tulong) ::
+                                       (Etempvar _src64 tulong) ::
+                                       (Etempvar _op tuchar) ::
+                                       (Etempvar _ofs64 tulong) ::
+                                       (Etempvar _addr tulong) :: nil))
+                                    (Sreturn None)))))))))
+                    (LScons (Some 2)
+                      (Ssequence
+                        (Ssequence
+                          (Scall (Some _t'38)
+                            (Evar _get_dst (Tfunction (Tcons tulong Tnil)
+                                             tuint cc_default))
+                            ((Etempvar _ins tulong) :: nil))
+                          (Sset _dst (Etempvar _t'38 tuint)))
+                        (Ssequence
+                          (Ssequence
+                            (Scall (Some _t'39)
+                              (Evar _eval_reg (Tfunction
+                                                (Tcons
+                                                  (tptr (Tstruct _bpf_state noattr))
+                                                  (Tcons tuint Tnil)) tulong
+                                                cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Etempvar _dst tuint) :: nil))
+                            (Sset _dst64 (Etempvar _t'39 tulong)))
+                          (Ssequence
+                            (Ssequence
+                              (Scall (Some _t'40)
+                                (Evar _get_offset (Tfunction
+                                                    (Tcons tulong Tnil) tint
+                                                    cc_default))
+                                ((Etempvar _ins tulong) :: nil))
+                              (Sset _ofs (Etempvar _t'40 tint)))
+                            (Ssequence
+                              (Ssequence
+                                (Scall (Some _t'41)
+                                  (Evar _eval_immediate (Tfunction
+                                                          (Tcons tint Tnil)
+                                                          tulong cc_default))
+                                  ((Etempvar _ofs tint) :: nil))
+                                (Sset _ofs64 (Etempvar _t'41 tulong)))
+                              (Ssequence
+                                (Ssequence
+                                  (Scall (Some _t'42)
+                                    (Evar _get_immediate (Tfunction
+                                                           (Tcons tulong
+                                                             Tnil) tint
+                                                           cc_default))
+                                    ((Etempvar _ins tulong) :: nil))
+                                  (Sset _imm (Etempvar _t'42 tint)))
+                                (Ssequence
+                                  (Ssequence
+                                    (Scall (Some _t'43)
+                                      (Evar _get_addl (Tfunction
+                                                        (Tcons tulong
+                                                          (Tcons tulong Tnil))
+                                                        tulong cc_default))
+                                      ((Etempvar _dst64 tulong) ::
+                                       (Etempvar _ofs64 tulong) :: nil))
+                                    (Sset _addr (Etempvar _t'43 tulong)))
+                                  (Ssequence
+                                    (Scall None
+                                      (Evar _step_opcode_mem_st_imm (Tfunction
+                                                                    (Tcons
+                                                                    (tptr (Tstruct _bpf_state noattr))
+                                                                    (Tcons
+                                                                    tint
+                                                                    (Tcons
+                                                                    tuint
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tint
+                                                                    (Tcons
+                                                                    tuchar
+                                                                    (Tcons
+                                                                    tulong
+                                                                    (Tcons
+                                                                    tulong
+                                                                    Tnil))))))))
+                                                                    tvoid
+                                                                    cc_default))
+                                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                       (Etempvar _pc tint) ::
+                                       (Etempvar _dst tuint) ::
+                                       (Etempvar _dst64 tulong) ::
+                                       (Etempvar _imm tint) ::
+                                       (Etempvar _op tuchar) ::
+                                       (Etempvar _ofs64 tulong) ::
+                                       (Etempvar _addr tulong) :: nil))
+                                    (Sreturn None))))))))
+                      (LScons (Some 3)
+                        (Ssequence
+                          (Ssequence
+                            (Scall (Some _t'44)
+                              (Evar _get_dst (Tfunction (Tcons tulong Tnil)
+                                               tuint cc_default))
+                              ((Etempvar _ins tulong) :: nil))
+                            (Sset _dst (Etempvar _t'44 tuint)))
+                          (Ssequence
+                            (Ssequence
+                              (Scall (Some _t'45)
+                                (Evar _eval_reg (Tfunction
+                                                  (Tcons
+                                                    (tptr (Tstruct _bpf_state noattr))
+                                                    (Tcons tuint Tnil))
+                                                  tulong cc_default))
+                                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                 (Etempvar _dst tuint) :: nil))
+                              (Sset _dst64 (Etempvar _t'45 tulong)))
+                            (Ssequence
+                              (Ssequence
+                                (Scall (Some _t'46)
+                                  (Evar _get_src (Tfunction
+                                                   (Tcons tulong Tnil) tuint
+                                                   cc_default))
+                                  ((Etempvar _ins tulong) :: nil))
+                                (Sset _src (Etempvar _t'46 tuint)))
+                              (Ssequence
+                                (Ssequence
+                                  (Scall (Some _t'47)
+                                    (Evar _eval_reg (Tfunction
+                                                      (Tcons
+                                                        (tptr (Tstruct _bpf_state noattr))
+                                                        (Tcons tuint Tnil))
+                                                      tulong cc_default))
+                                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                     (Etempvar _src tuint) :: nil))
+                                  (Sset _src64 (Etempvar _t'47 tulong)))
+                                (Ssequence
+                                  (Ssequence
+                                    (Scall (Some _t'48)
+                                      (Evar _get_offset (Tfunction
+                                                          (Tcons tulong Tnil)
+                                                          tint cc_default))
+                                      ((Etempvar _ins tulong) :: nil))
+                                    (Sset _ofs (Etempvar _t'48 tint)))
+                                  (Ssequence
+                                    (Ssequence
+                                      (Scall (Some _t'49)
+                                        (Evar _eval_immediate (Tfunction
+                                                                (Tcons tint
+                                                                  Tnil)
+                                                                tulong
+                                                                cc_default))
+                                        ((Etempvar _ofs tint) :: nil))
+                                      (Sset _ofs64 (Etempvar _t'49 tulong)))
+                                    (Ssequence
+                                      (Ssequence
+                                        (Scall (Some _t'50)
+                                          (Evar _get_addl (Tfunction
+                                                            (Tcons tulong
+                                                              (Tcons tulong
+                                                                Tnil)) tulong
+                                                            cc_default))
+                                          ((Etempvar _dst64 tulong) ::
+                                           (Etempvar _ofs64 tulong) :: nil))
+                                        (Sset _addr (Etempvar _t'50 tulong)))
+                                      (Ssequence
+                                        (Scall None
+                                          (Evar _step_opcode_mem_st_reg 
+                                          (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tint
+                                                (Tcons tuint
+                                                  (Tcons tulong
+                                                    (Tcons tulong
+                                                      (Tcons tuchar
+                                                        (Tcons tulong
+                                                          (Tcons tulong Tnil))))))))
+                                            tvoid cc_default))
+                                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                                           (Etempvar _pc tint) ::
+                                           (Etempvar _dst tuint) ::
+                                           (Etempvar _dst64 tulong) ::
+                                           (Etempvar _src64 tulong) ::
+                                           (Etempvar _op tuchar) ::
+                                           (Etempvar _ofs64 tulong) ::
+                                           (Etempvar _addr tulong) :: nil))
+                                        (Sreturn None)))))))))
+                        (LScons None
+                          (Ssequence
+                            (Scall None
+                              (Evar _upd_flag (Tfunction
+                                                (Tcons
+                                                  (tptr (Tstruct _bpf_state noattr))
+                                                  (Tcons tint Tnil)) tvoid
+                                                cc_default))
+                              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                               (Eunop Oneg (Econst_int (Int.repr 1) tint)
+                                 tint) :: nil))
+                            (Sreturn None))
+                          LSnil)))))))))))))
+|}.
+
+Definition f_bpf_interpreter_aux := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_len, tint) ::
+                (_fuel, tuint) :: (_l, (tptr tulong)) :: nil);
+  fn_vars := nil;
+  fn_temps := ((_fuel0, tuint) :: (_pc, tint) :: (_f, tint) ::
+               (_t'3, tint) :: (_t'2, tint) :: (_t'1, tulong) :: nil);
+  fn_body :=
+(Sifthenelse (Ebinop Oeq (Etempvar _fuel tuint)
+               (Econst_int (Int.repr 0) tuint) tint)
   (Ssequence
     (Scall None
       (Evar _upd_flag (Tfunction
@@ -5760,85 +3871,161 @@ Definition f_bpf_interpreter_aux := {|
                           (Tcons tint Tnil)) tvoid cc_default))
       ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
        (Eunop Oneg (Econst_int (Int.repr 5) tint) tint) :: nil))
-    (Sreturn None)))
+    (Sreturn None))
+  (Ssequence
+    (Sset _fuel0
+      (Ebinop Osub (Etempvar _fuel tuint) (Econst_int (Int.repr 1) tuint)
+        tuint))
+    (Ssequence
+      (Ssequence
+        (Scall (Some _t'1)
+          (Evar _eval_pc (Tfunction
+                           (Tcons (tptr (Tstruct _bpf_state noattr)) Tnil)
+                           tulong cc_default))
+          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+        (Sset _pc (Ecast (Etempvar _t'1 tulong) tint)))
+      (Ssequence
+        (Sifthenelse (Ebinop Ole (Econst_int (Int.repr 0) tuint)
+                       (Etempvar _pc tint) tint)
+          (Sset _t'3
+            (Ecast (Ebinop Olt (Etempvar _pc tint) (Etempvar _len tint) tint)
+              tbool))
+          (Sset _t'3 (Econst_int (Int.repr 0) tint)))
+        (Sifthenelse (Etempvar _t'3 tint)
+          (Ssequence
+            (Scall None
+              (Evar _step (Tfunction
+                            (Tcons (tptr (Tstruct _bpf_state noattr))
+                              (Tcons tint (Tcons (tptr tulong) Tnil))) tvoid
+                            cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Etempvar _len tint) :: (Etempvar _l (tptr tulong)) :: nil))
+            (Ssequence
+              (Scall None
+                (Evar _upd_pc_incr (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       Tnil) tvoid cc_default))
+                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+              (Ssequence
+                (Ssequence
+                  (Scall (Some _t'2)
+                    (Evar _eval_flag (Tfunction
+                                       (Tcons
+                                         (tptr (Tstruct _bpf_state noattr))
+                                         Tnil) tint cc_default))
+                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                     nil))
+                  (Sset _f (Etempvar _t'2 tint)))
+                (Sifthenelse (Ebinop Oeq (Etempvar _f tint)
+                               (Econst_int (Int.repr 0) tint) tint)
+                  (Ssequence
+                    (Scall None
+                      (Evar _bpf_interpreter_aux (Tfunction
+                                                   (Tcons
+                                                     (tptr (Tstruct _bpf_state noattr))
+                                                     (Tcons tint
+                                                       (Tcons tuint
+                                                         (Tcons (tptr tulong)
+                                                           Tnil)))) tvoid
+                                                   cc_default))
+                      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                       (Etempvar _len tint) :: (Etempvar _fuel0 tuint) ::
+                       (Etempvar _l (tptr tulong)) :: nil))
+                    (Sreturn None))
+                  (Sreturn None)))))
+          (Ssequence
+            (Scall None
+              (Evar _upd_flag (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tint Tnil)) tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Eunop Oneg (Econst_int (Int.repr 5) tint) tint) :: nil))
+            (Sreturn None)))))))
 |}.
 
 Definition f_bpf_interpreter := {|
   fn_return := tulong;
   fn_callconv := cc_default;
-  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
-                (_l2, (tptr tulong)) :: (_len2, tulong) :: (_fuel2, tuint) ::
-                nil);
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_len, tint) ::
+                (_fuel, tuint) :: (_l, (tptr tulong)) :: nil);
   fn_vars := nil;
-  fn_temps := ((_f2, tint) :: (_t'2, tulong) :: (_t'1, tint) :: nil);
+  fn_temps := ((_bpf_ctx, (tptr (Tstruct _memory_region noattr))) ::
+               (_f, tint) :: (_t'3, tulong) :: (_t'2, tint) ::
+               (_t'1, (tptr (Tstruct _memory_region noattr))) :: nil);
   fn_body :=
 (Ssequence
-  (Scall None
-    (Evar _upd_reg (Tfunction
-                     (Tcons (tptr (Tstruct _bpf_state noattr))
-                       (Tcons tuint (Tcons tulong Tnil))) tvoid cc_default))
-    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-     (Econst_int (Int.repr 1) tuint) ::
-     (Efield
-       (Ederef
-         (Efield
-           (Ederef
-             (Efield
-               (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                 (Tstruct _bpf_state noattr)) _mrs
-               (tptr (Tstruct _memory_regions noattr)))
-             (Tstruct _memory_regions noattr)) _bpf_ctx
-           (tptr (Tstruct _memory_region noattr)))
-         (Tstruct _memory_region noattr)) _start_addr tulong) :: nil))
+  (Ssequence
+    (Scall (Some _t'1)
+      (Evar _get_mem_region (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tuint Tnil))
+                              (tptr (Tstruct _memory_region noattr))
+                              cc_default))
+      ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+       (Econst_int (Int.repr 0) tuint) :: nil))
+    (Sset _bpf_ctx (Etempvar _t'1 (tptr (Tstruct _memory_region noattr)))))
   (Ssequence
     (Scall None
-      (Evar _bpf_interpreter_aux (Tfunction
-                                   (Tcons (tptr (Tstruct _bpf_state noattr))
-                                     (Tcons (tptr tulong)
-                                       (Tcons tulong (Tcons tuint Tnil))))
-                                   tvoid cc_default))
+      (Evar _upd_reg (Tfunction
+                       (Tcons (tptr (Tstruct _bpf_state noattr))
+                         (Tcons tuint (Tcons tulong Tnil))) tvoid cc_default))
       ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-       (Etempvar _l2 (tptr tulong)) :: (Etempvar _len2 tulong) ::
-       (Etempvar _fuel2 tuint) :: nil))
+       (Econst_int (Int.repr 1) tuint) ::
+       (Efield
+         (Ederef (Etempvar _bpf_ctx (tptr (Tstruct _memory_region noattr)))
+           (Tstruct _memory_region noattr)) _start_addr tulong) :: nil))
     (Ssequence
+      (Scall None
+        (Evar _bpf_interpreter_aux (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       (Tcons tint
+                                         (Tcons tuint
+                                           (Tcons (tptr tulong) Tnil))))
+                                     tvoid cc_default))
+        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+         (Etempvar _len tint) :: (Etempvar _fuel tuint) ::
+         (Etempvar _l (tptr tulong)) :: nil))
       (Ssequence
-        (Scall (Some _t'1)
-          (Evar _eval_flag (Tfunction
-                             (Tcons (tptr (Tstruct _bpf_state noattr)) Tnil)
-                             tint cc_default))
-          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
-        (Sset _f2 (Etempvar _t'1 tint)))
-      (Sifthenelse (Ebinop Oeq (Etempvar _f2 tint)
-                     (Econst_int (Int.repr 1) tint) tint)
         (Ssequence
           (Scall (Some _t'2)
-            (Evar _eval_reg (Tfunction
-                              (Tcons (tptr (Tstruct _bpf_state noattr))
-                                (Tcons tuint Tnil)) tulong cc_default))
-            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-             (Econst_int (Int.repr 0) tuint) :: nil))
-          (Sreturn (Some (Etempvar _t'2 tulong))))
-        (Sreturn (Some (Econst_long (Int64.repr 0) tulong)))))))
+            (Evar _eval_flag (Tfunction
+                               (Tcons (tptr (Tstruct _bpf_state noattr))
+                                 Tnil) tint cc_default))
+            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+          (Sset _f (Etempvar _t'2 tint)))
+        (Sifthenelse (Ebinop Oeq (Etempvar _f tint)
+                       (Econst_int (Int.repr 1) tint) tint)
+          (Ssequence
+            (Scall (Some _t'3)
+              (Evar _eval_reg (Tfunction
+                                (Tcons (tptr (Tstruct _bpf_state noattr))
+                                  (Tcons tuint Tnil)) tulong cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Econst_int (Int.repr 0) tuint) :: nil))
+            (Sreturn (Some (Etempvar _t'3 tulong))))
+          (Sreturn (Some (Econst_long (Int64.repr 0) tulong))))))))
 |}.
 
 Definition composites : list composite_definition :=
 (Composite _memory_region Struct
-   ((_start_addr, tulong) :: (_block_size, tulong) :: (_block_ptr, tulong) ::
-    nil)
-   noattr ::
- Composite _memory_regions Struct
-   ((_bpf_ctx, (tptr (Tstruct _memory_region noattr))) ::
-    (_bpf_stk, (tptr (Tstruct _memory_region noattr))) ::
-    (_content, (tptr (Tstruct _memory_region noattr))) :: nil)
+   ((_start_addr, tulong) :: (_block_size, tuint) :: (_block_perm, tuint) ::
+    (_block_ptr, tulong) :: nil)
    noattr ::
  Composite _bpf_state Struct
-   ((_state_pc, tulong) :: (_regsmap, (tarray tulong 11)) ::
-    (_bpf_flag, tint) :: (_mrs, (tptr (Tstruct _memory_regions noattr))) ::
-    nil)
+   ((_state_pc, tuint) :: (_bpf_flag, tint) :: (_mem_num, tuint) ::
+    (_regsmap, (tarray tulong 11)) ::
+    (_mrs, (tptr (Tstruct _memory_region noattr))) :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=
-((___builtin_ais_annot,
+((___stringlit_2, Gvar v___stringlit_2) ::
+ (___stringlit_5, Gvar v___stringlit_5) ::
+ (___stringlit_3, Gvar v___stringlit_3) ::
+ (___stringlit_4, Gvar v___stringlit_4) ::
+ (___stringlit_1, Gvar v___stringlit_1) ::
+ (___builtin_ais_annot,
    Gfun(External (EF_builtin "__builtin_ais_annot"
                    (mksignature (AST.Tlong :: nil) AST.Tvoid
                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
@@ -6105,6 +4292,13 @@ Definition global_definitions : list (ident * globdef fundef type) :=
                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
      (Tcons tint Tnil) tvoid
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
+ (_printf,
+   Gfun(External (EF_external "printf"
+                   (mksignature (AST.Tlong :: nil) AST.Tint
+                     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
+     (Tcons (tptr tschar) Tnil) tint
+     {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
+ (_print_bpf_state, Gfun(Internal f_print_bpf_state)) ::
  (_eval_pc, Gfun(Internal f_eval_pc)) ::
  (_upd_pc, Gfun(Internal f_upd_pc)) ::
  (_upd_pc_incr, Gfun(Internal f_upd_pc_incr)) ::
@@ -6112,48 +4306,74 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (_upd_reg, Gfun(Internal f_upd_reg)) ::
  (_eval_flag, Gfun(Internal f_eval_flag)) ::
  (_upd_flag, Gfun(Internal f_upd_flag)) ::
+ (_eval_mem_num, Gfun(Internal f_eval_mem_num)) ::
+ (_eval_mem_regions, Gfun(Internal f_eval_mem_regions)) ::
+ (_add_mem_region, Gfun(Internal f_add_mem_region)) ::
+ (_add_mem_region_ctx, Gfun(Internal f_add_mem_region_ctx)) ::
  (_load_mem, Gfun(Internal f_load_mem)) ::
  (_store_mem_reg, Gfun(Internal f_store_mem_reg)) ::
  (_store_mem_imm, Gfun(Internal f_store_mem_imm)) ::
  (_list_get, Gfun(Internal f_list_get)) ::
- (_get_opcode, Gfun(Internal f_get_opcode)) ::
+ (_get_mem_region, Gfun(Internal f_get_mem_region)) ::
  (_get_dst, Gfun(Internal f_get_dst)) ::
+ (_reg64_to_reg32, Gfun(Internal f_reg64_to_reg32)) ::
  (_get_src, Gfun(Internal f_get_src)) ::
  (_get_offset, Gfun(Internal f_get_offset)) ::
  (_get_immediate, Gfun(Internal f_get_immediate)) ::
+ (_eval_immediate, Gfun(Internal f_eval_immediate)) ::
+ (_get_opcode_ins, Gfun(Internal f_get_opcode_ins)) ::
+ (_get_opcode_alu64, Gfun(Internal f_get_opcode_alu64)) ::
+ (_get_opcode_alu32, Gfun(Internal f_get_opcode_alu32)) ::
+ (_get_opcode_branch, Gfun(Internal f_get_opcode_branch)) ::
+ (_get_opcode_mem_ld_imm, Gfun(Internal f_get_opcode_mem_ld_imm)) ::
+ (_get_opcode_mem_ld_reg, Gfun(Internal f_get_opcode_mem_ld_reg)) ::
+ (_get_opcode_mem_st_imm, Gfun(Internal f_get_opcode_mem_st_imm)) ::
+ (_get_opcode_mem_st_reg, Gfun(Internal f_get_opcode_mem_st_reg)) ::
+ (_get_opcode, Gfun(Internal f_get_opcode)) ::
  (_get_addl, Gfun(Internal f_get_addl)) ::
  (_get_subl, Gfun(Internal f_get_subl)) ::
- (_getMemRegion_block_ptr, Gfun(Internal f_getMemRegion_block_ptr)) ::
- (_getMemRegion_start_addr, Gfun(Internal f_getMemRegion_start_addr)) ::
- (_getMemRegion_block_size, Gfun(Internal f_getMemRegion_block_size)) ::
  (_is_well_chunk_bool, Gfun(Internal f_is_well_chunk_bool)) ::
+ (_check_mem_aux2, Gfun(Internal f_check_mem_aux2)) ::
  (_check_mem_aux, Gfun(Internal f_check_mem_aux)) ::
  (_check_mem, Gfun(Internal f_check_mem)) ::
+ (_comp_and_0x08_byte, Gfun(Internal f_comp_and_0x08_byte)) ::
+ (_step_opcode_alu64, Gfun(Internal f_step_opcode_alu64)) ::
+ (_step_opcode_alu32, Gfun(Internal f_step_opcode_alu32)) ::
+ (_step_opcode_branch, Gfun(Internal f_step_opcode_branch)) ::
+ (_step_opcode_mem_ld_imm, Gfun(Internal f_step_opcode_mem_ld_imm)) ::
+ (_step_opcode_mem_ld_reg, Gfun(Internal f_step_opcode_mem_ld_reg)) ::
+ (_step_opcode_mem_st_imm, Gfun(Internal f_step_opcode_mem_st_imm)) ::
+ (_step_opcode_mem_st_reg, Gfun(Internal f_step_opcode_mem_st_reg)) ::
  (_step, Gfun(Internal f_step)) ::
  (_bpf_interpreter_aux, Gfun(Internal f_bpf_interpreter_aux)) ::
  (_bpf_interpreter, Gfun(Internal f_bpf_interpreter)) :: nil).
 
 Definition public_idents : list ident :=
-(_bpf_interpreter :: _bpf_interpreter_aux :: _step :: ___builtin_debug ::
- ___builtin_write32_reversed :: ___builtin_write16_reversed ::
- ___builtin_read32_reversed :: ___builtin_read16_reversed ::
- ___builtin_fnmsub :: ___builtin_fnmadd :: ___builtin_fmsub ::
- ___builtin_fmadd :: ___builtin_fmin :: ___builtin_fmax ::
- ___compcert_i64_umulh :: ___compcert_i64_smulh :: ___compcert_i64_sar ::
- ___compcert_i64_shr :: ___compcert_i64_shl :: ___compcert_i64_umod ::
- ___compcert_i64_smod :: ___compcert_i64_udiv :: ___compcert_i64_sdiv ::
- ___compcert_i64_utof :: ___compcert_i64_stof :: ___compcert_i64_utod ::
- ___compcert_i64_stod :: ___compcert_i64_dtou :: ___compcert_i64_dtos ::
- ___builtin_expect :: ___builtin_unreachable :: ___compcert_va_composite ::
- ___compcert_va_float64 :: ___compcert_va_int64 :: ___compcert_va_int32 ::
- ___builtin_va_end :: ___builtin_va_copy :: ___builtin_va_arg ::
- ___builtin_va_start :: ___builtin_membar :: ___builtin_annot_intval ::
- ___builtin_annot :: ___builtin_sel :: ___builtin_memcpy_aligned ::
- ___builtin_sqrt :: ___builtin_fsqrt :: ___builtin_fabsf ::
- ___builtin_fabs :: ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz ::
- ___builtin_clzll :: ___builtin_clzl :: ___builtin_clz ::
- ___builtin_bswap16 :: ___builtin_bswap32 :: ___builtin_bswap ::
- ___builtin_bswap64 :: ___builtin_ais_annot :: nil).
+(_bpf_interpreter :: _bpf_interpreter_aux :: _step ::
+ _step_opcode_mem_st_reg :: _step_opcode_mem_st_imm ::
+ _step_opcode_mem_ld_reg :: _step_opcode_mem_ld_imm :: _step_opcode_branch ::
+ _step_opcode_alu32 :: _step_opcode_alu64 :: _check_mem :: _check_mem_aux ::
+ _add_mem_region_ctx :: _add_mem_region :: _print_bpf_state :: _printf ::
+ ___builtin_debug :: ___builtin_write32_reversed ::
+ ___builtin_write16_reversed :: ___builtin_read32_reversed ::
+ ___builtin_read16_reversed :: ___builtin_fnmsub :: ___builtin_fnmadd ::
+ ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_fmin ::
+ ___builtin_fmax :: ___compcert_i64_umulh :: ___compcert_i64_smulh ::
+ ___compcert_i64_sar :: ___compcert_i64_shr :: ___compcert_i64_shl ::
+ ___compcert_i64_umod :: ___compcert_i64_smod :: ___compcert_i64_udiv ::
+ ___compcert_i64_sdiv :: ___compcert_i64_utof :: ___compcert_i64_stof ::
+ ___compcert_i64_utod :: ___compcert_i64_stod :: ___compcert_i64_dtou ::
+ ___compcert_i64_dtos :: ___builtin_expect :: ___builtin_unreachable ::
+ ___compcert_va_composite :: ___compcert_va_float64 ::
+ ___compcert_va_int64 :: ___compcert_va_int32 :: ___builtin_va_end ::
+ ___builtin_va_copy :: ___builtin_va_arg :: ___builtin_va_start ::
+ ___builtin_membar :: ___builtin_annot_intval :: ___builtin_annot ::
+ ___builtin_sel :: ___builtin_memcpy_aligned :: ___builtin_sqrt ::
+ ___builtin_fsqrt :: ___builtin_fabsf :: ___builtin_fabs ::
+ ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll ::
+ ___builtin_clzl :: ___builtin_clz :: ___builtin_bswap16 ::
+ ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 ::
+ ___builtin_ais_annot :: nil).
 
 Definition prog : Clight.program := 
   mkprogram composites global_definitions public_idents _main Logic.I.

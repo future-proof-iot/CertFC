@@ -9,7 +9,7 @@ From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-Require Import DxIntegers DxList64 DxValues DxRegs DxState DxOpcode DxMonad DxFlag DxInstructions DxAST DxMemRegion.
+Require Import DxIntegers DxList64 DxValues DxRegs DxState DxOpcode DxMonad DxFlag DxInstructions DxAST DxMemRegion DxMemType.
 
 (***************************************)
 
@@ -27,25 +27,28 @@ GenerateIntermediateRepresentation SymbolIRs
   DxFlag.Exports
   DxAST.Exports
   DxMemRegion.Exports
+  DxMemType.Exports
   eval_pc
   upd_pc
   upd_pc_incr
-  eval_reg
-  upd_reg
   eval_flag
   upd_flag
+  eval_mem_num
+  eval_reg
+  upd_reg
   eval_mem_regions
-  upd_mem_regions
+  add_mem_region
+  add_mem_region_ctx
   load_mem
   store_mem_imm
   store_mem_reg
   __
   list_get
+  get_mem_region
   get_dst
   reg64_to_reg32
   get_src
   get_offset
-  eval_offset
   get_immediate
   eval_immediate
   get_opcode_ins
@@ -59,10 +62,8 @@ GenerateIntermediateRepresentation SymbolIRs
   get_opcode
   get_addl
   get_subl
-  getMemRegion_block_ptr
-  getMemRegion_start_addr
-  getMemRegion_block_size
   is_well_chunk_bool
+  check_mem_aux2
   check_mem_aux
   check_mem
   comp_and_0x08_byte
@@ -81,8 +82,7 @@ GenerateIntermediateRepresentation SymbolIRs
 Definition dxModuleTest := makeDXModuleWithDefaults SymbolIRs. *)
 
 Definition dxModuleTest := makeDXModuleWithUserIds 
-  [ mem_region_def; mem_regions_def; state_struct_def]
+  [ mem_region_def; state_struct_def]
   [
-   "memory_region"; "start_addr"; "block_size"; "block_ptr";
-   "memory_regions"; "bpf_ctx"; "bpf_stk"; "content";
-   "bpf_state"; "state_pc"; "regsmap"; "bpf_flag"; "mrs"] SymbolIRs.
+   "memory_region"; "start_addr"; "block_size"; "block_perm"; "block_ptr";
+   "bpf_state"; "state_pc"; "bpf_flag"; "mem_num"; "regsmap"; "mrs"] SymbolIRs.

@@ -30,6 +30,8 @@ Definition sint16_t := int16.
 (******************** UInt32 *******************)
 Definition uint32_t := int.
 
+Definition int32_0  := Int.zero.
+Definition int32_1  := Int.one.
 Definition int32_2  := Int.repr 2.
 Definition int32_3  := Int.repr 3.
 Definition int32_4  := Int.repr 4.
@@ -94,6 +96,10 @@ Definition int64_to_int8 (x: int64_t): int8_t := Byte.repr (Int64.unsigned x).
 (** sint16_to_uint64: sint16_t -> uint64_t
   *)
 Definition sint16_to_int64 (x: sint16_t): int64_t := Int64.repr (Int16.signed x).
+
+(** sint16_to_sint32: sint16_t -> sint32_t
+  *)
+Definition sint16_to_sint32 (x: sint16_t): sint32_t := Int.repr (Int16.signed x).
 
 (** int64_to_sint16: int64_t -> sint16_t
   *)
@@ -260,10 +266,10 @@ Definition Const_sint16_sub :=
 
 (******************** UInt32 *******************)
 Definition C_U32_zero: Csyntax.expr :=
-  Csyntax.Eval (Vint Int.zero) C_U32.
+  Csyntax.Eval (Vint int32_0) C_U32.
 
 Definition C_U32_one: Csyntax.expr :=
-  Csyntax.Eval (Vint Int.one) C_U32.
+  Csyntax.Eval (Vint int32_1) C_U32.
 
 Definition C_U32_2: Csyntax.expr :=
   Csyntax.Eval (Vint int32_2) C_U32.
@@ -307,9 +313,9 @@ Definition uint32CompilableType :=
 Definition uint32SymbolType :=
   MkCompilableSymbolType nil (Some uint32CompilableType).
 
-Definition Const_uint32_zero := constant uint32SymbolType Int.zero C_U32_zero.
+Definition Const_uint32_zero := constant uint32SymbolType int32_0 C_U32_zero.
 
-Definition Const_uint32_one := constant uint32SymbolType Int.one C_U32_one.
+Definition Const_uint32_one := constant uint32SymbolType int32_1 C_U32_one.
 
 Definition Const_uint32_2 := constant uint32SymbolType int32_2 C_U32_2.
 
@@ -535,6 +541,41 @@ Definition Const_sint32_sub :=
                            | [e1;e2] => Ok (C_S32_sub e1 e2)
                            | _       => Err PrimitiveEncodingFailed
                            end).
+
+(** Type signature: sint32 -> sint32 -> bool
+  *)
+Definition sint32Tosint32ToboolSymbolType :=
+  MkCompilableSymbolType [sint32CompilableType; sint32CompilableType] (Some boolCompilableType).
+
+Definition Const_sint32_lt :=
+  MkPrimitive sint32Tosint32ToboolSymbolType
+                Int.lt
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Int_le (x y: int): bool := negb (Int.lt y x).
+
+Definition Const_sint32_le :=
+  MkPrimitive sint32Tosint32ToboolSymbolType
+                Int_le
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ole e1 e2 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition sint16Tosint32SymbolType :=
+  MkCompilableSymbolType [sint16CompilableType] (Some sint32CompilableType).
+
+Definition Const_sint16_to_sint32 :=
+  MkPrimitive sint16Tosint32SymbolType
+                sint16_to_sint32
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 
 (******************** Int64 *******************)
 Definition int64CompilableType :=
@@ -802,6 +843,9 @@ Module Exports.
   Definition Const_sint32_neg      := Const_sint32_neg.
   Definition Const_sint32_add      := Const_sint32_add.
   Definition Const_sint32_sub      := Const_sint32_sub.
+  Definition Const_sint32_lt       := Const_sint32_lt.
+  Definition Const_sint32_le       := Const_sint32_le.
+  Definition Const_sint16_to_sint32:=Const_sint16_to_sint32.
 
   Definition int64CompilableType   := int64CompilableType.
   Definition Const_int64_zero      := Const_int64_zero.

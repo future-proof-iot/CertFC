@@ -426,16 +426,16 @@ Definition opcode_branchCompilableTypeMatchableType : MatchableType:=
        :: (op_BPF_JEQ,  0x10)
        :: (op_BPF_JGT,  0x20)
        :: (op_BPF_JGE,  0x30)
+       :: (op_BPF_JLT,  0xa0)
+       :: (op_BPF_JLE,  0xb0)
        :: (op_BPF_JSET, 0x40)
        :: (op_BPF_JNE,  0x50)
        :: (op_BPF_JSGT, 0x60)
        :: (op_BPF_JSGE, 0x70)
-
-       :: (op_BPF_RET,  0x90)
-       :: (op_BPF_JLT,  0xa0)
-       :: (op_BPF_JLE,  0xb0)
        :: (op_BPF_JSLT, 0xc0)
-       :: (op_BPF_JSLE, 0xd0) :: nil)
+       :: (op_BPF_JSLE, 0xd0)
+
+       :: (op_BPF_RET,  0x90) :: nil)
     op_BPF_JMP_ILLEGAL_INS
     (fun m A => opcode_branch_rect (fun _ => m A))).
 
