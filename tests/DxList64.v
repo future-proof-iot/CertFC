@@ -14,8 +14,8 @@ Require Import CoqIntegers DxIntegers.
 Module MyList.
 
   Definition t := list int64_t.
-  Definition index_64 (l: t) (idx: int64_t): int64_t := 
-    List.nth (Z.to_nat (Integers.Int64.unsigned idx)) l (Integers.Int64.zero).
+  Definition index_s32 (l: t) (idx: sint32_t): int64_t := 
+    List.nth (Z.to_nat (Integers.Int.signed idx)) l (Integers.Int64.zero).
   Definition index_nat (l: t) (idx: nat): int64_t := 
     List.nth idx l (Integers.Int64.zero).
 
@@ -24,7 +24,7 @@ End MyList.
 (** length of MyList should be a extern variable? *)
 
 Definition MyListType := MyList.t.
-Definition MyListIndex64 := MyList.index_64.
+Definition MyListIndexs32 := MyList.index_s32.
 Definition MyListIndexnat := MyList.index_nat.
 
 
@@ -45,12 +45,12 @@ Definition MyListCompilableType :=
 
 (** Type for MyList.t -> u64_t -> u64_t *)
 Definition MyListToStateToStateCompilableSymbolType :=
-  MkCompilableSymbolType [MyListCompilableType; int64CompilableType] (Some int64CompilableType).
+  MkCompilableSymbolType [MyListCompilableType; sint32CompilableType] (Some int64CompilableType).
 
 (** Coq2C: get l idx -> *(l+idx) *)
-Definition myListIndex64Primitive := 
+Definition myListIndexs32Primitive := 
   MkPrimitive MyListToStateToStateCompilableSymbolType 
-              MyListIndex64
+              MyListIndexs32
               (fun es => match es with
                          | [e1; e2] => Ok (get_index e1 e2)
                          | _   => Err PrimitiveEncodingFailed
@@ -71,6 +71,6 @@ Definition myListIndexnatPrimitive :=
 
 Module Exports.
   Definition MyListCompilableType    := MyListCompilableType.
-  Definition myListIndex64Primitive  := myListIndex64Primitive.
+  Definition myListIndexs32Primitive := myListIndexs32Primitive.
   Definition myListIndexnatPrimitive := myListIndexnatPrimitive.
 End Exports.

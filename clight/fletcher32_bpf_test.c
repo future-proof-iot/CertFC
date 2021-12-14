@@ -46,6 +46,7 @@ struct fletcher32_ctx f32_ctx = {
 
 //struct memory_regions *memory_regions = &init_memory_regions;
 
+/*
 static void bpf_add_region_ctx(struct bpf_state* st){
   (*(*((*st).mrs)).bpf_ctx).start_addr = (unsigned long long) &f32_ctx;
   (*(*((*st).mrs)).bpf_ctx).block_size = sizeof(f32_ctx);
@@ -55,6 +56,7 @@ void bpf_add_region_content(struct bpf_state* st){
   (*(*((*st).mrs)).content).start_addr = (unsigned long long) (const uint16_t *)wrap_around_data;
   (*(*((*st).mrs)).content).block_size = sizeof(wrap_around_data);
 }
+*/
 
 void print_normal_addr(struct bpf_state* st){
   printf("\n\n *********print_normal_addr*******\n\n");
@@ -76,16 +78,16 @@ void print_normal_addr(struct bpf_state* st){
   
   printf("\n\n *********print_region_info*******\n\n");
   
-  printf("start_ctx(physical) = %lld\n", (*(*((*st).mrs)).bpf_ctx).start_addr);
-  printf("start_ctx (value)   = %"PRIu64"\n", *(uint64_t *) (uintptr_t)(*(*((*st).mrs)).bpf_ctx).start_addr);
-  printf("ctx_size  = %lld\n", (*(*((*st).mrs)).bpf_ctx).block_size);
-  printf("ctx_words = %"PRIu16"\n", (uint16_t)(intptr_t)((&(*(*((*st).mrs)).bpf_ctx).start_addr)+8));
-  printf("ctx_words = %"PRIu16"\n", *((uint16_t *)(uintptr_t) ((&(*(*((*st).mrs)).bpf_ctx).start_addr)+8)));
+  printf("start_ctx(physical) = %lld\n", ((*st).mrs)[0].start_addr);
+  printf("start_ctx (value)   = %"PRIu64"\n", *(uint64_t *) (uintptr_t)((*st).mrs)[0].start_addr);
+  printf("ctx_size  = %d\n", ((*st).mrs)[0].block_size);
+  printf("ctx_words = %"PRIu16"\n", (uint16_t)(intptr_t)(&(((*st).mrs)[0].start_addr))+8);
+  printf("ctx_words = %"PRIu16"\n", *((uint16_t *)(uintptr_t) (((*st).mrs)[0].start_addr)+8));
   
    
-  printf("start_content(physical) = %lld\n", (*(*((*st).mrs)).content).start_addr);
-  printf("start_content (value)   = %"PRIu16"\n", *(uint16_t *) (uintptr_t)(*(*((*st).mrs)).content).start_addr);
-  printf("content_size  = %lld\n", (*(*((*st).mrs)).content).block_size);
+  printf("start_content(physical) = %lld\n", ((*st).mrs)[1].start_addr);
+  printf("start_content (value)   = %"PRIu16"\n", *(uint16_t *) (uintptr_t)((*st).mrs)[1].start_addr);
+  printf("content_size  = %d\n", ((*st).mrs)[1].block_size);
   
   printf("\n\n *********print_region_info*******\n\n");
 }
@@ -94,7 +96,7 @@ void print_normal_addr(struct bpf_state* st){
 int main(){
   
   printf("Hello rBPF_fletcher32 C code Testing:\n");
-  uint32_t res0;    
+  uint32_t res0;
   
   clock_t begin0 = clock();
   //for (int i = 0; i < 1000; i++) {
@@ -111,30 +113,36 @@ int main(){
   printf ("fletcher32 start!!! \n");
   unsigned long long result;
   // adding memory_regions
-  static struct memory_region init_memory_region0 = {.start_addr = 0LLU, .block_size = 0LLU }; 
-  static struct memory_region init_memory_region1 = {.start_addr = 0LLU, .block_size = 0LLU }; 
-  static struct memory_region init_memory_region2 = {.start_addr = 0LLU, .block_size = 0LLU }; 
 
-  static struct memory_regions init_memory_regions = {
-    .bpf_ctx = &init_memory_region0,
-    .bpf_stk = &init_memory_region1,
-    .content = &init_memory_region2
+  static const struct memory_region mr_ctx = {
+  	.start_addr = (unsigned long long) &f32_ctx,
+  	.block_size = sizeof(f32_ctx),
+  	.block_perm = Readable,
+  	.block_ptr = 1LLU
   };
+  
+  static const struct memory_region mr_content ={
+  	.start_addr = (unsigned long long) (const uint16_t *)wrap_around_data,
+  	.block_size = sizeof(wrap_around_data),
+  	.block_perm = Readable,
+  	.block_ptr = 1LLU
+  }; 
+
+  static struct memory_region my_memory_regions[] = { mr_ctx, mr_content};
 
   struct bpf_state st = {
     .state_pc = 0LLU,
-    .regsmap = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
     .bpf_flag = BPF_OK,
-    .mrs = &init_memory_regions
+    .mem_num  = 2,
+    .regsmap = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
+    .mrs = my_memory_regions
   };
   
-  bpf_add_region_ctx(&st);
-  bpf_add_region_content(&st);
-  print_normal_addr(&st);
+  //print_normal_addr(&st);
   
   clock_t begin1 = clock();
   //for (int j = 0; j < 1000; j++) { //TODO: why a loop returns a wrong result? 
-    result = bpf_interpreter(&st, (unsigned long long *) bpf_fletcher32_bpf_bin, sizeof(bpf_fletcher32_bpf_bin), 10000);
+    result = bpf_interpreter(&st, sizeof(bpf_fletcher32_bpf_bin), 10000, (unsigned long long *) bpf_fletcher32_bpf_bin);
     //}
   clock_t end1 = clock();
   printf("execution time:%f\n", (double)(end1-begin1)/CLOCKS_PER_SEC);

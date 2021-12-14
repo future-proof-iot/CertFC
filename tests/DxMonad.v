@@ -17,23 +17,30 @@ Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B :=
     | Some (x', st') => runM (f x') st'
     end.
 
-Definition eval_pc: M int64_t := fun st => Some (eval_pc st, st).
-Definition upd_pc (p: int64_t): M unit := fun st => Some (tt, upd_pc p st).
+Definition eval_pc: M sint32_t := fun st => Some (eval_pc st, st).
+Definition upd_pc (p: sint32_t): M unit := fun st => Some (tt, upd_pc p st).
 Definition upd_pc_incr: M unit := fun st => Some (tt, upd_pc_incr st).
+
+Definition eval_flag: M bpf_flag := fun st => Some (eval_flag st, st).
+Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag f st).
+
+Definition eval_mem_num: M nat := fun st => Some (eval_mem_num st, st).
 
 Definition eval_reg (r: reg) : M val64_t := fun st => Some (eval_reg r st, st).
 Definition upd_reg (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg r v st).
-Definition eval_flag : M bpf_flag := fun st => Some (eval_flag st, st).
-Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag f st).
+
+Definition eval_mem_regions : M MyMemRegionsType := fun st => Some (eval_mem_regions st, st).
+
 (*
-Definition eval_mem_regions : M memory_regions := fun st => Some (snd st, st).
-Definition upd_mem_regions (mrs: memory_regions) : M unit := fun st => Some (tt, upd_mem_regions mrs st).*)
+Definition bpf_add_mem_region (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region mr st).
 
-Definition load_mem (chunk: memory_chunk) (ptr: val64_t): M val64_t := fun st => Some (load_mem chunk ptr st, st).
+Definition bpf_add_region_ctx (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region_ctx mr st).*)
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) : M unit := fun st => Some (tt, store_mem_imm chunk ptr v st).
+Definition load_mem (chunk: memory_chunk) (ptr: valu32_t): M val64_t := fun st => Some (load_mem chunk ptr st, st).
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) : M unit := fun st => Some (tt, store_mem_reg chunk ptr v st).
+Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) : M unit := fun st => Some (tt, store_mem_imm chunk ptr v st).
+
+Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) : M unit := fun st => Some (tt, store_mem_reg chunk ptr v st).
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

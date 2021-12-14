@@ -13,6 +13,13 @@ Require Import CoqIntegers Int16 InfComp.
 (******************** UInt8 *******************)
 Definition int8_t := byte.
 
+(** masking operation *)
+Definition int8_0xf0 := Byte.repr 0xf0.
+Definition int8_0x07 := Byte.repr 0x07.
+Definition int8_0xff := Byte.repr 0xff.
+Definition int8_0x08 := Byte.repr 0x08.
+Definition int8_zero := Byte.zero.
+
 (******************** UInt16 *******************)
 Definition uint16_t := int16.
 
@@ -23,6 +30,8 @@ Definition sint16_t := int16.
 (******************** UInt32 *******************)
 Definition uint32_t := int.
 
+Definition int32_0  := Int.zero.
+Definition int32_1  := Int.one.
 Definition int32_2  := Int.repr 2.
 Definition int32_3  := Int.repr 3.
 Definition int32_4  := Int.repr 4.
@@ -36,6 +45,13 @@ Definition int32_10 := Int.repr 10.
 Definition int32_16 := Int.repr 16.
 Definition int32_32 := Int.repr 32.
 Definition int32_64 := Int.repr 64.
+Definition int32_max_unsigned := Int.repr Int.max_unsigned.
+
+(** masking operations *)
+Definition int32_0xf0 := Int.repr 0xf0.
+Definition int32_0x07 := Int.repr 0x07.
+Definition int32_0xff := Int.repr 0xff.
+Definition int32_0x08 := Int.repr 0x08.
 
 (******************** SInt32 *******************)
 Definition sint32_t := int. (**r here we should define two types for C: sint32_t and uint32_t, then we should use those two types to define rbpf functions *)
@@ -75,7 +91,14 @@ Definition int64_48     := Int64.repr 48.
 Definition int64_0xfff  := Int64.repr 0xfff.
 Definition int64_0xffff := Int64.repr 0xffff.
 
+<<<<<<< HEAD
 Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.
+=======
+(** masking operation *)
+Definition int64_0xf    := Int64.repr 0xf.
+(*
+Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.*)
+>>>>>>> optimization_32
 
 (******************** Int64 Type Casting *******************)
 
@@ -86,6 +109,10 @@ Definition int64_to_int8 (x: int64_t): int8_t := Byte.repr (Int64.unsigned x).
 (** sint16_to_uint64: sint16_t -> uint64_t
   *)
 Definition sint16_to_int64 (x: sint16_t): int64_t := Int64.repr (Int16.signed x).
+
+(** sint16_to_sint32: sint16_t -> sint32_t
+  *)
+Definition sint16_to_sint32 (x: sint16_t): sint32_t := Int.repr (Int16.signed x).
 
 (** int64_to_sint16: int64_t -> sint16_t
   *)
@@ -112,6 +139,57 @@ Definition C_U8_one: Csyntax.expr :=
 
 Definition int8CompilableType :=
   MkCompilableType int8_t C_U8.
+
+(**r masking operations *)
+Definition C_U8_0xf0: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0xf0) C_U8.
+
+Definition C_U8_0x07: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0x07) C_U8.
+
+Definition C_U8_0xff: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0xff) C_U8.
+
+Definition C_U8_0x08: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0x08) C_U8.
+
+Definition int8SymbolType :=
+  MkCompilableSymbolType nil (Some int8CompilableType).
+
+Definition Const_int8_0xf0 := constant int8SymbolType int8_0xf0 C_U8_0xf0.
+Definition Const_int8_0x07 := constant int8SymbolType int8_0x07 C_U8_0x07.
+Definition Const_int8_0xff := constant int8SymbolType int8_0xff C_U8_0xff.
+Definition Const_int8_0x08 := constant int8SymbolType int8_0x08 C_U8_0x08.
+Definition Const_int8_zero := constant int8SymbolType int8_zero C_U8_zero.
+
+
+Definition int8Toint8ToboolSymbolType :=
+  MkCompilableSymbolType [int8CompilableType; int8CompilableType] (Some boolCompilableType).
+
+Definition C_U8_eq (x y: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oeq x y C_U8.
+
+Definition Const_int8_eq :=
+  MkPrimitive int8Toint8ToboolSymbolType
+                Byte.eq
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U8_eq e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition int8Toint8Toint8SymbolType :=
+  MkCompilableSymbolType [int8CompilableType; int8CompilableType] (Some int8CompilableType).
+
+Definition C_U8_and (x y: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oand x y C_U8.
+
+Definition Const_int8_and :=
+  MkPrimitive int8Toint8Toint8SymbolType
+                Byte.and
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_U8_and e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
 
 (******************** UInt16 *******************)
 
@@ -201,10 +279,10 @@ Definition Const_sint16_sub :=
 
 (******************** UInt32 *******************)
 Definition C_U32_zero: Csyntax.expr :=
-  Csyntax.Eval (Vint Int.zero) C_U32.
+  Csyntax.Eval (Vint int32_0) C_U32.
 
 Definition C_U32_one: Csyntax.expr :=
-  Csyntax.Eval (Vint Int.one) C_U32.
+  Csyntax.Eval (Vint int32_1) C_U32.
 
 Definition C_U32_2: Csyntax.expr :=
   Csyntax.Eval (Vint int32_2) C_U32.
@@ -242,15 +320,18 @@ Definition C_U32_32: Csyntax.expr :=
 Definition C_U32_64: Csyntax.expr :=
   Csyntax.Eval (Vint int32_64) C_U32.
 
+Definition C_U32_max_unsigned: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_max_unsigned) C_U32.
+
 Definition uint32CompilableType :=
   MkCompilableType uint32_t C_U32.
 
 Definition uint32SymbolType :=
   MkCompilableSymbolType nil (Some uint32CompilableType).
 
-Definition Const_uint32_zero := constant uint32SymbolType Int.zero C_U32_zero.
+Definition Const_uint32_zero := constant uint32SymbolType int32_0 C_U32_zero.
 
-Definition Const_uint32_one := constant uint32SymbolType Int.one C_U32_one.
+Definition Const_uint32_one := constant uint32SymbolType int32_1 C_U32_one.
 
 Definition Const_uint32_2 := constant uint32SymbolType int32_2 C_U32_2.
 
@@ -275,6 +356,8 @@ Definition Const_uint32_16 := constant uint32SymbolType int32_16 C_U32_16.
 Definition Const_uint32_32 := constant uint32SymbolType int32_32 C_U32_32.
 
 Definition Const_uint32_64 := constant uint32SymbolType int32_64 C_U32_64.
+
+Definition Const_uint32_max_unsigned := constant uint32SymbolType int32_max_unsigned C_U32_max_unsigned.
 
 Definition uint32Touint32SymbolType :=
   MkCompilableSymbolType [uint32CompilableType] (Some uint32CompilableType).
@@ -477,6 +560,41 @@ Definition Const_sint32_sub :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+(** Type signature: sint32 -> sint32 -> bool
+  *)
+Definition sint32Tosint32ToboolSymbolType :=
+  MkCompilableSymbolType [sint32CompilableType; sint32CompilableType] (Some boolCompilableType).
+
+Definition Const_sint32_lt :=
+  MkPrimitive sint32Tosint32ToboolSymbolType
+                Int.lt
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition Int_le (x y: int): bool := negb (Int.lt y x).
+
+Definition Const_sint32_le :=
+  MkPrimitive sint32Tosint32ToboolSymbolType
+                Int_le
+                (fun es => match es with
+                           | [e1; e2] => Ok (Csyntax.Ebinop Cop.Ole e1 e2 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition sint16Tosint32SymbolType :=
+  MkCompilableSymbolType [sint16CompilableType] (Some sint32CompilableType).
+
+Definition Const_sint16_to_sint32 :=
+  MkPrimitive sint16Tosint32SymbolType
+                sint16_to_sint32
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_S32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+
 (******************** Int64 *******************)
 Definition int64CompilableType :=
   MkCompilableType int64_t C_U64.
@@ -526,8 +644,15 @@ Definition C_U64_0xfff: Csyntax.expr :=
 Definition C_U64_0xffff: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_0xffff) C_U64.
 
+<<<<<<< HEAD
+=======
+(** masking operation*)
+Definition C_U64_0xf: Csyntax.expr :=
+  Csyntax.Eval (Vlong int64_0xf) C_U64.
+(*
+>>>>>>> optimization_32
 Definition C_U64_max_unsigned: Csyntax.expr :=
-  Csyntax.Eval (Vlong (Int64.repr (Int64.max_unsigned))) C_U64.
+  Csyntax.Eval (Vlong (Int64.repr (Int64.max_unsigned))) C_U64.*)
 
 Definition Const_int64_0x07 := constant int64SymbolType int64_0x07 C_U64_0x07.
 Definition Const_int64_0x0f := constant int64SymbolType int64_0x0f C_U64_0x0f.
@@ -545,7 +670,14 @@ Definition Const_int64_48 := constant int64SymbolType int64_48 C_U64_48.
 Definition Const_int64_0xfff := constant int64SymbolType int64_0xfff C_U64_0xfff.
 Definition Const_int64_0xffff := constant int64SymbolType int64_0xffff C_U64_0xffff.
 
+<<<<<<< HEAD
 Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.
+=======
+(** masking operation*)
+Definition Const_int64_0xf := constant int64SymbolType int64_0xf C_U64_0xf.
+(*
+Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.*)
+>>>>>>> optimization_32
 
 Definition Const_int64_zero := constant int64SymbolType Int64.zero C_U64_zero.
 
@@ -693,6 +825,16 @@ Definition Const_int64_to_sint32 :=
 
 Module Exports.
   Definition int8CompilableType    := int8CompilableType.
+
+  (** masking operation *)
+  Definition Const_int8_0xf0       := Const_int8_0xf0.
+  Definition Const_int8_0x07       := Const_int8_0x07.
+  Definition Const_int8_0xff       := Const_int8_0xff.
+  Definition Const_int8_0x08       := Const_int8_0x08.
+  Definition Const_int8_eq         := Const_int8_eq.
+  Definition Const_int8_and        := Const_int8_and.
+  Definition Const_int8_zero       := Const_int8_zero.
+
   Definition uint16CompilableType  := uint16CompilableType.
   Definition Const_uint16_zero     := Const_uint16_zero.
   Definition Const_uint16_one      := Const_uint16_one.
@@ -718,6 +860,7 @@ Module Exports.
   Definition Const_uint32_16       := Const_uint32_16.
   Definition Const_uint32_32       := Const_uint32_32.
   Definition Const_uint32_64       := Const_uint32_64.
+  Definition Const_uint32_max_unsigned := Const_uint32_max_unsigned.
   Definition Const_uint32_neg      := Const_uint32_neg.
   Definition Const_uint32_add      := Const_uint32_add.
   Definition Const_uint32_sub      := Const_uint32_sub.
@@ -748,6 +891,9 @@ Module Exports.
   Definition Const_sint32_neg      := Const_sint32_neg.
   Definition Const_sint32_add      := Const_sint32_add.
   Definition Const_sint32_sub      := Const_sint32_sub.
+  Definition Const_sint32_lt       := Const_sint32_lt.
+  Definition Const_sint32_le       := Const_sint32_le.
+  Definition Const_sint16_to_sint32:=Const_sint16_to_sint32.
 
   Definition int64CompilableType   := int64CompilableType.
   Definition Const_int64_zero      := Const_int64_zero.
@@ -769,7 +915,16 @@ Module Exports.
   Definition Const_int64_48        := Const_int64_48.
   Definition Const_int64_0xfff     := Const_int64_0xfff.
   Definition Const_int64_0xffff    := Const_int64_0xffff.
+<<<<<<< HEAD
   Definition Const_int64_max_unsigned := Const_int64_max_unsigned.
+=======
+
+  (** masking operation*)
+  Definition Const_int64_0xf       := Const_int64_0xf.
+
+(*
+  Definition Const_int64_max_unsigned := Const_int64_max_unsigned.*)
+>>>>>>> optimization_32
   Definition Const_int64_neg       := Const_int64_neg.
   Definition Const_int64_add       := Const_int64_add.
   Definition Const_int64_sub       := Const_int64_sub.

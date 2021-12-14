@@ -79,13 +79,7 @@ extern void step_opcode_mem_st_imm(int, unsigned int, int, unsigned int, unsigne
 
 extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, int, unsigned int, unsigned char);
 
-<<<<<<< HEAD
-extern unsigned long long test_complex(unsigned long long, int);
-
-extern unsigned long long eval_pc(void);
-=======
 extern void step(int, unsigned long long *);
->>>>>>> optimization_32
 
 extern void bpf_interpreter_aux(int, unsigned int, unsigned long long *);
 
@@ -991,13 +985,6 @@ unsigned long long bpf_interpreter(int len$418, unsigned int fuel$420, unsigned 
   } else {
     return 0LLU;
   }
-}
-
-unsigned long long test_complex(unsigned long long dst64$206, int imm$208)
-{
-  unsigned long long res;
-  res = get_addl(dst64$206, (unsigned long long) imm$208);
-  return res;
 }
 
 

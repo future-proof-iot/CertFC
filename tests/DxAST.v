@@ -10,11 +10,11 @@ From dx.Type Require Import Bool Nat.
 
 Require Import CoqIntegers DxIntegers DxValues.
 
-Definition memory_chunk_to_val64 (chunk: memory_chunk) := 
-  Vlong (Int64.repr (align_chunk chunk)).
+Definition memory_chunk_to_valu32 (chunk: memory_chunk) := 
+  Vint (Int.repr (align_chunk chunk)).
 
-Definition memory_chunk_to_val64_upbound (chunk: memory_chunk) :=
-  Vlong (Int64.repr (Int64.max_unsigned-(align_chunk chunk))).
+Definition memory_chunk_to_valu32_upbound (chunk: memory_chunk) :=
+  Vint (Int.repr (Int.max_unsigned-(align_chunk chunk))).
 
 (******************** Dx Related *******************)
 
@@ -68,22 +68,22 @@ Definition Const_Mint64 := constant memoryChunkSymbolType Mint64 C_U32_8.
 Definition memoryChunkToboolSymbolType :=
   MkCompilableSymbolType [memoryChunkCompilableType] (Some boolCompilableType).
 
-Definition memoryChunkToval64SymbolType :=
-  MkCompilableSymbolType [memoryChunkCompilableType] (Some val64CompilableType).
+Definition memoryChunkTovalU32SymbolType :=
+  MkCompilableSymbolType [memoryChunkCompilableType] (Some valU32CompilableType).
 
-Definition Const_memory_chunk_to_val64 :=
-  MkPrimitive memoryChunkToval64SymbolType
-                memory_chunk_to_val64
+Definition Const_memory_chunk_to_valu32 :=
+  MkPrimitive memoryChunkTovalU32SymbolType
+                memory_chunk_to_valu32
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast  e1 C_U64) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
+                           | [e1] => Ok (Csyntax.Ecast  e1 C_U32) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-Definition Const_memory_chunk_to_val64_upbound :=
-  MkPrimitive memoryChunkToval64SymbolType
-                memory_chunk_to_val64_upbound
+Definition Const_memory_chunk_to_valu32_upbound :=
+  MkPrimitive memoryChunkTovalU32SymbolType
+                memory_chunk_to_valu32_upbound
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ebinop Cop.Osub C_U64_max_unsigned (Csyntax.Ecast  e1 C_U64) C_U64) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
+                           | [e1] => Ok (Csyntax.Ebinop Cop.Osub C_U32_max_unsigned (Csyntax.Ecast  e1 C_U32) C_U32) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -93,6 +93,6 @@ Module Exports.
   Definition Const_Mint16unsigned      := Const_Mint16unsigned.
   Definition Const_Mint32              := Const_Mint32.
   Definition Const_Mint64              := Const_Mint64.
-  Definition Const_memory_chunk_to_val64:= Const_memory_chunk_to_val64.
-  Definition Const_memory_chunk_to_val64_upbound := Const_memory_chunk_to_val64_upbound.
+  Definition Const_memory_chunk_to_valu32:= Const_memory_chunk_to_valu32.
+  Definition Const_memory_chunk_to_valu32_upbound := Const_memory_chunk_to_valu32_upbound.
 End Exports.

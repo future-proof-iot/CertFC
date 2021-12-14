@@ -7,6 +7,7 @@ COQC := coqc
 COQDEP := coqdep
 OCAMLOPT := ocamlopt
 COQMAKEFILE := coq_makefile
+CP := cp
 
 CC=gcc
 OFLAGS=-Os
@@ -27,10 +28,17 @@ all:
 	@echo $@
 	@$(MAKE) compile
 	@$(MAKE) extract
+	@$(MAKE) repatch
 	@$(MAKE) clight
 	@$(MAKE) proof 
 
 
+
+test:
+	@echo $@
+	@$(MAKE) compile
+	@$(MAKE) extract
+	@$(MAKE) repatch
 
 COQSRC = $(wildcard tests/*.v)
 
@@ -38,8 +46,8 @@ compile:
 	@echo $@
 	$(COQMAKEFILE) -f _CoqProject $(COQSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
-	cp TestMain.ml tests # mv -> cp to avoid when running `make` again, it doesn't find the two files
-	cp TestMain.mli tests
+	$(CP) TestMain.ml tests # mv -> cp to avoid when running `make` again, it doesn't find the two files
+	$(CP) TestMain.mli tests
 
 extract:
 	@echo $@
@@ -65,10 +73,17 @@ extract:
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini tests/compcert.ini
 	cd tests && ./main
 
+repatch:
+	@echo $@
+	$(CP) tests/generated.c repatch
+	cd repatch && $(CC) -o repatch1 repatch1.c && ./repatch1 && $(CC) -o repatch2 repatch2.c && ./repatch2 && $(CC) -o repatch3 repatch3.c && ./repatch3 && $(CC) -o repatch4 repatch4.c && ./repatch4
+	$(CP) repatch/interpreter.c clight
+
 clight:
 	@echo $@
-	cd codeTest && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c
-	cd codeTest && $(CLIGHTGEN) interpreter.c
+	cd clight && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c # && ./$@
+	cd clight && $(CLIGHTGEN) interpreter.c
+	$(CP) clight/interpreter.v codeTest
 
 PROOF = $(addprefix codeTest/,clight_exec.v Clightlogic.v interpreter.v CommonLemma.v MatchState.v CorrectRel.v correct_is_well_chunk_bool.v correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v correct_getMemRegion_block_ptr.v correct_getMemRegion_block_size.v correct_getMemRegion_start_addr.v correct_get_addl.v correct_get_subl.v correct_check_mem_aux.v)
 
@@ -87,4 +102,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all compile extract clight proof clean
+.PHONY: all compile extract repatch clight proof clean
