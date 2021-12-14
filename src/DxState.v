@@ -5,7 +5,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Bool Nat.
 
-Require Import IdentDef CoqIntegers DxIntegers DxValues DxFlag DxRegs DxMemRegion.
+From bpf.src Require Import IdentDef CoqIntegers DxIntegers DxValues DxFlag DxRegs DxMemRegion.
 
 From Coq Require Import List ZArith.
 Import ListNotations.

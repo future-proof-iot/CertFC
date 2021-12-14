@@ -6,7 +6,7 @@ From compcert Require Import Coqlib Values.
 From compcert Require Import SimplExpr.
 From compcert Require Import Clight.
 
-From dx.tests Require Import DxIntegers DxMonad.
+From bpf.src Require Import DxIntegers DxMonad.
 From compcert Require Import Integers.
 From compcert Require Import Smallstep.
 Require Import clight_exec.

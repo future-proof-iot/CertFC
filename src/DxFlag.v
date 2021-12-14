@@ -4,7 +4,7 @@ Import ListNotations.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool.
 
-Require Import CoqIntegers DxIntegers.
+From bpf.src Require Import CoqIntegers DxIntegers.
 
 Inductive bpf_flag: Type := 
   | BPF_SUCC_RETURN         (**r =  1, *)

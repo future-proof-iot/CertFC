@@ -8,7 +8,7 @@ From compcert.lib Require Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Nat.
 
-Require Import CoqIntegers DxIntegers.
+From bpf.src Require Import CoqIntegers DxIntegers.
 
 
 Module MyList.

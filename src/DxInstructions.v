@@ -5,7 +5,7 @@ From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
-Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag DxAST DxMemRegion DxMemType.
+From bpf.src Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag DxAST DxMemRegion DxMemType.
 
 Open Scope monad_scope.
 
@@ -64,7 +64,7 @@ Definition get_add (x y: valu32_t): M valu32_t := returnM (Val.add x y).
 
 Definition get_sub (x y: valu32_t): M valu32_t := returnM (Val.sub x y).
 
-Definition get_addr_ofs (x: val64_t) (ofs: sint32_t): M valu32_t := returnM (val_intuoflongu (Val.addl x (Val.longofintu (sint32_to_vint ofs)))).
+Definition get_addr_ofs (x: val64_t) (ofs: sint32_t): M valu32_t := returnM (val_intuoflongu (Val.addl x (Val.longofint (sint32_to_vint ofs)))).
 
 Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
   match chunk with

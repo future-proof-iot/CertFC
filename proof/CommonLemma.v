@@ -238,12 +238,12 @@ Proof.
   reflexivity.
 Qed.
 
-
+(*
 Lemma Ptrofs_max_unsigned_eq64:
   Ptrofs.max_unsigned = 18446744073709551615%Z.
 Proof.
   unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
   Transparent Archi.ptr64.
   reflexivity.
-Qed.
+Qed.*)
 

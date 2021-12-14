@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool.
 
-Require Import CoqIntegers Int16 InfComp.
+From bpf.src Require Import CoqIntegers Int16 InfComp.
 
 (******************** UInt8 *******************)
 Definition int8_t := byte.

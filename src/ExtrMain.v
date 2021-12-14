@@ -14,13 +14,7 @@
 (*  GNU General Public License for more details.                          *)
 (**************************************************************************)
 
-From Coq Require Import List String.
-Import List.ListNotations.
-Open Scope string.
-
 From dx Require Import DumpAsC.
-From dx.tests Require Import Tests.
+From bpf.src Require Import TestMain.
 
-Definition main := ltac:(let ms := eval vm_compute in
-  [ ("generated.c", dxModuleTest) ]
-  in exact (print_dx_modules ms)).
+Extraction Library TestMain.

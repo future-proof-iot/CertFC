@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-Require Import CoqIntegers DxIntegers DxValues.
+From bpf.src Require Import CoqIntegers DxIntegers DxValues.
 
 Definition memory_chunk_to_valu32 (chunk: memory_chunk) := 
   Vint (Int.repr (align_chunk chunk)).

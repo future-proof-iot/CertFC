@@ -5,7 +5,7 @@ From compcert Require Import Integers.
 
 From dx Require Import ResultMonad IR.
 
-Require Import CoqIntegers DxIntegers InfComp GenMatchable.
+From bpf.src Require Import CoqIntegers DxIntegers InfComp GenMatchable.
 
 Open Scope Z_scope.
 

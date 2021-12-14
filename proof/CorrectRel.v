@@ -1,16 +1,20 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxFlag DxInstructions.
-From Coq Require Import List Lia.
+From bpf.src Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxFlag.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
-Require Import ZArith.
 
 From bpf.proof Require Import Clightlogic MatchState.
+
+Open Scope Z_scope.
 
 Definition int64_correct (x:int64_t) (v: val) :=
   Vlong x = v.
 
 Definition val64_correct (x:val64_t) (v: val) :=
   x = v /\ exists vl, x = Vlong vl.
+
+Definition valu32_correct (x:valu32_t) (v: val) :=
+  x = v /\ exists vi, x = Vint vi.
 
 Definition sint32_correct (x: sint32_t) (v: val) :=
   Vint x = v.
@@ -38,3 +42,5 @@ Definition match_chunk (x : memory_chunk) (b: val) :=
 
 Definition flag_correct (f: bpf_flag) (v: val) :=
   v = Vint (int_of_flag f).
+
+Close Scope Z_scope.

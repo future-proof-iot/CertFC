@@ -15,6 +15,6 @@
 (**************************************************************************)
 
 From dx Require Import DumpAsC.
-From dx.tests Require Import TestMain.
+From bpf.benchmark Require Import BenchmarkTestMain.
 
-Extraction Library TestMain.
+Extraction Library BenchmarkTestMain.

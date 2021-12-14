@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-Require Import Int16 CoqIntegers DxIntegers InfComp.
+From bpf.src Require Import Int16 CoqIntegers DxIntegers InfComp.
 
 (** Coq2C: Values.val -> unsigned long long or unsigned int
   *)

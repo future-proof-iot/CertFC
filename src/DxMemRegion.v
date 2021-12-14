@@ -7,7 +7,7 @@ From compcert Require Import Integers Values Memtype.
 From dx Require Import ResultMonad IR IRtoC.
 From dx.Type Require Import Nat.
 
-Require Import IdentDef CoqIntegers DxIntegers DxValues DxMemType.
+From bpf.src Require Import IdentDef CoqIntegers DxIntegers DxValues DxMemType.
 
 Record memory_region : Type := mkmr{
   start_addr : valu32_t;
