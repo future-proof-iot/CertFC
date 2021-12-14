@@ -10,17 +10,17 @@ From dx.Type Require Import Nat.
 Require Import IdentDef CoqIntegers DxIntegers DxValues DxMemType.
 
 Record memory_region : Type := mkmr{
-  start_addr : val64_t;
+  start_addr : valu32_t;
   block_size : valu32_t;   (**r should those be val32_t? *)
   block_perm : permission; (**r let's say it should be u32 *)
-  block_ptr  : val64_t;
+  block_ptr  : valu32_t;
 }.
 
 Definition default_memory_region := {|
-  start_addr := val64_zero;
+  start_addr := val32_zero;
   block_size := val32_zero;
   block_perm := Nonempty;
-  block_ptr  := val64_zero;
+  block_ptr  := val32_zero;
 |}.
 
 Module Memory_regions.
@@ -48,13 +48,11 @@ Fixpoint MyMemRegionsAdd (mr: memory_region) (l: MyMemRegionsType) :=
 Definition mem_region_type: Ctypes.type := Ctypes.Tpointer (Ctypes.Tstruct mem_region_id Ctypes.noattr) Ctypes.noattr.
 
 Definition mem_region_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U64); (size_id, C_U32); (perm_id, C_U32); (block_ptr_id, C_U64)] Ctypes.noattr.
+  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U32); (size_id, C_U32); (perm_id, C_U32); (block_ptr_id, C_U32)] Ctypes.noattr.
 
 Definition mem_regionCompilableType := MkCompilableType memory_region mem_region_type.
 
-(** Type for mem_region -> val64_t/valu32_t *)
-Definition mem_regionToVal64CompilableSymbolType :=
-  MkCompilableSymbolType [mem_regionCompilableType] (Some val64CompilableType).
+(** Type for mem_region -> valu32_t *)
 
 Definition mem_regionToValU32CompilableSymbolType :=
   MkCompilableSymbolType [mem_regionCompilableType] (Some valU32CompilableType).
@@ -63,18 +61,18 @@ Definition mem_regionTopermCompilableSymbolType :=
   MkCompilableSymbolType [mem_regionCompilableType] (Some permissionCompilableType).
 
 Definition Const_block_ptr := 
-  MkPrimitive mem_regionToVal64CompilableSymbolType 
+  MkPrimitive mem_regionToValU32CompilableSymbolType 
               block_ptr
               (fun es => match es with
-                         | [e1] => Ok (C_U64_one)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) block_ptr_id C_U32)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 
 Definition Const_start_addr := 
-  MkPrimitive mem_regionToVal64CompilableSymbolType 
+  MkPrimitive mem_regionToValU32CompilableSymbolType 
               start_addr
               (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) start_addr_id C_U64)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) start_addr_id C_U32)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 

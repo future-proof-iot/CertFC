@@ -31,15 +31,16 @@ Definition upd_reg (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg
 
 Definition eval_mem_regions : M MyMemRegionsType := fun st => Some (eval_mem_regions st, st).
 
+(*
 Definition bpf_add_mem_region (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region mr st).
 
-Definition bpf_add_region_ctx (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region_ctx mr st).
+Definition bpf_add_region_ctx (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region_ctx mr st).*)
 
-Definition load_mem (chunk: memory_chunk) (ptr: val64_t): M val64_t := fun st => Some (load_mem chunk ptr st, st).
+Definition load_mem (chunk: memory_chunk) (ptr: valu32_t): M val64_t := fun st => Some (load_mem chunk ptr st, st).
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) : M unit := fun st => Some (tt, store_mem_imm chunk ptr v st).
+Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) : M unit := fun st => Some (tt, store_mem_imm chunk ptr v st).
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) : M unit := fun st => Some (tt, store_mem_reg chunk ptr v st).
+Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) : M unit := fun st => Some (tt, store_mem_reg chunk ptr v st).
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

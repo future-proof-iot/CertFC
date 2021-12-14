@@ -86,14 +86,19 @@ static unsigned char get_opcode(unsigned char op)
   return (unsigned char) (op & 7);
 }
 
-static unsigned long long get_addl(unsigned long long x, unsigned long long y)
+static unsigned int get_add(unsigned int x, unsigned int y)
 {
   return x + y;
 }
 
-static unsigned long long get_subl(unsigned long long x, unsigned long long y)
+static unsigned int get_sub(unsigned int x, unsigned int y)
 {
   return x - y;
+}
+
+unsigned int get_addr_ofs(unsigned long long x, int ofs)
+{
+  return (unsigned int) (x + (unsigned long long) ofs);
 }
 
 static _Bool is_well_chunk_bool(unsigned int chunk)
@@ -113,43 +118,43 @@ static _Bool is_well_chunk_bool(unsigned int chunk)
   }
 }
 
-static unsigned long long check_mem_aux2(struct memory_region *mr, unsigned long long addr, unsigned int chunk)
+static unsigned int check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigned int chunk)
 {
   _Bool well_chunk;
-  unsigned long long lo_ofs;
-  unsigned long long hi_ofs;
+  unsigned int lo_ofs;
+  unsigned int hi_ofs;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
-    lo_ofs = get_subl(addr, (*mr).start_addr);
-    hi_ofs = get_addl(lo_ofs, (unsigned long long) chunk);
-    if (0LLU <= lo_ofs && hi_ofs < (*mr).block_size) {
-      if (lo_ofs <= 18446744073709551615LLU - (unsigned long long) chunk
-            && 0LLU == lo_ofs % (unsigned long long) chunk) {
-        return 1LLU + lo_ofs;
+    lo_ofs = get_sub(addr, (*mr).start_addr);
+    hi_ofs = get_add(lo_ofs, (unsigned int) chunk);
+    if (0U <= lo_ofs && hi_ofs < (*mr).block_size) {
+      if (lo_ofs <= 4294967295U - (unsigned int) chunk
+            && 0U == lo_ofs % (unsigned int) chunk) {
+        return (*mr).block_ptr + lo_ofs;
       } else {
-        return 0LLU;
+        return 0U;
       }
     } else {
-      return 0LLU;
+      return 0U;
     }
   } else {
-    return 0LLU;
+    return 0U;
   }
 }
 
-unsigned long long check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int perm, unsigned int chunk, unsigned long long addr)
+unsigned int check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr)
 {
   unsigned int n;
   struct memory_region *cur_mr;
-  unsigned long long check_mem;
+  unsigned int check_mem;
   if (num == 0U) {
-    return 0LLU;
+    return 0U;
   } else {
     n = num - 1U;
     cur_mr = get_mem_region(st, n);
     if ((*cur_mr).block_perm >= perm) {
       check_mem = check_mem_aux2(cur_mr, addr, chunk);
-      if (check_mem == 0LLU) {
+      if (check_mem == 0U) {
         return check_mem_aux(st, n, perm, chunk, addr);
       } else {
         return check_mem;
@@ -160,22 +165,22 @@ unsigned long long check_mem_aux(struct bpf_state* st, unsigned int num, unsigne
   }
 }
 
-unsigned long long check_mem(struct bpf_state* st, unsigned int perm, unsigned int chunk, unsigned long long addr)
+unsigned int check_mem(struct bpf_state* st, unsigned int perm, unsigned int chunk, unsigned int addr)
 {
   _Bool well_chunk;
   unsigned int mem_reg_num;
-  unsigned long long check_mem;
+  unsigned int check_mem;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
     mem_reg_num = eval_mem_num(st);
     check_mem = check_mem_aux(st, mem_reg_num, perm, chunk, addr);
-    if (check_mem == 0LLU) {
-      return 0LLU;
+    if (check_mem == 0U) {
+      return 0U;
     } else {
       return check_mem;
     }
   } else {
-    return 0LLU;
+    return 0U;
   }
 }
 
@@ -184,7 +189,7 @@ static _Bool comp_and_0x08_byte(unsigned char x)
   return 0 == (x & 8);
 }
 
-void step_opcode_alu64(struct bpf_state* st, unsigned int dst, unsigned long long dst64, unsigned long long src64, unsigned char op)
+void step_opcode_alu64(struct bpf_state* st, unsigned long long dst64, unsigned long long src64, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_alu64;
   unsigned int src32;
@@ -281,7 +286,7 @@ void step_opcode_alu64(struct bpf_state* st, unsigned int dst, unsigned long lon
   }
 }
 
-void step_opcode_alu32(struct bpf_state* st, unsigned int dst, unsigned int dst32, unsigned int src32, unsigned char op)
+void step_opcode_alu32(struct bpf_state* st, unsigned int dst32, unsigned int src32, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_alu32;
   opcode_alu32 = get_opcode_alu32(op);
@@ -370,7 +375,7 @@ void step_opcode_alu32(struct bpf_state* st, unsigned int dst, unsigned int dst3
   }
 }
 
-void step_opcode_branch(struct bpf_state* st, int pc, int ofs, unsigned long long dst64, unsigned long long src64, unsigned char op)
+void step_opcode_branch(struct bpf_state* st, unsigned long long dst64, unsigned long long src64, int pc, int ofs, unsigned char op)
 {
   unsigned char opcode_jmp;
   opcode_jmp = get_opcode_branch(op);
@@ -488,7 +493,7 @@ void step_opcode_branch(struct bpf_state* st, int pc, int ofs, unsigned long lon
   }
 }
 
-void step_opcode_mem_ld_imm(struct bpf_state* st, int pc, int len, unsigned int dst, unsigned long long dst64, int imm, unsigned char op, unsigned long long *l)
+void step_opcode_mem_ld_imm(struct bpf_state* st, int imm, int pc, int len, unsigned int dst, unsigned char op, unsigned long long *l)
 {
   unsigned char opcode_ld;
   unsigned long long next_ins;
@@ -516,59 +521,59 @@ void step_opcode_mem_ld_imm(struct bpf_state* st, int pc, int len, unsigned int 
   }
 }
 
-void step_opcode_mem_ld_reg(struct bpf_state* st, int pc, unsigned int dst, unsigned long long dst64, unsigned long long src64, unsigned char op, unsigned long long ofs64, unsigned long long addr)
+void step_opcode_mem_ld_reg(struct bpf_state* st, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_ld;
-  unsigned long long check_ld;
+  unsigned int addr_ptr;
   unsigned long long v;
-  unsigned long long check_ld;
+  unsigned int addr_ptr;
   unsigned long long v;
-  unsigned long long check_ld;
+  unsigned int addr_ptr;
   unsigned long long v;
-  unsigned long long check_ld;
+  unsigned int addr_ptr;
   unsigned long long v;
   opcode_ld = get_opcode_mem_ld_reg(op);
   switch (opcode_ld) {
     case 97:
-      check_ld = check_mem(st, 1U, 4U, addr);
-      if (check_ld == 0LLU) {
+      addr_ptr = check_mem(st, 1U, 4U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        v = load_mem(st, 4U, src64 + ofs64);
+        v = load_mem(st, 4U, addr_ptr);
         upd_reg(st, dst, v);
         upd_flag(st, 0);
         return;
       }
     case 105:
-      check_ld = check_mem(st, 1U, 2U, addr);
-      if (check_ld == 0LLU) {
+      addr_ptr = check_mem(st, 1U, 2U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        v = load_mem(st, 2U, src64 + ofs64);
+        v = load_mem(st, 2U, addr_ptr);
         upd_reg(st, dst, v);
         upd_flag(st, 0);
         return;
       }
     case 113:
-      check_ld = check_mem(st, 1U, 1U, addr);
-      if (check_ld == 0LLU) {
+      addr_ptr = check_mem(st, 1U, 1U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        v = load_mem(st, 1U, src64 + ofs64);
+        v = load_mem(st, 1U, addr_ptr);
         upd_reg(st, dst, v);
         upd_flag(st, 0);
         return;
       }
     case 121:
-      check_ld = check_mem(st, 1U, 8U, addr);
-      if (check_ld == 0LLU) {
+      addr_ptr = check_mem(st, 1U, 8U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        v = load_mem(st, 8U, src64 + ofs64);
+        v = load_mem(st, 8U, addr_ptr);
         upd_reg(st, dst, v);
         upd_flag(st, 0);
         return;
@@ -580,52 +585,52 @@ void step_opcode_mem_ld_reg(struct bpf_state* st, int pc, unsigned int dst, unsi
   }
 }
 
-void step_opcode_mem_st_imm(struct bpf_state* st, int pc, unsigned int dst, unsigned long long dst64, int imm, unsigned char op, unsigned long long ofs64, unsigned long long addr)
+void step_opcode_mem_st_imm(struct bpf_state* st, int imm, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
-  unsigned long long check_st;
-  unsigned long long check_st;
-  unsigned long long check_st;
-  unsigned long long check_st;
+  unsigned int addr_ptr;
+  unsigned int addr_ptr;
+  unsigned int addr_ptr;
+  unsigned int addr_ptr;
   opcode_st = get_opcode_mem_st_imm(op);
   switch (opcode_st) {
     case 98:
-      check_st = check_mem(st, 2U, 4U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 4U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_imm(st, 4U, dst64 + ofs64, imm);
+        store_mem_imm(st, 4U, addr_ptr, imm);
         upd_flag(st, 0);
         return;
       }
     case 106:
-      check_st = check_mem(st, 2U, 2U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 2U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_imm(st, 2U, dst64 + ofs64, imm);
+        store_mem_imm(st, 2U, addr_ptr, imm);
         upd_flag(st, 0);
         return;
       }
     case 114:
-      check_st = check_mem(st, 2U, 1U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 1U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_imm(st, 1U, dst64 + ofs64, imm);
+        store_mem_imm(st, 1U, addr_ptr, imm);
         upd_flag(st, 0);
         return;
       }
     case 122:
-      check_st = check_mem(st, 2U, 8U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 8U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_imm(st, 8U, dst64 + ofs64, imm);
+        store_mem_imm(st, 8U, addr_ptr, imm);
         upd_flag(st, 0);
         return;
       }
@@ -636,52 +641,52 @@ void step_opcode_mem_st_imm(struct bpf_state* st, int pc, unsigned int dst, unsi
   }
 }
 
-void step_opcode_mem_st_reg(struct bpf_state* st, int pc, unsigned int dst, unsigned long long dst64, unsigned long long src64, unsigned char op, unsigned long long ofs64, unsigned long long addr)
+void step_opcode_mem_st_reg(struct bpf_state* st, unsigned long long src64, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
-  unsigned long long check_st;
-  unsigned long long check_st;
-  unsigned long long check_st;
-  unsigned long long check_st;
+  unsigned int addr_ptr;
+  unsigned int addr_ptr;
+  unsigned int addr_ptr;
+  unsigned int addr_ptr;
   opcode_st = get_opcode_mem_st_reg(op);
   switch (opcode_st) {
     case 99:
-      check_st = check_mem(st, 2U, 4U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 4U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_reg(st, 4U, dst64 + ofs64, src64);
+        store_mem_reg(st, 4U, addr_ptr, src64);
         upd_flag(st, 0);
         return;
       }
     case 107:
-      check_st = check_mem(st, 2U, 2U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 2U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_reg(st, 2U, dst64 + ofs64, src64);
+        store_mem_reg(st, 2U, addr_ptr, src64);
         upd_flag(st, 0);
         return;
       }
     case 115:
-      check_st = check_mem(st, 2U, 1U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 1U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_reg(st, 1U, dst64 + ofs64, src64);
+        store_mem_reg(st, 1U, addr_ptr, src64);
         upd_flag(st, 0);
         return;
       }
     case 123:
-      check_st = check_mem(st, 2U, 8U, addr);
-      if (check_st == 0LLU) {
+      addr_ptr = check_mem(st, 2U, 8U, addr);
+      if (addr_ptr == 0U) {
         upd_flag(st, -2);
         return;
       } else {
-        store_mem_reg(st, 8U, dst64 + ofs64, src64);
+        store_mem_reg(st, 8U, addr_ptr, src64);
         upd_flag(st, 0);
         return;
       }
@@ -722,28 +727,23 @@ void step(struct bpf_state* st, int len, unsigned long long *l)
   unsigned int src;
   unsigned long long src64;
   unsigned int dst;
-  unsigned long long dst64;
   int imm;
+  unsigned int dst;
+  unsigned int src;
+  unsigned long long src64;
+  int ofs;
+  unsigned int addr;
+  unsigned int dst;
+  unsigned long long dst64;
+  int ofs;
+  int imm;
+  unsigned int addr;
   unsigned int dst;
   unsigned long long dst64;
   unsigned int src;
   unsigned long long src64;
   int ofs;
-  unsigned long long ofs64;
-  unsigned long long addr;
-  unsigned int dst;
-  unsigned long long dst64;
-  int ofs;
-  unsigned long long ofs64;
-  int imm;
-  unsigned long long addr;
-  unsigned int dst;
-  unsigned long long dst64;
-  unsigned int src;
-  unsigned long long src64;
-  int ofs;
-  unsigned long long ofs64;
-  unsigned long long addr;
+  unsigned int addr;
   pc = eval_pc(st);
   ins = list_get(l, pc);
   op = get_opcode_ins(ins);
@@ -756,12 +756,12 @@ void step(struct bpf_state* st, int len, unsigned long long *l)
       if (is_imm) {
         imm = get_immediate(ins);
         imm64 = eval_immediate(imm);
-        step_opcode_alu64(st, dst, dst64, imm64, op);
+        step_opcode_alu64(st, dst64, imm64, dst, op);
         return;
       } else {
         src = get_src(ins);
         src64 = eval_reg(st, src);
-        step_opcode_alu64(st, dst, dst64, src64, op);
+        step_opcode_alu64(st, dst64, src64, dst, op);
         return;
       }
     case 4:
@@ -771,13 +771,13 @@ void step(struct bpf_state* st, int len, unsigned long long *l)
       is_imm = comp_and_0x08_byte(op);
       if (is_imm) {
         imm = get_immediate(ins);
-        step_opcode_alu32(st, pc, dst32, imm, op);
+        step_opcode_alu32(st, dst32, imm, dst, op);
         return;
       } else {
         src = get_src(ins);
         src64 = eval_reg(st, src);
         src32 = reg64_to_reg32(src64);
-        step_opcode_alu32(st, pc, dst32, src32, op);
+        step_opcode_alu32(st, dst32, src32, dst, op);
         return;
       }
     case 5:
@@ -788,41 +788,35 @@ void step(struct bpf_state* st, int len, unsigned long long *l)
       if (is_imm) {
         imm = get_immediate(ins);
         imm64 = eval_immediate(imm);
-        step_opcode_branch(st, pc, ofs, dst64, imm64, op);
+        step_opcode_branch(st, dst64, imm64, pc, ofs, op);
         return;
       } else {
         src = get_src(ins);
         src64 = eval_reg(st, src);
-        step_opcode_branch(st, pc, ofs, dst64, src64, op);
+        step_opcode_branch(st, dst64, src64, pc, ofs, op);
         return;
       }
     case 0:
       dst = get_dst(ins);
-      dst64 = eval_reg(st, dst);
       imm = get_immediate(ins);
-      step_opcode_mem_ld_imm(st, pc, len, dst, dst64, imm,
-                             op, l);
+      step_opcode_mem_ld_imm(st, imm, pc, len, dst, op,
+                             l);
       return;
     case 1:
       dst = get_dst(ins);
-      dst64 = eval_reg(st, dst);
       src = get_src(ins);
       src64 = eval_reg(st, src);
       ofs = get_offset(ins);
-      ofs64 = eval_immediate(ofs);
-      addr = get_addl(src64, ofs64);
-      step_opcode_mem_ld_reg(st, pc, dst, dst64, src64, op,
-                             ofs64, addr);
+      addr = get_addr_ofs(src64, ofs);
+      step_opcode_mem_ld_reg(st, addr, pc, dst, op);
       return;
     case 2:
       dst = get_dst(ins);
       dst64 = eval_reg(st, dst);
       ofs = get_offset(ins);
-      ofs64 = eval_immediate(ofs);
       imm = get_immediate(ins);
-      addr = get_addl(dst64, ofs64);
-      step_opcode_mem_st_imm(st, pc, dst, dst64, imm, op,
-                             ofs64, addr);
+      addr = get_addr_ofs(dst64, ofs);
+      step_opcode_mem_st_imm(st, imm, addr, pc, dst, op);
       return;
     case 3:
       dst = get_dst(ins);
@@ -830,10 +824,8 @@ void step(struct bpf_state* st, int len, unsigned long long *l)
       src = get_src(ins);
       src64 = eval_reg(st, src);
       ofs = get_offset(ins);
-      ofs64 = eval_immediate(ofs);
-      addr = get_addl(dst64, ofs64);
-      step_opcode_mem_st_reg(st, pc, dst, dst64, src64, op,
-                             ofs64, addr);
+      addr = get_addr_ofs(dst64, ofs);
+      step_opcode_mem_st_reg(st, src64, addr, pc, dst, op);
       return;
     default:
       upd_flag(st, -1);

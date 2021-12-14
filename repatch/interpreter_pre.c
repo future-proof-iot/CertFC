@@ -54,6 +54,7 @@ static struct memory_region *eval_mem_regions(struct bpf_state* st){
   return (*st).mrs;
 }
 
+/*
 void add_mem_region(struct bpf_state* st, struct memory_region* mr){
   (*st).mrs[(*st).mem_num] = *mr;
   (*st).mem_num += 1;
@@ -64,34 +65,34 @@ void add_mem_region_ctx(struct bpf_state* st, struct memory_region* mr){
   (*st).mrs[0] = *mr;
   (*st).mem_num = 1;
   return ;
-}
+}*/
 
-static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned long long v){
+static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned int addr){
   switch (chunk) {
-    case 1: return *(unsigned char *) (intptr_t)v;
-    case 2: return *(unsigned short *) (intptr_t)v;
-    case 4: return *(unsigned int *) (intptr_t)v;
-    case 8: return *(unsigned long long *) (intptr_t) v;
-    default: /*printf ("load:addr = %" PRIu64 "\n", v);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return 0;
+    case 1: return *(unsigned char *) (uintptr_t)addr;
+    case 2: return *(unsigned short *) (uintptr_t)addr;
+    case 4: return *(unsigned int *) (uintptr_t)addr;
+    case 8: return *(unsigned long long *) (uintptr_t) addr;
+    default: /*printf ("load:addr = %" PRIu64 "\n", v);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return 0LLU;
   }
 }
 
-static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned long long addr, unsigned long long v){
+static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned int addr, unsigned long long v){
   switch (chunk) {
-    case 1: *(unsigned char *) (intptr_t) addr = v; return ;
-    case 2: *(unsigned short *) (intptr_t) addr = v; return ;
-    case 4: *(unsigned int *) (intptr_t) addr = v; return ;
-    case 8: *(unsigned long long *) (intptr_t) addr = v; return ;
+    case 1: *(unsigned char *) (uintptr_t) addr = v; return ;
+    case 2: *(unsigned short *) (uintptr_t) addr = v; return ;
+    case 4: *(unsigned int *) (uintptr_t) addr = v; return ;
+    case 8: *(unsigned long long *) (uintptr_t) addr = v; return ;
     default: /*printf ("store_reg:addr = %" PRIu64 "\n", addr);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
 }
 
-static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned long long addr, int v){
+static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned int addr, int v){
   switch (chunk) {
-    case 1: *(unsigned char *) addr = v; return ;
-    case 2: *(unsigned short *) addr = v; return ;
-    case 4: *(unsigned int *) addr = v; return ;
-    case 8: *(unsigned long long *) addr = v; return ;
+    case 1: *(unsigned char *) (uintptr_t) addr = v; return ;
+    case 2: *(unsigned short *) (uintptr_t) addr = v; return ;
+    case 4: *(unsigned int *) (uintptr_t) addr = v; return ;
+    case 8: *(unsigned long long *) (uintptr_t) addr = v; return ;
     default: /*printf ("store_imm:addr = %" PRIu64 "\n", addr);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
 }

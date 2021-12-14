@@ -138,7 +138,7 @@ int main(){
     .mrs = my_memory_regions
   };
   
-  //print_normal_addr(&st);
+  print_normal_addr(&st);
   
   clock_t begin1 = clock();
   //for (int j = 0; j < 1000; j++) { //TODO: why a loop returns a wrong result? 

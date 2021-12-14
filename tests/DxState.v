@@ -86,7 +86,7 @@ Definition upd_reg (r:reg) (v:val64_t) (st:state): state := {|
 |}.
 
 Definition eval_mem_regions (st:state): MyMemRegionsType := bpf_mrs st.
-
+(*
 Definition add_mem_region (mr: memory_region) (st:state): state :={|
   pc_loc  := pc_loc st;
   flag    := flag st;
@@ -104,7 +104,7 @@ Definition add_mem_region_ctx (mr: memory_region) (st:state): state :={|
   bpf_mrs := MyMemRegionsAdd mr (bpf_mrs st);
   bpf_m   := bpf_m st;
 |}.
-
+*)
 Definition eval_mem (st: state):Mem.mem := bpf_m st.
 
 Definition upd_mem (m: Mem.mem) (st: state): state := {| (**r never be used I guess *)
@@ -116,19 +116,19 @@ Definition upd_mem (m: Mem.mem) (st: state): state := {| (**r never be used I gu
   bpf_m   := m;
 |}.
 
-Definition load_mem (chunk: memory_chunk) (ptr: val64_t) (st: state) :=
+Definition load_mem (chunk: memory_chunk) (ptr: valu32_t) (st: state) :=
   match Mem.loadv chunk (bpf_m st) ptr with
   | Some res => res
   | None => val64_zero
   end.
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: val64_t) (v: vals32_t) (st: state): state :=
+Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) (st: state): state :=
   match Mem.storev chunk (bpf_m st) ptr v with
   | Some m => upd_mem m st
   | None => upd_mem init_mem st
   end.
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr v: val64_t) (st: state): state :=
+Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) (st: state): state :=
   match Mem.storev chunk (bpf_m st) ptr v with
   | Some m => upd_mem m st
   | None => upd_mem init_mem st

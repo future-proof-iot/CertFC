@@ -45,6 +45,7 @@ Definition int32_10 := Int.repr 10.
 Definition int32_16 := Int.repr 16.
 Definition int32_32 := Int.repr 32.
 Definition int32_64 := Int.repr 64.
+Definition int32_max_unsigned := Int.repr Int.max_unsigned.
 
 (** masking operations *)
 Definition int32_0xf0 := Int.repr 0xf0.
@@ -84,8 +85,8 @@ Definition int64_0xffff := Int64.repr 0xffff.
 
 (** masking operation *)
 Definition int64_0xf    := Int64.repr 0xf.
-
-Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.
+(*
+Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.*)
 
 (******************** Int64 Type Casting *******************)
 
@@ -307,6 +308,9 @@ Definition C_U32_32: Csyntax.expr :=
 Definition C_U32_64: Csyntax.expr :=
   Csyntax.Eval (Vint int32_64) C_U32.
 
+Definition C_U32_max_unsigned: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_max_unsigned) C_U32.
+
 Definition uint32CompilableType :=
   MkCompilableType uint32_t C_U32.
 
@@ -340,6 +344,8 @@ Definition Const_uint32_16 := constant uint32SymbolType int32_16 C_U32_16.
 Definition Const_uint32_32 := constant uint32SymbolType int32_32 C_U32_32.
 
 Definition Const_uint32_64 := constant uint32SymbolType int32_64 C_U32_64.
+
+Definition Const_uint32_max_unsigned := constant uint32SymbolType int32_max_unsigned C_U32_max_unsigned.
 
 Definition uint32Touint32SymbolType :=
   MkCompilableSymbolType [uint32CompilableType] (Some uint32CompilableType).
@@ -615,9 +621,9 @@ Definition C_U64_0xffff: Csyntax.expr :=
 (** masking operation*)
 Definition C_U64_0xf: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_0xf) C_U64.
-
+(*
 Definition C_U64_max_unsigned: Csyntax.expr :=
-  Csyntax.Eval (Vlong (Int64.repr (Int64.max_unsigned))) C_U64.
+  Csyntax.Eval (Vlong (Int64.repr (Int64.max_unsigned))) C_U64.*)
 
 Definition Const_int64_0xff := constant int64SymbolType int64_0xff C_U64_0xff.
 Definition Const_int64_8  := constant int64SymbolType int64_8  C_U64_8.
@@ -629,8 +635,8 @@ Definition Const_int64_0xffff := constant int64SymbolType int64_0xffff C_U64_0xf
 
 (** masking operation*)
 Definition Const_int64_0xf := constant int64SymbolType int64_0xf C_U64_0xf.
-
-Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.
+(*
+Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.*)
 
 Definition Const_int64_zero := constant int64SymbolType Int64.zero C_U64_zero.
 
@@ -813,6 +819,7 @@ Module Exports.
   Definition Const_uint32_16       := Const_uint32_16.
   Definition Const_uint32_32       := Const_uint32_32.
   Definition Const_uint32_64       := Const_uint32_64.
+  Definition Const_uint32_max_unsigned := Const_uint32_max_unsigned.
   Definition Const_uint32_neg      := Const_uint32_neg.
   Definition Const_uint32_add      := Const_uint32_add.
   Definition Const_uint32_sub      := Const_uint32_sub.
@@ -864,8 +871,8 @@ Module Exports.
   (** masking operation*)
   Definition Const_int64_0xf       := Const_int64_0xf.
 
-
-  Definition Const_int64_max_unsigned := Const_int64_max_unsigned.
+(*
+  Definition Const_int64_max_unsigned := Const_int64_max_unsigned.*)
   Definition Const_int64_neg       := Const_int64_neg.
   Definition Const_int64_add       := Const_int64_add.
   Definition Const_int64_sub       := Const_int64_sub.

@@ -22,6 +22,7 @@ Definition val32_one  := Vint int32_1.   (**r ==> Readable *)
 Definition val32_2    := Vint int32_2. (**r ==> Writable *)
 Definition val32_3    := Vint int32_3. (**r ==> Freeable *)
 Definition val32_32   := Vint int32_32.
+Definition val32_max_unsigned := Vint int32_max_unsigned.
 
 (** Type signature: val -> val -> option val
     we use `val32_divu` to replace `Val.divu`
@@ -43,15 +44,27 @@ Definition val32_modu (x y: val): val :=
   | None => Vundef
   end.
 
-Definition compl_ne_32 (x y: val): bool :=
+Definition comp_eq_32 (x y: val): bool :=
+  match x, y with
+  | Vint n1, Vint n2 => Int.eq n1 n2
+  | _, _ => false
+  end.
+
+Definition comp_ne_32 (x y: val): bool :=
   match x, y with
   | Vint n1, Vint n2 => negb (Int.eq n1 n2)
   | _, _ => false
   end.
 
-Definition complu_lt_32 (x y: val): bool :=
+Definition compu_lt_32 (x y: val): bool :=
   match x, y with
   | Vint n1, Vint n2 => Int.ltu n1 n2
+  | _, _ => false
+  end.
+
+Definition compu_le_32 (x y: val): bool :=
+  match x, y with
+  | Vint n1, Vint n2 => negb (Int.ltu n2 n1)
   | _, _ => false
   end.
 
@@ -64,8 +77,8 @@ Definition vals32_t := val.
 Definition val64_t := val.
 
 Definition val64_zero := Vlong Int64.zero.
-Definition val64_64 := Vlong int64_64.
-Definition val64_max_unsigned := Vlong int64_max_unsigned.
+Definition val64_64 := Vlong int64_64. (*
+Definition val64_max_unsigned := Vlong int64_max_unsigned.*)
 
 (** Type signature: val -> val -> option val
     we use `val64_divlu` to replace `Val.divlu`
@@ -193,6 +206,8 @@ Definition Const_val32_3    := constant valU32SymbolType val32_3    C_U32_3.
 
 Definition Const_val32_32 := constant valU32SymbolType val32_32 C_U32_32.
 
+Definition Const_val32_max_unsigned := constant valU32SymbolType val32_max_unsigned C_U32_max_unsigned.
+
 (** Type signature: val -> val
   *)
 Definition valU32TovalU32SymbolType :=
@@ -237,8 +252,11 @@ Definition valU32TovalU32ToboolSymbolType :=
 
 Instance C_bool : CType bool := mkCType _ (cType boolCompilableType).
 
-Definition Const_valU32_ne  := ltac: (mkprimitive compl_ne_32 (binop_expr Cop.One C_U32)).
-Definition Const_valU32_ltu := ltac: (mkprimitive complu_lt_32 (binop_expr Cop.Olt C_U32)).
+Definition Const_valU32_eq  := ltac: (mkprimitive comp_eq_32 (binop_expr Cop.Oeq C_U32)).
+Definition Const_valU32_ne  := ltac: (mkprimitive comp_ne_32 (binop_expr Cop.One C_U32)).
+Definition Const_valU32_ltu := ltac: (mkprimitive compu_lt_32 (binop_expr Cop.Olt C_U32)).
+
+Definition Const_valU32_le := ltac: (mkprimitive compu_le_32 (binop_expr Cop.Ole C_U32)).
 
 (******************** Val2S32 *******************)
 
@@ -281,8 +299,8 @@ Definition val64SymbolType :=
 Definition Const_val64_zero := constant val64SymbolType val64_zero C_U64_zero.
 
 Definition Const_val64_64 := constant val64SymbolType val64_64 C_U64_64.
-
-Definition Const_val64_max_unsigned := constant val64SymbolType val64_max_unsigned C_U64_max_unsigned.
+(*
+Definition Const_val64_max_unsigned := constant val64SymbolType val64_max_unsigned C_U64_max_unsigned.*)
 
 (** Type signature: val -> val
   *)
@@ -435,6 +453,7 @@ Module Exports.
   Definition Const_val32_2          := Const_val32_2.
   Definition Const_val32_3          := Const_val32_3.
   Definition Const_val32_32         := Const_val32_32.
+  Definition Const_val32_max_unsigned := Const_val32_max_unsigned.
   Definition Const_valU32_neg       := Const_valU32_neg.
   Definition Const_valU32_add       := Const_valU32_add.
   Definition Const_valU32_sub       := Const_valU32_sub.
@@ -447,16 +466,19 @@ Module Exports.
   Definition Const_valU32_mod       := Const_valU32_mod.
   Definition Const_valU32_xor       := Const_valU32_xor.
   Definition Const_valU32_shrs      := Const_valU32_shrs.
+  Definition Const_valU32_eq        := Const_valU32_eq.
   Definition Const_valU32_ne        := Const_valU32_ne.
   Definition Const_valU32_ltu       := Const_valU32_ltu.
+  Definition Const_valU32_le        := Const_valU32_le.
+
   Definition valS32CompilableType   := valS32CompilableType.
   Definition Const_valS32_neg       := Const_valS32_neg.
   Definition Const_valS32_add       := Const_valS32_add.
 
   Definition val64CompilableType    := val64CompilableType.
   Definition Const_val64_zero       := Const_val64_zero.
-  Definition Const_val64_64         := Const_val64_64.
-  Definition Const_val64_max_unsigned := Const_val64_max_unsigned.
+  Definition Const_val64_64         := Const_val64_64. (*
+  Definition Const_val64_max_unsigned := Const_val64_max_unsigned.*)
   Definition Const_val64_neg        := Const_val64_neg.
   Definition Const_val64_add        := Const_val64_add.
   Definition Const_val64_sub        := Const_val64_sub.

@@ -36,9 +36,9 @@ GenerateIntermediateRepresentation SymbolIRs
   eval_mem_num
   eval_reg
   upd_reg
-  eval_mem_regions
+  eval_mem_regions(*
   add_mem_region
-  add_mem_region_ctx
+  add_mem_region_ctx*)
   load_mem
   store_mem_imm
   store_mem_reg
@@ -60,8 +60,9 @@ GenerateIntermediateRepresentation SymbolIRs
   get_opcode_mem_st_imm
   get_opcode_mem_st_reg
   get_opcode
-  get_addl
-  get_subl
+  get_add
+  get_sub
+  get_addr_ofs
   is_well_chunk_bool
   check_mem_aux2
   check_mem_aux
@@ -78,8 +79,6 @@ GenerateIntermediateRepresentation SymbolIRs
   bpf_interpreter_aux
   bpf_interpreter
 .
-(*
-Definition dxModuleTest := makeDXModuleWithDefaults SymbolIRs. *)
 
 Definition dxModuleTest := makeDXModuleWithUserIds 
   [ mem_region_def; state_struct_def]
