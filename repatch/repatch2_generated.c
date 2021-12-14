@@ -96,7 +96,7 @@ static unsigned int get_sub(unsigned int x, unsigned int y)
   return x - y;
 }
 
-unsigned int get_addr_ofs(unsigned long long x, int ofs)
+static unsigned int get_addr_ofs(unsigned long long x, int ofs)
 {
   return (unsigned int) (x + (unsigned long long) ofs);
 }

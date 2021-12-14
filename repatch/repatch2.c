@@ -100,7 +100,7 @@ const char old_words[][100] = {
 	"unsigned char get_opcode(",
 	"unsigned int get_add(",
 	"unsigned int get_sub(",
-	"unsigned int get_addr(",
+	"unsigned int get_addr_ofs(",
 	"_Bool is_well_chunk_bool(",
 	"unsigned int check_mem_aux2(",
 	"_Bool comp_and_0x08_byte("
@@ -188,7 +188,7 @@ const char new_words[][100] = {
 	"static unsigned char get_opcode(",
 	"static unsigned int get_add(",
 	"static unsigned int get_sub(",
-	"static unsigned int get_addr(",
+	"static unsigned int get_addr_ofs(",
 	"static _Bool is_well_chunk_bool(",
 	"static unsigned int check_mem_aux2(",
 	"static _Bool comp_and_0x08_byte("

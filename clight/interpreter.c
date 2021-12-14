@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include<stdlib.h>
 #include<stddef.h>
-
+/*
 void print_bpf_state(struct bpf_state* st){
   printf("pc= %" PRIu64 "\n", (uint64_t) (*st).state_pc);
   printf("flag= %d\n", (*st).bpf_flag);
@@ -12,7 +12,7 @@ void print_bpf_state(struct bpf_state* st){
     printf("= %" PRIu64 ";", (uint64_t) (*st).regsmap[i]);
   }
   printf("\n");
-}
+}*/
 
 static unsigned long long eval_pc (struct bpf_state* st) {
   return (*st).state_pc;
@@ -69,9 +69,9 @@ void add_mem_region_ctx(struct bpf_state* st, struct memory_region* mr){
 
 static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned int addr){
   switch (chunk) {
-    case 1: return *(unsigned char *) (uintptr_t)addr;
-    case 2: return *(unsigned short *) (uintptr_t)addr;
-    case 4: return *(unsigned int *) (uintptr_t)addr;
+    case 1: return *(unsigned char *) (uintptr_t) addr;
+    case 2: return *(unsigned short *) (uintptr_t) addr;
+    case 4: return *(unsigned int *) (uintptr_t) addr;
     case 8: return *(unsigned long long *) (uintptr_t) addr;
     default: /*printf ("load:addr = %" PRIu64 "\n", v);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return 0LLU;
   }
@@ -196,7 +196,7 @@ static unsigned int get_sub(unsigned int x, unsigned int y)
   return x - y;
 }
 
-unsigned int get_addr_ofs(unsigned long long x, int ofs)
+static unsigned int get_addr_ofs(unsigned long long x, int ofs)
 {
   return (unsigned int) (x + (unsigned long long) ofs);
 }
@@ -901,7 +901,7 @@ void bpf_interpreter_aux(struct bpf_state* st, int len, unsigned int fuel, unsig
     fuel0 = fuel - 1U;
     pc = eval_pc(st);
     if (0U <= pc && pc < len) {
-      step(st, len, l); print_bpf_state(st);
+      step(st, len, l); //print_bpf_state(st);
       upd_pc_incr(st);
       f = eval_flag(st);
       if (f == 0) {

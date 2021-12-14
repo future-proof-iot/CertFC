@@ -81,7 +81,7 @@ repatch:
 
 clight:
 	@echo $@
-	cd clight && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c
+	cd clight && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c && ./$@
 	cd clight && $(CLIGHTGEN) interpreter.c
 	$(CP) clight/interpreter.v codeTest
 
