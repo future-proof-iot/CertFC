@@ -75,14 +75,6 @@ Definition int64_2 := Int64.repr 2.
 
 Definition int64_64 := Int64.repr 64.
 
-Definition int64_0x07   := Int64.repr 0x07.
-Definition int64_0x0f   := Int64.repr 0x0f.
-Definition int64_0x87   := Int64.repr 0x87.
-Definition int64_0x04   := Int64.repr 0x04.
-Definition int64_0x0c   := Int64.repr 0x0c.
-Definition int64_0x84   := Int64.repr 0x84.
-Definition int64_0x95   := Int64.repr 0x95.
-
 Definition int64_0xff   := Int64.repr 0xff.
 Definition int64_8      := Int64.repr 8.
 Definition int64_12     := Int64.repr 12.
@@ -91,14 +83,10 @@ Definition int64_48     := Int64.repr 48.
 Definition int64_0xfff  := Int64.repr 0xfff.
 Definition int64_0xffff := Int64.repr 0xffff.
 
-<<<<<<< HEAD
-Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.
-=======
 (** masking operation *)
 Definition int64_0xf    := Int64.repr 0xf.
 (*
 Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.*)
->>>>>>> optimization_32
 
 (******************** Int64 Type Casting *******************)
 
@@ -614,20 +602,6 @@ Definition C_U64_2: Csyntax.expr :=
 Definition C_U64_64: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_64) C_U64.
 
-Definition C_U64_0x07: Csyntax.expr :=
-  Csyntax.Eval (Vlong int64_0x07) C_U64.
-Definition C_U64_0x0f: Csyntax.expr :=
-  Csyntax.Eval (Vlong int64_0x0f) C_U64.
-Definition C_U64_0x87: Csyntax.expr :=
-  Csyntax.Eval (Vlong int64_0x87) C_U64.
-Definition C_U64_0x04: Csyntax.expr :=
-  Csyntax.Eval (Vlong int64_0x04) C_U64.
-Definition C_U64_0x0c: Csyntax.expr :=
-  Csyntax.Eval (Vlong int64_0x0c) C_U64.
-Definition C_U64_0x84: Csyntax.expr :=
-  Csyntax.Eval (Vlong int64_0x84) C_U64.
-Definition C_U64_0x95: Csyntax.expr :=
-  Csyntax.Eval (Vlong int64_0x95) C_U64.
 
 Definition C_U64_0xff: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_0xff) C_U64.
@@ -644,25 +618,14 @@ Definition C_U64_0xfff: Csyntax.expr :=
 Definition C_U64_0xffff: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_0xffff) C_U64.
 
-<<<<<<< HEAD
-=======
 (** masking operation*)
 Definition C_U64_0xf: Csyntax.expr :=
   Csyntax.Eval (Vlong int64_0xf) C_U64.
 (*
->>>>>>> optimization_32
 Definition C_U64_max_unsigned: Csyntax.expr :=
   Csyntax.Eval (Vlong (Int64.repr (Int64.max_unsigned))) C_U64.*)
 
-Definition Const_int64_0x07 := constant int64SymbolType int64_0x07 C_U64_0x07.
-Definition Const_int64_0x0f := constant int64SymbolType int64_0x0f C_U64_0x0f.
-Definition Const_int64_0x87 := constant int64SymbolType int64_0x87 C_U64_0x87.
-Definition Const_int64_0x04 := constant int64SymbolType int64_0x04 C_U64_0x04.
-Definition Const_int64_0x0c := constant int64SymbolType int64_0x0c C_U64_0x0c.
-Definition Const_int64_0x84 := constant int64SymbolType int64_0x84 C_U64_0x84.
-Definition Const_int64_0x95 := constant int64SymbolType int64_0x95 C_U64_0x95.
 Definition Const_int64_0xff := constant int64SymbolType int64_0xff C_U64_0xff.
-
 Definition Const_int64_8  := constant int64SymbolType int64_8  C_U64_8.
 Definition Const_int64_12 := constant int64SymbolType int64_12 C_U64_12.
 Definition Const_int64_32 := constant int64SymbolType int64_32 C_U64_32.
@@ -670,14 +633,10 @@ Definition Const_int64_48 := constant int64SymbolType int64_48 C_U64_48.
 Definition Const_int64_0xfff := constant int64SymbolType int64_0xfff C_U64_0xfff.
 Definition Const_int64_0xffff := constant int64SymbolType int64_0xffff C_U64_0xffff.
 
-<<<<<<< HEAD
-Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.
-=======
 (** masking operation*)
 Definition Const_int64_0xf := constant int64SymbolType int64_0xf C_U64_0xf.
 (*
 Definition Const_int64_max_unsigned := constant int64SymbolType int64_max_unsigned C_U64_max_unsigned.*)
->>>>>>> optimization_32
 
 Definition Const_int64_zero := constant int64SymbolType Int64.zero C_U64_zero.
 
@@ -900,13 +859,6 @@ Module Exports.
   Definition Const_int64_one       := Const_int64_one.
   Definition Const_int64_2         := Const_int64_2.
   Definition Const_int64_64        := Const_int64_64.
-  Definition Const_int64_0x07      := Const_int64_0x07.
-  Definition Const_int64_0x0f      := Const_int64_0x0f.
-  Definition Const_int64_0x87      := Const_int64_0x87.
-  Definition Const_int64_0x04      := Const_int64_0x04.
-  Definition Const_int64_0x0c      := Const_int64_0x0c.
-  Definition Const_int64_0x84      := Const_int64_0x84.
-  Definition Const_int64_0x95      := Const_int64_0x95.
 
   Definition Const_int64_0xff      := Const_int64_0xff.
   Definition Const_int64_8         := Const_int64_8.
@@ -915,16 +867,12 @@ Module Exports.
   Definition Const_int64_48        := Const_int64_48.
   Definition Const_int64_0xfff     := Const_int64_0xfff.
   Definition Const_int64_0xffff    := Const_int64_0xffff.
-<<<<<<< HEAD
-  Definition Const_int64_max_unsigned := Const_int64_max_unsigned.
-=======
 
   (** masking operation*)
   Definition Const_int64_0xf       := Const_int64_0xf.
 
 (*
   Definition Const_int64_max_unsigned := Const_int64_max_unsigned.*)
->>>>>>> optimization_32
   Definition Const_int64_neg       := Const_int64_neg.
   Definition Const_int64_add       := Const_int64_add.
   Definition Const_int64_sub       := Const_int64_sub.

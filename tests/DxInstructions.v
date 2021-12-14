@@ -9,10 +9,6 @@ Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag
 
 Open Scope monad_scope.
 
-<<<<<<< HEAD
-(** TODO: regarding the decode function: from int64 to bpf_instruction
-  from: https://github.com/bergzand/RIOT/blob/10cecc628e89442777f2a798f6763e3f55ac9731/sys/include/bpf/instruction.h#L89
-=======
 Definition list_get (l: MyListType) (idx: sint32_t): M int64_t :=
   returnM (MyListIndexs32 l idx).
 
@@ -24,7 +20,6 @@ Definition get_dst (ins: int64_t): M reg :=
   returnM (int64_to_dst_reg ins).
 
 Definition reg64_to_reg32 (d: val64_t): M valu32_t := returnM (val_intuoflongu d).
->>>>>>> optimization_32
 
 Definition get_src (ins: int64_t): M reg :=
   returnM (int64_to_src_reg ins).
@@ -78,17 +73,8 @@ Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
   end.
 
 
-<<<<<<< HEAD
-Definition test_complex (dst64: val64_t) (imm: sint32_t): M val64_t :=
-  do res <- get_addl dst64 (Val.longofintu (sint32_to_vint imm));
-  returnM res.
-
-Definition check_mem_aux (mr3: memory_region) (addr0: val64_t) (chunk1: memory_chunk): M val64_t :=
-  do well_chunk <- is_well_chunk_bool chunk1;
-=======
 Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_chunk): M valu32_t :=
   do well_chunk <- is_well_chunk_bool chunk;
->>>>>>> optimization_32
     if well_chunk then
       do lo_ofs <- get_sub addr (start_addr mr);
       do hi_ofs <- get_add lo_ofs (memory_chunk_to_valu32 chunk);
