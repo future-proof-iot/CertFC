@@ -82,6 +82,19 @@ unsigned int calc_sum(unsigned int v, unsigned int n)
   }
 }
 
+void rec_upd_pc(struct bpf_state* st, unsigned int n)
+{
+  unsigned int n1;
+  if (n == 0U) {
+    return;
+  } else {
+    n1 = n - 1U;
+    upd_pc_incr(st);
+    rec_upd_pc(st, n1);
+    return;
+  }
+}
+
 void step_opcode_mem_ld_imm(struct bpf_state* st, int imm, int pc, int len, unsigned int dst, unsigned char op, unsigned long long *l)
 {
   unsigned char opcode_ld;
