@@ -238,6 +238,12 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma Int_eq_one_zero :
+  Int.eq Int.one Int.zero = false.
+Proof.
+  reflexivity.
+Qed.
+
 (*
 Lemma Ptrofs_max_unsigned_eq64:
   Ptrofs.max_unsigned = 18446744073709551615%Z.

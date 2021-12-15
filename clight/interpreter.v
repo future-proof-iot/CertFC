@@ -11,9 +11,9 @@ Module Info.
   Definition build_tag := "".
   Definition build_branch := "".
   Definition arch := "x86".
-  Definition model := "64".
+  Definition model := "32sse2".
   Definition abi := "standard".
-  Definition bitsize := 64.
+  Definition bitsize := 32.
   Definition big_endian := false.
   Definition source_file := "interpreter.c".
   Definition normalized := false.
@@ -376,19 +376,19 @@ Definition f_load_mem := {|
 (Sswitch (Etempvar _chunk tuint)
   (LScons (Some 1)
     (Sreturn (Some (Ederef
-                     (Ecast (Ecast (Etempvar _addr tuint) tulong)
+                     (Ecast (Ecast (Etempvar _addr tuint) tuint)
                        (tptr tuchar)) tuchar)))
     (LScons (Some 2)
       (Sreturn (Some (Ederef
-                       (Ecast (Ecast (Etempvar _addr tuint) tulong)
+                       (Ecast (Ecast (Etempvar _addr tuint) tuint)
                          (tptr tushort)) tushort)))
       (LScons (Some 4)
         (Sreturn (Some (Ederef
-                         (Ecast (Ecast (Etempvar _addr tuint) tulong)
+                         (Ecast (Ecast (Etempvar _addr tuint) tuint)
                            (tptr tuint)) tuint)))
         (LScons (Some 8)
           (Sreturn (Some (Ederef
-                           (Ecast (Ecast (Etempvar _addr tuint) tulong)
+                           (Ecast (Ecast (Etempvar _addr tuint) tuint)
                              (tptr tulong)) tulong)))
           (LScons None
             (Ssequence
@@ -413,28 +413,26 @@ Definition f_store_mem_reg := {|
   (LScons (Some 1)
     (Ssequence
       (Sassign
-        (Ederef (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tuchar))
+        (Ederef (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tuchar))
           tuchar) (Etempvar _v tulong))
       (Sreturn None))
     (LScons (Some 2)
       (Ssequence
         (Sassign
-          (Ederef
-            (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tushort))
+          (Ederef (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tushort))
             tushort) (Etempvar _v tulong))
         (Sreturn None))
       (LScons (Some 4)
         (Ssequence
           (Sassign
-            (Ederef
-              (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tuint))
+            (Ederef (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tuint))
               tuint) (Etempvar _v tulong))
           (Sreturn None))
         (LScons (Some 8)
           (Ssequence
             (Sassign
               (Ederef
-                (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tulong))
+                (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tulong))
                 tulong) (Etempvar _v tulong))
             (Sreturn None))
           (LScons None
@@ -460,28 +458,26 @@ Definition f_store_mem_imm := {|
   (LScons (Some 1)
     (Ssequence
       (Sassign
-        (Ederef (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tuchar))
+        (Ederef (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tuchar))
           tuchar) (Etempvar _v tint))
       (Sreturn None))
     (LScons (Some 2)
       (Ssequence
         (Sassign
-          (Ederef
-            (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tushort))
+          (Ederef (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tushort))
             tushort) (Etempvar _v tint))
         (Sreturn None))
       (LScons (Some 4)
         (Ssequence
           (Sassign
-            (Ederef
-              (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tuint))
+            (Ederef (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tuint))
               tuint) (Etempvar _v tint))
           (Sreturn None))
         (LScons (Some 8)
           (Ssequence
             (Sassign
               (Ederef
-                (Ecast (Ecast (Etempvar _addr tuint) tulong) (tptr tulong))
+                (Ecast (Ecast (Etempvar _addr tuint) tuint) (tptr tulong))
                 tulong) (Etempvar _v tint))
             (Sreturn None))
           (LScons None
@@ -3766,7 +3762,7 @@ Definition composites : list composite_definition :=
 Definition global_definitions : list (ident * globdef fundef type) :=
 ((___builtin_ais_annot,
    Gfun(External (EF_builtin "__builtin_ais_annot"
-                   (mksignature (AST.Tlong :: nil) AST.Tvoid
+                   (mksignature (AST.Tint :: nil) AST.Tvoid
                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
      (Tcons (tptr tschar) Tnil) tvoid
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
@@ -3792,8 +3788,8 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      (Tcons tuint Tnil) tint cc_default)) ::
  (___builtin_clzl,
    Gfun(External (EF_builtin "__builtin_clzl"
-                   (mksignature (AST.Tlong :: nil) AST.Tint cc_default))
-     (Tcons tulong Tnil) tint cc_default)) ::
+                   (mksignature (AST.Tint :: nil) AST.Tint cc_default))
+     (Tcons tuint Tnil) tint cc_default)) ::
  (___builtin_clzll,
    Gfun(External (EF_builtin "__builtin_clzll"
                    (mksignature (AST.Tlong :: nil) AST.Tint cc_default))
@@ -3804,8 +3800,8 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      (Tcons tuint Tnil) tint cc_default)) ::
  (___builtin_ctzl,
    Gfun(External (EF_builtin "__builtin_ctzl"
-                   (mksignature (AST.Tlong :: nil) AST.Tint cc_default))
-     (Tcons tulong Tnil) tint cc_default)) ::
+                   (mksignature (AST.Tint :: nil) AST.Tint cc_default))
+     (Tcons tuint Tnil) tint cc_default)) ::
  (___builtin_ctzll,
    Gfun(External (EF_builtin "__builtin_ctzll"
                    (mksignature (AST.Tlong :: nil) AST.Tint cc_default))
@@ -3829,10 +3825,10 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (___builtin_memcpy_aligned,
    Gfun(External (EF_builtin "__builtin_memcpy_aligned"
                    (mksignature
-                     (AST.Tlong :: AST.Tlong :: AST.Tlong :: AST.Tlong ::
-                      nil) AST.Tvoid cc_default))
+                     (AST.Tint :: AST.Tint :: AST.Tint :: AST.Tint :: nil)
+                     AST.Tvoid cc_default))
      (Tcons (tptr tvoid)
-       (Tcons (tptr tvoid) (Tcons tulong (Tcons tulong Tnil)))) tvoid
+       (Tcons (tptr tvoid) (Tcons tuint (Tcons tuint Tnil)))) tvoid
      cc_default)) ::
  (___builtin_sel,
    Gfun(External (EF_builtin "__builtin_sel"
@@ -3842,13 +3838,13 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
  (___builtin_annot,
    Gfun(External (EF_builtin "__builtin_annot"
-                   (mksignature (AST.Tlong :: nil) AST.Tvoid
+                   (mksignature (AST.Tint :: nil) AST.Tvoid
                      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|}))
      (Tcons (tptr tschar) Tnil) tvoid
      {|cc_vararg:=(Some 1); cc_unproto:=false; cc_structret:=false|})) ::
  (___builtin_annot_intval,
    Gfun(External (EF_builtin "__builtin_annot_intval"
-                   (mksignature (AST.Tlong :: AST.Tint :: nil) AST.Tint
+                   (mksignature (AST.Tint :: AST.Tint :: nil) AST.Tint
                      cc_default)) (Tcons (tptr tschar) (Tcons tint Tnil))
      tint cc_default)) ::
  (___builtin_membar,
@@ -3857,38 +3853,38 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      cc_default)) ::
  (___builtin_va_start,
    Gfun(External (EF_builtin "__builtin_va_start"
-                   (mksignature (AST.Tlong :: nil) AST.Tvoid cc_default))
+                   (mksignature (AST.Tint :: nil) AST.Tvoid cc_default))
      (Tcons (tptr tvoid) Tnil) tvoid cc_default)) ::
  (___builtin_va_arg,
    Gfun(External (EF_builtin "__builtin_va_arg"
-                   (mksignature (AST.Tlong :: AST.Tint :: nil) AST.Tvoid
+                   (mksignature (AST.Tint :: AST.Tint :: nil) AST.Tvoid
                      cc_default)) (Tcons (tptr tvoid) (Tcons tuint Tnil))
      tvoid cc_default)) ::
  (___builtin_va_copy,
    Gfun(External (EF_builtin "__builtin_va_copy"
-                   (mksignature (AST.Tlong :: AST.Tlong :: nil) AST.Tvoid
+                   (mksignature (AST.Tint :: AST.Tint :: nil) AST.Tvoid
                      cc_default))
      (Tcons (tptr tvoid) (Tcons (tptr tvoid) Tnil)) tvoid cc_default)) ::
  (___builtin_va_end,
    Gfun(External (EF_builtin "__builtin_va_end"
-                   (mksignature (AST.Tlong :: nil) AST.Tvoid cc_default))
+                   (mksignature (AST.Tint :: nil) AST.Tvoid cc_default))
      (Tcons (tptr tvoid) Tnil) tvoid cc_default)) ::
  (___compcert_va_int32,
    Gfun(External (EF_external "__compcert_va_int32"
-                   (mksignature (AST.Tlong :: nil) AST.Tint cc_default))
+                   (mksignature (AST.Tint :: nil) AST.Tint cc_default))
      (Tcons (tptr tvoid) Tnil) tuint cc_default)) ::
  (___compcert_va_int64,
    Gfun(External (EF_external "__compcert_va_int64"
-                   (mksignature (AST.Tlong :: nil) AST.Tlong cc_default))
+                   (mksignature (AST.Tint :: nil) AST.Tlong cc_default))
      (Tcons (tptr tvoid) Tnil) tulong cc_default)) ::
  (___compcert_va_float64,
    Gfun(External (EF_external "__compcert_va_float64"
-                   (mksignature (AST.Tlong :: nil) AST.Tfloat cc_default))
+                   (mksignature (AST.Tint :: nil) AST.Tfloat cc_default))
      (Tcons (tptr tvoid) Tnil) tdouble cc_default)) ::
  (___compcert_va_composite,
    Gfun(External (EF_external "__compcert_va_composite"
-                   (mksignature (AST.Tlong :: AST.Tlong :: nil) AST.Tlong
-                     cc_default)) (Tcons (tptr tvoid) (Tcons tulong Tnil))
+                   (mksignature (AST.Tint :: AST.Tint :: nil) AST.Tint
+                     cc_default)) (Tcons (tptr tvoid) (Tcons tuint Tnil))
      (tptr tvoid) cc_default)) ::
  (___builtin_unreachable,
    Gfun(External (EF_builtin "__builtin_unreachable"
@@ -3896,8 +3892,8 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      cc_default)) ::
  (___builtin_expect,
    Gfun(External (EF_builtin "__builtin_expect"
-                   (mksignature (AST.Tlong :: AST.Tlong :: nil) AST.Tlong
-                     cc_default)) (Tcons tlong (Tcons tlong Tnil)) tlong
+                   (mksignature (AST.Tint :: AST.Tint :: nil) AST.Tint
+                     cc_default)) (Tcons tint (Tcons tint Tnil)) tint
      cc_default)) ::
  (___compcert_i64_dtos,
    Gfun(External (EF_runtime "__compcert_i64_dtos"
@@ -4008,21 +4004,21 @@ Definition global_definitions : list (ident * globdef fundef type) :=
      cc_default)) ::
  (___builtin_read16_reversed,
    Gfun(External (EF_builtin "__builtin_read16_reversed"
-                   (mksignature (AST.Tlong :: nil) AST.Tint16unsigned
+                   (mksignature (AST.Tint :: nil) AST.Tint16unsigned
                      cc_default)) (Tcons (tptr tushort) Tnil) tushort
      cc_default)) ::
  (___builtin_read32_reversed,
    Gfun(External (EF_builtin "__builtin_read32_reversed"
-                   (mksignature (AST.Tlong :: nil) AST.Tint cc_default))
+                   (mksignature (AST.Tint :: nil) AST.Tint cc_default))
      (Tcons (tptr tuint) Tnil) tuint cc_default)) ::
  (___builtin_write16_reversed,
    Gfun(External (EF_builtin "__builtin_write16_reversed"
-                   (mksignature (AST.Tlong :: AST.Tint :: nil) AST.Tvoid
+                   (mksignature (AST.Tint :: AST.Tint :: nil) AST.Tvoid
                      cc_default)) (Tcons (tptr tushort) (Tcons tushort Tnil))
      tvoid cc_default)) ::
  (___builtin_write32_reversed,
    Gfun(External (EF_builtin "__builtin_write32_reversed"
-                   (mksignature (AST.Tlong :: AST.Tint :: nil) AST.Tvoid
+                   (mksignature (AST.Tint :: AST.Tint :: nil) AST.Tvoid
                      cc_default)) (Tcons (tptr tuint) (Tcons tuint Tnil))
      tvoid cc_default)) ::
  (___builtin_debug,
