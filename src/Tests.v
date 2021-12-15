@@ -84,4 +84,4 @@ Definition dxModuleTest := makeDXModuleWithUserIds
   [ mem_region_def; state_struct_def]
   [
    "memory_region"; "start_addr"; "block_size"; "block_perm"; "block_ptr";
-   "bpf_state"; "state_pc"; "bpf_flag"; "mem_num"; "regsmap"; "mrs"] SymbolIRs.
+   "bpf_state"; "state_pc"; "bpf_flag"; "regsmap"; "mrs_num"; "mrs"] SymbolIRs.

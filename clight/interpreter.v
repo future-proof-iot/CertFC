@@ -136,11 +136,11 @@ Definition _list_get : ident := $"list_get".
 Definition _lo_ofs : ident := $"lo_ofs".
 Definition _load_mem : ident := $"load_mem".
 Definition _main : ident := $"main".
-Definition _mem_num : ident := $"mem_num".
 Definition _mem_reg_num : ident := $"mem_reg_num".
 Definition _memory_region : ident := $"memory_region".
 Definition _mr : ident := $"mr".
 Definition _mrs : ident := $"mrs".
+Definition _mrs_num : ident := $"mrs_num".
 Definition _n : ident := $"n".
 Definition _next_imm : ident := $"next_imm".
 Definition _next_ins : ident := $"next_ins".
@@ -349,7 +349,7 @@ Definition f_eval_mem_num := {|
   fn_body :=
 (Sreturn (Some (Efield
                  (Ederef (Etempvar _st (tptr (Tstruct _bpf_state noattr)))
-                   (Tstruct _bpf_state noattr)) _mem_num tuint)))
+                   (Tstruct _bpf_state noattr)) _mrs_num tuint)))
 |}.
 
 Definition f_eval_mem_regions := {|
@@ -741,7 +741,8 @@ Definition f_get_addr_ofs := {|
   fn_body :=
 (Sreturn (Some (Ecast
                  (Ebinop Oadd (Etempvar _x tulong)
-                   (Ecast (Etempvar _ofs tint) tulong) tulong) tuint)))
+                   (Ecast (Ecast (Etempvar _ofs tint) tuint) tulong) tulong)
+                 tuint)))
 |}.
 
 Definition f_is_well_chunk_bool := {|
@@ -3754,8 +3755,8 @@ Definition composites : list composite_definition :=
     (_block_ptr, tulong) :: nil)
    noattr ::
  Composite _bpf_state Struct
-   ((_state_pc, tuint) :: (_bpf_flag, tint) :: (_mem_num, tuint) ::
-    (_regsmap, (tarray tulong 11)) ::
+   ((_state_pc, tuint) :: (_bpf_flag, tint) ::
+    (_regsmap, (tarray tulong 11)) :: (_mrs_num, tuint) ::
     (_mrs, (tptr (Tstruct _memory_region noattr))) :: nil)
    noattr :: nil).
 

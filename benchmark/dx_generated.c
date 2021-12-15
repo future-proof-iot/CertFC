@@ -10,9 +10,9 @@ struct memory_region {
 struct bpf_state {
   unsigned int state_pc;
   int bpf_flag;
-  unsigned int mem_num;
   unsigned long long regsmap[11];
   struct memory_region *mrs$757165;
+  unsigned int $11884978998701;
 };
 
 extern unsigned long long list_get(unsigned long long *, int);

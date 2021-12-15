@@ -10,7 +10,7 @@ struct memory_region {
 struct bpf_state {
   unsigned int state_pc;
   int bpf_flag;
-  unsigned int mem_num;
   unsigned long long regsmap[11];
+  unsigned int mem_num;
   struct memory_region *mrs;
 };

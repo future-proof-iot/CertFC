@@ -2,7 +2,7 @@
 
    This benchmark is used to test the [`clightlogic`]
 
-[`clightlogic`]: //proof/clightlogic.v   
+[`clightlogic`]: https://gitlab.inria.fr/syuan/rbpf-dx/-/tree/master/proof/clightlogic.v   
 
 ## benchmark structure
 1. Benchmark*.v: the coq files use [`dx`] to generate C file `dx_generated.c`. The compilation command is `make bench` 
@@ -16,16 +16,16 @@
 The examples can be found at `clightlogicexample.c`, consisting of:
    
 - atomic function:
-	-- `get_add`: return x + y;
-	-- `get_immediate`, `get_opcode_mem_ld_imm`: return _(type_casting)_ x _op_ y.
-	-- `get_addr_ofs`: return (unsigned int) (x + (unsigned long long) ofs)
-	-- `is_well_chunk_bool`: test _switch-case_
-	-- `list_get`: test _Coq list_ to _C array_
-	-- `eval_mem_regions`: read memory
-	-- `upd_pc_incr`, `upd_reg`, `upd_flag`: write memory
+	1. `get_add`: return x + y;
+	2. `get_immediate`, `get_opcode_mem_ld_imm`: return _(type_casting)_ x _op_ y.
+	3. `get_addr_ofs`: return (unsigned int) (x + (unsigned long long) ofs)
+	4. `is_well_chunk_bool`: test _switch-case_
+	5. `list_get`: test _Coq list_ to _C array_
+	6. `eval_mem_regions`: read memory
+	7. `upd_pc_incr`, `upd_reg`, `upd_flag`: write memory
 - composition function:
-	-- `calc_sum`: call `get_add` + _recursive_ function (same memory model)
-	-- `rec_upd_pc`: call `upd_pc_incr` + _recursive_ function (memory model is changed)
-	-- `step_opcode_mem_ld_imm`: call some _atomic_ functions  + _switch-case_ + _complex expressions_
+	1. `calc_sum`: call `get_add` + _recursive_ function (same memory model)
+	2. `rec_upd_pc`: call `upd_pc_incr` + _recursive_ function (memory model is changed)
+	3. `step_opcode_mem_ld_imm`: call some _atomic_ functions  + _switch-case_ + _complex expressions_
 
- [`clight/interpreter.h`]: //clight/interpreter.h
+ [`clight/interpreter.h`]: https://gitlab.inria.fr/syuan/rbpf-dx/-/tree/master/clight/interpreter.h

@@ -79,32 +79,11 @@ unsigned int get_addr_ofs(unsigned long long x, int ofs)
     repeat split; unfold step2.
     -
       apply Smallstep.plus_star.
-      (** TODO: adding Sreturn  more info by Ltac2 *)
-      eapply Smallstep.plus_one; eauto.
-      eapply step_return_1.
-      +
-        repeat econstructor; eauto.
-        simpl.
-        Transparent Archi.ptr64.
-        unfold Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-        unfold Cop.sem_binary_operation.
-        unfold Cop.sem_add, Cop.classify_add, Ctypes.typeconv; simpl.
-        unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast; simpl.
-        (**r we need a 32 Arch.
-match
-  match (if Archi.ptr64 then Cop.cast_case_pointer else Cop.cast_case_l2l) with
-  | Cop.cast_case_pointer => if Archi.ptr64 then None
+      Transparent Archi.ptr64.
+      repeat forward_clight.
 
-*)
-        reflexivity.
-        unfold Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-      +
-        unfold Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-      + 
-        econstructor; eauto.
+      reflexivity.
+      reflexivity.
     - simpl.
       eexists; reflexivity.
     - simpl.

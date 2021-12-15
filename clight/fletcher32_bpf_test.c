@@ -133,7 +133,7 @@ int main(){
   struct bpf_state st = {
     .state_pc = 0LLU,
     .bpf_flag = BPF_OK,
-    .mem_num  = 2,
+    .mrs_num  = 2,
     .regsmap = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
     .mrs = my_memory_regions
   };

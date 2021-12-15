@@ -71,19 +71,16 @@ unsigned char get_opcode_mem_ld_imm(unsigned char op)
     repeat split; unfold step2.
     -
       apply Smallstep.plus_star.
-      (** TODO: adding Sreturn  more info by Ltac2 *)
-      eapply Smallstep.plus_one; eauto.
-      eapply step_return_1.
-      +
+      repeat forward_clight.
+
+      + Transparent Archi.ptr64.
         repeat econstructor; eauto.
-        Transparent Archi.ptr64.
-        unfold Cop.sem_binary_operation.
+        simpl.
         unfold Cop.sem_and; simpl.
-        unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-        
-        reflexivity. 
-      + econstructor; eauto.
+        unfold Cop.sem_binarith; reflexivity.
+        simpl.
+        unfold Cop.sem_cast; reflexivity.
+      + unfold Cop.sem_cast; reflexivity.
       + reflexivity.
     - simpl.
       unfold match_res, byte_to_opcode_mem_ld_imm, opcode_mem_ld_imm_correct.

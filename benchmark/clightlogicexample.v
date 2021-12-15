@@ -452,8 +452,8 @@ Definition composites : list composite_definition :=
     (_block_ptr, tuint) :: nil)
    noattr ::
  Composite _bpf_state Struct
-   ((_state_pc, tuint) :: (_bpf_flag, tint) :: (_mem_num, tuint) ::
-    (_regsmap, (tarray tulong 11)) ::
+   ((_state_pc, tuint) :: (_bpf_flag, tint) ::
+    (_regsmap, (tarray tulong 11)) :: (_mem_num, tuint) ::
     (_mrs, (tptr (Tstruct _memory_region noattr))) :: nil)
    noattr :: nil).
 

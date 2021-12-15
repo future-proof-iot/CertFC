@@ -76,20 +76,12 @@ unsigned int get_add(unsigned int x, unsigned int y)
     repeat split; unfold step2.
     -
       apply Smallstep.plus_star.
-      (** TODO: adding Sreturn  more info by Ltac2 *)
-      eapply Smallstep.plus_one; eauto.
-      eapply step_return_1.
-      +
-        repeat econstructor; eauto.
-        Transparent Archi.ptr64.
-        unfold Cop.sem_binary_operation.
-        unfold Cop.sem_add, Cop.classify_add, Ctypes.typeconv; simpl.
-        unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-      + econstructor; eauto.
-      + reflexivity.
+      repeat forward_clight.
+
+      reflexivity.
+      reflexivity.
     - simpl.
-      exists (Int.add vi vj); reflexivity.
+      eexists; reflexivity.
     - simpl.
       constructor.
       reflexivity.

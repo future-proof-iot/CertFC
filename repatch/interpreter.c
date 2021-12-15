@@ -47,7 +47,7 @@ static void upd_flag(struct bpf_state* st, int f){
 }
 
 static unsigned int eval_mem_num(struct bpf_state* st){
-  return (*st).mem_num;
+  return (*st).mrs_num;
 }
 
 static struct memory_region *eval_mem_regions(struct bpf_state* st){
@@ -198,7 +198,7 @@ static unsigned int get_sub(unsigned int x, unsigned int y)
 
 static unsigned int get_addr_ofs(unsigned long long x, int ofs)
 {
-  return (unsigned int) (x + (unsigned long long) ofs);
+  return (unsigned int) (x + (unsigned long long) (unsigned int) ofs);
 }
 
 static _Bool is_well_chunk_bool(unsigned int chunk)

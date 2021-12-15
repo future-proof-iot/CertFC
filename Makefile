@@ -118,7 +118,6 @@ clight:
 	@echo $@
 	cd clight && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c # && ./$@
 	cd clight && $(CLIGHTGEN32) interpreter.c
-	$(CP) clight/interpreter.v codeTest
 
 PROOF = $(addprefix proof/,clight_exec.v Clightlogic.v interpreter.v CommonLemma.v MatchState.v CorrectRel.v correct_is_well_chunk_bool.v correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v correct_getMemRegion_block_ptr.v correct_getMemRegion_block_size.v correct_getMemRegion_start_addr.v correct_get_addl.v correct_get_subl.v correct_check_mem_aux.v)
 

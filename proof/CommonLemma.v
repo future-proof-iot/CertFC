@@ -1,6 +1,9 @@
 From compcert Require Import Coqlib Clight Integers Ctypes.
 From bpf.proof Require Import Clightlogic.
 From Ltac2 Require Import Ltac2 Message.
+From Coq Require Import List Lia.
+Import ListNotations.
+Require Import ZArith.
 
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
     list_norepet_dec eq_dec l = left H ->
@@ -119,6 +122,113 @@ Ltac completer :=
            | [ H : forall x, ?P x -> _, H' : ?P ?X |- _ ] => specialize (H X H')
          end.
 
+Ltac deref_loc_tactic :=
+  match goal with
+  | |- deref_loc ?t _ _ _ _ =>
+    let r := eval compute in (access_mode t) in
+      match r with
+      | By_value _ => eapply deref_loc_value
+      | By_reference => eapply deref_loc_reference
+      | By_copy => eapply deref_loc_copy
+      | By_nothing => fail "deref_loc nothing (this tactic only works on coq-compcert-32)"
+      end
+  end.
+
+Ltac assign_loc_tactic :=
+  match goal with
+  | |- assign_loc _ ?t _ _ _ _ _ =>
+    let r := eval compute in (access_mode t) in
+    match r with
+    | By_value _ => eapply assign_loc_value
+    | By_copy => eapply assign_loc_copy
+    | _ => fail "assign_loc error (this tactic only works on coq-compcert-32)"
+    end
+  end.
+
+Ltac forward_eval_expr :=
+  match goal with
+  | |- eval_lvalue  _ _ _ _ ?e _ _ =>
+    match e with
+    | Evar ?id _ =>
+      let r := eval compute in (Maps.PTree.get id e) in
+      match r with
+      | Some _ => eapply eval_Evar_local; [reflexivity || fail "Please use `eapply eval_Evar_local` to debug"]
+      | None => eapply eval_Evar_global; [reflexivity | reflexivity]
+      end
+    | Ederef _ _ =>
+      eapply eval_Ederef; forward_eval_expr
+    | Efield ?a _ _ =>
+      let r := eval compute in (typeof a) in
+      match r with
+      | Tstruct _ _ =>
+        eapply eval_Efield_struct; [forward_eval_expr | reflexivity | reflexivity | reflexivity]
+      | Tunion _ _ =>
+        eapply eval_Efield_union; [forward_eval_expr | reflexivity | reflexivity | reflexivity]
+      | _ => fail "eval_lvalue fails"
+      end
+    end
+  | |- eval_expr _ _ _ _ ?e _ =>
+    match e with
+    | Econst_int _ _    => econstructor; eauto
+    | Econst_float _ _  => econstructor; eauto
+    | Econst_single _ _ => econstructor; eauto
+    | Econst_long _ _   => econstructor; eauto
+    | Etempvar _ _      => eapply eval_Etempvar; reflexivity
+    | Eaddrof _ _       => eapply eval_Eaddrof; forward_eval_expr
+    | Eunop _ _ _       => eapply eval_Eunop; [forward_eval_expr | unfold Cop.sem_unary_operation; simpl; try reflexivity]
+    | Ebinop _ _ _ _    => eapply eval_Ebinop; [forward_eval_expr | forward_eval_expr | unfold Cop.sem_binary_operation; simpl; try reflexivity]
+    | Ecast _ _         => eapply eval_Ecast; [forward_eval_expr | unfold Cop.sem_cast, Cop.classify_cast; simpl; try reflexivity]
+    | Esizeof _ _       => econstructor; eauto
+    | Ealignof _ _      => econstructor; eauto
+    | _                 => eapply eval_Elvalue; [idtac | deref_loc_tactic]
+    end
+  end.
+
+Ltac forward_expr :=
+  match goal with
+  | |- eval_expr _ _ _ _ _ _ =>
+    repeat econstructor; eauto; try reflexivity
+  end.
+
+Ltac forward_clight :=
+  (* repeat *)
+  match goal with
+  (** forward_return_some *)
+  | |- Smallstep.plus _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
+    eapply Smallstep.plus_one; eauto;
+      [eapply step_return_1 | try simpl ..]
+  (** forward_return_none *)
+  | |- Smallstep.plus _ _ (State _ (Sreturn None) _ _ _ _) _ _ =>
+      eapply Smallstep.plus_one; eauto; eapply step_return_0; try reflexivity
+  (** Smallstep.plus _ _ _ _ _ *)
+  | |- Smallstep.plus _ _ _ _ _ =>
+      eapply Smallstep.plus_left'; eauto
+    (** assign *)
+  | |- Smallstep.step _ _ (State _ (Sassign _ _ ) _ _ _ _) _ _ =>
+      repeat (econstructor; eauto; try deref_loc_tactic)
+    (** seq *)
+  | |- Smallstep.step _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
+      eapply step_seq
+  | |- Smallstep.step _ _ (State _ Sskip (Kseq _ _) _ _ _ ) _ _ =>
+      eapply step_skip_seq
+
+    (** call *)
+  | |- Smallstep.step _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
+      eapply step_call; [
+        (** classify_fun (typeof a) = fun_case_f tyargs tyres cconv *)
+        reflexivity |
+        (** eval_expr e le m a vf *)
+        idtac (* TODO *) |
+        (**  eval_exprlist e le m al tyargs vargs *)
+        idtac (* TODO *) |
+        (** Genv.find_funct ge vf = Some fd *)
+        reflexivity (**r or `econstructor; eauto`, which one is better *) |
+        (** type_of_fundef fd = Tfunction tyargs tyres cconv *)
+        reflexivity
+      ]
+  | _ => forward_expr
+  end.
+
 Ltac forward_plus :=
  match goal with
   (** forward_seq *)
@@ -216,17 +326,6 @@ Ltac get_invariant_more VAR :=
           | destruct I as (v &p &c)]; completer
       end
   end.
-Ltac deref_loc_tactic :=
-  match goal with
-  | |- deref_loc ?t _ _ _ _ =>
-    let r := eval compute in (access_mode t) in
-      match r with
-      | By_value _ => eapply deref_loc_value
-      | By_reference => eapply deref_loc_reference
-      | By_copy => eapply deref_loc_copy
-      | By_nothing => fail "deref_loc nothing"
-      end
-  end.
 
 (** Integer.max_unsigned *)
 
@@ -244,12 +343,11 @@ Proof.
   reflexivity.
 Qed.
 
-(*
-Lemma Ptrofs_max_unsigned_eq64:
-  Ptrofs.max_unsigned = 18446744073709551615%Z.
+Lemma Ptrofs_max_unsigned_eq32:
+  Ptrofs.max_unsigned = 4294967295%Z.
 Proof.
   unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
   Transparent Archi.ptr64.
   reflexivity.
-Qed.*)
+Qed.
 

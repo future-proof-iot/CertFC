@@ -10,9 +10,9 @@ struct memory_region {
 struct bpf_state {
   unsigned int state_pc;
   int bpf_flag;
-  unsigned int mem_num;
   unsigned long long regsmap[11];
   struct memory_region *mrs;
+  unsigned int mrs_num;
 };
 
 extern unsigned long long list_get(unsigned long long *, int);
@@ -208,7 +208,7 @@ unsigned int get_sub(unsigned int x, unsigned int y)
 
 unsigned int get_addr_ofs(unsigned long long x, int ofs)
 {
-  return (unsigned int) (x + (unsigned long long) ofs);
+  return (unsigned int) (x + (unsigned long long) (unsigned int) ofs);
 }
 
 _Bool is_well_chunk_bool(unsigned int chunk)

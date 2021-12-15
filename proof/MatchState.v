@@ -1,6 +1,6 @@
 (** Definition of matching relation between Coq and C representation *)
 
-From bpf.src Require Import DxIntegers DxValues DxAST DxMemRegion DxRegs DxState DxFlag.
+From bpf.src Require Import DxIntegers DxValues DxAST DxState DxMemRegion DxRegs DxFlag.
 From compcert Require Import Coqlib Integers Values AST Clight Memory Memtype.
 
 (**r
@@ -66,7 +66,7 @@ Section S.
 
   Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
-    exists vl, Mem.loadv AST.Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some (Vlong vl) /\ (**r it should be `(eval_regmap r rmap)`*)
+    exists vl, Mem.loadv Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some (Vlong vl) /\ (**r it should be `(eval_regmap r rmap)`*)
             Vlong vl = eval_regmap r rmap.
            (*Val.inject inject_id (eval_regmap r rmap) (Vlong vl) . (**r each register is Vlong *)*)
 
@@ -94,6 +94,7 @@ Section S.
     Int.repr (Z_of_flag f).
 
   Definition size_of_regs := 11 * 8. (**r we have 11 regs R0 - R10 *)
+  Definition size_of_state (st: DxState.state) := 100 + 16 * (Z.of_nat (mrs_num st)).
 
 
 (**r
@@ -101,21 +102,22 @@ Definition state_struct_def: Ctypes.composite_definition :=
   Ctypes.Composite state_id Ctypes.Struct [
     (pc_id, C_U32);
     (flag_id, C_S32);
-    (mem_num_id, C_U32);
-    (regmaps_id, C_regmap);
+    (regmaps_id, C_regmap);;
+    (mem_num_id, C_U32)
     (mem_regs_id, mem_region_type)
   ] Ctypes.noattr.
 
 *)
 
-  Record match_state  (st:DxState.state) (m:mem) : Prop :=
+  Record match_state  (st: DxState.state) (m: mem) : Prop :=
     {
-      minj     : Mem.inject (inject_id) (bpf_m st) m;
+      minj     : Mem.inject inject_id (bpf_m st) m;
       mpc      : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
       mflags   : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
-      memr_num : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 8)) = Some (Vint  (mem_num st));
-      mregs    : match_registers  (regs_st st) bl_state (Ptrofs.repr 12) m;
-      mem_regs : match_regions (bpf_mrs st) bl_state (Ptrofs.repr (size_of_regs + 12)) m
+      mregs    : match_registers  (regs_st st) bl_state (Ptrofs.repr 8) m;
+      mrs_num : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (Int.repr (Z.of_nat (mrs_num st))));
+      mem_regs : match_regions (bpf_mrs st) bl_state (Ptrofs.repr (size_of_regs + 12)) m;
+      mperm    : Mem.range_perm m bl_state 0 (size_of_state st) Cur Freeable
     }.
 
 End S.
@@ -133,19 +135,22 @@ Proof.
   apply H2.
   lia.
 Qed.
-(* TODO: 
+
 (** Permission Lemmas: upd_pc *)
 Lemma upd_pc_write_access:
   forall m0 blk st
     (Hst: match_state blk st m0),
-    Mem.valid_access m0 Mint64 blk 0 Writable.
+    Mem.valid_access m0 Mint32 blk 0 Writable.
 Proof.
-  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mflags0 memr_num0 mregs0; simpl in mem_regs0.
-  unfold match_regions in *.
-  
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mflags0 mrs_num0 mregs0; simpl in mem_regs0.
+  unfold match_regions, size_of_state in *.
+  apply (Mem.range_perm_implies _ _ _ _ _ _ Writable) in mperm0; [idtac | constructor].
+
   unfold size_chunk, align_chunk.
   split.
-  - simpl; apply (range_perm_included _ _ Writable _ _ 0 8) in mperm0; [assumption | lia | lia | lia].
+  - simpl; apply (range_perm_included _ _ Writable _ _ 0 4) in mperm0; [assumption | lia | lia | idtac].
+    assert (H: 0<= Z.of_nat (DxState.mrs_num st)). { apply Nat2Z.is_nonneg. }
+    lia.
   - apply Z.divide_0_r.
 Qed.
 
@@ -153,15 +158,45 @@ Lemma upd_pc_store:
   forall m0 blk pc st
     (Hst: match_state blk st m0),
     exists m1,
-    Mem.store AST.Mint64 m0 blk 0 (Vlong pc) = Some m1.
+    Mem.store AST.Mint32 m0 blk 0 (Vint pc) = Some m1.
 Proof.
   intros.
   apply (upd_pc_write_access _ _ _) in Hst.
-  apply (Mem.valid_access_store _ _ _ _ (Vlong pc)) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vint pc)) in Hst.
   destruct Hst as (m2 & Hstore).
   exists m2; assumption.
 Qed.
 
+(** Permission Lemmas: upd_flags *)
+Lemma upd_flags_write_access:
+  forall m0 blk st
+    (Hst: match_state blk st m0),
+    Mem.valid_access m0 Mint32 blk 4 Writable.
+Proof.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0 mrs_num0; simpl in mperm0.
+  unfold size_of_regs, size_of_state in *.
+  apply (Mem.range_perm_implies _ _ _ _ _ _ Writable) in mperm0; [idtac | constructor].
+
+
+  unfold size_chunk, align_chunk.
+  split.
+  - simpl.
+    apply (range_perm_included _ _ Writable _ _ 4 8) in mperm0; [assumption | lia | lia | lia].
+  - apply Z.divide_refl.
+Qed.
+
+Lemma upd_flags_store:
+  forall m0 blk st v
+    (Hst: match_state blk st m0),
+    exists m1,
+    Mem.store AST.Mint32 m0 blk 4 (Vint v) = Some m1.
+Proof.
+  intros.
+  apply (upd_flags_write_access _ _ ) in Hst.
+  apply (Mem.valid_access_store _ _ _ _ (Vint v)) in Hst.
+  destruct Hst as (m2 & Hstore).
+  exists m2; assumption.
+Qed.
 
 (** Permission Lemmas: upd_regs *)
 Lemma upd_regs_write_access:
@@ -169,13 +204,17 @@ Lemma upd_regs_write_access:
     (Hst: match_state blk st m0),
     Mem.valid_access m0 Mint64 blk (8 + (8 * (id_of_reg r))) Writable.
 Proof.
-  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
+  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0 mrs_num0; simpl in mperm0.
+  unfold size_of_regs, size_of_state in *.
+  apply (Mem.range_perm_implies _ _ _ _ _ _ Writable) in mperm0; [idtac | constructor].
+  assert (H: 0<= Z.of_nat (DxState.mrs_num st)). { apply Nat2Z.is_nonneg. }
+  apply (range_perm_included _ _ Writable _ _ 0 100) in mperm0; [idtac | lia | lia | lia].
+
   unfold id_of_reg.
   unfold size_chunk, align_chunk.
   split.
   - apply (range_perm_included _ _ Writable _ _ (8 + (8 * (id_of_reg r))) (8 + (8 * (id_of_reg r +1)))) in mperm0;
-  destruct r; unfold id_of_reg in *; simpl in *; try lia;
-  simpl; assumption.
+  destruct r; simpl in *; try lia; try assumption.
   - assert (Heq: forall x, 8 + 8 * x = 8 * (1 + x)). {
       intros.
       rewrite Zred_factor2.
@@ -198,38 +237,9 @@ Proof.
   exists m2; assumption.
 Qed.
 
-(** Permission Lemmas: upd_flags *)
-Lemma upd_flags_write_access:
-  forall m0 blk st
-    (Hst: match_state blk st m0),
-    Mem.valid_access m0 Mint32 blk (size_of_regs + 8) Writable.
-Proof.
-  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0; simpl in mperm0.
-  unfold size_of_regs.
-  unfold size_chunk, align_chunk.
-  split.
-  - simpl.
-    apply (range_perm_included _ _ Writable _ _ 96 100) in mperm0; [assumption | lia | lia | lia].
-  - assert (Heq: 11 * 8 + 8 = 4 * 24). { reflexivity. }
-    rewrite Heq;apply Z.divide_factor_l.
-Qed.
-
-Lemma upd_flags_store:
-  forall m0 blk st v
-    (Hst: match_state blk st m0),
-    exists m1,
-    Mem.store AST.Mint32 m0 blk (size_of_regs + 8) (Vint v) = Some m1.
-Proof.
-  intros.
-  apply (upd_flags_write_access _ _ ) in Hst.
-  apply (Mem.valid_access_store _ _ _ _ (Vint v)) in Hst.
-  destruct Hst as (m2 & Hstore).
-  exists m2; assumption.
-Qed.
-*)
 (** Permission Lemmas: upd_mem_regions *)
 
-(** TODO: *)
+(** TODO: nothing to do because we never update memory_regions, it should be done before running the interpter *)
 
 Require Import DxMonad.
 

@@ -47,7 +47,7 @@ static void upd_flag(struct bpf_state* st, int f){
 }
 
 static unsigned int eval_mem_num(struct bpf_state* st){
-  return (*st).mem_num;
+  return (*st).mrs_num;
 }
 
 static struct memory_region *eval_mem_regions(struct bpf_state* st){
