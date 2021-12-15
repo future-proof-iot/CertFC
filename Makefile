@@ -71,6 +71,10 @@ bench:
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini benchmark/compcert.ini
 	cd benchmark && ./main
 
+bench_clight:
+	@echo $@
+	cd benchmark && $(CLIGHTGEN32) clightlogicexample.c
+	
 COQSRC = $(wildcard src/*.v)
 
 compile:
@@ -133,4 +137,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all test bench compile extract repatch clight proof clean
+.PHONY: all test bench bench_clight compile extract repatch clight proof clean

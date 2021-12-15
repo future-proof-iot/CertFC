@@ -20,6 +20,14 @@ Fixpoint calc_sum (v: valu32_t) (n:nat){struct n}: M valu32_t :=
       calc_sum nv n1
   end.
 
+Fixpoint rec_upd_pc (n:nat){struct n}: M unit :=
+  match n with
+  | O => returnM tt
+  | S n1 =>
+    do _ <- upd_pc_incr;
+      rec_upd_pc n1
+  end.
+
 Close Scope monad_scope.
 
 (***************************************)
@@ -60,6 +68,9 @@ GenerateIntermediateRepresentation SymbolIRs
   is_well_chunk_bool
   (**r complex function: including `get_add` and recursion *)
   calc_sum
+  (**r complex function: including `upd_pc_incr`(updating memory) + recursion *)
+  rec_upd_pc
+  (**r complex function: calling basic functions + argument with complex expressions + switch-case + updating memory several times *)
   step_opcode_mem_ld_imm
 .
 (*

@@ -111,6 +111,7 @@ Definition _ofs : ident := $"ofs".
 Definition _op : ident := $"op".
 Definition _opcode_ld : ident := $"opcode_ld".
 Definition _pc : ident := $"pc".
+Definition _rec_upd_pc : ident := $"rec_upd_pc".
 Definition _regsmap : ident := $"regsmap".
 Definition _st : ident := $"st".
 Definition _start_addr : ident := $"start_addr".
@@ -323,6 +324,36 @@ Definition f_calc_sum := {|
                             cc_default))
           ((Etempvar _nv tuint) :: (Etempvar _n1 tuint) :: nil))
         (Sreturn (Some (Etempvar _t'2 tuint)))))))
+|}.
+
+Definition f_rec_upd_pc := {|
+  fn_return := tvoid;
+  fn_callconv := cc_default;
+  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_n, tuint) ::
+                nil);
+  fn_vars := nil;
+  fn_temps := ((_n1, tuint) :: nil);
+  fn_body :=
+(Sifthenelse (Ebinop Oeq (Etempvar _n tuint) (Econst_int (Int.repr 0) tuint)
+               tint)
+  (Sreturn None)
+  (Ssequence
+    (Sset _n1
+      (Ebinop Osub (Etempvar _n tuint) (Econst_int (Int.repr 1) tuint) tuint))
+    (Ssequence
+      (Scall None
+        (Evar _upd_pc_incr (Tfunction
+                             (Tcons (tptr (Tstruct _bpf_state noattr)) Tnil)
+                             tvoid cc_default))
+        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+      (Ssequence
+        (Scall None
+          (Evar _rec_upd_pc (Tfunction
+                              (Tcons (tptr (Tstruct _bpf_state noattr))
+                                (Tcons tuint Tnil)) tvoid cc_default))
+          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+           (Etempvar _n1 tuint) :: nil))
+        (Sreturn None)))))
 |}.
 
 Definition f_step_opcode_mem_ld_imm := {|
@@ -706,31 +737,33 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (_get_addr_ofs, Gfun(Internal f_get_addr_ofs)) ::
  (_is_well_chunk_bool, Gfun(Internal f_is_well_chunk_bool)) ::
  (_calc_sum, Gfun(Internal f_calc_sum)) ::
+ (_rec_upd_pc, Gfun(Internal f_rec_upd_pc)) ::
  (_step_opcode_mem_ld_imm, Gfun(Internal f_step_opcode_mem_ld_imm)) :: nil).
 
 Definition public_idents : list ident :=
-(_step_opcode_mem_ld_imm :: _calc_sum :: _is_well_chunk_bool ::
- _get_addr_ofs :: _get_add :: _get_opcode_mem_ld_imm :: _get_immediate ::
- _get_mem_region :: _list_get :: ___builtin_debug ::
- ___builtin_write32_reversed :: ___builtin_write16_reversed ::
- ___builtin_read32_reversed :: ___builtin_read16_reversed ::
- ___builtin_fnmsub :: ___builtin_fnmadd :: ___builtin_fmsub ::
- ___builtin_fmadd :: ___builtin_fmin :: ___builtin_fmax ::
- ___compcert_i64_umulh :: ___compcert_i64_smulh :: ___compcert_i64_sar ::
- ___compcert_i64_shr :: ___compcert_i64_shl :: ___compcert_i64_umod ::
- ___compcert_i64_smod :: ___compcert_i64_udiv :: ___compcert_i64_sdiv ::
- ___compcert_i64_utof :: ___compcert_i64_stof :: ___compcert_i64_utod ::
- ___compcert_i64_stod :: ___compcert_i64_dtou :: ___compcert_i64_dtos ::
- ___builtin_expect :: ___builtin_unreachable :: ___compcert_va_composite ::
- ___compcert_va_float64 :: ___compcert_va_int64 :: ___compcert_va_int32 ::
- ___builtin_va_end :: ___builtin_va_copy :: ___builtin_va_arg ::
- ___builtin_va_start :: ___builtin_membar :: ___builtin_annot_intval ::
- ___builtin_annot :: ___builtin_sel :: ___builtin_memcpy_aligned ::
- ___builtin_sqrt :: ___builtin_fsqrt :: ___builtin_fabsf ::
- ___builtin_fabs :: ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz ::
- ___builtin_clzll :: ___builtin_clzl :: ___builtin_clz ::
- ___builtin_bswap16 :: ___builtin_bswap32 :: ___builtin_bswap ::
- ___builtin_bswap64 :: ___builtin_ais_annot :: nil).
+(_step_opcode_mem_ld_imm :: _rec_upd_pc :: _calc_sum ::
+ _is_well_chunk_bool :: _get_addr_ofs :: _get_add ::
+ _get_opcode_mem_ld_imm :: _get_immediate :: _get_mem_region :: _list_get ::
+ ___builtin_debug :: ___builtin_write32_reversed ::
+ ___builtin_write16_reversed :: ___builtin_read32_reversed ::
+ ___builtin_read16_reversed :: ___builtin_fnmsub :: ___builtin_fnmadd ::
+ ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_fmin ::
+ ___builtin_fmax :: ___compcert_i64_umulh :: ___compcert_i64_smulh ::
+ ___compcert_i64_sar :: ___compcert_i64_shr :: ___compcert_i64_shl ::
+ ___compcert_i64_umod :: ___compcert_i64_smod :: ___compcert_i64_udiv ::
+ ___compcert_i64_sdiv :: ___compcert_i64_utof :: ___compcert_i64_stof ::
+ ___compcert_i64_utod :: ___compcert_i64_stod :: ___compcert_i64_dtou ::
+ ___compcert_i64_dtos :: ___builtin_expect :: ___builtin_unreachable ::
+ ___compcert_va_composite :: ___compcert_va_float64 ::
+ ___compcert_va_int64 :: ___compcert_va_int32 :: ___builtin_va_end ::
+ ___builtin_va_copy :: ___builtin_va_arg :: ___builtin_va_start ::
+ ___builtin_membar :: ___builtin_annot_intval :: ___builtin_annot ::
+ ___builtin_sel :: ___builtin_memcpy_aligned :: ___builtin_sqrt ::
+ ___builtin_fsqrt :: ___builtin_fabsf :: ___builtin_fabs ::
+ ___builtin_ctzll :: ___builtin_ctzl :: ___builtin_ctz :: ___builtin_clzll ::
+ ___builtin_clzl :: ___builtin_clz :: ___builtin_bswap16 ::
+ ___builtin_bswap32 :: ___builtin_bswap :: ___builtin_bswap64 ::
+ ___builtin_ais_annot :: nil).
 
 Definition prog : Clight.program := 
   mkprogram composites global_definitions public_idents _main Logic.I.
