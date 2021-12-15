@@ -22,5 +22,5 @@ From dx Require Import DumpAsC.
 From bpf.benchmark Require Import BenchmarkTests.
 
 Definition main := ltac:(let ms := eval vm_compute in
-  [ ("clightexample.c", dxModuleTest) ]
+  [ ("dx_generated.c", dxModuleTest) ]
   in exact (print_dx_modules ms)).
