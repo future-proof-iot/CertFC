@@ -1,4 +1,4 @@
-From bpf.src Require Import DxIntegers DxValues DxOpcode DxMemRegion DxRegs DxState DxMonad DxFlag.
+From bpf.src Require Import DxIntegers DxValues DxList64 DxOpcode DxMemRegion DxRegs DxState DxMonad DxFlag.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
@@ -39,10 +39,12 @@ Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   | op_BPF_LDX_IMM_ILLEGAL_INS => exists vi, v = Vint vi (*v = Vundef*)
   end.
 
-(*
-Definition MyListType_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  exists b,
-    forall pc, 0 <= pc < v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.*)
+Definition MyListType_correct (l: MyListType) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+  exists b, v = Vptr b Ptrofs.zero /\
+    forall pc,
+      0 <= pc < Z.of_nat (List.length l) ->
+        exists vl, Mem.loadv Mint64 m (Vptr b (Ptrofs.repr (8 * pc))) = Some (Vlong vl)
+.
 
 Definition match_chunk (x : memory_chunk) (b: val) :=
   b = Vint (

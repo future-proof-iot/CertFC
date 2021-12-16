@@ -41,8 +41,8 @@ Section List_get.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless MyListType_correct)
-        (DList.DCons (stateless sint32_correct)
+    (DList.DCons MyListType_correct
+        (DList.DCons (stateless sint32_correct) (**r here we need to say the constraints with the input list *)
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -56,10 +56,13 @@ Section List_get.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _ins.
+    get_invariant_more _l.
+    get_invariant_more _idx.
 
-    unfold stateless, int64_correct in H1.
-    subst v.
+    unfold MyListType_correct in H1.
+    destruct H1 as (b & Hv_eq & H1).
+    unfold stateless, sint32_correct in H3.
+    subst v v0.
 
     eexists. exists m, Events.E0.
 
@@ -68,6 +71,9 @@ Section List_get.
       apply Smallstep.plus_star.
       repeat forward_clight.
 
+      rewrite Ptrofs.add_zero_l; simpl.
+      unfold Ptrofs.of_ints.
+      specialize H1 with (Int.signed c0).
       reflexivity.
       reflexivity.
     - simpl.
