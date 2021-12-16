@@ -152,7 +152,7 @@ Ltac forward_eval_expr :=
     | Evar ?id _ =>
       let r := eval compute in (Maps.PTree.get id e) in
       match r with
-      | Some _ => eapply eval_Evar_local; [reflexivity || fail "Please use `eapply eval_Evar_local` to debug"]
+      | Some _ => eapply eval_Evar_local; (reflexivity || fail "Please use `eapply eval_Evar_local` to debug")
       | None => eapply eval_Evar_global; [reflexivity | reflexivity]
       end
     | Ederef _ _ =>
@@ -187,7 +187,7 @@ Ltac forward_eval_expr :=
 Ltac forward_expr :=
   match goal with
   | |- eval_expr _ _ _ _ _ _ =>
-    repeat econstructor; eauto; try reflexivity
+    repeat (econstructor; eauto; try deref_loc_tactic); try reflexivity
   end.
 
 Ltac forward_clight :=

@@ -39,6 +39,11 @@ Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   | op_BPF_LDX_IMM_ILLEGAL_INS => exists vi, v = Vint vi (*v = Vundef*)
   end.
 
+(*
+Definition MyListType_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+  exists b,
+    forall pc, 0 <= pc < v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.*)
+
 Definition match_chunk (x : memory_chunk) (b: val) :=
   b = Vint (
           match x with
