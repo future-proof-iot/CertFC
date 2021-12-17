@@ -62,12 +62,12 @@ Ltac get_invariant VAR :=
   end.
 
 Ltac correct_body :=
-  intros st le m a;
-  match type of a with
+  intros st le m;
+(*  match type of a with
   | DList.t _ ?A =>
       unfold A in a
   end;
-  car_cdr ; unfold list_rel_arg,app;
+  car_cdr ;*)  unfold list_rel_arg,app;
   match goal with
     |- correct_body _ _ _ _ ?B _ ?INV
                  _ _ _ _ =>

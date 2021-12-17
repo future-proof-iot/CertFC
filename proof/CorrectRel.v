@@ -23,7 +23,9 @@ Definition int8_correct (x: int8_t) (v: val) :=
   Vint (Int.repr (Byte.unsigned x)) = v.
 
 Definition nat_correct (x: nat) (v: val) :=
-  Vint (Int.repr (Z.of_nat x)) = v.
+  Vint (Int.repr (Z.of_nat x)) = v /\
+    (* Avoid overflow *)
+    Int.unsigned (Int.repr (Z.of_nat x)) = Z.of_nat x.
 
 Definition reg_correct (r: reg) (v: val) :=
   (*complu_lt_32 v (Vint (Int.repr 11)) = true /\ (**r ensured by verifier *) *)
