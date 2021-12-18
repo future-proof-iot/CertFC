@@ -2397,15 +2397,13 @@ Section S.
 
   Variable match_res2 : res  -> val -> stateM -> Memory.Mem.mem -> Prop.
 
-  Check match_temp_env.
-
   Lemma correct_statement_seq_set :
     forall (r:AST.ident) (e:expr) (s2:Clight.statement) (*vret ti*)
            (modifies : list block)
            (var_inv  : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
       st le m 
       (EVAL: match_temp_env var_inv le st m ->
-             exists v, eval_expr (globalenv (semantics2 p)) empty_env le m e v  /\
+             exists v, exec_expr (globalenv (semantics2 p)) empty_env le m e = Some v  /\
                          match_res1 tt v st m /\val_casted v (typeof e))
       (FR     :   ~ In r (map (fun x => fst (fst x)) var_inv))
      (C2 : forall le m st x, correct_body p res f fn s2 modifies  ((r,typeof e,match_res1 x):: var_inv) match_res2 st le m)
@@ -2423,6 +2421,7 @@ Section S.
     unfold pre in H.
     specialize (EVAL H).
     destruct EVAL as (v & EVAL & MR & CAST).
+    apply eval_expr_eval in EVAL.
     repeat eexists.
     econstructor. econstructor.
     eauto.
@@ -2555,7 +2554,7 @@ Section S.
                          modifies  var_inv match_res st
                          le m)
       (TY : classify_bool (typeof e) = bool_case_i)
-      (EVAL: match_temp_env var_inv le st m -> eval_expr (globalenv (semantics2 p)) empty_env le m e (Val.of_bool x))
+      (EVAL: match_temp_env var_inv le st m -> exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Val.of_bool x))
     ,
 
       correct_body p res (if x then f1 else f2) fn
@@ -2572,6 +2571,8 @@ Section S.
       destruct p0 as (v',st').
       intros.
       destruct (C1 k H) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      specialize (EVAL PRE).
+      apply eval_expr_eval in EVAL.
       exists v1,m1,t1.
       repeat split.
       eapply star_step.
@@ -2590,6 +2591,8 @@ Section S.
       destruct p0 as (v',st').
       intros.
       destruct (C1 k H) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      specialize (EVAL PRE).
+      apply eval_expr_eval in EVAL.
       exists v1,m1,t1.
       repeat split.
       eapply star_step.

@@ -156,8 +156,8 @@ Ltac correct_body :=
         destruct H0 ; subst.
         eexists.
         repeat split.
-        econstructor;eauto.
-        econstructor;eauto. econstructor;eauto.
+        unfold exec_expr.
+        rewrite p0.
         unfold Cop.sem_binary_operation.
         unfold Cop.sem_sub. simpl.
         unfold Cop.sem_binarith.
@@ -232,14 +232,12 @@ Ltac correct_body :=
         admit.
       +  simpl.
         reflexivity.
-      + simpl.
-        intros. unfold INV in H.
+      + intros. unfold INV in H.
         get_invariant_more _n.
         unfold stateless,nat_correct in H0.
         intuition subst.
-        econstructor ; eauto.
-        econstructor ; eauto.
-        econstructor ; eauto.
+        unfold exec_expr.
+        rewrite p0.
         simpl. unfold Cop.sem_cmp.
         unfold Cop.classify_cmp.
         simpl.
