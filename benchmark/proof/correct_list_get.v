@@ -36,13 +36,16 @@ Section List_get.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
 
+  Variable ins_block: block.
+  Variable ins_block_length: nat.
+
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_list_get.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons MyListType_correct
-        (DList.DCons (stateless sint32_correct) (**r here we need to say the constraints with the input list *)
+    (DList.DCons (MyListType_correct ins_block ins_block_length)
+        (DList.DCons (stateless (pc_correct ins_block_length)) (**r here we need to say the constraints with the input list *)
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -55,30 +58,57 @@ Section List_get.
     (** how to use correct_* *)
     unfold INV.
     unfold f.
+    unfold list_get.
+    simpl.
+    unfold MyListIndexs32, MyList.index_s32.
     repeat intro.
     get_invariant_more _l.
     get_invariant_more _idx.
 
     unfold MyListType_correct in H1.
-    destruct H1 as (b & Hv_eq & H1).
-    unfold stateless, sint32_correct in H3.
+    destruct H1 as (Hv_eq & H1).
+    unfold stateless, pc_correct in H3.
+    destruct H3 as (Hv0_eq & Hrange & Hrange_max).
+    specialize H1 with (Z.to_nat (Int.signed c0)).
+    assert (Hc0_eq: Z.of_nat (Z.to_nat (Int.signed c0)) = Int.signed c0). {
+      apply Z2Nat.id.
+      lia.
+    }
+    rewrite Hc0_eq in H1; clear Hc0_eq.
+    apply H1 in Hrange as Hrange1.
+    destruct Hrange1 as (vl & Hnth & Hload).
     subst v v0.
 
     eexists. exists m, Events.E0.
 
     repeat split; unfold step2.
     -
-      apply Smallstep.plus_star.
-      repeat forward_clight.
+      repeat forward_star.
 
       rewrite Ptrofs.add_zero_l; simpl.
-      unfold Ptrofs.of_ints.
-      specialize H1 with (Int.signed c0).
+      unfold Ptrofs.of_ints, Ptrofs.mul.
+      unfold Mem.loadv in Hload.
+      repeat rewrite Ptrofs.unsigned_repr.
+      rewrite Ptrofs.unsigned_repr in Hload.
+      rewrite Hload; reflexivity.
+      lia.
+      lia.
+      rewrite Ptrofs_max_unsigned_eq32.
+      lia.
+      lia.
+      lia.
+      rewrite Ptrofs_max_unsigned_eq32.
+      lia.
+
+      Transparent Archi.ptr64.
+      simpl.
+      unfold Cop.sem_cast; simpl.
+      apply nth_error_nth with (d:= Int64.zero) in Hnth.
+      rewrite <- Hnth.
       reflexivity.
-      reflexivity.
+
     - simpl.
       constructor.
-      reflexivity.
   Qed.
 
 End List_get.

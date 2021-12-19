@@ -52,21 +52,26 @@ unsigned int get_addr_ofs(unsigned long long x, int ofs)
   return (unsigned int) (x + (unsigned long long) ofs);
 }
 
-_Bool is_well_chunk_bool(unsigned int chunk)
+static _Bool is_well_chunk_bool(unsigned int chunk)
 {
+  _Bool b;
   switch (chunk) {
     case 1:
-      return 1;
+      b = 1;
+      break;
     case 2:
-      return 1;
+      b = 1;
+      break;
     case 4:
-      return 1;
+      b = 1;
+      break;
     case 8:
-      return 1;
+      b = 1;
+      break;
     default:
-      return 0;
-    
+      b = 0;    
   }
+  return b;
 }
 
 unsigned int calc_sum(unsigned int v, unsigned int n)

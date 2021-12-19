@@ -81,7 +81,6 @@ Definition _block_size : ident := $"block_size".
 Definition _bpf_flag : ident := $"bpf_flag".
 Definition _bpf_state : ident := $"bpf_state".
 Definition _calc_sum : ident := $"calc_sum".
-Definition _chunk : ident := $"chunk".
 Definition _dst : ident := $"dst".
 Definition _eval_mem_regions : ident := $"eval_mem_regions".
 Definition _f : ident := $"f".
@@ -94,7 +93,6 @@ Definition _i : ident := $"i".
 Definition _idx : ident := $"idx".
 Definition _imm : ident := $"imm".
 Definition _ins : ident := $"ins".
-Definition _is_well_chunk_bool : ident := $"is_well_chunk_bool".
 Definition _l : ident := $"l".
 Definition _len : ident := $"len".
 Definition _list_get : ident := $"list_get".
@@ -276,25 +274,6 @@ Definition f_get_addr_ofs := {|
 (Sreturn (Some (Ecast
                  (Ebinop Oadd (Etempvar _x tulong)
                    (Ecast (Etempvar _ofs tint) tulong) tulong) tuint)))
-|}.
-
-Definition f_is_well_chunk_bool := {|
-  fn_return := tbool;
-  fn_callconv := cc_default;
-  fn_params := ((_chunk, tuint) :: nil);
-  fn_vars := nil;
-  fn_temps := nil;
-  fn_body :=
-(Sswitch (Etempvar _chunk tuint)
-  (LScons (Some 1)
-    (Sreturn (Some (Econst_int (Int.repr 1) tint)))
-    (LScons (Some 2)
-      (Sreturn (Some (Econst_int (Int.repr 1) tint)))
-      (LScons (Some 4)
-        (Sreturn (Some (Econst_int (Int.repr 1) tint)))
-        (LScons (Some 8)
-          (Sreturn (Some (Econst_int (Int.repr 1) tint)))
-          (LScons None (Sreturn (Some (Econst_int (Int.repr 0) tint))) LSnil))))))
 |}.
 
 Definition f_calc_sum := {|
@@ -735,16 +714,14 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (_get_opcode_mem_ld_imm, Gfun(Internal f_get_opcode_mem_ld_imm)) ::
  (_get_add, Gfun(Internal f_get_add)) ::
  (_get_addr_ofs, Gfun(Internal f_get_addr_ofs)) ::
- (_is_well_chunk_bool, Gfun(Internal f_is_well_chunk_bool)) ::
  (_calc_sum, Gfun(Internal f_calc_sum)) ::
  (_rec_upd_pc, Gfun(Internal f_rec_upd_pc)) ::
  (_step_opcode_mem_ld_imm, Gfun(Internal f_step_opcode_mem_ld_imm)) :: nil).
 
 Definition public_idents : list ident :=
-(_step_opcode_mem_ld_imm :: _rec_upd_pc :: _calc_sum ::
- _is_well_chunk_bool :: _get_addr_ofs :: _get_add ::
- _get_opcode_mem_ld_imm :: _get_immediate :: _get_mem_region :: _list_get ::
- ___builtin_debug :: ___builtin_write32_reversed ::
+(_step_opcode_mem_ld_imm :: _rec_upd_pc :: _calc_sum :: _get_addr_ofs ::
+ _get_add :: _get_opcode_mem_ld_imm :: _get_immediate :: _get_mem_region ::
+ _list_get :: ___builtin_debug :: ___builtin_write32_reversed ::
  ___builtin_write16_reversed :: ___builtin_read32_reversed ::
  ___builtin_read16_reversed :: ___builtin_fnmsub :: ___builtin_fnmadd ::
  ___builtin_fmsub :: ___builtin_fmadd :: ___builtin_fmin ::

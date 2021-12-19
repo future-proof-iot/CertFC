@@ -1,26 +1,24 @@
 From bpf.src Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
-From Coq Require Import List Lia.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
 From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
 
-From bpf.benchmark Require Import clightlogicexample.
+From bpf.clight Require Import interpreter.
+
+
 
 (**
-unsigned int get_add(unsigned int x, unsigned int y)
-{
-  return x + y;
-}
 
-get_add = 
-fun x y : valu32_t => returnM (Val.add x y)
+Print get_sub.
+get_sub = 
+fun x y : valu32_t => returnM (Val.sub x y)
      : valu32_t -> valu32_t -> M valu32_t
 
 *)
 
-Section Get_add.
+Section Get_sub.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -31,12 +29,12 @@ Section Get_add.
   Definition res : Type := (valu32_t:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_add.
+  Definition f : arrow_type args (M res) := get_sub.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
-  Definition fn: Clight.function := f_get_add.
+  Definition fn: Clight.function := f_get_sub.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
@@ -47,7 +45,7 @@ Section Get_add.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
 
-  Instance correct_function3_get_add : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function3_get_sub : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
     intros. unfold args in a.
     car_cdr.
@@ -61,19 +59,16 @@ Section Get_add.
     get_invariant_more _y.
 
     unfold stateless, valu32_correct in H1, H3.
-    destruct H1 as (Hc_eq & (vi & Hvi_eq)).
-    destruct H3 as (Hc0_eq & (vj & Hvj_eq)).
-    subst c c0 v v0.
+    destruct H1 as (Hc_eq & vi & Hvi_eq).
+    destruct H3 as (Hc0_eq & vj & Hvj_eq).
+    subst.
 
-    (**according to the c function:
-unsigned int get_add(unsigned int x, unsigned int y)
-{
-  return x + y;
-}
+    (**according to the type of eval_pc:
+         static unsigned long long get_subl(unsigned long long x1, unsigned long long y1)
        1. return value should be  x+y
        2. the memory is same
       *)
-    exists (Val.add (Vint vi) (Vint vj)), m, Events.E0.
+    exists (Val.sub (Vint vi) (Vint vj)), m, Events.E0.
 
     repeat split; unfold step2.
     -
@@ -85,6 +80,6 @@ unsigned int get_add(unsigned int x, unsigned int y)
       reflexivity.
   Qed.
 
-End Get_add.
+End Get_sub.
 
-Existing Instance correct_function3_get_add.
+Existing Instance correct_function3_get_sub.

@@ -184,25 +184,35 @@ Ltac forward_eval_expr :=
     end
   end.
 
+Ltac exec_seq_of_labeled_statement :=
+  match goal with
+  | |- context[seq_of_labeled_statement ?X] =>
+      let x := (eval simpl in (seq_of_labeled_statement X)) in
+      change (seq_of_labeled_statement X) with x; try simpl
+  end.
+
 Ltac forward_expr :=
   match goal with
   | |- eval_expr _ _ _ _ _ _ =>
     repeat (econstructor; eauto; try deref_loc_tactic); try reflexivity
   end.
 
-Ltac forward_clight :=
+Ltac forward_clight_ss :=
   (* repeat *)
   match goal with
   (** forward_return_some *)
-  | |- Smallstep.plus _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
-    eapply Smallstep.plus_one; eauto;
-      [eapply step_return_1 | try simpl ..]
+  | |- Smallstep.step _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
+      eapply step_return_1;[
+      (** eval_expr e le m a v  *)
+      forward_expr |
+      (*** sem_cast v (typeof a) f.(fn_return) m = Some v' *)
+      try reflexivity |
+      (* Mem.free_list m (blocks_of_env e) = Some m' *)
+      try reflexivity
+      ]
   (** forward_return_none *)
-  | |- Smallstep.plus _ _ (State _ (Sreturn None) _ _ _ _) _ _ =>
-      eapply Smallstep.plus_one; eauto; eapply step_return_0; try reflexivity
-  (** Smallstep.plus _ _ _ _ _ *)
-  | |- Smallstep.plus _ _ _ _ _ =>
-      eapply Smallstep.plus_left'; eauto
+  | |- Smallstep.step _ _ (State _ (Sreturn None) _ _ _ _) _ _ =>
+      eapply step_return_0; try reflexivity
     (** assign *)
   | |- Smallstep.step _ _ (State _ (Sassign _ _ ) _ _ _ _) _ _ =>
       repeat (econstructor; eauto; try deref_loc_tactic)
@@ -211,6 +221,14 @@ Ltac forward_clight :=
       eapply step_seq
   | |- Smallstep.step _ _ (State _ Sskip (Kseq _ _) _ _ _ ) _ _ =>
       eapply step_skip_seq
+    (** switch *)
+  | |- Smallstep.step _ _ (State _ (Sswitch _ _) _ _ _ _) _ _ =>
+      eapply step_switch; [
+        (** eval_expr e le m a v *)
+        forward_expr |
+        (** sem_switch_arg v (typeof a) = Some n *)
+        try reflexivity
+      ]; try exec_seq_of_labeled_statement
 
     (** call *)
   | |- Smallstep.step _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
@@ -226,7 +244,79 @@ Ltac forward_clight :=
         (** type_of_fundef fd = Tfunction tyargs tyres cconv *)
         reflexivity
       ]
-  | _ => forward_expr
+  end.
+
+Ltac forward_clight :=
+  (* repeat *)
+  match goal with
+  (** forward_return_some *)
+  | |- step _ _ (State _ (Sreturn (Some _)) _ _ _ _) _ _ =>
+      eapply step_return_1;[
+      (** eval_expr e le m a v  *)
+      forward_expr |
+      (*** sem_cast v (typeof a) f.(fn_return) m = Some v' *)
+      try reflexivity |
+      (* Mem.free_list m (blocks_of_env e) = Some m' *)
+      try reflexivity
+      ]
+  (** forward_return_none *)
+  | |- step _ _ (State _ (Sreturn None) _ _ _ _) _ _ =>
+      eapply step_return_0; try reflexivity
+    (** assign *)
+  | |- step _ _ (State _ (Sassign _ _ ) _ _ _ _) _ _ =>
+      repeat (econstructor; eauto; try deref_loc_tactic)
+    (** seq *)
+  | |- step _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
+      eapply step_seq
+  | |- step _ _ (State _ Sskip (Kseq _ _) _ _ _ ) _ _ =>
+      eapply step_skip_seq
+    (** switch *)
+  | |- step _ _ (State _ (Sswitch _ _) _ _ _ _) _ _ =>
+      eapply step_switch; [
+        (** eval_expr e le m a v *)
+        forward_expr |
+        (** sem_switch_arg v (typeof a) = Some n *)
+        try reflexivity
+      ]; try exec_seq_of_labeled_statement
+
+    (** call *)
+  | |- step _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
+      eapply step_call; [
+        (** classify_fun (typeof a) = fun_case_f tyargs tyres cconv *)
+        reflexivity |
+        (** eval_expr e le m a vf *)
+        idtac (* TODO *) |
+        (**  eval_exprlist e le m al tyargs vargs *)
+        idtac (* TODO *) |
+        (** Genv.find_funct ge vf = Some fd *)
+        reflexivity (**r or `econstructor; eauto`, which one is better *) |
+        (** type_of_fundef fd = Tfunction tyargs tyres cconv *)
+        reflexivity
+      ]
+  end.
+
+
+Ltac forward_star :=
+  match goal with
+  (** Inductive star (ge: genv): state -> trace -> state -> Prop :=
+  | star_refl: forall s,
+      star ge s E0 s *)
+  | |- Smallstep.star _  _ ?s _ ?s =>
+    eapply Smallstep.star_refl
+  | |- Smallstep.star _  _ (Returnstate _ _ _) _ (Returnstate _ _ _) =>
+    (eapply Smallstep.star_refl || fail "debug `eapply Smallstep.star_refl`")
+  (** 
+  | star_step: forall s1 t1 s2 t2 s3 t,
+      step ge s1 t1 s2 -> star ge s2 t2 s3 -> t = t1 ** t2 ->
+      star ge s1 t s3. *)
+  | |- Smallstep.star _ _ _ _ _ =>
+    eapply Smallstep.star_step; eauto
+  | |- Smallstep.step _ _ _ _ _ =>
+      forward_clight_ss
+  | |- step _ _ _ _ _ =>
+      forward_clight
+  | |- Events.E0 = Events.Eapp _ _ =>
+      try reflexivity
   end.
 
 Ltac forward_plus :=

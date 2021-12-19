@@ -63,6 +63,10 @@ GenerateIntermediateRepresentation SymbolIRs
   get_add
   get_sub
   get_addr_ofs
+  get_block_ptr (**r adding the four functions *)
+  get_start_addr
+  get_block_size
+  get_block_perm
   is_well_chunk_bool
   check_mem_aux2
   check_mem_aux

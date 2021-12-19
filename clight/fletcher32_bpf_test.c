@@ -78,14 +78,14 @@ void print_normal_addr(struct bpf_state* st){
   
   printf("\n\n *********print_region_info*******\n\n");
   
-  printf("start_ctx(physical) = %lld\n", ((*st).mrs)[0].start_addr);
+  printf("start_ctx(physical) = %d\n", ((*st).mrs)[0].start_addr);
   printf("start_ctx (value)   = %"PRIu64"\n", *(uint64_t *) (uintptr_t)((*st).mrs)[0].start_addr);
   printf("ctx_size  = %d\n", ((*st).mrs)[0].block_size);
   printf("ctx_words = %"PRIu16"\n", (uint16_t)(intptr_t)(&(((*st).mrs)[0].start_addr))+8);
   printf("ctx_words = %"PRIu16"\n", *((uint16_t *)(uintptr_t) (((*st).mrs)[0].start_addr)+8));
   
    
-  printf("start_content(physical) = %lld\n", ((*st).mrs)[1].start_addr);
+  printf("start_content(physical) = %d\n", ((*st).mrs)[1].start_addr);
   printf("start_content (value)   = %"PRIu16"\n", *(uint16_t *) (uintptr_t)((*st).mrs)[1].start_addr);
   printf("content_size  = %d\n", ((*st).mrs)[1].block_size);
   
@@ -114,24 +114,24 @@ int main(){
   unsigned long long result;
   // adding memory_regions
 
-  static const struct memory_region mr_ctx = {
-  	.start_addr = (unsigned long long) &f32_ctx,
+  const struct memory_region mr_ctx = {
+  	.start_addr = (uint32_t)(uintptr_t) &f32_ctx,
   	.block_size = sizeof(f32_ctx),
   	.block_perm = Readable,
-  	.block_ptr = 1LLU
+  	.block_ptr = 1U
   };
   
-  static const struct memory_region mr_content ={
+  const struct memory_region mr_content ={
   	.start_addr = (unsigned long long) (const uint16_t *)wrap_around_data,
   	.block_size = sizeof(wrap_around_data),
   	.block_perm = Readable,
-  	.block_ptr = 1LLU
+  	.block_ptr = 1U
   }; 
 
-  static struct memory_region my_memory_regions[] = { mr_ctx, mr_content};
+  struct memory_region my_memory_regions[] = { mr_ctx, mr_content};
 
   struct bpf_state st = {
-    .state_pc = 0LLU,
+    .state_pc = 0,
     .bpf_flag = BPF_OK,
     .mrs_num  = 2,
     .regsmap = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},

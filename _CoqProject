@@ -2,3 +2,4 @@
 -R /home/shyuan/.opam/4.11.1/lib/coq-variant/compcert32/compcert compcert
 -R benchmark bpf.benchmark
 -R proof bpf.proof
+-R clight bpf.clight

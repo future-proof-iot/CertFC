@@ -7,6 +7,7 @@ Require Import ZArith.
 From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
 
 From bpf.benchmark Require Import clightlogicexample BenchmarkTests.
+From bpf.benchmark.proof Require Import correct_get_add.
 
 Locate nat_correct.
 
@@ -140,7 +141,7 @@ Ltac correct_body :=
       + eexists. reflexivity.
       + econstructor;eauto.
     }
-    { intros.
+    intros.
       correct_function_from_body.
       correct_body.
       unfold f. unfold app.
@@ -206,18 +207,38 @@ Ltac correct_body :=
         reflexivity.
         reflexivity.
         intros.
-        admit.
-        admit.
+        typeclasses eauto.
+        { unfold INV.
+          unfold var_inv_preserve.
+          intros.
+          unfold match_temp_env in *.
+          rewrite Forall_fold_right in *.
+          simpl in *.
+          intuition.
+        }
         reflexivity.
         reflexivity.
         reflexivity.
-        unfold INV.
-        simpl. intuition subst ; discriminate.
-        simpl. intuition subst ; discriminate.
+        Ltac prove_in_inv :=
+  simpl; intuition subst; discriminate.
+        prove_in_inv.
+        prove_in_inv.
         reflexivity.
-        instantiate (1:= true).
         reflexivity.
-        admit.
+
+        intros.
+        change (match_temp_env ((_n1, Clightdefs.tuint, stateless nat_correct c0) :: INV) le0 st0 m0) in H.
+        unfold INV in H.
+        get_invariant _v.
+        exists (v::(Vint (Int.repr 1):: nil)).
+        split.
+        unfold map_opt. unfold exec_expr. rewrite p0.
+        reflexivity.
+        intros. simpl.
+        intuition eauto.
+        unfold stateless, valu32_correct, val32_one, int32_1, Int.one.
+        intuition eauto.
+
         intros.
         unfold typeof.
         change (calc_sum x0 c0) with
@@ -228,8 +249,27 @@ Ltac correct_body :=
         reflexivity.
         reflexivity.
         reflexivity.
-        admit.
-        admit.
+        { unfold INV.
+          unfold var_inv_preserve.
+          intros.
+          unfold match_temp_env in *.
+          rewrite Forall_fold_right in *.
+          simpl in *.
+          intuition.
+        }
+
+        intros.
+        change (match_temp_env ((_nv, Clightdefs.tuint, correct_get_add.match_res x0)
+       :: (_n1, Clightdefs.tuint, stateless nat_correct c0) :: INV) le1 st1 m1) in H.
+        unfold INV in H.
+        get_invariant_more _nv.
+        get_invariant_more _n1.
+        exists (v::(v0:: nil)).
+        split.
+        unfold map_opt. unfold exec_expr. rewrite p0, p1.
+        reflexivity.
+        intros. simpl.
+        intuition eauto.
       +  simpl.
         reflexivity.
       + intros. unfold INV in H.
@@ -256,46 +296,6 @@ Ltac correct_body :=
         destruct Archi.ptr64.
         simpl. rewrite E. reflexivity.
         rewrite E. reflexivity.
-  Admitted.
-
-
-    (**r
-      H2 :         Vint (Int.repr (Z.of_nat (S c0))) = v0
-      Ihc0: ... -> Vint (Int.repr (Z.of_nat c0)) = v0 -> ...
-    *)
-
-    (**according to the c function:
-unsigned int get_add(unsigned int x, unsigned int y)
-{
-  return x + y;
-}
-       1. return value should be  x+y
-       2. the memory is same
-      *)
-    destruct (calc_sum _ _ _) eqn: Heq; [idtac | apply I].
-    unfold calc_sum in Heq.
-    eexists. exists m, Events.E0.
-
-    repeat split; unfold step2.
-    -
-      apply Smallstep.plus_star.
-      (** TODO: adding Sreturn  more info by Ltac2 *)
-      eapply Smallstep.plus_one; eauto.
-      eapply step_return_1.
-      +
-        repeat econstructor; eauto.
-        Transparent Archi.ptr64.
-        unfold Cop.sem_binary_operation.
-        unfold Cop.sem_add, Cop.classify_add, Ctypes.typeconv; simpl.
-        unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-      + econstructor; eauto.
-      + reflexivity.
-    - simpl.
-      exists (Int.add vi vj); reflexivity.
-    - simpl.
-      constructor.
-      reflexivity.
   Qed.
 
 End Calc_sum.

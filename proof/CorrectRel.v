@@ -1,4 +1,4 @@
-From bpf.src Require Import DxIntegers DxValues DxList64 DxOpcode DxMemRegion DxRegs DxState DxMonad DxFlag.
+From bpf.src Require Import DxIntegers DxValues DxAST DxList64 DxOpcode DxMemRegion DxRegs DxState DxMonad DxFlag.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
@@ -41,22 +41,23 @@ Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   | op_BPF_LDX_IMM_ILLEGAL_INS => exists vi, v = Vint vi (*v = Vundef*)
   end.
 
-Definition MyListType_correct (l: MyListType) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  exists b, v = Vptr b Ptrofs.zero /\
-    forall pc,
-      0 <= pc < Z.of_nat (List.length l) ->
-        exists vl, Mem.loadv Mint64 m (Vptr b (Ptrofs.repr (8 * pc))) = Some (Vlong vl)
+Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+  v = Vptr b Ptrofs.zero /\
+    forall pc, 0 <= Z.of_nat pc < Z.of_nat len ->
+    exists vl,
+        List.nth_error l  pc = Some vl /\
+        Mem.loadv Mint64 m (Vptr b (Ptrofs.repr (8 * (Z.of_nat pc)))) = Some (Vlong vl)
 .
 
+Definition pc_correct (len: nat) (x: sint32_t) (v: val) :=
+  Vint x = v /\  0 <= Int.signed x < Z.of_nat len /\ 0 <= 8 * Z.of_nat len <= Ptrofs.max_unsigned. (**r the number of input instructions should be less than Ptrofs.max_unsigned *)
+
+
+Definition len_correct (len: nat) (x: sint32_t) (v: val) :=
+  Vint x = v /\  Int.signed x = Z.of_nat len.
+
 Definition match_chunk (x : memory_chunk) (b: val) :=
-  b = Vint (
-          match x with
-          | Mint8unsigned => Integers.Int.one
-          | Mint16unsigned => Integers.Int.repr 2
-          | Mint32 => Integers.Int.repr 4
-          | Mint64 => Integers.Int.repr 8
-          | _ => Integers.Int.repr 0
-          end).
+  b = memory_chunk_to_valu32 x.
 
 Definition flag_correct (f: bpf_flag) (v: val) :=
   v = Vint (int_of_flag f).

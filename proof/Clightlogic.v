@@ -872,25 +872,33 @@ Definition  exec_deref_loc (ty : Ctypes.type) (m : Memory.Mem.mem) (b : block) (
   | Ctypes.By_nothing => None
   end.
 
+(**r ysh: executing clight expressions, return the result of the expression (Q: Clight has `eval_expr`, is a relation ), this definition should be equivalent to clight's `eval_expr` *)
 Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr) {struct e} : option val :=
   match e with
   | Econst_int i t    => Some (Vint  i)
   | Econst_float f _  => Some (Vfloat f)
   | Econst_single f _ => Some (Vsingle f)
   | Econst_long  l _  => Some (Vlong l)
-  | Evar v  t        => match Maps.PTree.get v ev with
-                        | Some (b,t') =>
+  | Evar v  t         => match Maps.PTree.get v ev with
+                         | Some (b,t') => (**r ysh: local variable *)
                             if Ctypes.type_eq t t' then
                               exec_deref_loc t m b  Ptrofs.zero
                             else None
-                        | None   =>
+                         | None   => (**r ysh: global variable *)
                             match (Globalenvs.Genv.find_symbol ge v) with
                             | None => None
                             | Some b => exec_deref_loc t m b  Ptrofs.zero
                             end
-                        end
+                         end
   | Etempvar id t     => Maps.PTree.get id le
-  | Ederef _ _        => None
+  | Ederef e t        => match exec_expr ge ev le m e with  (**r ysh: None -> *)
+                         | None => None
+                         | Some v => 
+                            match v with
+                            | Vptr b ofs => exec_deref_loc t m b ofs
+                            | _ => None
+                            end
+                         end
   | Eaddrof _ _       => None
   | Eunop o e t       => match exec_expr ge ev le m e with
                          | None => None
@@ -904,14 +912,14 @@ Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr
                          | None => None
                          | Some v => Cop.sem_cast v (typeof e) ty m
                          end
-  | Efield _ _ _      => None
+  | Efield _ _ _      => None (**r ysh: None -> *)
   | Esizeof _ _       => None
   | Ealignof _ _      => None
   end.
 
-Lemma deref_loc_var : forall t m b v,
-    exec_deref_loc t m b Ptrofs.zero = Some v ->
-    deref_loc t m b Ptrofs.zero v.
+Lemma deref_loc_var : forall t m b v ofs,
+    exec_deref_loc t m b ofs = Some v -> (**r ysh: zero -> ofs *)
+    deref_loc t m b ofs v.
 Proof.
   intros.
   unfold exec_deref_loc in H.
@@ -922,7 +930,7 @@ Proof.
   discriminate.
 Qed.
 
-
+(**r ysh: The Lemma tells the relation between `exec_expr` and Clight's `eval_expr` *)
 Lemma eval_expr_eval : forall ge ev te m e v,
     exec_expr ge ev te m e = Some v ->
     eval_expr ge ev te m e v.
@@ -954,7 +962,17 @@ Proof.
       apply deref_loc_var. auto.
   - simpl. intros.
     econstructor ; eauto.
-  - intros ; discriminate.
+  - (**r ysh: `intros ; discriminate.` -> *)
+    intros.
+    simpl in H.
+    destruct (exec_expr ge ev te m e) eqn: He; try discriminate.
+    destruct v0 eqn: Hv0; try discriminate.
+    subst.
+    econstructor.
+    econstructor.
+    apply IHe.
+    reflexivity.
+    apply deref_loc_var. auto.
   - intros ; discriminate.
   - simpl.
     intros.
@@ -1642,7 +1660,7 @@ Proof.
              destruct f ; try congruence.
 Qed.
 
-
+(**r this one should be another version of `Cop.val_casted` *)
 Fixpoint vc_casted (inv: list (positive * Ctypes.type)) (e:expr) :=
   match e with
   | Econst_int _ t    => is_Vint t
@@ -1651,18 +1669,19 @@ Fixpoint vc_casted (inv: list (positive * Ctypes.type)) (e:expr) :=
   | Econst_long _ t  => is_Vlong t
   | Evar _ _         => false
   | Etempvar v t     => existsb (fun x => if Ctypes.type_eq t (snd x) then Pos.eqb v (fst x) else false) inv
-  | Ederef _ _        => false
+  | Ederef e _       => false (**r ysh: `false` -> `vc_casted inv e` *)
   | Eaddrof _ _       => false
   | Eunop o e t       => false
   | Ebinop o e1 e2 t    => vc_casted inv e1 && vc_casted inv e2 &&
                              vc_binary_operation_casted o (typeof e1) (typeof e2) t
   | Ecast e ty        => vc_casted inv e &&
                            vc_cast_casted (typeof e) ty
-  | Efield _ _ _      => false
+  | Efield e _ _      => false (**r ysh: `false` -> `vc_casted inv e` *)
   | Esizeof _ _       => false
   | Ealignof _ _      => false
   end.
 
+(**r this Lemma tells the relation among vc_casted, exec_expr and `Cop.val_casted` *)
 Lemma vc_casted_correct :
   forall inv ge le m a v
          (INV : var_casted_list inv le),
@@ -1686,8 +1705,16 @@ Proof.
     destruct (Ctypes.type_eq t t'); try congruence.
     apply Peqb_true_eq in P. subst.
     eapply INV;eauto.
-  - intros.
+  (*- (**r Ederef *)
+    intros. (**r ysh: `old` -> `new` *)
+    destruct (exec_expr ge empty_env le m a) eqn:E1; try discriminate.
+    destruct v0 eqn: Hv0; try discriminate.
+    specialize IHa with (Vptr b i).
+    apply IHa in INV;[ idtac | assumption | reflexivity]. admit. *)
+  - (**r Ebinop *)
+    intros.
     destruct (exec_expr ge empty_env le m a1) eqn:E1; try discriminate.
+
     destruct (exec_expr ge empty_env le m a2) eqn:E2; try discriminate.
     repeat rewrite andb_true_iff in H.
     destruct H as ((H1 , H2), H3).

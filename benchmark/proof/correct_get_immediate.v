@@ -63,11 +63,7 @@ Section Get_immediate.
 
     repeat split; unfold step2.
     -
-      apply Smallstep.plus_star.
-      repeat forward_clight.
-
-      reflexivity.
-      reflexivity.
+      repeat forward_star.
     - simpl.
       constructor.
       reflexivity.

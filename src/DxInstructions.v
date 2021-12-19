@@ -66,13 +66,58 @@ Definition get_sub (x y: valu32_t): M valu32_t := returnM (Val.sub x y).
 
 Definition get_addr_ofs (x: val64_t) (ofs: sint32_t): M valu32_t := returnM (val_intuoflongu (Val.addl x (Val.longofint (sint32_to_vint ofs)))).
 
+Definition get_block_ptr (mr: memory_region) : M valu32_t := returnM (block_ptr mr).
+
+Definition get_start_addr (mr: memory_region): M valu32_t := returnM (start_addr mr).
+
+Definition get_block_size (mr: memory_region): M valu32_t := returnM (block_size mr).
+
+Definition get_block_perm (mr: memory_region): M permission := returnM (block_perm mr).
+
+
+
 Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 => returnM true
   | _ => returnM false
   end.
 
+Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_chunk): M valu32_t :=
+  do well_chunk <- is_well_chunk_bool chunk;
+    if well_chunk then
+      do ptr    <- get_block_ptr mr;
+      do start  <- get_start_addr mr;
+      do size   <- get_block_size mr;
+      do lo_ofs <- get_sub addr start;
+      do hi_ofs <- get_add lo_ofs (memory_chunk_to_valu32 chunk);
+        if (andb (compu_le_32 val32_zero lo_ofs) (compu_lt_32 hi_ofs size)) then
+          if (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
+                   (comp_eq_32 val32_zero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))) then
+            returnM (Val.add ptr lo_ofs) (**r > 0 *)
+          else
+            returnM val32_zero (**r = 0 *)
+        else
+          returnM val32_zero
+    else
+      returnM val32_zero.
 
+Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: valu32_t) {struct num}: M valu32_t :=
+  match num with
+  | O => returnM val32_zero
+  | S n =>
+    do cur_mr   <- get_mem_region n;
+    do mr_perm  <- get_block_perm cur_mr;
+      if (perm_ge mr_perm perm) then
+        do check_mem <- check_mem_aux2 cur_mr addr chunk;
+          if comp_eq_32 check_mem val32_zero then
+            check_mem_aux n perm chunk addr
+          else
+            returnM check_mem
+      else
+        check_mem_aux n perm chunk addr
+  end.
+
+(*
 Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_chunk): M valu32_t :=
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then
@@ -102,7 +147,7 @@ Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr
             returnM check_mem
       else
         check_mem_aux n perm chunk addr
-  end.
+  end. *)
 
 Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: valu32_t): M valu32_t :=
   do well_chunk <- is_well_chunk_bool chunk;

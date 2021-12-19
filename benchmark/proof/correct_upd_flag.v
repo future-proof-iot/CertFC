@@ -79,10 +79,8 @@ Section Upd_flag.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
-      repeat forward_clight.
+      repeat forward_star.
 
-      reflexivity.
     - simpl.
       constructor.
     -

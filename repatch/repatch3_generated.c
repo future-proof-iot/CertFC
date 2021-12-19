@@ -101,6 +101,26 @@ static unsigned int get_addr_ofs(unsigned long long x, int ofs)
   return (unsigned int) (x + (unsigned long long) (unsigned int) ofs);
 }
 
+unsigned int get_block_ptr(struct memory_region *mr)
+{
+  return (*mr).block_ptr;
+}
+
+unsigned int get_start_addr(struct memory_region *mr)
+{
+  return (*mr).start_addr;
+}
+
+unsigned int get_block_size(struct memory_region *mr)
+{
+  return (*mr).block_size;
+}
+
+unsigned int get_block_perm(struct memory_region *mr)
+{
+  return (*mr).block_perm;
+}
+
 static _Bool is_well_chunk_bool(unsigned int chunk)
 {
   switch (chunk) {
@@ -121,16 +141,21 @@ static _Bool is_well_chunk_bool(unsigned int chunk)
 static unsigned int check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigned int chunk)
 {
   _Bool well_chunk;
+  unsigned int ptr;
+  unsigned int start;
+  unsigned int size;
   unsigned int lo_ofs;
   unsigned int hi_ofs;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
-    lo_ofs = get_sub(addr, (*mr).start_addr);
-    hi_ofs = get_add(lo_ofs, (unsigned int) chunk);
-    if (0U <= lo_ofs && hi_ofs < (*mr).block_size) {
-      if (lo_ofs <= 4294967295U - (unsigned int) chunk
-            && 0U == lo_ofs % (unsigned int) chunk) {
-        return (*mr).block_ptr + lo_ofs;
+    ptr = get_block_ptr(mr);
+    start = get_start_addr(mr);
+    size = get_block_size(mr);
+    lo_ofs = get_sub(addr, start);
+    hi_ofs = get_add(lo_ofs, chunk);
+    if (0U <= lo_ofs && hi_ofs < size) {
+      if (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk) {
+        return ptr + lo_ofs;
       } else {
         return 0U;
       }
@@ -146,13 +171,15 @@ unsigned int check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int 
 {
   unsigned int n;
   struct memory_region *cur_mr;
+  unsigned int mr_perm;
   unsigned int check_mem;
   if (num == 0U) {
     return 0U;
   } else {
     n = num - 1U;
     cur_mr = get_mem_region(st, n);
-    if ((*cur_mr).block_perm >= perm) {
+    mr_perm = get_block_perm(cur_mr);
+    if (mr_perm >= perm) {
       check_mem = check_mem_aux2(cur_mr, addr, chunk);
       if (check_mem == 0U) {
         return check_mem_aux(st, n, perm, chunk, addr);

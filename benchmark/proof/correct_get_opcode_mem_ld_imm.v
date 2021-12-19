@@ -70,18 +70,7 @@ unsigned char get_opcode_mem_ld_imm(unsigned char op)
 
     repeat split; unfold step2.
     -
-      apply Smallstep.plus_star.
-      repeat forward_clight.
-
-      + Transparent Archi.ptr64.
-        repeat econstructor; eauto.
-        simpl.
-        unfold Cop.sem_and; simpl.
-        unfold Cop.sem_binarith; reflexivity.
-        simpl.
-        unfold Cop.sem_cast; reflexivity.
-      + unfold Cop.sem_cast; reflexivity.
-      + reflexivity.
+      repeat forward_star.
     - simpl.
       unfold match_res, byte_to_opcode_mem_ld_imm, opcode_mem_ld_imm_correct.
       unfold int8_0xff.

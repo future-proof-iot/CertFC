@@ -30,10 +30,10 @@ enum BPF_PERM {
 };
 
 struct memory_region {
-  unsigned long long start_addr;
+  unsigned int start_addr;
   unsigned int block_size;
   unsigned int block_perm;
-  unsigned long long block_ptr;
+  unsigned int block_ptr;
 };
 
 struct bpf_state {

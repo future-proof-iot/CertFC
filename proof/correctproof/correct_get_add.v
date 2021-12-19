@@ -1,18 +1,14 @@
 From bpf.src Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
-From Coq Require Import List Lia.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
 From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
 
-From bpf.benchmark Require Import clightlogicexample.
+From bpf.clight Require Import interpreter.
 
 (**
-unsigned int get_add(unsigned int x, unsigned int y)
-{
-  return x + y;
-}
+Print get_add.
 
 get_add = 
 fun x y : valu32_t => returnM (Val.add x y)
@@ -61,19 +57,15 @@ Section Get_add.
     get_invariant_more _y.
 
     unfold stateless, valu32_correct in H1, H3.
-    destruct H1 as (Hc_eq & (vi & Hvi_eq)).
-    destruct H3 as (Hc0_eq & (vj & Hvj_eq)).
-    subst c c0 v v0.
+    completer.
+    subst.
 
-    (**according to the c function:
-unsigned int get_add(unsigned int x, unsigned int y)
-{
-  return x + y;
-}
+    (**according to the type of eval_pc:
+         static unsigned long long get_addl(unsigned long long x, unsigned long long y)
        1. return value should be  x+y
        2. the memory is same
       *)
-    exists (Val.add (Vint vi) (Vint vj)), m, Events.E0.
+    exists (Val.add (Vint x0) (Vint x)), m, Events.E0.
 
     repeat split; unfold step2.
     -

@@ -10,11 +10,20 @@ From dx.Type Require Import Bool Nat.
 
 From bpf.src Require Import CoqIntegers DxIntegers DxValues.
 
-Definition memory_chunk_to_valu32 (chunk: memory_chunk) := 
-  Vint (Int.repr (align_chunk chunk)).
+Definition well_chunk_Z (chunk: memory_chunk):Z := 
+  match chunk with
+  | Mint8unsigned => 1
+  | Mint16unsigned => 2
+  | Mint32 => 4
+  | Mint64 => 8
+  | _ => 0
+  end.
 
-Definition memory_chunk_to_valu32_upbound (chunk: memory_chunk) :=
-  Vint (Int.repr (Int.max_unsigned-(align_chunk chunk))).
+Definition memory_chunk_to_valu32 (chunk: memory_chunk): valu32_t := 
+  Vint (Int.repr (well_chunk_Z chunk)). (**r well_chunk implies align_chunk, so we didn't need align_chunk, but we must prove a lemma! *)
+
+Definition memory_chunk_to_valu32_upbound (chunk: memory_chunk): valu32_t :=
+  Vint (Int.repr (Int.max_unsigned-(well_chunk_Z chunk))).
 
 (******************** Dx Related *******************)
 
@@ -75,7 +84,7 @@ Definition Const_memory_chunk_to_valu32 :=
   MkPrimitive memoryChunkTovalU32SymbolType
                 memory_chunk_to_valu32
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast  e1 C_U32) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
+                           | [e1] => Ok e1 (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -83,7 +92,7 @@ Definition Const_memory_chunk_to_valu32_upbound :=
   MkPrimitive memoryChunkTovalU32SymbolType
                 memory_chunk_to_valu32_upbound
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ebinop Cop.Osub C_U32_max_unsigned (Csyntax.Ecast  e1 C_U32) C_U32) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
+                           | [e1] => Ok (Csyntax.Ebinop Cop.Osub C_U32_max_unsigned e1 C_U32) (**r e1 -> (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue *)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 

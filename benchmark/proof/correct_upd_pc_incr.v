@@ -78,13 +78,12 @@ Section Upd_pc_incr.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
 
-      repeat forward_clight.
+      repeat forward_star.
+
       rewrite Ptrofs.add_zero.
       fold Ptrofs.zero in mpc.
       rewrite mpc; reflexivity.
-      reflexivity.
       reflexivity.
       reflexivity.
     -

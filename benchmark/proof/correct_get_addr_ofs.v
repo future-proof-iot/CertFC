@@ -78,12 +78,7 @@ unsigned int get_addr_ofs(unsigned long long x, int ofs)
 
     repeat split; unfold step2.
     -
-      apply Smallstep.plus_star.
-      Transparent Archi.ptr64.
-      repeat forward_clight.
-
-      reflexivity.
-      reflexivity.
+      repeat forward_star.
     - simpl.
       eexists; reflexivity.
     - simpl.

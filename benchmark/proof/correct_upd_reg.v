@@ -78,8 +78,7 @@ Section Upd_reg.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
-      repeat forward_clight.
+      repeat forward_star.
 
       rewrite Ptrofs.add_zero_l.
       unfold Coqlib.align; simpl.
@@ -89,7 +88,6 @@ Section Upd_reg.
       }
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
-      reflexivity.
     - simpl.
       constructor.
     - unfold unmodifies_effect, modifies, In.

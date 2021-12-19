@@ -31,7 +31,8 @@ all:
 	@$(MAKE) extract
 	@$(MAKE) repatch
 	@$(MAKE) clight
-	@$(MAKE) proof 
+	@$(MAKE) clightproof
+	@$(MAKE) correctproof
 
 
 
@@ -118,13 +119,69 @@ clight:
 	@echo $@
 	cd clight && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c # && ./$@
 	cd clight && $(CLIGHTGEN32) interpreter.c
+	$(COQMAKEFILE) -f _CoqProject clight/interpreter.v COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
 
-PROOF = $(addprefix proof/,clight_exec.v Clightlogic.v interpreter.v CommonLemma.v MatchState.v CorrectRel.v correct_is_well_chunk_bool.v correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v correct_getMemRegion_block_ptr.v correct_getMemRegion_block_size.v correct_getMemRegion_start_addr.v correct_get_addl.v correct_get_subl.v correct_check_mem_aux.v)
+PROOF = $(addprefix proof/correctproof/, correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_add.v correct_get_sub.v correct_check_mem_aux.v  correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v)
 
-proof:
+CLIGHTLOGICDIR = $(wildcard proof/*.v)
+
+clightproof:
+	@echo $@
+	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
+	make -f CoqMakefilePrf
+
+# CORRECTPROOFDIR = $(wildcard proof/*.v)
+correctproof:
 	@echo $@
 	$(COQMAKEFILE) -f _CoqProject $(PROOF) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
+
+GITDIR=/home/shyuan/GitLab/rbpf-dx
+	
+gitpush:
+	@echo $@
+	cp src/*.v $(GITDIR)/src
+	cp src/*.c $(GITDIR)/src
+	cp benchmark/*.v $(GITDIR)/benchmark
+	cp benchmark/*.c $(GITDIR)/benchmark
+	cp benchmark/*.h $(GITDIR)/benchmark
+	cp benchmark/*.md $(GITDIR)/benchmark
+	cp benchmark/proof/*.v $(GITDIR)/benchmark/proof
+	cp clight/*.v $(GITDIR)/clight
+	cp clight/*.c $(GITDIR)/clight
+	cp clight/*.h $(GITDIR)/clight
+	cp proof/*.v $(GITDIR)/proof
+	cp proof/correctproof/*.v $(GITDIR)/proof/correctproof
+	cp repatch/*.c $(GITDIR)/repatch
+	cp Makefile $(GITDIR)
+	cp Makefile.config $(GITDIR)
+	cp _CoqProject $(GITDIR)
+	cp compcertsrc-I $(GITDIR)
+	cp compcertcprinter-cmx-args $(GITDIR)
+	cp *.md $(GITDIR)
+	
+gitpull:
+	@echo $@
+	cp $(GITDIR)/src/*.v ./src
+	cp $(GITDIR)/src/*.c ./src
+	cp $(GITDIR)/benchmark/*.v ./benchmark
+	cp $(GITDIR)/benchmark/*.c ./benchmark
+	cp $(GITDIR)/benchmark/*.h ./benchmark
+	cp $(GITDIR)/benchmark/*.md ./benchmark
+	cp $(GITDIR)/benchmark/proof/*.v ./benchmark/proof
+	cp $(GITDIR)/clight/*.v ./clight
+	cp $(GITDIR)/clight/*.c ./clight
+	cp $(GITDIR)/clight/*.h ./clight
+	cp $(GITDIR)/proof/*.v ./proof
+	cp $(GITDIR)/proof/correctproof/*.v ./proof/correctproof
+	cp $(GITDIR)/repatch/*.c ./repatch
+	cp $(GITDIR)/Makefile .
+	cp $(GITDIR)/Makefile.config .
+	cp $(GITDIR)/_CoqProject .
+	cp $(GITDIR)/compcertsrc-I .
+	cp $(GITDIR)/compcertcprinter-cmx-args .
+	cp $(GITDIR)/*.md .
 
 clean :
 	@echo $@
@@ -136,4 +193,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all test bench bench_clight compile extract repatch clight proof clean
+.PHONY: all test bench bench_clight compile extract repatch clight proof correctproof clean

@@ -107,6 +107,9 @@ Definition _fuel : ident := $"fuel".
 Definition _fuel0 : ident := $"fuel0".
 Definition _get_add : ident := $"get_add".
 Definition _get_addr_ofs : ident := $"get_addr_ofs".
+Definition _get_block_perm : ident := $"get_block_perm".
+Definition _get_block_ptr : ident := $"get_block_ptr".
+Definition _get_block_size : ident := $"get_block_size".
 Definition _get_dst : ident := $"get_dst".
 Definition _get_immediate : ident := $"get_immediate".
 Definition _get_mem_region : ident := $"get_mem_region".
@@ -121,6 +124,7 @@ Definition _get_opcode_mem_ld_reg : ident := $"get_opcode_mem_ld_reg".
 Definition _get_opcode_mem_st_imm : ident := $"get_opcode_mem_st_imm".
 Definition _get_opcode_mem_st_reg : ident := $"get_opcode_mem_st_reg".
 Definition _get_src : ident := $"get_src".
+Definition _get_start_addr : ident := $"get_start_addr".
 Definition _get_sub : ident := $"get_sub".
 Definition _hi_ofs : ident := $"hi_ofs".
 Definition _i : ident := $"i".
@@ -139,6 +143,7 @@ Definition _main : ident := $"main".
 Definition _mem_reg_num : ident := $"mem_reg_num".
 Definition _memory_region : ident := $"memory_region".
 Definition _mr : ident := $"mr".
+Definition _mr_perm : ident := $"mr_perm".
 Definition _mrs : ident := $"mrs".
 Definition _mrs_num : ident := $"mrs_num".
 Definition _n : ident := $"n".
@@ -155,12 +160,15 @@ Definition _opcode_ld : ident := $"opcode_ld".
 Definition _opcode_st : ident := $"opcode_st".
 Definition _pc : ident := $"pc".
 Definition _perm : ident := $"perm".
+Definition _ptr : ident := $"ptr".
 Definition _reg64_to_reg32 : ident := $"reg64_to_reg32".
 Definition _regsmap : ident := $"regsmap".
+Definition _size : ident := $"size".
 Definition _src : ident := $"src".
 Definition _src32 : ident := $"src32".
 Definition _src64 : ident := $"src64".
 Definition _st : ident := $"st".
+Definition _start : ident := $"start".
 Definition _start_addr : ident := $"start_addr".
 Definition _state_pc : ident := $"state_pc".
 Definition _step : ident := $"step".
@@ -745,6 +753,58 @@ Definition f_get_addr_ofs := {|
                  tuint)))
 |}.
 
+Definition f_get_block_ptr := {|
+  fn_return := tuint;
+  fn_callconv := cc_default;
+  fn_params := ((_mr, (tptr (Tstruct _memory_region noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Efield
+                 (Ederef
+                   (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+                   (Tstruct _memory_region noattr)) _block_ptr tuint)))
+|}.
+
+Definition f_get_start_addr := {|
+  fn_return := tuint;
+  fn_callconv := cc_default;
+  fn_params := ((_mr, (tptr (Tstruct _memory_region noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Efield
+                 (Ederef
+                   (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+                   (Tstruct _memory_region noattr)) _start_addr tuint)))
+|}.
+
+Definition f_get_block_size := {|
+  fn_return := tuint;
+  fn_callconv := cc_default;
+  fn_params := ((_mr, (tptr (Tstruct _memory_region noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Efield
+                 (Ederef
+                   (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+                   (Tstruct _memory_region noattr)) _block_size tuint)))
+|}.
+
+Definition f_get_block_perm := {|
+  fn_return := tuint;
+  fn_callconv := cc_default;
+  fn_params := ((_mr, (tptr (Tstruct _memory_region noattr))) :: nil);
+  fn_vars := nil;
+  fn_temps := nil;
+  fn_body :=
+(Sreturn (Some (Efield
+                 (Ederef
+                   (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+                   (Tstruct _memory_region noattr)) _block_perm tuint)))
+|}.
+
 Definition f_is_well_chunk_bool := {|
   fn_return := tbool;
   fn_callconv := cc_default;
@@ -770,9 +830,11 @@ Definition f_check_mem_aux2 := {|
   fn_params := ((_mr, (tptr (Tstruct _memory_region noattr))) ::
                 (_addr, tuint) :: (_chunk, tuint) :: nil);
   fn_vars := nil;
-  fn_temps := ((_well_chunk, tbool) :: (_lo_ofs, tuint) ::
-               (_hi_ofs, tuint) :: (_t'5, tint) :: (_t'4, tint) ::
-               (_t'3, tuint) :: (_t'2, tuint) :: (_t'1, tbool) :: nil);
+  fn_temps := ((_well_chunk, tbool) :: (_ptr, tuint) :: (_start, tuint) ::
+               (_size, tuint) :: (_lo_ofs, tuint) :: (_hi_ofs, tuint) ::
+               (_t'8, tint) :: (_t'7, tint) :: (_t'6, tuint) ::
+               (_t'5, tuint) :: (_t'4, tuint) :: (_t'3, tuint) ::
+               (_t'2, tuint) :: (_t'1, tbool) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
@@ -785,56 +847,70 @@ Definition f_check_mem_aux2 := {|
     (Ssequence
       (Ssequence
         (Scall (Some _t'2)
-          (Evar _get_sub (Tfunction (Tcons tuint (Tcons tuint Tnil)) tuint
-                           cc_default))
-          ((Etempvar _addr tuint) ::
-           (Efield
-             (Ederef (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
-               (Tstruct _memory_region noattr)) _start_addr tulong) :: nil))
-        (Sset _lo_ofs (Etempvar _t'2 tuint)))
+          (Evar _get_block_ptr (Tfunction
+                                 (Tcons
+                                   (tptr (Tstruct _memory_region noattr))
+                                   Tnil) tuint cc_default))
+          ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
+        (Sset _ptr (Etempvar _t'2 tuint)))
       (Ssequence
         (Ssequence
           (Scall (Some _t'3)
-            (Evar _get_add (Tfunction (Tcons tuint (Tcons tuint Tnil)) tuint
-                             cc_default))
-            ((Etempvar _lo_ofs tuint) ::
-             (Ecast (Etempvar _chunk tuint) tuint) :: nil))
-          (Sset _hi_ofs (Etempvar _t'3 tuint)))
+            (Evar _get_start_addr (Tfunction
+                                    (Tcons
+                                      (tptr (Tstruct _memory_region noattr))
+                                      Tnil) tuint cc_default))
+            ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
+          (Sset _start (Etempvar _t'3 tuint)))
         (Ssequence
-          (Sifthenelse (Ebinop Ole (Econst_int (Int.repr 0) tuint)
-                         (Etempvar _lo_ofs tuint) tint)
-            (Sset _t'5
-              (Ecast
-                (Ebinop Olt (Etempvar _hi_ofs tuint)
-                  (Efield
-                    (Ederef
-                      (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
-                      (Tstruct _memory_region noattr)) _block_size tuint)
-                  tint) tbool))
-            (Sset _t'5 (Econst_int (Int.repr 0) tint)))
-          (Sifthenelse (Etempvar _t'5 tint)
+          (Ssequence
+            (Scall (Some _t'4)
+              (Evar _get_block_size (Tfunction
+                                      (Tcons
+                                        (tptr (Tstruct _memory_region noattr))
+                                        Tnil) tuint cc_default))
+              ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
+            (Sset _size (Etempvar _t'4 tuint)))
+          (Ssequence
             (Ssequence
-              (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tuint)
-                             (Ebinop Osub (Econst_int (Int.repr (-1)) tuint)
-                               (Ecast (Etempvar _chunk tuint) tuint) tuint)
-                             tint)
-                (Sset _t'4
-                  (Ecast
-                    (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
-                      (Ebinop Omod (Etempvar _lo_ofs tuint)
-                        (Ecast (Etempvar _chunk tuint) tuint) tuint) tint)
-                    tbool))
-                (Sset _t'4 (Econst_int (Int.repr 0) tint)))
-              (Sifthenelse (Etempvar _t'4 tint)
-                (Sreturn (Some (Ebinop Oadd
-                                 (Efield
-                                   (Ederef
-                                     (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
-                                     (Tstruct _memory_region noattr))
-                                   _block_ptr tulong)
-                                 (Etempvar _lo_ofs tuint) tulong)))
-                (Sreturn (Some (Econst_int (Int.repr 0) tuint)))))
-            (Sreturn (Some (Econst_int (Int.repr 0) tuint)))))))
+              (Scall (Some _t'5)
+                (Evar _get_sub (Tfunction (Tcons tuint (Tcons tuint Tnil))
+                                 tuint cc_default))
+                ((Etempvar _addr tuint) :: (Etempvar _start tuint) :: nil))
+              (Sset _lo_ofs (Etempvar _t'5 tuint)))
+            (Ssequence
+              (Ssequence
+                (Scall (Some _t'6)
+                  (Evar _get_add (Tfunction (Tcons tuint (Tcons tuint Tnil))
+                                   tuint cc_default))
+                  ((Etempvar _lo_ofs tuint) :: (Etempvar _chunk tuint) ::
+                   nil))
+                (Sset _hi_ofs (Etempvar _t'6 tuint)))
+              (Ssequence
+                (Sifthenelse (Ebinop Ole (Econst_int (Int.repr 0) tuint)
+                               (Etempvar _lo_ofs tuint) tint)
+                  (Sset _t'8
+                    (Ecast
+                      (Ebinop Olt (Etempvar _hi_ofs tuint)
+                        (Etempvar _size tuint) tint) tbool))
+                  (Sset _t'8 (Econst_int (Int.repr 0) tint)))
+                (Sifthenelse (Etempvar _t'8 tint)
+                  (Ssequence
+                    (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tuint)
+                                   (Ebinop Osub
+                                     (Econst_int (Int.repr (-1)) tuint)
+                                     (Etempvar _chunk tuint) tuint) tint)
+                      (Sset _t'7
+                        (Ecast
+                          (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
+                            (Ebinop Omod (Etempvar _lo_ofs tuint)
+                              (Etempvar _chunk tuint) tuint) tint) tbool))
+                      (Sset _t'7 (Econst_int (Int.repr 0) tint)))
+                    (Sifthenelse (Etempvar _t'7 tint)
+                      (Sreturn (Some (Ebinop Oadd (Etempvar _ptr tuint)
+                                       (Etempvar _lo_ofs tuint) tuint)))
+                      (Sreturn (Some (Econst_int (Int.repr 0) tuint)))))
+                  (Sreturn (Some (Econst_int (Int.repr 0) tuint))))))))))
     (Sreturn (Some (Econst_int (Int.repr 0) tuint)))))
 |}.
 
@@ -846,7 +922,8 @@ Definition f_check_mem_aux := {|
   fn_vars := nil;
   fn_temps := ((_n, tuint) ::
                (_cur_mr, (tptr (Tstruct _memory_region noattr))) ::
-               (_check_mem__1, tuint) :: (_t'4, tuint) :: (_t'3, tuint) ::
+               (_mr_perm, tuint) :: (_check_mem__1, tuint) ::
+               (_t'5, tuint) :: (_t'4, tuint) :: (_t'3, tuint) ::
                (_t'2, tuint) ::
                (_t'1, (tptr (Tstruct _memory_region noattr))) :: nil);
   fn_body :=
@@ -868,51 +945,59 @@ Definition f_check_mem_aux := {|
           ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
            (Etempvar _n tuint) :: nil))
         (Sset _cur_mr (Etempvar _t'1 (tptr (Tstruct _memory_region noattr)))))
-      (Sifthenelse (Ebinop Oge
-                     (Efield
-                       (Ederef
-                         (Etempvar _cur_mr (tptr (Tstruct _memory_region noattr)))
-                         (Tstruct _memory_region noattr)) _block_perm tuint)
-                     (Etempvar _perm tuint) tint)
+      (Ssequence
         (Ssequence
+          (Scall (Some _t'2)
+            (Evar _get_block_perm (Tfunction
+                                    (Tcons
+                                      (tptr (Tstruct _memory_region noattr))
+                                      Tnil) tuint cc_default))
+            ((Etempvar _cur_mr (tptr (Tstruct _memory_region noattr))) ::
+             nil))
+          (Sset _mr_perm (Etempvar _t'2 tuint)))
+        (Sifthenelse (Ebinop Oge (Etempvar _mr_perm tuint)
+                       (Etempvar _perm tuint) tint)
           (Ssequence
-            (Scall (Some _t'2)
-              (Evar _check_mem_aux2 (Tfunction
-                                      (Tcons
-                                        (tptr (Tstruct _memory_region noattr))
-                                        (Tcons tuint (Tcons tuint Tnil)))
-                                      tuint cc_default))
-              ((Etempvar _cur_mr (tptr (Tstruct _memory_region noattr))) ::
-               (Etempvar _addr tuint) :: (Etempvar _chunk tuint) :: nil))
-            (Sset _check_mem__1 (Etempvar _t'2 tuint)))
-          (Sifthenelse (Ebinop Oeq (Etempvar _check_mem__1 tuint)
-                         (Econst_int (Int.repr 0) tuint) tint)
             (Ssequence
               (Scall (Some _t'3)
-                (Evar _check_mem_aux (Tfunction
-                                       (Tcons
-                                         (tptr (Tstruct _bpf_state noattr))
-                                         (Tcons tuint
+                (Evar _check_mem_aux2 (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _memory_region noattr))
+                                          (Tcons tuint (Tcons tuint Tnil)))
+                                        tuint cc_default))
+                ((Etempvar _cur_mr (tptr (Tstruct _memory_region noattr))) ::
+                 (Etempvar _addr tuint) :: (Etempvar _chunk tuint) :: nil))
+              (Sset _check_mem__1 (Etempvar _t'3 tuint)))
+            (Sifthenelse (Ebinop Oeq (Etempvar _check_mem__1 tuint)
+                           (Econst_int (Int.repr 0) tuint) tint)
+              (Ssequence
+                (Scall (Some _t'4)
+                  (Evar _check_mem_aux (Tfunction
+                                         (Tcons
+                                           (tptr (Tstruct _bpf_state noattr))
                                            (Tcons tuint
-                                             (Tcons tuint (Tcons tuint Tnil)))))
-                                       tuint cc_default))
-                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                 (Etempvar _n tuint) :: (Etempvar _perm tuint) ::
-                 (Etempvar _chunk tuint) :: (Etempvar _addr tuint) :: nil))
-              (Sreturn (Some (Etempvar _t'3 tuint))))
-            (Sreturn (Some (Etempvar _check_mem__1 tuint)))))
-        (Ssequence
-          (Scall (Some _t'4)
-            (Evar _check_mem_aux (Tfunction
-                                   (Tcons (tptr (Tstruct _bpf_state noattr))
-                                     (Tcons tuint
+                                             (Tcons tuint
+                                               (Tcons tuint
+                                                 (Tcons tuint Tnil))))) tuint
+                                         cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                   (Etempvar _n tuint) :: (Etempvar _perm tuint) ::
+                   (Etempvar _chunk tuint) :: (Etempvar _addr tuint) :: nil))
+                (Sreturn (Some (Etempvar _t'4 tuint))))
+              (Sreturn (Some (Etempvar _check_mem__1 tuint)))))
+          (Ssequence
+            (Scall (Some _t'5)
+              (Evar _check_mem_aux (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
                                        (Tcons tuint
-                                         (Tcons tuint (Tcons tuint Tnil)))))
-                                   tuint cc_default))
-            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-             (Etempvar _n tuint) :: (Etempvar _perm tuint) ::
-             (Etempvar _chunk tuint) :: (Etempvar _addr tuint) :: nil))
-          (Sreturn (Some (Etempvar _t'4 tuint))))))))
+                                         (Tcons tuint
+                                           (Tcons tuint (Tcons tuint Tnil)))))
+                                     tuint cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+               (Etempvar _n tuint) :: (Etempvar _perm tuint) ::
+               (Etempvar _chunk tuint) :: (Etempvar _addr tuint) :: nil))
+            (Sreturn (Some (Etempvar _t'5 tuint)))))))))
 |}.
 
 Definition f_check_mem := {|
@@ -3715,7 +3800,7 @@ Definition f_bpf_interpreter := {|
        (Econst_int (Int.repr 1) tuint) ::
        (Efield
          (Ederef (Etempvar _bpf_ctx (tptr (Tstruct _memory_region noattr)))
-           (Tstruct _memory_region noattr)) _start_addr tulong) :: nil))
+           (Tstruct _memory_region noattr)) _start_addr tuint) :: nil))
     (Ssequence
       (Scall None
         (Evar _bpf_interpreter_aux (Tfunction
@@ -3751,8 +3836,8 @@ Definition f_bpf_interpreter := {|
 
 Definition composites : list composite_definition :=
 (Composite _memory_region Struct
-   ((_start_addr, tulong) :: (_block_size, tuint) :: (_block_perm, tuint) ::
-    (_block_ptr, tulong) :: nil)
+   ((_start_addr, tuint) :: (_block_size, tuint) :: (_block_perm, tuint) ::
+    (_block_ptr, tuint) :: nil)
    noattr ::
  Composite _bpf_state Struct
    ((_state_pc, tuint) :: (_bpf_flag, tint) ::
@@ -4060,6 +4145,10 @@ Definition global_definitions : list (ident * globdef fundef type) :=
  (_get_add, Gfun(Internal f_get_add)) ::
  (_get_sub, Gfun(Internal f_get_sub)) ::
  (_get_addr_ofs, Gfun(Internal f_get_addr_ofs)) ::
+ (_get_block_ptr, Gfun(Internal f_get_block_ptr)) ::
+ (_get_start_addr, Gfun(Internal f_get_start_addr)) ::
+ (_get_block_size, Gfun(Internal f_get_block_size)) ::
+ (_get_block_perm, Gfun(Internal f_get_block_perm)) ::
  (_is_well_chunk_bool, Gfun(Internal f_is_well_chunk_bool)) ::
  (_check_mem_aux2, Gfun(Internal f_check_mem_aux2)) ::
  (_check_mem_aux, Gfun(Internal f_check_mem_aux)) ::
@@ -4081,6 +4170,7 @@ Definition public_idents : list ident :=
  _step_opcode_mem_st_reg :: _step_opcode_mem_st_imm ::
  _step_opcode_mem_ld_reg :: _step_opcode_mem_ld_imm :: _step_opcode_branch ::
  _step_opcode_alu32 :: _step_opcode_alu64 :: _check_mem :: _check_mem_aux ::
+ _get_block_perm :: _get_block_size :: _get_start_addr :: _get_block_ptr ::
  ___builtin_debug :: ___builtin_write32_reversed ::
  ___builtin_write16_reversed :: ___builtin_read32_reversed ::
  ___builtin_read16_reversed :: ___builtin_fnmsub :: ___builtin_fnmadd ::

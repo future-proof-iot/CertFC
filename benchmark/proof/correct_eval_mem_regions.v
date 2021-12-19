@@ -83,8 +83,7 @@ Section Eval_mem_regions.
 
     repeat split; unfold step2.
     -
-      apply Smallstep.plus_star.
-      repeat forward_clight.
+      repeat forward_star.
 
       Transparent Archi.ptr64.
       rewrite Ptrofs.add_zero_l.
@@ -92,7 +91,6 @@ Section Eval_mem_regions.
 
       rewrite Hstart_addr; reflexivity.
 
-      reflexivity.
       reflexivity.
     - simpl.
       constructor.
