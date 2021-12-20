@@ -1,22 +1,18 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
-From Coq Require Import List.
+From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxState DxMonad DxInstructions.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+
+From bpf.clight Require Import interpreter.
+
 
 (**
-static void upd_pc_incr(struct bpf_state* st) {
-  ( *st).state_pc = ( *st).state_pc+1;
-  return ;
-}
-
-Definition upd_pc_incr: M unit := fun st => Some (tt, upd_pc_incr st).
+Check upd_pc_incr.
+upd_pc_incr
+     : M unit
  *)
-
-Definition int64_correct (x:int64_t) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-  Vlong x = v.
 
 Section Upd_pc_incr.
 
@@ -51,9 +47,9 @@ Section Upd_pc_incr.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
 
-  Lemma correct_function3_upd_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Lemma correct_function3_upd_pc_incr : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     repeat intro.
     unfold INV in H.
@@ -61,10 +57,10 @@ Section Upd_pc_incr.
     destruct c as (H_st & Hst_casted).
     unfold stateM_correct in H_st.
     destruct H_st as (Hv_eq & Hst).
-    subst v.
+    subst.
 
     (** we need to get the proof of `upd_pc_incr` load/store permission *)
-    apply (upd_pc_store _ _ (Int64.add (pc_loc st) (Cop.cast_int_long Ctypes.Signed (Int.repr 1))) _) in Hst as Hstore.
+    apply (upd_pc_store _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     destruct Hst; clear minj mregs mflags mperm.
     (** pc \in [ (state_block,0), (state_block,8) ) *)
@@ -78,19 +74,12 @@ Section Upd_pc_incr.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
+      repeat forward_star.
 
-      eapply Smallstep.plus_left'; eauto.
-      econstructor; eauto.
-      eapply Smallstep.plus_left'; eauto.
-      repeat (econstructor; eauto; try deref_loc_tactic).
       rewrite Ptrofs.add_zero.
       fold Ptrofs.zero in mpc.
       rewrite mpc; reflexivity.
       reflexivity.
-      reflexivity.
-      forward_plus.
-      forward_plus.
       reflexivity.
     -
       simpl.
@@ -104,7 +93,7 @@ Section Upd_pc_incr.
       left; reflexivity.
       apply POrderedType.PositiveOrder.neq_sym in n.
       symmetry.
-      apply (Mem.load_store_other AST.Mint64 m _ _ _ m1 Hstore chk _ _).
+      apply (Mem.load_store_other AST.Mint32 m _ _ _ m1 Hstore chk _ _).
       left; assumption.
 Qed.
 

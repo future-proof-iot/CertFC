@@ -16,6 +16,9 @@ Definition val64_correct (x:val64_t) (v: val) :=
 Definition valu32_correct (x:valu32_t) (v: val) :=
   x = v /\ exists vi, x = Vint vi.
 
+Definition addr_valu32_correct (x:valu32_t) (v: val) :=
+  x = v /\ exists b ofs, x = Vptr b ofs.
+
 Definition sint32_correct (x: sint32_t) (v: val) :=
   Vint x = v.
 

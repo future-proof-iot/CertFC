@@ -124,16 +124,17 @@ clight:
 
 PROOF = $(addprefix proof/correctproof/, correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_add.v correct_get_sub.v correct_check_mem_aux.v  correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v)
 
-CLIGHTLOGICDIR = $(wildcard proof/*.v)
+CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v Clightlogic.v MatchState.v CorrectRel.v CommonLemma.v)
 
 clightproof:
 	@echo $@
 	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 
-# CORRECTPROOFDIR = $(wildcard proof/*.v)
+# PROOF = $(wildcard proof/correctproof/*.v)
 correctproof:
 	@echo $@
+	rm proof/correctproof/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(PROOF) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 

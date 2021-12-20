@@ -1,17 +1,17 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxInstructions.
-From Coq Require Import List Lia.
+From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+
+From bpf.clight Require Import interpreter.
+
 
 (**
-static void upd_reg (struct bpf_state* st, unsigned int i, unsigned long long v){
-  ( *st).regsmap[i] = v;
-}
-
-Definition upd_reg (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg r v st).
+Check upd_reg.
+upd_reg
+     : reg -> val64_t -> M unit
  *)
 
 
@@ -48,9 +48,9 @@ Section Upd_reg.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
 
-  Instance correct_function3_upd_reg : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Instance correct_function3_upd_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     repeat intro.
     unfold INV in H.
@@ -62,7 +62,7 @@ Section Upd_reg.
     unfold stateless, val64_correct in H5.
     destruct H1 as (Hv_eq & Hst).
     destruct H5 as (Hc_eq & (vl & Hvl_eq)).
-    subst v0 v v1 c0.
+    subst.
 
     simpl in c.
     apply (upd_regs_store m _ _ c vl) in Hst as Hstore.
@@ -77,22 +77,16 @@ Section Upd_reg.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
-      repeat forward_plus.
+      repeat forward_star.
 
-      eapply Smallstep.plus_left'; eauto.
-      repeat (econstructor; eauto; try deref_loc_tactic).
       unfold Coqlib.align; simpl.
       rewrite Ptrofs.add_zero_l.
       assert (Heq: (8 + 8 * id_of_reg c)%Z = (Ptrofs.unsigned (Ptrofs.add (Ptrofs.repr 8) (Ptrofs.mul (Ptrofs.repr 8) (Ptrofs.of_intu (Int.repr (id_of_reg c))))))). {
         unfold Ptrofs.add, Ptrofs.mul.
-        unfold id_of_reg; destruct c; try unfold Ptrofs.of_intu, Ptrofs.of_int; repeat rewrite Ptrofs.unsigned_repr; try rewrite Int.unsigned_repr; try rewrite Int_max_unsigned_eq64; try rewrite Ptrofs_max_unsigned_eq64; try lia.
+        unfold id_of_reg; destruct c; try unfold Ptrofs.of_intu, Ptrofs.of_int; repeat rewrite Ptrofs.unsigned_repr; try rewrite Int.unsigned_repr; try rewrite Int_max_unsigned_eq64; try rewrite Ptrofs_max_unsigned_eq32; try lia.
       }
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
-      forward_plus.
-      forward_plus.
-      reflexivity.
     - simpl.
       constructor.
     - unfold unmodifies_effect, modifies, In.

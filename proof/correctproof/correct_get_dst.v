@@ -1,21 +1,17 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxInstructions.
-From Coq Require Import List Lia.
+From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+
+From bpf.clight Require Import interpreter.
 
 
 (**
-
-static unsigned int get_dst(unsigned long long ins1)
-{
-  return (unsigned int) ((ins1 & 4095LLU) >> 8LLU);
-}
-
-Definition get_dst (ins1: int64_t): M reg :=
-  returnM (int64_to_dst_reg ins1).
+Check get_dst.
+get_dst
+     : int64_t -> M reg
 
  *)
 
@@ -47,19 +43,19 @@ Section Get_dst.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => reg_correct x v.
 
-  Instance correct_function3_get_dst : correct_function3 p args res f fn (nil) true match_arg_list match_res.
+  Instance correct_function3_get_dst : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     (** how to use correct_* *)
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _ins1.
+    get_invariant_more _ins.
 
     unfold stateless, reg_int64_correct in H1.
     destruct H1 as (Hv_eq & (Hreg_range_0 & Hreg_range10)).
-    subst v.
+    subst.
 
     (**according to the type:
          static unsigned int get_dst(unsigned long long ins1)
@@ -73,26 +69,7 @@ Section Get_dst.
 
     repeat split; unfold step2.
     -
-      apply Smallstep.plus_star.
-      (** TODO: adding Sreturn  more info by Ltac2 *)
-      eapply Smallstep.plus_one; eauto.
-      eapply step_return_1.
-      +
-        repeat econstructor; eauto.
-        Transparent Archi.ptr64.
-        unfold Cop.sem_binary_operation.
-        unfold Cop.sem_add, Cop.classify_add, Ctypes.typeconv; simpl.
-        unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-        unfold Cop.sem_binary_operation.
-        unfold Cop.sem_add, Cop.classify_add, Ctypes.typeconv; simpl.
-        unfold Cop.sem_binarith, Cop.sem_cast, Cop.classify_cast; simpl.
-        reflexivity.
-        unfold Cop.sem_cast; simpl.
-        reflexivity.
-      +
-        unfold Cop.sem_cast; reflexivity.
-      + reflexivity.
+      repeat forward_star.
     -
       unfold match_res.
       unfold reg_correct. (**r we need the invariant reg \in [0; 10] *)

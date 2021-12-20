@@ -1,19 +1,17 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxFlag DxInstructions.
-From Coq Require Import List Lia.
+From bpf.src Require Import DxIntegers DxValues DxFlag DxMonad DxMemRegion DxState DxMonad DxInstructions.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+
+From bpf.clight Require Import interpreter.
+
 
 (**
-
-static void upd_flag(struct bpf_state* st, int f){
-  ( *st).bpf_flag = f;
-  return ;
-}
-
-Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag f st).
+Check upd_flag.
+upd_flag
+     : DxFlag.bpf_flag -> M unit
 *)
 
 Section Upd_flag.
@@ -48,9 +46,9 @@ Section Upd_flag.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => True.
 
-  Instance correct_function3_upd_flag : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Instance correct_function3_upd_flag : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     repeat intro.
     unfold INV in H.
@@ -59,7 +57,7 @@ Section Upd_flag.
     unfold stateM_correct in H1.
     unfold stateless, flag_correct in H3.
     destruct H1 as (Hv_eq & Hst).
-    subst v v0.
+    subst.
 
     simpl in c.
     apply (upd_flags_store _ _ _ (int_of_flag c)) in Hst as Hstore.
@@ -79,14 +77,7 @@ Section Upd_flag.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
-      repeat forward_plus.
-
-      eapply Smallstep.plus_left'; eauto.
-      repeat (econstructor; eauto; try deref_loc_tactic).
-      forward_plus.
-      forward_plus.
-      reflexivity.
+      repeat forward_star.
     - simpl.
       constructor.
     -

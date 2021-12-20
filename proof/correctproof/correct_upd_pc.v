@@ -1,17 +1,17 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
-From Coq Require Import List.
+From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxState DxMonad DxInstructions.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+
+From bpf.clight Require Import interpreter.
+
 
 (**
-static void upd_pc(struct bpf_state* st, unsigned long long pc) {
-  ( *st).state_pc = pc;
-  return ;
-}
-Definition upd_pc (p: int64_t): M unit := fun st => Some (tt, upd_pc p st).
+Check upd_pc.
+upd_pc
+     : sint32_t -> M unit
  *)
 
 Section Upd_pc.
@@ -21,7 +21,7 @@ Section Upd_pc.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(int64_t:Type)].
+  Definition args : list Type := [(sint32_t:Type)].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -40,25 +40,25 @@ Section Upd_pc.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
-                (DList.DCons (stateless int64_correct)
+                (DList.DCons (stateless sint32_correct)
                              (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
 
-  Instance correct_function3_upd_pc : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Instance correct_function3_upd_pc : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     repeat intro.
     unfold INV in H.
     get_invariant_more _st.
     get_invariant_more _pc.
     unfold stateM_correct in H1.
-    unfold stateless, int64_correct in H3.
+    unfold stateless, sint32_correct in H3.
     destruct H1 as (Hv_eq & Hst).
     (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
-    subst v0 v.
+    subst.
     
     (** we need to get the proof of `upd_pc` store permission *)
     apply (upd_pc_store _ _ c _) in Hst as Hstore.
@@ -75,20 +75,7 @@ Section Upd_pc.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
-      repeat forward_plus.
-
-      eapply Smallstep.plus_left'; eauto.
-      eapply step_assign; [do 4 econstructor; eauto | econstructor; eauto | econstructor; eauto| ..]. econstructor; eauto; reflexivity. (*
-        * do 4 econstructor; eauto. (**r how to do automatically in Ltac? *)
-        * econstructor; eauto.
-        * econstructor; eauto.
-        * econstructor; eauto; reflexivity.*)
-      forward_plus.
-      eapply Smallstep.plus_one; eauto.
-      eapply step_return_0.
-      reflexivity.
-      reflexivity.
+      repeat forward_star.
     - simpl.
       constructor.
     - unfold unmodifies_effect, modifies, In.
@@ -100,7 +87,7 @@ Section Upd_pc.
       left; reflexivity.
       apply POrderedType.PositiveOrder.neq_sym in n.
       symmetry.
-      apply (Mem.load_store_other AST.Mint64 m _ _ _ m1 Hstore chk _ _).
+      apply (Mem.load_store_other AST.Mint32 m _ _ _ m1 Hstore chk _ _).
       left; assumption.
 Qed.
 

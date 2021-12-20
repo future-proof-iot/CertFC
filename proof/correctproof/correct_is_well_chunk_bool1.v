@@ -1,14 +1,14 @@
-Require Import   interpreter.
-From dx.tests Require Import DxIntegers DxValues DxAST DxState DxMonad DxInstructions.
+From bpf.src Require Import DxIntegers DxValues DxAST DxState DxMonad DxInstructions.
 From dx.Type Require Import Bool.
 From dx Require Import IR.
-From Coq Require Import List.
+From Coq Require Import List ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 From compcert Require Import Coqlib.
 Import ListNotations.
-Require Import ZArith.
 
-Require Import clight_exec Clightlogic CorrectRel MatchState CommonLemma.
+From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState CommonLemma.
+
+From bpf.clight Require Import interpreter.
 
 
 Definition match_state (st_block : block) (_ : unit) (v : val) (st: stateM) (m : Memory.Mem.mem) : Prop :=
@@ -22,8 +22,8 @@ Variable st_block : block.
 Definition p : Clight.program := prog.
 
 (* [Args,Res] provides the mapping between the Coq and the C types *)
-Definition Args : list Type := [memory_chunk:Type].
-Definition Res : Type := bool.
+Definition args : list Type := [memory_chunk:Type].
+Definition res : Type := bool.
 
 (* [f] is a Coq Monadic function with the right type *)
 Definition f := is_well_chunk_bool.
@@ -41,16 +41,15 @@ Ltac exec_seq_of_labeled_statement :=
   end.
 
 
-Instance correct_function_is_well_chunk_bool2 : forall unmod,
+Instance correct_function_is_well_chunk_bool2 : forall unmod a,
   correct_function3
-    p Args Res f fn unmod true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool).
+    p args res f fn unmod true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool) a.
 Proof.
-  intro.
-  correct_function_from_body.
+  correct_function_from_body args.
   repeat intro.
-  simpl in H.
-  unfold Args in a.
-  car_cdr.
+  simpl in H. (*
+  unfold args in *.
+  car_cdr. *)
   unfold list_rel_arg in H.
   simpl in H.
   unfold app.
@@ -59,7 +58,7 @@ Proof.
   destruct p0 as (v',st'); intros.
   unfold fn at 2. unfold f_is_well_chunk_bool.
   unfold fn_body.
-  get_invariant _chunk0.
+  get_invariant _chunk.
   destruct c0 as [MC  C].
   unfold stateless in MC.
   unfold match_chunk in MC.

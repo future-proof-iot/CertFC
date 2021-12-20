@@ -1,18 +1,18 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxRegs DxState DxMonad DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+
+From bpf.clight Require Import interpreter.
+
 
 (**
-static unsigned long long eval_reg(struct bpf_state* st, unsigned int i){
-    return ( *st).regsmap[i];
-}
-
-
-Definition eval_reg (r: reg) : M val64_t := fun st => Some (eval_reg r st, st).
- *)
+Check DxMonad.eval_reg.
+eval_reg
+     : DxRegs.reg -> M val64_t
+*)
 
 
 Section Eval_reg.
@@ -47,9 +47,9 @@ Section Eval_reg.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
 
-  Instance correct_function3_eval_reg : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Instance correct_function3_eval_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     unfold f, INV.
     repeat intro.
@@ -58,7 +58,7 @@ Section Eval_reg.
     unfold stateM_correct in H1.
     unfold stateless, reg_correct in H3.
     destruct H1 as (Hptr & Hmatch).
-    subst v v0.
+    subst.
     destruct Hmatch.
     clear minj mpc mflags mperm.
     unfold match_registers in mregs.
@@ -73,11 +73,8 @@ Section Eval_reg.
       *)
     exists (Vlong vl), m, Events.E0.
     repeat split; unfold step2.
-    - apply Smallstep.plus_star.
-      eapply Smallstep.plus_one; eauto.
-      repeat (econstructor; eauto; try (deref_loc_tactic)).
-
-      Transparent Archi.ptr64.
+    -
+      repeat forward_star.
 
       rewrite Ptrofs.add_zero_l.
       unfold Coqlib.align; simpl.
@@ -90,12 +87,12 @@ Section Eval_reg.
         reflexivity.
         rewrite Int_max_unsigned_eq64.
         unfold id_of_reg; destruct c; lia.
-        rewrite Ptrofs_max_unsigned_eq64.
+        rewrite Ptrofs_max_unsigned_eq32.
         rewrite Int.unsigned_repr.
         unfold id_of_reg; destruct c; lia.
         rewrite Int_max_unsigned_eq64.
         unfold id_of_reg; destruct c; lia.
-        rewrite Ptrofs_max_unsigned_eq64.
+        rewrite Ptrofs_max_unsigned_eq32.
         lia.
       }
       rewrite Heq in Hreg_load.
@@ -103,9 +100,7 @@ Section Eval_reg.
       reflexivity.
 
       unfold Cop.sem_cast; reflexivity.
-    -
-      unfold match_res.
-      unfold val64_correct.
+    - 
       unfold DxState.eval_reg.
       symmetry; assumption.
     - unfold DxState.eval_reg; exists vl; symmetry; assumption.

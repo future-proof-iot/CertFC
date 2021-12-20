@@ -47,9 +47,7 @@ Section Get_sub.
 
   Instance correct_function3_get_sub : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
-    intros. unfold args in a.
-    car_cdr.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     (** how to use correct_* *)
     unfold INV.

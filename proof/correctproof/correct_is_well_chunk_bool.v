@@ -40,12 +40,10 @@ Ltac exec_seq_of_labeled_statement :=
       change (seq_of_labeled_statement X) with x
   end.
 
-Instance correct_function_is_well_chunk_bool2 : forall a, correct_function3
-    p args res f fn [] true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool) a.
+Instance correct_function_is_well_chunk_bool2 : forall unmod a, correct_function3
+    p args res f fn unmod true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool) a.
 Proof.
-  intros. unfold args in a.
-  car_cdr.
-  correct_function_from_body.
+  correct_function_from_body args.
   correct_body.
   unfold INV, f.
   repeat intro.

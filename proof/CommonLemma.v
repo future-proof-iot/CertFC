@@ -1,9 +1,8 @@
 From compcert Require Import Coqlib Clight Integers Ctypes.
 From bpf.proof Require Import Clightlogic.
 From Ltac2 Require Import Ltac2 Message.
-From Coq Require Import List Lia.
+From Coq Require Import List Lia ZArith.
 Import ListNotations.
-Require Import ZArith.
 
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
     list_norepet_dec eq_dec l = left H ->
@@ -19,7 +18,9 @@ Ltac list_no_repet :=
      eapply list_no_repet_dec with (eq_dec := Pos.eq_dec); reflexivity.
 
 
-Ltac correct_function_from_body :=
+Ltac correct_function_from_body args :=
+  intros; unfold args in *;
+  car_cdr;
   apply correct_function_from_body;
   [
     list_disjoint |
@@ -29,8 +30,8 @@ Ltac correct_function_from_body :=
 
 Ltac get_inv_from_list VAR L :=
   match L with
-  | nil => fail -1
-  | cons (?V,?T,?P) ?L' =>
+  | [] => fail -1
+  | (?V,?T,?P) :: ?L' =>
       match constr:(VAR = V) with
       | ?X = ?X => constr:((T,P))
       |    _    => get_inv_from_list VAR L'
@@ -78,37 +79,12 @@ Ltac correct_body :=
   end.
 
 
-
-(*
-Ltac forward_seq :=
+Ltac exec_seq_of_labeled_statement :=
   match goal with
-  | |- Smallstep.plus _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_seq | idtac]
+  | |- context[seq_of_labeled_statement ?X] =>
+      let x := (eval simpl in (seq_of_labeled_statement X)) in
+      change (seq_of_labeled_statement X) with x; try simpl
   end.
-
-Ltac forward_call_one_arg :=
-  match goal with
-  | |- Smallstep.plus _ _ (State _ (Scall _ _ _) _ _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_call; [reflexivity | eapply eval_Elvalue;[eapply eval_Evar_global; reflexivity | eapply deref_loc_reference; reflexivity] | eapply eval_Econs; [eapply eval_Etempvar; reflexivity | reflexivity | eapply eval_Enil] | econstructor; eauto | reflexivity] | idtac]
-  end.
-
-Ltac forward_returnstate :=
-  match goal with
-  | |- Smallstep.plus _ _ (Returnstate _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_returnstate | idtac]
-  end.
-
-Ltac forward_skip_seq :=
-  match goal with
-  | |- Smallstep.plus _ _ (State _ Sskip (Kseq _ _) _ _ _) _ _ =>
-      eapply Smallstep.plus_left'; eauto; [eapply step_skip_seq | idtac]
-  end.
-
-Ltac forward_if :=
-  match goal with
-  | |- Smallstep.plus _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
-  eapply Smallstep.plus_left'; eauto; [eapply step_ifthenelse; [eapply eval_Etempvar; rewrite Maps.PTree.gss; reflexivity | reflexivity] | idtac]
-  end.*)
 
 (**copy from cpdt *)
 Ltac completer :=
@@ -184,13 +160,6 @@ Ltac forward_eval_expr :=
     end
   end.
 
-Ltac exec_seq_of_labeled_statement :=
-  match goal with
-  | |- context[seq_of_labeled_statement ?X] =>
-      let x := (eval simpl in (seq_of_labeled_statement X)) in
-      change (seq_of_labeled_statement X) with x; try simpl
-  end.
-
 Ltac forward_expr :=
   match goal with
   | |- eval_expr _ _ _ _ _ _ =>
@@ -216,11 +185,21 @@ Ltac forward_clight_ss :=
     (** assign *)
   | |- Smallstep.step _ _ (State _ (Sassign _ _ ) _ _ _ _) _ _ =>
       repeat (econstructor; eauto; try deref_loc_tactic)
+    (** set *)
+  | |- Smallstep.step _ _ (State _ (Sset _ _) _ _ _ _) _ _ =>
+      eapply step_set; forward_expr
     (** seq *)
   | |- Smallstep.step _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
       eapply step_seq
   | |- Smallstep.step _ _ (State _ Sskip (Kseq _ _) _ _ _ ) _ _ =>
       eapply step_skip_seq
+  | |- Smallstep.step _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
+      eapply step_ifthenelse;[
+        (** eval_expr e le m a v1 *)
+        forward_expr |
+        try reflexivity
+        (** bool_val v1 (typeof a) m = Some b *)
+      ]
     (** switch *)
   | |- Smallstep.step _ _ (State _ (Sswitch _ _) _ _ _ _) _ _ =>
       eapply step_switch; [
@@ -265,11 +244,21 @@ Ltac forward_clight :=
     (** assign *)
   | |- step _ _ (State _ (Sassign _ _ ) _ _ _ _) _ _ =>
       repeat (econstructor; eauto; try deref_loc_tactic)
+    (** set *)
+  | |- step _ _ (State _ (Sset _ _) _ _ _ _) _ _ =>
+      eapply step_set; forward_expr
     (** seq *)
   | |- step _ _ (State _ (Ssequence _ _) _ _ _ _) _ _ =>
       eapply step_seq
   | |- step _ _ (State _ Sskip (Kseq _ _) _ _ _ ) _ _ =>
       eapply step_skip_seq
+  | |- step _ _ (State _ (Sifthenelse _ _ _) _ _ _ _) _ _ =>
+      eapply step_ifthenelse;[
+        (** eval_expr e le m a v1 *)
+        forward_expr |
+        try reflexivity
+        (** bool_val v1 (typeof a) m = Some b *)
+      ]
     (** switch *)
   | |- step _ _ (State _ (Sswitch _ _) _ _ _ _) _ _ =>
       eapply step_switch; [
@@ -297,10 +286,23 @@ Ltac forward_clight :=
 
 
 Ltac forward_star :=
+  unfold step2;
   match goal with
   (** Inductive star (ge: genv): state -> trace -> state -> Prop :=
   | star_refl: forall s,
       star ge s E0 s *)
+  | |- Smallstep.star _  _ ?s1 _ ?s2 =>
+    let res1 := (eval simpl in s1) in
+    let res2 := (eval simpl in s2) in
+      match res1 with
+      | Returnstate _ _ _ =>
+        match res2 with
+        | Returnstate _ _ _ =>
+          (eapply Smallstep.star_refl || fail "debug `eapply Smallstep.star_refl`")
+        | _ => eapply Smallstep.star_step; eauto
+        end
+      | _ => eapply Smallstep.star_step; eauto
+      end (*
   | |- Smallstep.star _  _ ?s _ ?s =>
     eapply Smallstep.star_refl
   | |- Smallstep.star _  _ (Returnstate _ _ _) _ (Returnstate _ _ _) =>
@@ -310,7 +312,7 @@ Ltac forward_star :=
       step ge s1 t1 s2 -> star ge s2 t2 s3 -> t = t1 ** t2 ->
       star ge s1 t s3. *)
   | |- Smallstep.star _ _ _ _ _ =>
-    eapply Smallstep.star_step; eauto
+    eapply Smallstep.star_step; eauto *)
   | |- Smallstep.step _ _ _ _ _ =>
       forward_clight_ss
   | |- step _ _ _ _ _ =>

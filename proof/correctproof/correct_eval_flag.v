@@ -1,17 +1,17 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxFlag DxInstructions.
-From Coq Require Import List Lia.
+From bpf.src Require Import DxIntegers DxValues DxFlag DxMemRegion DxState DxMonad DxInstructions.
+From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
-Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+
+From bpf.clight Require Import interpreter.
+
 
 (**
-static int eval_flag(struct bpf_state* st){
-  return ( *st).bpf_flag;
-}
-
-Definition eval_flag : M bpf_flag := fun st => Some (eval_flag st, st).
+Check eval_flag.
+eval_flag
+     : M DxFlag.bpf_flag
 *)
 
 Section Eval_flag.
@@ -44,9 +44,9 @@ Section Eval_flag.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => flag_correct x v.
 
-  Instance correct_function3_eval_flag : correct_function3 p args res f fn modifies false match_arg_list match_res.
+  Instance correct_function3_eval_flag : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     repeat intro.
     unfold INV in H.
@@ -54,7 +54,7 @@ Section Eval_flag.
     destruct c as (H_st & Hst_casted).
     unfold stateM_correct in H_st.
     destruct H_st as (Hv_eq & Hst).
-    subst v.
+    subst.
 
     (** we need to get the value of pc in the memory *)
     destruct Hst; clear minj mpc mregs mperm.
@@ -70,14 +70,12 @@ Section Eval_flag.
 
     repeat split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      apply Smallstep.plus_star.
-      forward_plus.
-      repeat (econstructor; eauto; try deref_loc_tactic).
+      repeat forward_star.
+
       unfold Coqlib.align; simpl.
       rewrite Ptrofs.add_zero_l.
       rewrite mflags; reflexivity.
       econstructor; eauto.
-      reflexivity.
     - simpl.
       constructor.
       reflexivity.

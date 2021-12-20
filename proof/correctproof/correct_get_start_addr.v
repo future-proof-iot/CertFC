@@ -41,13 +41,11 @@ Section Get_start_addr.
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := (stateless valu32_correct).
 
   Instance correct_function3_get_start_addr : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
-    intros. unfold args in a.
-    car_cdr.
-    correct_function_from_body.
+    correct_function_from_body args.
     correct_body.
     (** how to use correct_* *)
     unfold INV.
