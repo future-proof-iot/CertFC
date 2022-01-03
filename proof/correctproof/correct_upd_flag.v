@@ -28,6 +28,7 @@ Section Upd_flag.
   Definition f : arrow_type args (M res) := DxMonad.upd_flag.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_flag.
@@ -35,7 +36,7 @@ Section Upd_flag.
   Definition modifies : list block := [state_block]. (* of the C code *)
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -54,13 +55,13 @@ Section Upd_flag.
     unfold INV in H.
     get_invariant_more _st.
     get_invariant_more _f.
-    unfold stateM_correct in H1.
-    unfold stateless, flag_correct in H3.
-    destruct H1 as (Hv_eq & Hst).
+    unfold stateM_correct in H0.
+    unfold stateless, flag_correct in H2.
+    destruct H0 as (Hv_eq & Hst).
     subst.
 
     simpl in c.
-    apply (upd_flags_store _ _ _ (int_of_flag c)) in Hst as Hstore.
+    apply (upd_flags_store _ _ _ _ (CommonLib.int_of_flag c)) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** we need to get the value of flag in the memory *)
     destruct Hst; clear minj mpc mregs mperm.
@@ -82,11 +83,12 @@ Section Upd_flag.
       constructor.
     -
       unfold unmodifies_effect.
+      simpl.
       intros.
       destruct (Pos.eq_dec state_block b).
       subst b.
       exfalso.
-      apply H1.
+      apply H0.
       left; reflexivity.
       apply POrderedType.PositiveOrder.neq_sym in n.
       symmetry.

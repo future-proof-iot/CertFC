@@ -14,37 +14,37 @@ From bpf.src Require Import Int16 CoqIntegers DxIntegers InfComp.
   *)
 
 (******************** Val2PTR *******************)
-Definition valptr32_t := val.
+Definition valptr8_t := val.
 Definition valptr_null := Vnullptr.
 
-Definition C_U32ptr_zero: Csyntax.expr :=
-  Csyntax.Eval valptr_null C_U32_pointer.
+Definition C_U8ptr_zero: Csyntax.expr :=
+  Csyntax.Eval valptr_null C_U8_pointer.
 
-Definition comp_eq_ptr32_zero (x: val): bool :=
+Definition comp_eq_ptr8_zero (x: val): bool :=
   match x with
   | Vint n1 => Int.eq n1 Int.zero
   | _ => false
   end.
 
-Definition valptr32CompilableType :=
-  MkCompilableType valptr32_t C_U32_pointer.
+Definition valptr8CompilableType :=
+  MkCompilableType valptr8_t C_U8_pointer.
 
-Definition valptr32SymbolType :=
-  MkCompilableSymbolType nil (Some valptr32CompilableType).
+Definition valptr8SymbolType :=
+  MkCompilableSymbolType nil (Some valptr8CompilableType).
 
-Definition Const_valptr_null := constant valptr32SymbolType valptr_null C_U32ptr_zero.
+Definition Const_valptr_null := constant valptr8SymbolType valptr_null C_U8ptr_zero.
 
-Definition valptr32ToboolSymbolType :=
-  MkCompilableSymbolType [valptr32CompilableType] (Some boolCompilableType).
+Definition valptr8ToboolSymbolType :=
+  MkCompilableSymbolType [valptr8CompilableType] (Some boolCompilableType).
 
-Definition C_U32ptr_eq (x y: Csyntax.expr) : Csyntax.expr :=
-  Csyntax.Ebinop Cop.Oeq x y C_U32_pointer.
+Definition C_U8ptr_eq (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oeq x y C_U8_pointer.
 
-Definition Const_comp_eq_ptr32_zero :=
-  MkPrimitive valptr32ToboolSymbolType
-                comp_eq_ptr32_zero
+Definition Const_comp_eq_ptr8_zero :=
+  MkPrimitive valptr8ToboolSymbolType
+                comp_eq_ptr8_zero
                 (fun es => match es with
-                           | [e1] => Ok (C_U32ptr_eq e1 C_U32ptr_zero)
+                           | [e1] => Ok (C_U8ptr_eq e1 C_U8ptr_zero)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -490,9 +490,9 @@ Definition Const_valU32Toval64 :=
                            end).
 
 Module Exports.
-  Definition valptr32CompilableType := valptr32CompilableType.
+  Definition valptr8CompilableType := valptr8CompilableType.
   Definition Const_valptr_null      := Const_valptr_null.
-  Definition Const_comp_eq_ptr32_zero:= Const_comp_eq_ptr32_zero.
+  Definition Const_comp_eq_ptr8_zero:= Const_comp_eq_ptr8_zero.
 
   Definition valU32CompilableType   := valU32CompilableType.
   Definition Const_val32_zero       := Const_val32_zero.

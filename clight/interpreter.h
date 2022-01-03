@@ -33,7 +33,7 @@ struct memory_region {
   unsigned int start_addr;
   unsigned int block_size;
   unsigned int block_perm;
-  unsigned int* block_ptr;
+  unsigned char* block_ptr;
 };
 
 struct bpf_state {

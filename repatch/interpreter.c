@@ -48,11 +48,11 @@ static void upd_flag(struct bpf_state* st, int f){
   return ;
 }
 
-static unsigned int eval_mrs_num(struct bpf_state* st){
+static unsigned int eval_mem_num(struct bpf_state* st){
   return (*st).mrs_num;
 }
 
-static struct memory_region *eval_mrs_regions(struct bpf_state* st){
+static struct memory_region *eval_mem_regions(struct bpf_state* st){
   return (*st).mrs;
 }
 
@@ -69,7 +69,7 @@ void add_mem_region_ctx(struct bpf_state* st, struct memory_region* mr){
   return ;
 } */
 
-static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned int* addr){
+static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned char* addr){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
@@ -84,7 +84,7 @@ static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, uns
   //}
 }
 
-static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned int* addr, unsigned long long v){
+static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned char* addr, unsigned long long v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
@@ -99,7 +99,7 @@ static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned int
   //}
 }
 
-static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned int* addr, int v){
+static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned char* addr, int v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
@@ -218,7 +218,7 @@ static unsigned int get_addr_ofs(unsigned long long x, int ofs)
   return (unsigned int) (x + (unsigned long long) ofs);
 }
 
-unsigned int *get_block_ptr(struct memory_region *mr)
+unsigned char *get_block_ptr(struct memory_region *mr)
 {
   return (*mr).block_ptr;
 }
@@ -255,10 +255,10 @@ static _Bool is_well_chunk_bool(unsigned int chunk)
   }
 }
 
-static unsigned int *check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigned int chunk)
+static unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigned int chunk)
 {
   _Bool well_chunk;
-  unsigned int *ptr;
+  unsigned char *ptr;
   unsigned int start;
   unsigned int size;
   unsigned int lo_ofs;
@@ -272,7 +272,7 @@ static unsigned int *check_mem_aux2(struct memory_region *mr, unsigned int addr,
     hi_ofs = get_add(lo_ofs, chunk);
     if (0U <= lo_ofs && hi_ofs < size) {
       if (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk) {
-        return (unsigned int *) (uintptr_t) ((unsigned int) (uintptr_t) ptr + lo_ofs);
+        return ptr + lo_ofs;
       } else {
         return 0;
       }
@@ -284,12 +284,12 @@ static unsigned int *check_mem_aux2(struct memory_region *mr, unsigned int addr,
   }
 }
 
-unsigned int *check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr)
+unsigned char *check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr)
 {
   unsigned int n;
   struct memory_region *cur_mr;
   unsigned int mr_perm;
-  unsigned int *check_mem;
+  unsigned char *check_mem;
   if (num == 0U) {
     return 0;
   } else {
@@ -309,11 +309,11 @@ unsigned int *check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int
   }
 }
 
-unsigned int *check_mem(struct bpf_state* st, unsigned int perm, unsigned int chunk, unsigned int addr)
+unsigned char *check_mem(struct bpf_state* st, unsigned int perm, unsigned int chunk, unsigned int addr)
 {
   _Bool well_chunk;
   unsigned int mem_reg_num;
-  unsigned int *check_mem;
+  unsigned char *check_mem;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
     mem_reg_num = eval_mrs_num(st);
@@ -677,7 +677,7 @@ void step_opcode_mem_ld_imm(struct bpf_state* st, int imm, int pc, int len, unsi
 void step_opcode_mem_ld_reg(struct bpf_state* st, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_ld;
-  unsigned int *addr_ptr;
+  unsigned char *addr_ptr;
   unsigned long long v;
   opcode_ld = get_opcode_mem_ld_reg(op);
   switch (opcode_ld) {
@@ -735,7 +735,7 @@ void step_opcode_mem_ld_reg(struct bpf_state* st, unsigned int addr, int pc, uns
 void step_opcode_mem_st_imm(struct bpf_state* st, int imm, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
-  unsigned int *addr_ptr;
+  unsigned char *addr_ptr;
   opcode_st = get_opcode_mem_st_imm(op);
   switch (opcode_st) {
     case 98:
@@ -788,7 +788,7 @@ void step_opcode_mem_st_imm(struct bpf_state* st, int imm, unsigned int addr, in
 void step_opcode_mem_st_reg(struct bpf_state* st, unsigned long long src64, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
-  unsigned int *addr_ptr;
+  unsigned char *addr_ptr;
   opcode_st = get_opcode_mem_st_reg(op);
   switch (opcode_st) {
     case 99:

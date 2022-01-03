@@ -53,8 +53,8 @@ Section Get_dst.
     repeat intro.
     get_invariant_more _ins.
 
-    unfold stateless, reg_int64_correct in H1.
-    destruct H1 as (Hv_eq & (Hreg_range_0 & Hreg_range10)).
+    unfold stateless, reg_int64_correct in H0.
+    destruct H0 as (Hv_eq & (Hreg_range_0 & Hreg_range10)).
     subst.
 
     (**according to the type:
@@ -73,7 +73,6 @@ Section Get_dst.
     -
       unfold match_res.
       unfold reg_correct. (**r we need the invariant reg \in [0; 10] *)
-      unfold id_of_reg.
       unfold int64_0xfff, int64_8.
       remember ((Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8)))) as X.
       Ltac zeqb :=

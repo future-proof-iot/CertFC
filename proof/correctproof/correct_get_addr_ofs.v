@@ -37,6 +37,7 @@ Section Get_addr_ofs.
   Definition f : arrow_type args (M res) := get_addr_ofs.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_addr_ofs.
@@ -61,9 +62,9 @@ Section Get_addr_ofs.
     get_invariant_more _x.
     get_invariant_more _ofs.
 
-    unfold stateless, val64_correct in H1.
-    unfold stateless, sint32_correct in H3.
-    destruct H1 as (Hc_eq & (vi & Hvi_eq)).
+    unfold stateless, val64_correct in H0.
+    unfold stateless, sint32_correct in H2.
+    destruct H0 as (Hc_eq & (vi & Hvi_eq)).
     subst c v v0.
 
     (**according to the type of eval_pc:

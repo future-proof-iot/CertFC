@@ -10,11 +10,6 @@ From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState Comm
 
 From bpf.clight Require Import interpreter.
 
-
-Definition match_state (st_block : block) (_ : unit) (v : val) (st: stateM) (m : Memory.Mem.mem) : Prop :=
-  v = Vptr st_block Ptrofs.zero /\ match_state st_block st m.
-
-
 Section Is_well_chunk_bool.
 Variable st_block : block.
 
@@ -31,7 +26,8 @@ Locate f_is_well_chunk_bool.
 (* [fn] is the Cligth function which has the same behaviour as [f] *)
 Definition fn: Clight.function := f_is_well_chunk_bool.
 
-
+Definition match_state (st_block ins_block : block) (_ : unit) (v : val) (st: stateM) (m : Memory.Mem.mem) : Prop :=
+  v = Vptr st_block Ptrofs.zero /\ match_state st_block ins_block st m.
 
 Ltac exec_seq_of_labeled_statement :=
   match goal with
@@ -52,7 +48,7 @@ Proof.
   destruct p0 as (v',st'); intros.
 
   get_invariant_more _chunk.
-  unfold stateless, match_chunk in H1.
+  unfold stateless, match_chunk in H0.
   subst.
 
   exists (Vint (if v' then Integers.Int.one else Integers.Int.zero)).
@@ -60,8 +56,8 @@ Proof.
   
   repeat split; unfold step2.
   -
-    unfold memory_chunk_to_valu32, well_chunk_Z in p0, H2.
-    unfold align_chunk in p0, H2.
+    unfold memory_chunk_to_valu32, well_chunk_Z in p0.
+    unfold align_chunk in p0.
     destruct c; inv Heq; simpl.
     all: try
     forward_star;
@@ -76,57 +72,6 @@ Proof.
     destruct c; inversion Heq; reflexivity.
 Qed.
 
-(*
-Instance correct_function_is_well_chunk_bool2 : forall unmod,
-  correct_function3
-    p Args Res f fn unmod true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool).
-Proof.
-  intro.
-  correct_function_from_body.
-  repeat intro.
-  simpl in H.
-  unfold Args in a.
-  car_cdr.
-  unfold list_rel_arg in H.
-  simpl in H.
-  unfold app.
-  unfold f,f_is_well_chunk_bool.
-  destruct (is_well_chunk_bool c st) eqn:E ; auto.
-  destruct p0 as (v',st'); intros.
-  unfold fn at 2. unfold f_is_well_chunk_bool.
-  unfold fn_body.
-  get_invariant _chunk.
-  destruct c0 as [MC  C].
-  unfold stateless in MC.
-  unfold match_chunk in MC.
-  subst.
-  exists (Vint (if v' then Integers.Int.one else Integers.Int.zero)).
-  exists m. exists Events.E0.
-  repeat split.
-  + eapply Smallstep.star_step; eauto.
-    econstructor; eauto.
-    econstructor;eauto.
-    constructor.
-    unfold Integers.Int.one.
-    destruct c;inv E.
-    Ltac switch :=
-      match goal with
-        |- context[Integers.Int.unsigned (Integers.Int.repr ?X)] =>
-          change (Integers.Int.unsigned (Integers.Int.repr X)) with X;
-          exec_seq_of_labeled_statement
-      end;
-      eapply Smallstep.star_step; eauto;
-      [econstructor;eauto |
-        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
-                                            econstructor; eauto|]
-      ]; apply Smallstep.star_refl.
-    all: try switch.
-    reflexivity.
-  + simpl.
-    constructor.
-    destruct v' ; reflexivity.
-Qed.
-*)
 End Is_well_chunk_bool.
 
 Existing Instance correct_function_is_well_chunk_bool2.

@@ -33,12 +33,13 @@ Section Eval_mrs_regions.
   Definition f : arrow_type args (M res) := eval_mrs_regions.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_mrs_regions.
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -58,8 +59,8 @@ Section Eval_mrs_regions.
     repeat intro.
     get_invariant_more _st.
 
-    unfold stateM_correct in H1.
-    destruct H1 as (Hv_eq & Hst).
+    unfold stateM_correct in H0.
+    destruct H0 as (Hv_eq & Hst).
     destruct Hst.
     clear minj mpc mflags mregs mperm.
     destruct mrs_num as (Hmrs_num_ld & Hmrs_num_gt).

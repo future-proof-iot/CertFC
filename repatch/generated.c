@@ -1,10 +1,10 @@
 struct memory_region;
 struct bpf_state;
 struct memory_region {
-  unsigned int *start_addr;
+  unsigned int start_addr;
   unsigned int block_size;
   unsigned int block_perm;
-  unsigned int *block_ptr;
+  unsigned char *block_ptr;
 };
 
 struct bpf_state {
@@ -55,7 +55,7 @@ extern unsigned int get_sub(unsigned int, unsigned int);
 
 extern unsigned int get_addr_ofs(unsigned long long, int);
 
-extern unsigned int *get_block_ptr(struct memory_region *);
+extern unsigned char *get_block_ptr(struct memory_region *);
 
 extern unsigned int get_start_addr(struct memory_region *);
 
@@ -65,11 +65,11 @@ extern unsigned int get_block_perm(struct memory_region *);
 
 extern _Bool is_well_chunk_bool(unsigned int);
 
-extern unsigned int *check_mem_aux2(struct memory_region *, unsigned int, unsigned int);
+extern unsigned char *check_mem_aux2(struct memory_region *, unsigned int, unsigned int);
 
-extern unsigned int *check_mem_aux(unsigned int, unsigned int, unsigned int, unsigned int);
+extern unsigned char *check_mem_aux(unsigned int, unsigned int, unsigned int, unsigned int);
 
-extern unsigned int *check_mem(unsigned int, unsigned int, unsigned int);
+extern unsigned char *check_mem(unsigned int, unsigned int, unsigned int);
 
 extern _Bool comp_and_0x08_byte(unsigned char);
 
@@ -219,7 +219,7 @@ unsigned int get_addr_ofs(unsigned long long x$150, int ofs)
   return (unsigned int) (x$150 + (unsigned long long) ofs);
 }
 
-unsigned int *get_block_ptr(struct memory_region *mr)
+unsigned char *get_block_ptr(struct memory_region *mr)
 {
   return (*mr).block_ptr;
 }
@@ -256,10 +256,10 @@ _Bool is_well_chunk_bool(unsigned int chunk)
   }
 }
 
-unsigned int *check_mem_aux2(struct memory_region *mr$164, unsigned int addr, unsigned int chunk$168)
+unsigned char *check_mem_aux2(struct memory_region *mr$164, unsigned int addr, unsigned int chunk$168)
 {
   _Bool well_chunk;
-  unsigned int *ptr;
+  unsigned char *ptr;
   unsigned int start;
   unsigned int size;
   unsigned int lo_ofs;
@@ -285,12 +285,12 @@ unsigned int *check_mem_aux2(struct memory_region *mr$164, unsigned int addr, un
   }
 }
 
-unsigned int *check_mem_aux(unsigned int num, unsigned int perm, unsigned int chunk$186, unsigned int addr$188)
+unsigned char *check_mem_aux(unsigned int num, unsigned int perm, unsigned int chunk$186, unsigned int addr$188)
 {
   unsigned int n$190;
   struct memory_region *cur_mr;
   unsigned int mr_perm;
-  unsigned int *check_mem$196;
+  unsigned char *check_mem$196;
   if (num == 0U) {
     return 0;
   } else {
@@ -310,11 +310,11 @@ unsigned int *check_mem_aux(unsigned int num, unsigned int perm, unsigned int ch
   }
 }
 
-unsigned int *check_mem(unsigned int perm$198, unsigned int chunk$200, unsigned int addr$202)
+unsigned char *check_mem(unsigned int perm$198, unsigned int chunk$200, unsigned int addr$202)
 {
   _Bool well_chunk$204;
   unsigned int mem_reg_num;
-  unsigned int *check_mem$208;
+  unsigned char *check_mem$208;
   well_chunk$204 = is_well_chunk_bool(chunk$200);
   if (well_chunk$204) {
     mem_reg_num = eval_mrs_num();
@@ -681,13 +681,13 @@ void step_opcode_mem_ld_imm(int imm, int pc$254, int len, unsigned int dst$258, 
 void step_opcode_mem_ld_reg(unsigned int addr$270, int pc$272, unsigned int dst$274, unsigned char op$276)
 {
   unsigned char opcode_ld$278;
-  unsigned int *addr_ptr;
+  unsigned char *addr_ptr;
   unsigned long long v;
-  unsigned int *addr_ptr$284;
+  unsigned char *addr_ptr$284;
   unsigned long long v$286;
-  unsigned int *addr_ptr$288;
+  unsigned char *addr_ptr$288;
   unsigned long long v$290;
-  unsigned int *addr_ptr$292;
+  unsigned char *addr_ptr$292;
   unsigned long long v$294;
   opcode_ld$278 = get_opcode_mem_ld_reg(op$276);
   switch (opcode_ld$278) {
@@ -745,10 +745,10 @@ void step_opcode_mem_ld_reg(unsigned int addr$270, int pc$272, unsigned int dst$
 void step_opcode_mem_st_imm(int imm$296, unsigned int addr$298, int pc$300, unsigned int dst$302, unsigned char op$304)
 {
   unsigned char opcode_st;
-  unsigned int *addr_ptr$308;
-  unsigned int *addr_ptr$310;
-  unsigned int *addr_ptr$312;
-  unsigned int *addr_ptr$314;
+  unsigned char *addr_ptr$308;
+  unsigned char *addr_ptr$310;
+  unsigned char *addr_ptr$312;
+  unsigned char *addr_ptr$314;
   opcode_st = get_opcode_mem_st_imm(op$304);
   switch (opcode_st) {
     case 98:
@@ -801,10 +801,10 @@ void step_opcode_mem_st_imm(int imm$296, unsigned int addr$298, int pc$300, unsi
 void step_opcode_mem_st_reg(unsigned long long src64$316, unsigned int addr$318, int pc$320, unsigned int dst$322, unsigned char op$324)
 {
   unsigned char opcode_st$326;
-  unsigned int *addr_ptr$328;
-  unsigned int *addr_ptr$330;
-  unsigned int *addr_ptr$332;
-  unsigned int *addr_ptr$334;
+  unsigned char *addr_ptr$328;
+  unsigned char *addr_ptr$330;
+  unsigned char *addr_ptr$332;
+  unsigned char *addr_ptr$334;
   opcode_st$326 = get_opcode_mem_st_reg(op$324);
   switch (opcode_st$326) {
     case 99:

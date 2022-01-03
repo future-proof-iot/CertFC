@@ -66,7 +66,7 @@ Definition get_sub (x y: valu32_t): M valu32_t := returnM (Val.sub x y).
 
 Definition get_addr_ofs (x: val64_t) (ofs: sint32_t): M valu32_t := returnM (val_intuoflongu (Val.addl x (Val.longofint (sint32_to_vint ofs)))).
 
-Definition get_block_ptr (mr: memory_region) : M valptr32_t := returnM (block_ptr mr).
+Definition get_block_ptr (mr: memory_region) : M valptr8_t := returnM (block_ptr mr).
 
 Definition get_start_addr (mr: memory_region): M valu32_t := returnM (start_addr mr).
 
@@ -80,10 +80,10 @@ Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
   | _ => returnM false
   end.
 
-Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_chunk): M valptr32_t :=
+Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_chunk): M valptr8_t :=
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then
-      do ptr    <- get_block_ptr mr;
+      do ptr    <- get_block_ptr mr; (**r Vptr b 0 *)
       do start  <- get_start_addr mr;
       do size   <- get_block_size mr;
       do lo_ofs <- get_sub addr start;
@@ -91,7 +91,7 @@ Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_ch
         if (andb (compu_le_32 val32_zero lo_ofs) (compu_lt_32 hi_ofs size)) then
           if (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
                    (comp_eq_32 val32_zero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))) then
-            returnM (Val.add ptr lo_ofs) (**r > 0 *)
+            returnM (Val.add ptr lo_ofs) (**r Vptr b lo_ofs *)
           else
             returnM valptr_null (**r = 0 *)
         else
@@ -99,7 +99,7 @@ Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_ch
     else
       returnM valptr_null.
 
-Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: valu32_t) {struct num}: M valptr32_t :=
+Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: valu32_t) {struct num}: M valptr8_t :=
   match num with
   | O => returnM valptr_null
   | S n =>
@@ -107,7 +107,7 @@ Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr
     do mr_perm  <- get_block_perm cur_mr;
       if (perm_ge mr_perm perm) then
         do check_mem <- check_mem_aux2 cur_mr addr chunk;
-          if comp_eq_ptr32_zero check_mem then
+          if comp_eq_ptr8_zero check_mem then
             check_mem_aux n perm chunk addr
           else
             returnM check_mem
@@ -115,12 +115,12 @@ Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr
         check_mem_aux n perm chunk addr
   end.
 
-Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: valu32_t): M valptr32_t :=
+Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: valu32_t): M valptr8_t :=
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then
       do mem_reg_num <- eval_mrs_num;
       do check_mem <- check_mem_aux mem_reg_num perm chunk addr;
-        if comp_eq_ptr32_zero check_mem then
+        if comp_eq_ptr8_zero check_mem then
           returnM valptr_null
         else
           returnM check_mem
@@ -353,7 +353,7 @@ Definition step_opcode_mem_ld_reg (addr: valu32_t) (pc: sint32_t) (dst: reg) (op
   match opcode_ld with
   | op_BPF_LDXW      =>
     do addr_ptr <- check_mem Readable Mint32 addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint32 addr_ptr;
@@ -361,7 +361,7 @@ Definition step_opcode_mem_ld_reg (addr: valu32_t) (pc: sint32_t) (dst: reg) (op
           upd_flag BPF_OK
   | op_BPF_LDXH      =>
     do addr_ptr <- check_mem Readable Mint16unsigned addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint16unsigned addr_ptr;
@@ -369,7 +369,7 @@ Definition step_opcode_mem_ld_reg (addr: valu32_t) (pc: sint32_t) (dst: reg) (op
           upd_flag BPF_OK
   | op_BPF_LDXB      =>
     do addr_ptr <- check_mem Readable Mint8unsigned addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint8unsigned addr_ptr;
@@ -377,7 +377,7 @@ Definition step_opcode_mem_ld_reg (addr: valu32_t) (pc: sint32_t) (dst: reg) (op
           upd_flag BPF_OK
   | op_BPF_LDXDW     =>
     do addr_ptr <- check_mem Readable Mint64 addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint64 addr_ptr;
@@ -391,28 +391,28 @@ Definition step_opcode_mem_st_imm (imm: vals32_t) (addr: valu32_t) (pc: sint32_t
   match opcode_st with
   | op_BPF_STW       =>
     do addr_ptr <- check_mem Writable Mint32 addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint32 addr_ptr imm;
           upd_flag BPF_OK
   | op_BPF_STH       =>
     do addr_ptr <- check_mem Writable Mint16unsigned addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint16unsigned addr_ptr imm;
           upd_flag BPF_OK
   | op_BPF_STB       =>
     do addr_ptr <- check_mem Writable Mint8unsigned addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint8unsigned addr_ptr imm;
           upd_flag BPF_OK
   | op_BPF_STDW      =>
     do addr_ptr <- check_mem Writable Mint64 addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint64 addr_ptr imm;
@@ -425,28 +425,28 @@ Definition step_opcode_mem_st_reg (src64: val64_t) (addr: valu32_t) (pc: sint32_
   match opcode_st with
   | op_BPF_STXW      =>
     do addr_ptr <- check_mem Writable Mint32 addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint32 addr_ptr src64;
           upd_flag BPF_OK
   | op_BPF_STXH      =>
     do addr_ptr <- check_mem Writable Mint16unsigned addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint16unsigned addr_ptr src64;
           upd_flag BPF_OK
   | op_BPF_STXB      =>
     do addr_ptr <- check_mem Writable Mint8unsigned addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint8unsigned addr_ptr src64;
           upd_flag BPF_OK
   | op_BPF_STXDW     =>
     do addr_ptr <- check_mem Writable Mint64 addr;
-      if comp_eq_ptr32_zero addr_ptr then
+      if comp_eq_ptr8_zero addr_ptr then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint64 addr_ptr src64;

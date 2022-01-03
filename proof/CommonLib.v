@@ -1,5 +1,5 @@
 From bpf.src Require Import DxIntegers DxValues DxAST DxRegs DxFlag.
-From compcert Require Import Integers.
+From compcert Require Import Integers Values.
 From Coq Require Import ZArith.
 Open Scope Z_scope.
 
@@ -43,5 +43,11 @@ Definition Z_of_flag (f:bpf_flag) : Z :=
 Definition int_of_flag (f:bpf_flag)  :=
   Int.repr (Z_of_flag f).
 
+
+Definition inject_bl_state (bl_state b: block) :=
+  if Pos.eqb b bl_state then
+    None
+  else
+    Some (b, 0).
 
 Close Scope Z_scope.

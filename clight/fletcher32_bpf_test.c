@@ -102,14 +102,14 @@ int main(){
   	.start_addr = (uintptr_t) &f32_ctx,
   	.block_size = sizeof(f32_ctx),
   	.block_perm = Readable,
-  	.block_ptr  = (unsigned int *) (uintptr_t) &f32_ctx
+  	.block_ptr  = (unsigned char *) (uintptr_t) &f32_ctx
   };
   
   const struct memory_region mr_content ={
   	.start_addr = (uintptr_t) (const uint16_t *)wrap_around_data,
   	.block_size = sizeof(wrap_around_data),
   	.block_perm = Readable,
-  	.block_ptr  = (unsigned int *) (uintptr_t) (const uint16_t *)wrap_around_data
+  	.block_ptr  = (unsigned char *) (uintptr_t) (const uint16_t *)wrap_around_data
   }; 
 
   struct memory_region my_memory_regions[] = { mr_ctx, mr_content};

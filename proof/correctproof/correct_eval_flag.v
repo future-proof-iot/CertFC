@@ -28,6 +28,7 @@ Section Eval_flag.
   Definition f : arrow_type args (M res) := DxMonad.eval_flag.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_flag.
@@ -35,7 +36,7 @@ Section Eval_flag.
   Definition modifies : list block := [state_block]. (* of the C code *)
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=

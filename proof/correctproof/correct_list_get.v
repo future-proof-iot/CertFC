@@ -64,17 +64,17 @@ Section List_get.
     get_invariant_more _l.
     get_invariant_more _idx.
 
-    unfold MyListType_correct in H1.
-    destruct H1 as (Hv_eq & H1).
-    unfold stateless, pc_correct in H3.
-    destruct H3 as (Hv0_eq & Hrange & Hrange_max).
-    specialize H1 with (Z.to_nat (Int.signed c0)).
+    unfold MyListType_correct in H0.
+    destruct H0 as (Hv_eq & H0).
+    unfold stateless, pc_correct in H2.
+    destruct H2 as (Hv0_eq & Hrange & Hrange_max).
+    specialize H0 with (Z.to_nat (Int.signed c0)).
     assert (Hc0_eq: Z.of_nat (Z.to_nat (Int.signed c0)) = Int.signed c0). {
       apply Z2Nat.id.
       lia.
     }
-    rewrite Hc0_eq in H1; clear Hc0_eq.
-    apply H1 in Hrange as Hrange1.
+    rewrite Hc0_eq in H0; clear Hc0_eq.
+    apply H0 in Hrange as Hrange1.
     destruct Hrange1 as (vl & Hnth & Hload).
     subst v v0.
 

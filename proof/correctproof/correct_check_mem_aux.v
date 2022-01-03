@@ -112,7 +112,7 @@ Ltac correct_forward :=
       eapply correct_statement_if_body; [prove_in_inv | destruct x ]
   end.
 
-Lemma correct_function_check_mem_aux_correct : forall a, correct_function3 p args res f fn (nil) true match_arg (stateless match_res) a.
+Lemma correct_function_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg (stateless match_res) a.
 Proof.
   correct_function_from_body args.
   correct_body.
@@ -411,15 +411,15 @@ Proof.
     get_invariant_more _size.
     get_invariant_more _chunk.
     get_invariant_more _ptr.
-    unfold correct_get_add.match_res, valu32_correct in H1.
-    destruct H1 as (H1_eq & (vi1 & Hvi1_eq)).
-    unfold correct_get_sub.match_res, valu32_correct in H3.
-    destruct H3 as (H3_eq & (vi3 & Hvi3_eq)).
-    unfold correct_get_block_size.match_res, valu32_correct in H5.
-    destruct H5 as (H5_eq & (vi5 & Hvi5_eq)).
-    unfold stateless, match_chunk, memory_chunk_to_valu32 in H7.
-    unfold correct_get_block_ptr.match_res, val_ptr_correct in H9.
-    destruct H9 as (H10_eq & (b & ofs & Hvi10_eq)).
+    unfold correct_get_add.match_res, valu32_correct in H0.
+    destruct H0 as (H0_eq & (vi0 & Hvi0_eq)).
+    unfold correct_get_sub.match_res, valu32_correct in H2.
+    destruct H2 as (H2_eq & (vi2 & Hvi2_eq)).
+    unfold correct_get_block_size.match_res, valu32_correct in H4.
+    destruct H4 as (H4_eq & (vi4 & Hvi4_eq)).
+    unfold stateless, match_chunk, memory_chunk_to_valu32 in H6.
+    unfold correct_get_block_ptr.match_res, val_ptr_correct in H8.
+    destruct H8 as (H9_eq & (b & ofs & Hvi9_eq)).
     subst.
 
     exists (Vint Int.zero), m, Events.E0.
@@ -427,11 +427,11 @@ Proof.
 
     (**r we need the info given by Hcond1 *)
     unfold int32_0 in Hcond1.
-    assert (Hfalse: Int.ltu vi3 Int.zero = false). {
+    assert (Hfalse: Int.ltu vi2 Int.zero = false). {
       unfold Int.ltu.
       rewrite Int.unsigned_zero. (**r Check zlt. *)
-      destruct (zlt (Int.unsigned vi3) 0).
-      assert (Hge: (Int.unsigned vi3) >= 0). { apply Int_unsigned_ge_zero. }
+      destruct (zlt (Int.unsigned vi2) 0).
+      assert (Hge: (Int.unsigned vi2) >= 0). { apply Int_unsigned_ge_zero. }
       lia.
       reflexivity.
     }
@@ -497,24 +497,24 @@ Proof.
     get_invariant_more _size.
     get_invariant_more _chunk.
     get_invariant_more _ptr.
-    unfold correct_get_add.match_res, valu32_correct in H1.
-    destruct H1 as (H1_eq & (vi1 & Hvi1_eq)).
-    unfold correct_get_sub.match_res, valu32_correct in H3.
-    destruct H3 as (H3_eq & (vi3 & Hvi3_eq)).
-    unfold correct_get_block_size.match_res, valu32_correct in H5.
-    destruct H5 as (H5_eq & (vi5 & Hvi5_eq)).
-    unfold stateless, match_chunk, memory_chunk_to_valu32 in H7.
-    unfold correct_get_block_ptr.match_res, val_ptr_correct in H9.
-    destruct H9 as (H10_eq & (b & ofs & Hvi10_eq)).
+    unfold correct_get_add.match_res, valu32_correct in H0.
+    destruct H0 as (H0_eq & (vi0 & Hvi0_eq)).
+    unfold correct_get_sub.match_res, valu32_correct in H2.
+    destruct H2 as (H2_eq & (vi2 & Hvi2_eq)).
+    unfold correct_get_block_size.match_res, valu32_correct in H4.
+    destruct H4 as (H4_eq & (vi4 & Hvi4_eq)).
+    unfold stateless, match_chunk, memory_chunk_to_valu32 in H6.
+    unfold correct_get_block_ptr.match_res, val_ptr_correct in H8.
+    destruct H8 as (H9_eq & (b & ofs & Hvi9_eq)).
     subst.
 
     (**r we need the info given by Hcond1, Hcond2 *)
     unfold int32_0 in Hcond1, Hcond1.
-    assert (Hfalse: Int.ltu vi3 Int.zero = false). {
+    assert (Hfalse: Int.ltu vi2 Int.zero = false). {
       unfold Int.ltu.
       rewrite Int.unsigned_zero. (**r Check zlt. *)
-      destruct (zlt (Int.unsigned vi3) 0).
-      assert (Hge: (Int.unsigned vi3) >= 0). { apply Int_unsigned_ge_zero. }
+      destruct (zlt (Int.unsigned vi2) 0).
+      assert (Hge: (Int.unsigned vi2) >= 0). { apply Int_unsigned_ge_zero. }
       lia.
       reflexivity.
     }
@@ -552,12 +552,12 @@ Proof.
     unfold val32_modu, memory_chunk_to_valu32, Val.modu, int32_0 in Hcond2.
     rewrite Hchunk_ne_zero in Hcond2.
 
-    destruct (compu_le_32 (Vint vi3) (memory_chunk_to_valu32_upbound c1)) eqn: H1.
+    destruct (compu_le_32 (Vint vi2) (memory_chunk_to_valu32_upbound c1)) eqn: Heq1.
     (**r if lo_ofs <= 4294967295U - chunk then *)
     (**r Search (true && _). *)
     rewrite andb_true_l in Hcond2.
-    unfold compu_le_32, memory_chunk_to_valu32_upbound in H1.
-    rewrite Int_max_unsigned_eq64 in H1.
+    unfold compu_le_32, memory_chunk_to_valu32_upbound in Heq1.
+    rewrite Int_max_unsigned_eq64 in Heq1.
 
     forward_star.
     repeat forward_star.
@@ -596,7 +596,7 @@ Proof.
     rewrite He.
 
     rewrite Hwell_chunk_unsigned.
-    rewrite H1.
+    rewrite Heq1.
     reflexivity.
 
     forward_star.
@@ -637,7 +637,7 @@ Proof.
     reflexivity.
 
     (**r if not lo_ofs <= 4294967295U - chunk then if 0U == lo_ofs % chunk then *)
-    unfold compu_le_32, memory_chunk_to_valu32_upbound in H1.
+    unfold compu_le_32, memory_chunk_to_valu32_upbound in Heq1.
     (**r Search (_ && _ = false).*)
     forward_star.
     repeat forward_star.
@@ -685,8 +685,8 @@ Proof.
     rewrite He.
 
     rewrite Hwell_chunk_unsigned.
-    rewrite Int_max_unsigned_eq64 in H1.
-    rewrite H1.
+    rewrite Int_max_unsigned_eq64 in Heq1.
+    rewrite Heq1.
     reflexivity.
     rewrite Int.eq_true; unfold negb.
 
@@ -731,18 +731,18 @@ Proof.
   get_invariant_more _size.
   get_invariant_more _chunk.
   get_invariant_more _ptr.
-  unfold correct_get_add.match_res, valu32_correct in H1.
-  destruct H1 as (H1_eq & (vi1 & Hvi1_eq)).
-  unfold correct_get_sub.match_res, valu32_correct in H3.
-  destruct H3 as (H3_eq & (vi3 & Hvi3_eq)).
-  unfold correct_get_block_size.match_res, valu32_correct in H5.
-  destruct H5 as (H5_eq & (vi5 & Hvi5_eq)).
-  unfold stateless, match_chunk, memory_chunk_to_valu32 in H7.
-  unfold correct_get_block_ptr.match_res, val_ptr_correct in H9.
-  destruct H9 as (H10_eq & (b & ofs & Hvi10_eq)).
+  unfold correct_get_add.match_res, valu32_correct in H0.
+  destruct H0 as (H0_eq & (vi0 & Hvi0_eq)).
+  unfold correct_get_sub.match_res, valu32_correct in H2.
+  destruct H2 as (H2_eq & (vi2 & Hvi2_eq)).
+  unfold correct_get_block_size.match_res, valu32_correct in H4.
+  destruct H4 as (H4_eq & (vi4 & Hvi4_eq)).
+  unfold stateless, match_chunk, memory_chunk_to_valu32 in H6.
+  unfold correct_get_block_ptr.match_res, val_ptr_correct in H8.
+  destruct H8 as (H9_eq & (b & ofs & Hvi9_eq)).
   subst.
 
-  exists (Val.add (Vptr b ofs) (Vint vi3)), m, Events.E0.
+  exists (Val.add (Vptr b ofs) (Vint vi2)), m, Events.E0.
   repeat split.
   + 
     Transparent Archi.ptr64.
@@ -754,8 +754,8 @@ Proof.
     unfold Int.ltu.
     fold Int.zero.
     rewrite Int.unsigned_zero.
-    assert (Hvi3_ge: ((Int.unsigned vi3) >= 0)%Z). {
-      assert (Hhi_range: (0 <= Int.unsigned vi3 <= Int.max_unsigned)%Z).
+    assert (Hvi3_ge: ((Int.unsigned vi2) >= 0)%Z). {
+      assert (Hhi_range: (0 <= Int.unsigned vi2 <= Int.max_unsigned)%Z).
       apply Int.unsigned_range_2.
       lia.
     }
@@ -871,6 +871,7 @@ Proof.
     rewrite Int_eq_one_zero; unfold negb.
     forward_star.
     repeat forward_star.
+
     assert (Hneq3: _ptr <> _t'7). {
       unfold _ptr, _t'7.
       intro Hneq; inversion Hneq.
@@ -882,8 +883,7 @@ Proof.
     apply Maps.PTree.gso with (x:=Vint Int.one) (m:=(Maps.PTree.set _t'8 (Vint Int.one) le5)) in Hneq3; rewrite Hneq3.
     apply Maps.PTree.gso with (x:=Vint Int.one) (m:=le5) in Hneq4; rewrite Hneq4.
     rewrite p4; reflexivity.
-    reflexivity.
-    reflexivity.
+
     assert (Hneq3: _lo_ofs <> _t'7). {
       unfold _lo_ofs, _t'7.
       intro Hneq; inversion Hneq.
@@ -891,57 +891,33 @@ Proof.
     apply Maps.PTree.gso with (x:=Vint Int.one) (m:=(Maps.PTree.set _t'8 (Vint Int.one) le5)) in Hneq3; rewrite Hneq3.
     apply Maps.PTree.gso with (x:=Vint Int.one) (m:=le5) in Hneq1; rewrite Hneq1.
     rewrite p1; reflexivity.
-
-(**r TODO
-  Compcert doesn't support pointer -> int or int -> pointer?
-  Any solution:
-  1. CompCertS ?
-  2. https://people.irisa.fr/Aurele.Barriere/papers/intptrcast.pdf
-  or could we avoid it from rbpf?
-*)
-
     unfold Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add; simpl.
-    unfold Ctypes.typeconv, typeof, Clightdefs.tuint, Ctypes.remove_attributes.
-    unfold Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
-    destruct Hvi10_eq as (ofs & Hvi10_eq).
-    rewrite Hvi10_eq; simpl.
-    Print Cop.sem_add.
-    simpl.
     reflexivity.
     reflexivity.
 
-    (**r we need to show : Vint (Int.add vi10 vi3)) = v && m = m5 *)
-    simpl.
-    forward_star.
+    unfold Ptrofs.mul, Ptrofs.of_intu.
+    assert (Hofs_one: Ptrofs.unsigned (Ptrofs.repr 1) = 1). {
+      apply Ptrofs.unsigned_repr.
+      rewrite Ptrofs_max_unsigned_eq32.
+      lia.
+    }
+    rewrite Hofs_one.
+    rewrite Z.mul_1_l.
+    rewrite Ptrofs.repr_unsigned.
+    constructor.
     reflexivity.
   + inversion Hreturn.
     reflexivity.
   + inversion Hreturn.
-    left; exists b, ofs.
-    Check Maps.PTree.gso.
-    
-    simpl.
+    left; exists b, (Ptrofs.add ofs (Ptrofs.of_int vi2)).
+    reflexivity.
+  + constructor.
+  + inversion Hreturn.
+    reflexivity.
+Qed.
 
-
-    
-  admit.
- 
-  (* TODO .... *)
-
-
-  repeat intro.
-  repeat eexists.
-  eapply Smallstep.star_step;eauto.
-  econstructor ; eauto.
-  econstructor ; eauto.
-  simpl. reflexivity.
-  reflexivity.
-  eapply Smallstep.star_refl.
-  constructor.
-Admitted.
-
-
-
-End Check_mem_aux.
+End Check_mem_aux2.
 
 Close Scope Z_scope.
+
+Existing Instance correct_function_check_mem_aux2_correct.

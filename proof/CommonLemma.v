@@ -1,6 +1,6 @@
 From compcert Require Import Coqlib Clight Integers Values Ctypes Memory.
 From bpf.src Require Import DxState DxMonad.
-From bpf.proof Require Import Clightlogic.
+From bpf.proof Require Import Clightlogic CommonLib.
 From Ltac2 Require Import Ltac2 Message.
 From Coq Require Import List Lia ZArith.
 Import ListNotations.
@@ -525,7 +525,7 @@ Proof.
 Qed.
 
 Lemma upd_reg_preserves_perm: forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
-  (Hstate_inject: Mem.inject inject_id (bpf_m st) m)
+  (Hstate_inject: Mem.inject inject_id (bpf_m st) m) (**r (inject_bl_state b') *)
   (Hstore: Mem.store chunk m b' ofs' vl' = Some m2)
   (Hrbpf_m: bpf_m (DxState.upd_reg r vl st) = m1)
   (Hrbpf_perm: Mem.perm m1 b ofs k p),
@@ -535,8 +535,46 @@ Proof.
     apply Mem.perm_inject with (f:= inject_id) (m2:=m) (b2:= b) (delta:=0%Z)in Hrbpf_perm.
     rewrite Z.add_0_r in Hrbpf_perm.
     apply (Mem.perm_store_1 _ _ _ _ _ _ Hstore _ _ _ _ Hrbpf_perm).
+    (*
+    unfold inject_bl_state in *.
+    destruct (Pos.eqb b b') eqn: Hblk_eq.
+    - (**r b = b' *)
+      (**r Search (Pos.eqb).*)
+      apply Peqb_true_eq in Hblk_eq.
+      subst b'; simpl in *.
+      destruct Hstate_inject.
+      destruct mi_inj.
+      rewrite Hblk_eq in Hstate_inject. *)
     reflexivity.
     assumption.
 Qed.
+
+(*
+Lemma upd_reg_preserves_perm': forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
+  (Hstate_inject: Mem.inject (inject_bl_state b') (bpf_m st) m)
+  (Hstore: Mem.store chunk m b' ofs' vl' = Some m2)
+  (Hrbpf_m: bpf_m (DxState.upd_reg r vl st) = m1)
+  (Hrbpf_perm: Mem.perm m1 b ofs k p),
+    Mem.perm m2 b ofs k p.
+Proof.
+    unfold DxState.upd_reg; simpl; intros; subst.
+    destruct Hstate_inject as (mi_inj, mi_freeblocks, _, _, _, _).
+    apply Mem.perm_inject with (f:= inject_bl_state b') (m2:=m) (b2:= b) (delta:=0%Z)in Hrbpf_perm.
+    rewrite Z.add_0_r in Hrbpf_perm.
+    apply (Mem.perm_store_1 _ _ _ _ _ _ Hstore _ _ _ _ Hrbpf_perm).
+    unfold inject_bl_state in *.
+    destruct (Pos.eqb b b') eqn: Hblk_eq.
+    - (**r b = b' *)
+      (**r Search (Pos.eqb).*)
+      apply Peqb_true_eq in Hblk_eq.
+      subst b'; simpl in *.
+      destruct Hstate_inject as (mi_inj, mi_freeblocks, _, _, _, _).
+      destruct mi_inj as (mi_perm, _, _).
+      apply mi_perm with (b2:= , delta) in Hrbpf_perm.
+      destruct mi_inj.
+      rewrite Hblk_eq in Hstate_inject.
+    reflexivity.
+    assumption.
+Qed. *)
 
 Close Scope Z_scope.

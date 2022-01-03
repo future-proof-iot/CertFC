@@ -48,11 +48,11 @@ static void upd_flag(struct bpf_state* st, int f){
   return ;
 }
 
-static unsigned int eval_mrs_num(struct bpf_state* st){
+static unsigned int eval_mem_num(struct bpf_state* st){
   return (*st).mrs_num;
 }
 
-static struct memory_region *eval_mrs_regions(struct bpf_state* st){
+static struct memory_region *eval_mem_regions(struct bpf_state* st){
   return (*st).mrs;
 }
 
@@ -69,7 +69,7 @@ void add_mem_region_ctx(struct bpf_state* st, struct memory_region* mr){
   return ;
 } */
 
-static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned int* addr){
+static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned char* addr){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
@@ -84,7 +84,7 @@ static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, uns
   //}
 }
 
-static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned int* addr, unsigned long long v){
+static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned char* addr, unsigned long long v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
@@ -99,7 +99,7 @@ static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned int
   //}
 }
 
-static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned int* addr, int v){
+static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned char* addr, int v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }

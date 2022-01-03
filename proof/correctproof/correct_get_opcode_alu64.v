@@ -51,7 +51,7 @@ Section Get_opcode_alu64.
     repeat intro.
     get_invariant_more _op.
 
-    unfold stateless, int8_correct in H1.
+    unfold stateless, int8_correct in H0.
     subst.
 
     eexists. exists m, Events.E0.

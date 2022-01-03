@@ -56,9 +56,9 @@ Section Get_sub.
     get_invariant_more _x.
     get_invariant_more _y.
 
-    unfold stateless, valu32_correct in H1, H3.
-    destruct H1 as (Hc_eq & vi & Hvi_eq).
-    destruct H3 as (Hc0_eq & vj & Hvj_eq).
+    unfold stateless, valu32_correct in H0, H2.
+    destruct H0 as (Hc_eq & vi & Hvi_eq).
+    destruct H2 as (Hc0_eq & vj & Hvj_eq).
     subst.
 
     (**according to the type of eval_pc:

@@ -28,6 +28,7 @@ Section Upd_pc_incr.
   Definition f : arrow_type args (M res) := DxMonad.upd_pc_incr.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_pc_incr.
@@ -38,7 +39,7 @@ Section Upd_pc_incr.
 
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -60,7 +61,7 @@ Section Upd_pc_incr.
     subst.
 
     (** we need to get the proof of `upd_pc_incr` load/store permission *)
-    apply (upd_pc_store _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
+    apply (upd_pc_store _ _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     destruct Hst; clear minj mregs mflags mperm.
     (** pc \in [ (state_block,0), (state_block,8) ) *)
@@ -89,7 +90,7 @@ Section Upd_pc_incr.
       destruct (Pos.eq_dec state_block b).
       subst b.
       exfalso.
-      apply H1.
+      apply H0.
       left; reflexivity.
       apply POrderedType.PositiveOrder.neq_sym in n.
       symmetry.

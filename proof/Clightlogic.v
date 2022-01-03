@@ -451,7 +451,6 @@ Section S.
               (* We prove that we can reach a return state *)
               forall (lval: DList.t (fun _ => val) (all_args  args is_pure))
                      k m,
-                is_call_cont k ->
                 (* they satisfy the invariants *)
                 DList.Forall2 (fun (a:Type) (R: a -> val -> stateM -> Memory.Mem.mem ->Prop) (X:a * val) => R (fst X) (snd X) st m)
                               match_arg_list (DList.zip  (all_args_list args is_pure a ) lval) ->
@@ -562,7 +561,6 @@ Section S.
           | Some (v',st') =>
               (* We prove that we can reach a return state *)
               forall k,
-                is_call_cont k ->
                 (* We prove that we can reach a return state *)
                 exists v m' t,
                 Star (Clight.semantics2 p) (State fn stm k empty_env le m)
@@ -708,7 +706,7 @@ Section S.
     intros.
     destruct (app f a st) eqn: EQ; auto.
     destruct p0 as (v',st').
-    intros lval k m K MM MA.
+    intros lval k m MM MA.
     specialize (C st (bind_parameter_temps_s (fn_params fn) ((DList.to_list (fun (_ : Type) (v0 : val) => v0) lval))
           (create_undef_temps (fn_temps fn))) m).
     unfold correct_body in C.
@@ -1849,7 +1847,7 @@ Section S.
                             (Kcall (Some tres) fn empty_env le
                                    (Kseq (Sset vres (if has_cast
                 then Ecast (Etempvar tres ti) ti
-                                                     else Etempvar tres ti)) k)) m I).
+                                                     else Etempvar tres ti)) k)) m).
 (*
     assert (MA : DList.Forall2 (fun (a : Type) (R : a -> val -> stateM -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
                   (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN))).
@@ -2107,7 +2105,7 @@ Section S.
     specialize (fn_eval_ok4  st).
     destruct (app f a st); try congruence.
     destruct p0 as (v',st').
-    intros k  K.
+    intros k.
     destruct (LVAL PRE) as (lval & MAP & ALL).
     clear LVAL.
     assert (LEN : Datatypes.length lval = Datatypes.length (all_args args is_pure)).
@@ -2124,7 +2122,7 @@ Section S.
                 (Some
                    (if has_cast
                     then Ecast (Etempvar tres ti) ti
-                    else Etempvar tres ti))) k)) m I).
+                    else Etempvar tres ti))) k)) m).
 (*
     assert (MA : DList.Forall2 (fun (a : Type) (R : a -> val -> stateM -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
                   (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN))).
@@ -2377,7 +2375,7 @@ Section S.
       unfold pre. unfold post in MR.
       tauto.
     }
-    destruct (C2  PRE2  _ H) as
+    destruct (C2  PRE2  k) as
       (le2& m2 & t2 & ST2 & MR2).
     exists le2. exists m2. exists (t ++ t2).
     split;auto.
@@ -2428,7 +2426,7 @@ Section S.
       unfold pre. unfold post in MR.
       tauto.
     }
-    destruct (C2  PRE2  _ H) as
+    destruct (C2  PRE2  k) as
       (le2& m2 & t2 & ST2 & MR2).
     exists le2. exists m2. exists (t ++ t2).
     split;auto.
@@ -2482,7 +2480,7 @@ Section S.
       unfold pre. unfold post in MR.
       tauto.
     }
-    destruct (C2  PRE2  _ H) as
+    destruct (C2  PRE2  k) as
       (le2& m2 & t2 & ST2 & MR2).
     exists le2. exists m2. exists (t ++ t2).
     split;auto.
@@ -2641,7 +2639,7 @@ Section S.
     - destruct (f1 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k H) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
       exists v1,m1,t1.
       repeat split.
       eapply star_step.
@@ -2657,7 +2655,7 @@ Section S.
     - destruct (f2 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k H) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
       exists v1,m1,t1.
       repeat split.
       eapply star_step.
@@ -2712,7 +2710,7 @@ Section S.
     - destruct (f1 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k H) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
       specialize (EVAL PRE).
       apply eval_expr_eval in EVAL.
       exists v1,m1,t1.
@@ -2732,7 +2730,7 @@ Section S.
     - destruct (f2 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k H) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
       specialize (EVAL PRE).
       apply eval_expr_eval in EVAL.
       exists v1,m1,t1.

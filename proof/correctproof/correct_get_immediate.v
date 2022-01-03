@@ -56,7 +56,7 @@ Section Get_immediate.
     repeat intro.
     get_invariant_more _ins.
 
-    unfold stateless, int64_correct in H1.
+    unfold stateless, int64_correct in H0.
     subst v.
 
     eexists. exists m, Events.E0.

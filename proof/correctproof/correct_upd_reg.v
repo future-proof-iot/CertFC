@@ -29,6 +29,7 @@ Section Upd_reg.
   Definition f : arrow_type args (M res) := DxMonad.upd_reg.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_reg.
@@ -36,7 +37,7 @@ Section Upd_reg.
   Definition modifies : list block := [state_block]. (* of the C code *)
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -46,7 +47,7 @@ Section Upd_reg.
           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ st m => match_state state_block st m.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ st m => match_state state_block ins_block st m.
 
   Instance correct_function3_upd_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -57,15 +58,15 @@ Section Upd_reg.
     get_invariant_more _st.
     get_invariant_more _i.
     get_invariant_more _v.
-    unfold stateM_correct in H1.
-    unfold stateless, reg_correct in H3.
-    unfold stateless, val64_correct in H5.
-    destruct H1 as (Hv_eq & Hst).
-    destruct H5 as (Hc_eq & (vl & Hvl_eq)).
+    unfold stateM_correct in H0.
+    unfold stateless, reg_correct in H2.
+    unfold stateless, val64_correct in H4.
+    destruct H0 as (Hv_eq & Hst).
+    destruct H4 as (Hc_eq & (vl & Hvl_eq)).
     subst.
 
     simpl in c.
-    apply (upd_regs_store m _ _ c vl) in Hst as Hstore.
+    apply (upd_regs_store m _ _ _ c vl) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
 
     (**according to the type:
@@ -87,28 +88,46 @@ Section Upd_reg.
       }
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
-    - intros.
-      unfold inject_id in H1; inversion H1; subst.
-      clear H1; rewrite Z.add_0_r.
+    -
+      intros.
+      unfold inject_bl_state in H0.
+      inversion H0; subst.
+      clear H0; rewrite Z.add_0_r.
       (**r the memory relation is:
           - Hst: match_state _ st m (between rbpf's st Clight's m)
           - H3: Mem.perm (bpf_m st1) ... (the permission in the rbpf level)
           - goal: Mem.perm m1 ... (the permission in the Clight-level)
         *)
-      destruct Hst; clear mpc mflags mregs mrs_num mem_regs mperm.
+      destruct Hst as (minj, _, _, _, _, _, _, minvalid).
       apply (upd_reg_preserves_perm c (Vlong vl) _ _ st (bpf_m (DxState.upd_reg c (Vlong vl) st)) m m1 b2 _ ofs _ k0 p3 minj Hstore); [reflexivity | assumption].
-    - intros.
-      (**r Search Z.divide. *)
-      unfold inject_id in H1; inversion H1.
+    -
+      intros.
+      inversion H0.
       apply Z.divide_0_r.
+
     - intros. (**r inject_id is weak, we need inject_id' to say something about state_block *)
-      unfold inject_id in H1; inversion H1; clear H1.
+      inversion H0.
       rewrite Z.add_0_r; subst.
-      unfold DxState.upd_reg in H3.
-      simpl in H3. (** however b2 does not exist in st! and how to say b2 = state_block *)
+      unfold DxState.upd_reg in H2.
+      simpl in H2. (** however b2 = state_block does not exist in st! *)
+      destruct (Pos.eqb b2 state_block) eqn: Hblk_eq.
+      + (**r b2 = state_block *)
+        apply Peqb_true_eq in Hblk_eq.
+        subst b2.
+        exfalso.
+        (**r we should say inject_id state_block = None *)
+        destruct Hst as (minj, _, _, _, _, _, _, (minvalid_st & minvalid_ins)).
+        destruct minj as (mi_inj, mi_freeblocks, _, _, _, _).
+        apply mi_freeblocks in minvalid_st.
+        rewrite minvalid_st in H0.
+        inversion H0.
+      + apply Pos.eqb_neq in Hblk_eq. (**r b2 <> state_block is not enough because b2 could be the block of input in clight... *)
+        admit.
       exfalso.
-      destruct Hst; clear - minvalid H3.
-      specialize minvalid with AST.Mint64 ofs Readable.
+      destruct Hst as (minj, _, _, _, _, _, _, minvalid).
+      destruct minj as (mi_inj, mi_freeblocks, _, _, _, _).
+      apply mi_freeblocks in minvalid.
+      rewrite 
       destruct minvalid.
       apply H0.
       

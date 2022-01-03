@@ -54,7 +54,7 @@ Section Get_add.
     get_invariant_more _x.
     get_invariant_more _y.
 
-    unfold stateless, valu32_correct in H1, H3.
+    unfold stateless, valu32_correct in H0, H2.
     completer.
     subst.
 

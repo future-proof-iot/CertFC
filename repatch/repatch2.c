@@ -67,9 +67,9 @@ const char old_words[][100] = {
 	"store_mem_reg(2",
 	"store_mem_reg(4",
 	"store_mem_reg(8",
-	"unsigned int *check_mem_aux(",
+	"unsigned char *check_mem_aux(",
 	"return check_mem_aux(",
-	"unsigned int *check_mem(",
+	"unsigned char *check_mem(",
 	
 	"void step(",
 	"step(len, l);",
@@ -102,11 +102,10 @@ const char old_words[][100] = {
 	"unsigned int get_sub(",
 	"unsigned int get_addr_ofs(",
 	"_Bool is_well_chunk_bool(",
-	"unsigned int *check_mem_aux2(",
+	"unsigned char *check_mem_aux2(",
 	"_Bool comp_and_0x08_byte(",
 	
-	"unsigned long long *l",
-	"return ptr + lo_ofs"
+	"unsigned long long *l"
 	
 	};
 
@@ -158,9 +157,9 @@ const char new_words[][100] = {
 	"store_mem_reg(st, 2",
 	"store_mem_reg(st, 4",
 	"store_mem_reg(st, 8",
-	"unsigned int *check_mem_aux(struct bpf_state* st, ",
+	"unsigned char *check_mem_aux(struct bpf_state* st, ",
 	"return check_mem_aux(st, ",
-	"unsigned int *check_mem(struct bpf_state* st, ",
+	"unsigned char *check_mem(struct bpf_state* st, ",
 	
 	"void step(struct bpf_state* st, ",
 	"step(st, len, l); //print_bpf_state(st);",
@@ -193,11 +192,10 @@ const char new_words[][100] = {
 	"static unsigned int get_sub(",
 	"static unsigned int get_addr_ofs(",
 	"static _Bool is_well_chunk_bool(",
-	"static unsigned int *check_mem_aux2(",
+	"static unsigned char *check_mem_aux2(",
 	"static _Bool comp_and_0x08_byte(",
 	
-	"const unsigned long long *l",
-	"return (unsigned int *) (uintptr_t) ((unsigned int) (uintptr_t) ptr + lo_ofs)"
+	"const unsigned long long *l"
 	
 	};
 	

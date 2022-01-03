@@ -10,10 +10,10 @@ From dx.Type Require Import Nat.
 From bpf.src Require Import IdentDef CoqIntegers DxIntegers DxValues DxMemType.
 
 Record memory_region : Type := mkmr{
-  start_addr : valptr32_t;
+  start_addr : valptr8_t;
   block_size : valu32_t;   (**r should those be val32_t? *)
   block_perm : permission; (**r let's say it should be u32 *)
-  block_ptr  : valptr32_t;
+  block_ptr  : valptr8_t;
 }.
 
 Definition default_memory_region := {|
@@ -48,20 +48,20 @@ Fixpoint MyMemRegionsAdd (mr: memory_region) (l: MyMemRegionsType) :=
 Definition mem_region_type: Ctypes.type := Ctypes.Tpointer (Ctypes.Tstruct mem_region_id Ctypes.noattr) Ctypes.noattr.
 
 Definition mem_region_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U32_pointer); (size_id, C_U32); (perm_id, C_U32); (block_ptr_id, C_U32_pointer)] Ctypes.noattr.
+  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U32); (size_id, C_U32); (perm_id, C_U32); (block_ptr_id, C_U8_pointer)] Ctypes.noattr.
 
 Definition mem_regionCompilableType := MkCompilableType memory_region mem_region_type.
 
-(** Type for mem_region -> valptr32_t *)
+(** Type for mem_region -> valptr8_t *)
 
-Definition mem_regionToValU32PTRCompilableSymbolType :=
-  MkCompilableSymbolType [mem_regionCompilableType] (Some valptr32CompilableType).
+Definition mem_regionToValU8PTRCompilableSymbolType :=
+  MkCompilableSymbolType [mem_regionCompilableType] (Some valptr8CompilableType).
 
 Definition Const_block_ptr := 
-  MkPrimitive mem_regionToValU32PTRCompilableSymbolType 
+  MkPrimitive mem_regionToValU8PTRCompilableSymbolType 
               block_ptr
               (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) block_ptr_id C_U32_pointer)
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) block_ptr_id C_U8_pointer)
                          | _   => Err PrimitiveEncodingFailed
                          end).
 
