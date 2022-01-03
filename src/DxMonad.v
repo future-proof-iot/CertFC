@@ -24,12 +24,12 @@ Definition upd_pc_incr: M unit := fun st => Some (tt, upd_pc_incr st).
 Definition eval_flag: M bpf_flag := fun st => Some (eval_flag st, st).
 Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag f st).
 
-Definition eval_mem_num: M nat := fun st => Some (eval_mem_num st, st).
+Definition eval_mrs_num: M nat := fun st => Some (eval_mem_num st, st).
 
 Definition eval_reg (r: reg) : M val64_t := fun st => Some (eval_reg r st, st).
 Definition upd_reg (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg r v st).
 
-Definition eval_mem_regions : M MyMemRegionsType := fun st => Some (eval_mem_regions st, st).
+Definition eval_mrs_regions : M MyMemRegionsType := fun st => Some (eval_mem_regions st, st).
 
 (*
 Definition bpf_add_mem_region (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region mr st).

@@ -80,6 +80,7 @@ COQSRC = $(wildcard src/*.v)
 
 compile:
 	@echo $@
+	rm src/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(COQSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 	$(CP) TestMain.ml src # mv -> cp to avoid when running `make` again, it doesn't find the two files
@@ -124,10 +125,11 @@ clight:
 
 PROOF = $(addprefix proof/correctproof/, correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_add.v correct_get_sub.v correct_check_mem_aux.v  correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v)
 
-CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v Clightlogic.v MatchState.v CorrectRel.v CommonLemma.v)
+CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v CommonLib.v Clightlogic.v MatchState.v CorrectRel.v CommonLemma.v)
 
 clightproof:
 	@echo $@
+	rm proof/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 

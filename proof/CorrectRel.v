@@ -3,7 +3,7 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState.
+From bpf.proof Require Import CommonLib.
 
 Open Scope Z_scope.
 
@@ -15,6 +15,9 @@ Definition val64_correct (x:val64_t) (v: val) :=
 
 Definition valu32_correct (x:valu32_t) (v: val) :=
   x = v /\ exists vi, x = Vint vi.
+
+Definition val_ptr_correct (x:valu32_t) (v: val) :=
+  x = v /\ exists b ofs, x = Vptr b ofs.
 
 Definition addr_valu32_correct (x:valu32_t) (v: val) :=
   x = v /\ exists b ofs, x = Vptr b ofs.
@@ -34,9 +37,28 @@ Definition reg_correct (r: reg) (v: val) :=
   (*complu_lt_32 v (Vint (Int.repr 11)) = true /\ (**r ensured by verifier *) *)
     v = Vint (Int.repr (id_of_reg r)).
 
+
 Definition reg_int64_correct (x:int64_t) (v: val) :=
   Vlong x = v /\
     0 <= (Int64.unsigned (Int64.shru (Int64.and x (Int64.repr 4095)) (Int64.repr 8))) <= 10.
+
+Definition opcode_alu64_correct (opcode: opcode_alu64) (v: val) :=
+  match opcode with
+  | op_BPF_ADD64
+  | op_BPF_SUB64
+  | op_BPF_MUL64
+  | op_BPF_DIV64
+  | op_BPF_OR64
+  | op_BPF_AND64
+  | op_BPF_LSH64
+  | op_BPF_RSH64
+  | op_BPF_NEG64
+  | op_BPF_MOD64
+  | op_BPF_XOR64
+  | op_BPF_MOV64
+  | op_BPF_ARSH64 => exists vi, v = Vint vi
+  | op_BPF_ALU64_ILLEGAL_INS => exists vi, v = Vint vi
+  end.
 
 Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   match opcode with
@@ -64,5 +86,17 @@ Definition match_chunk (x : memory_chunk) (b: val) :=
 
 Definition flag_correct (f: bpf_flag) (v: val) :=
   v = Vint (int_of_flag f).
+
+Definition correct_perm (p: permission) (n: int): Prop :=
+  match p with
+  | Freeable => n = int32_3
+  | Writable => n = int32_2
+  | Readable => n = int32_1
+  | Nonempty => n = int32_0
+  end.
+
+(**r just a copy from clightlogic *)
+Definition match_bool (b:bool) (v:val) :=
+  v = Vint (if b then Integers.Int.one else Integers.Int.zero).
 
 Close Scope Z_scope.

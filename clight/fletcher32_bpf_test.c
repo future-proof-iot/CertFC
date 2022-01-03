@@ -2,8 +2,8 @@
 #include <inttypes.h>
 #include "interpreter.h"
 #include "fletcher32_bpf.h"
-#include<stdlib.h>
-#include<stddef.h>
+#include <stdlib.h>
+#include <stddef.h>
 #include <time.h> 
 
 uint32_t fletcher32(const uint16_t *data, size_t words)
@@ -43,20 +43,6 @@ struct fletcher32_ctx f32_ctx = {
   .data = (const unsigned short *) wrap_around_data,
   .words = sizeof(wrap_around_data)/2,
 };
-
-//struct memory_regions *memory_regions = &init_memory_regions;
-
-/*
-static void bpf_add_region_ctx(struct bpf_state* st){
-  (*(*((*st).mrs)).bpf_ctx).start_addr = (unsigned long long) &f32_ctx;
-  (*(*((*st).mrs)).bpf_ctx).block_size = sizeof(f32_ctx);
-}
-
-void bpf_add_region_content(struct bpf_state* st){
-  (*(*((*st).mrs)).content).start_addr = (unsigned long long) (const uint16_t *)wrap_around_data;
-  (*(*((*st).mrs)).content).block_size = sizeof(wrap_around_data);
-}
-*/
 
 void print_normal_addr(struct bpf_state* st){
   printf("\n\n *********print_normal_addr*******\n\n");
@@ -99,9 +85,7 @@ int main(){
   uint32_t res0;
   
   clock_t begin0 = clock();
-  //for (int i = 0; i < 1000; i++) {
-    res0 = fletcher32((const uint16_t *) wrap_around_data, sizeof(wrap_around_data)/2);
-    //}
+  res0 = fletcher32((const uint16_t *) wrap_around_data, sizeof(wrap_around_data)/2);
   clock_t end0 = clock();
   printf("execution time:%f\n", (double)(end0-begin0)/CLOCKS_PER_SEC);
   printf("rBPF_fletcher32 C result = 0x:%x\n", res0);
@@ -115,24 +99,24 @@ int main(){
   // adding memory_regions
 
   const struct memory_region mr_ctx = {
-  	.start_addr = (uint32_t)(uintptr_t) &f32_ctx,
+  	.start_addr = (uintptr_t) &f32_ctx,
   	.block_size = sizeof(f32_ctx),
   	.block_perm = Readable,
-  	.block_ptr = 1U
+  	.block_ptr  = (unsigned int *) (uintptr_t) &f32_ctx
   };
   
   const struct memory_region mr_content ={
-  	.start_addr = (unsigned long long) (const uint16_t *)wrap_around_data,
+  	.start_addr = (uintptr_t) (const uint16_t *)wrap_around_data,
   	.block_size = sizeof(wrap_around_data),
   	.block_perm = Readable,
-  	.block_ptr = 1U
+  	.block_ptr  = (unsigned int *) (uintptr_t) (const uint16_t *)wrap_around_data
   }; 
 
   struct memory_region my_memory_regions[] = { mr_ctx, mr_content};
 
   struct bpf_state st = {
     .state_pc = 0,
-    .bpf_flag = BPF_OK,
+    .bpf_flag = vBPF_OK,
     .mrs_num  = 2,
     .regsmap = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
     .mrs = my_memory_regions
@@ -142,7 +126,7 @@ int main(){
   
   clock_t begin1 = clock();
   //for (int j = 0; j < 1000; j++) { //TODO: why a loop returns a wrong result? 
-    result = bpf_interpreter(&st, sizeof(bpf_fletcher32_bpf_bin), 10000, (unsigned long long *) bpf_fletcher32_bpf_bin);
+    result = bpf_interpreter(&st, sizeof(bpf_fletcher32_bpf_bin), 10000, (const unsigned long long *) bpf_fletcher32_bpf_bin);
     //}
   clock_t end1 = clock();
   printf("execution time:%f\n", (double)(end1-begin1)/CLOCKS_PER_SEC);

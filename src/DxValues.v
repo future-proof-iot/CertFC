@@ -13,6 +13,41 @@ From bpf.src Require Import Int16 CoqIntegers DxIntegers InfComp.
 (** Coq2C: Values.val -> unsigned long long or unsigned int
   *)
 
+(******************** Val2PTR *******************)
+Definition valptr32_t := val.
+Definition valptr_null := Vnullptr.
+
+Definition C_U32ptr_zero: Csyntax.expr :=
+  Csyntax.Eval valptr_null C_U32_pointer.
+
+Definition comp_eq_ptr32_zero (x: val): bool :=
+  match x with
+  | Vint n1 => Int.eq n1 Int.zero
+  | _ => false
+  end.
+
+Definition valptr32CompilableType :=
+  MkCompilableType valptr32_t C_U32_pointer.
+
+Definition valptr32SymbolType :=
+  MkCompilableSymbolType nil (Some valptr32CompilableType).
+
+Definition Const_valptr_null := constant valptr32SymbolType valptr_null C_U32ptr_zero.
+
+Definition valptr32ToboolSymbolType :=
+  MkCompilableSymbolType [valptr32CompilableType] (Some boolCompilableType).
+
+Definition C_U32ptr_eq (x y: Csyntax.expr) : Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oeq x y C_U32_pointer.
+
+Definition Const_comp_eq_ptr32_zero :=
+  MkPrimitive valptr32ToboolSymbolType
+                comp_eq_ptr32_zero
+                (fun es => match es with
+                           | [e1] => Ok (C_U32ptr_eq e1 C_U32ptr_zero)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 (******************** Val2U32 *******************)
 
 Definition valu32_t := val.
@@ -158,6 +193,14 @@ Definition complu_set (x y: val): bool :=
   end.
 
 (******************** Val Type Casting *******************)
+
+(** ptr2valu32: ptr -> u32
+
+*)
+(*
+Definition ptr2valu32 (ptr: valptr32_t): valu32_t :=
+  match ptr with
+  | Vptr _ _ => here we need memory_region information...*)
 
 (** sint16_to_vlong: sint16_t -> Val
     *)
@@ -429,7 +472,7 @@ Definition Const_valS32Toval64 :=
   MkPrimitive valS32Toval64SymbolType
                 Val.longofint
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ecast e1 C_U32) C_U64)
+                           | [e1] => Ok (Csyntax.Ecast e1 C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
@@ -442,11 +485,15 @@ Definition Const_valU32Toval64 :=
   MkPrimitive valU32Toval64SymbolType
                 Val.longofintu
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast e1 C_U64)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ecast e1 C_U32) C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
 Module Exports.
+  Definition valptr32CompilableType := valptr32CompilableType.
+  Definition Const_valptr_null      := Const_valptr_null.
+  Definition Const_comp_eq_ptr32_zero:= Const_comp_eq_ptr32_zero.
+
   Definition valU32CompilableType   := valU32CompilableType.
   Definition Const_val32_zero       := Const_val32_zero.
   Definition Const_val32_one        := Const_val32_one.

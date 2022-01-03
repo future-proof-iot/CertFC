@@ -1,8 +1,11 @@
-From compcert Require Import Coqlib Clight Integers Ctypes.
+From compcert Require Import Coqlib Clight Integers Values Ctypes Memory.
+From bpf.src Require Import DxState DxMonad.
 From bpf.proof Require Import Clightlogic.
 From Ltac2 Require Import Ltac2 Message.
 From Coq Require Import List Lia ZArith.
 Import ListNotations.
+
+Open Scope Z_scope.
 
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
     list_norepet_dec eq_dec l = left H ->
@@ -419,6 +422,72 @@ Ltac get_invariant_more VAR :=
       end
   end.
 
+
+(*
+Ltac build_app_aux T :=
+  match T with
+  | ?F ?X => let ty := type of X in
+             let r := build_app_aux F in
+             constr:((mk ty X) :: r)
+  | ?X    => constr:(@nil dpair)
+  end.                                    
+
+Ltac get_function T :=
+  match T with
+  | ?F ?X => get_function F
+  | ?X    => X
+  end.
+
+Ltac build_app T :=
+  let a := build_app_aux T in
+  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
+  let f := get_function T in
+  match type of v with
+  | DList.t _ ?L =>
+      change T with (app (f: arrow_type L _) v)
+  end.
+
+Ltac change_app_for_body :=
+  match goal with
+  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
+    => build_app F
+  end.
+
+Ltac change_app_for_statement :=
+  match goal with
+  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
+    => build_app F
+  end.
+
+Ltac prove_incl :=
+  simpl; unfold incl; simpl; intuition congruence.
+
+Ltac prove_in_inv :=
+  simpl; intuition subst; discriminate.
+
+Ltac correct_forward :=
+  match goal with
+  | |- @correct_body _ _ (bindM ?F1 ?F2)  _
+                     (Ssequence
+                        (Ssequence
+                           (Scall _ _ _)
+                           (Sset ?V ?T))
+                        ?R)
+                     _ _ _ _ _ _  =>
+      eapply correct_statement_seq_body_pure;
+      [ change_app_for_statement ;
+        let b := match T with
+                 | Ecast _ _ => constr:(true)
+                 | _         => constr:(false)
+                 end in
+        eapply correct_statement_call with (has_cast := b)
+      |]
+  | |- @correct_body _ _ (match  ?x with true => _ | false => _ end) _
+                     (Sifthenelse _ _ _)
+                     _ _ _ _ _ _  =>
+      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
+  end. *)
+
 (** Integer.max_unsigned *)
 
 Lemma Int_max_unsigned_eq64:
@@ -436,10 +505,38 @@ Proof.
 Qed.
 
 Lemma Ptrofs_max_unsigned_eq32:
-  Ptrofs.max_unsigned = 4294967295%Z.
+  Ptrofs.max_unsigned = 4294967295.
 Proof.
   unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
   Transparent Archi.ptr64.
   reflexivity.
 Qed.
 
+Lemma Int_unsigned_ge_zero :
+  forall i,
+    Int.unsigned i >= 0.
+Proof.
+  intro.
+  assert (Hrange: 0 <= Int.unsigned i <= Int.max_unsigned). { apply Int.unsigned_range_2. }
+  destruct Hrange.
+  (**r Search (_ <= _). *)
+  apply Z.le_ge in H.
+  assumption.
+Qed.
+
+Lemma upd_reg_preserves_perm: forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
+  (Hstate_inject: Mem.inject inject_id (bpf_m st) m)
+  (Hstore: Mem.store chunk m b' ofs' vl' = Some m2)
+  (Hrbpf_m: bpf_m (DxState.upd_reg r vl st) = m1)
+  (Hrbpf_perm: Mem.perm m1 b ofs k p),
+    Mem.perm m2 b ofs k p.
+Proof.
+    unfold DxState.upd_reg; simpl; intros; subst.
+    apply Mem.perm_inject with (f:= inject_id) (m2:=m) (b2:= b) (delta:=0%Z)in Hrbpf_perm.
+    rewrite Z.add_0_r in Hrbpf_perm.
+    apply (Mem.perm_store_1 _ _ _ _ _ _ Hstore _ _ _ _ Hrbpf_perm).
+    reflexivity.
+    assumption.
+Qed.
+
+Close Scope Z_scope.

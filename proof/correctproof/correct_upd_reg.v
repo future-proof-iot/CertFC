@@ -1,9 +1,9 @@
 From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxRegs DxState DxMonad DxInstructions.
 From Coq Require Import List Lia ZArith.
-From compcert Require Import Integers Values Clight Memory.
+From compcert Require Import Integers Values Clight Memory Memdata.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLib.
 
 From bpf.clight Require Import interpreter.
 
@@ -46,7 +46,7 @@ Section Upd_reg.
           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ st m => match_state state_block st m.
 
   Instance correct_function3_upd_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -87,7 +87,54 @@ Section Upd_reg.
       }
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
-    - simpl.
+    - intros.
+      unfold inject_id in H1; inversion H1; subst.
+      clear H1; rewrite Z.add_0_r.
+      (**r the memory relation is:
+          - Hst: match_state _ st m (between rbpf's st Clight's m)
+          - H3: Mem.perm (bpf_m st1) ... (the permission in the rbpf level)
+          - goal: Mem.perm m1 ... (the permission in the Clight-level)
+        *)
+      destruct Hst; clear mpc mflags mregs mrs_num mem_regs mperm.
+      apply (upd_reg_preserves_perm c (Vlong vl) _ _ st (bpf_m (DxState.upd_reg c (Vlong vl) st)) m m1 b2 _ ofs _ k0 p3 minj Hstore); [reflexivity | assumption].
+    - intros.
+      (**r Search Z.divide. *)
+      unfold inject_id in H1; inversion H1.
+      apply Z.divide_0_r.
+    - intros. (**r inject_id is weak, we need inject_id' to say something about state_block *)
+      unfold inject_id in H1; inversion H1; clear H1.
+      rewrite Z.add_0_r; subst.
+      unfold DxState.upd_reg in H3.
+      simpl in H3. (** however b2 does not exist in st! and how to say b2 = state_block *)
+      exfalso.
+      destruct Hst; clear - minvalid H3.
+      specialize minvalid with AST.Mint64 ofs Readable.
+      destruct minvalid.
+      apply H0.
+      
+      
+      admit.
+    - intros.
+      exfalso.
+      apply H1.
+      destruct Hst. (**r TODO *) admit. ; clear mpc mflags mregs mrs_num mem_regs mperm.
+      (**r we have: It seems `inject_id` is too weak???
+        - minj : Mem.inject inject_id (bpf_m st) m
+        - H : Mem.store AST.Mint64 (bpf_m st) b 0 (Vlong vl) = (bpf_m (DxState.upd_reg c (Vlong vl) st)).
+        - F : inject_id b = Some (b, 0).
+        - VF: Val.inject inject_id (Vlong vl) (Vlong vl)
+        - we could get `exists n2, store AST.Mint64 m b 0 (Vlong vl) = Some n2
+    /\ inject inject_id (bpf_m (DxState.upd_reg c (Vlong vl) st)) n2`.
+        - Hstore : Mem.store AST.Mint64 m state_block (8 + 8 * id_of_reg c) (Vlong vl) =
+         Some m1
+        *)
+      apply Mem.valid_block_inject_2 with (f:=inject_id) (m1:= (bpf_m (DxState.upd_reg c (Vlong vl) st))) (b1:= b)(delta:= 0%Z).
+      reflexivity.
+      unfold Mem.inject.
+      
+
+    - intros.
+      simpl.
       constructor.
     - unfold unmodifies_effect, modifies, In.
       intros.

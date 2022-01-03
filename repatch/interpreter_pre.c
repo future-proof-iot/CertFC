@@ -1,18 +1,20 @@
 #include "interpreter.h"
-
+#include <stdint.h> /* for uintptr_t */
+/*
 #include <inttypes.h>
 #include<stdlib.h>
 #include<stddef.h>
-/*
+
 void print_bpf_state(struct bpf_state* st){
-  printf("pc= %" PRIu64 "\n", (uint64_t) (*st).state_pc);
+  printf("pc= %" PRIu64 "\n", (unsigned long long) (*st).state_pc);
   printf("flag= %d\n", (*st).bpf_flag);
   for(int i = 0; i < 11; i++){
     printf("R%d",i);
-    printf("= %" PRIu64 ";", (uint64_t) (*st).regsmap[i]);
+    printf("= %" PRIu64 ";", (unsigned long long) (*st).regsmap[i]);
   }
   printf("\n");
-}*/
+}
+*/
 
 static unsigned int eval_pc (struct bpf_state* st) {
   return (*st).state_pc;
@@ -46,11 +48,11 @@ static void upd_flag(struct bpf_state* st, int f){
   return ;
 }
 
-static unsigned int eval_mem_num(struct bpf_state* st){
+static unsigned int eval_mrs_num(struct bpf_state* st){
   return (*st).mrs_num;
 }
 
-static struct memory_region *eval_mem_regions(struct bpf_state* st){
+static struct memory_region *eval_mrs_regions(struct bpf_state* st){
   return (*st).mrs;
 }
 
@@ -65,49 +67,49 @@ void add_mem_region_ctx(struct bpf_state* st, struct memory_region* mr){
   (*st).mrs[0] = *mr;
   (*st).mem_num = 1;
   return ;
-}*/
+} */
 
-static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned int addr){
+static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned int* addr){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
   else{*/
     switch (chunk) {
-      case 1: return *(unsigned char *) (uintptr_t) addr;
-      case 2: return *(unsigned short *) (uintptr_t) addr;
-      case 4: return *(unsigned int *) (uintptr_t) addr;
-      case 8: return *(unsigned long long *) (uintptr_t) addr;
+      case 1: return *(unsigned char *) addr;
+      case 2: return *(unsigned short *) addr;
+      case 4: return *(unsigned int *) addr;
+      case 8: return *(unsigned long long *) addr;
       default: /*printf ("load:addr = %" PRIu64 "\n", v); (*st).bpf_flag = BPF_ILLEGAL_MEM;*/ return 0LLU;
     }
   //}
 }
 
-static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned int addr, unsigned long long v){
+static void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned int* addr, unsigned long long v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
   else{*/
     switch (chunk) {
-      case 1: *(unsigned char *) (uintptr_t) addr = v; return ;
-      case 2: *(unsigned short *) (uintptr_t) addr = v; return ;
-      case 4: *(unsigned int *) (uintptr_t) addr = v; return ;
-      case 8: *(unsigned long long *) (uintptr_t) addr = v; return ;
-      default: /*printf ("store_reg:addr = %" PRIu64 "\n", addr);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
+      case 1: *(unsigned char *) addr = v; return ;
+      case 2: *(unsigned short *) addr = v; return ;
+      case 4: *(unsigned int *) addr = v; return ;
+      case 8: *(unsigned long long *) addr = v; return ;
+      default: /*printf ("store_reg:addr = %" PRIu64 "\n", addr); (*st).bpf_flag = BPF_ILLEGAL_MEM;*/ return ;
     }
   //}
 }
 
-static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned int addr, int v){
+static void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned int* addr, int v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
   else{*/
     switch (chunk) {
-      case 1: *(unsigned char *) (uintptr_t) addr = v; return ;
-      case 2: *(unsigned short *) (uintptr_t) addr = v; return ;
-      case 4: *(unsigned int *) (uintptr_t) addr = v; return ;
-      case 8: *(unsigned long long *) (uintptr_t) addr = v; return ;
-      default: /*printf ("store_imm:addr = %" PRIu64 "\n", addr);*/ (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
+      case 1: *(unsigned char *) addr = v; return ;
+      case 2: *(unsigned short *) addr = v; return ;
+      case 4: *(unsigned int *) addr = v; return ;
+      case 8: *(unsigned long long *) addr = v; return ;
+      default: /*printf ("store_imm:addr = %" PRIu64 "\n", addr); (*st).bpf_flag = BPF_ILLEGAL_MEM;*/ return ;
     }
   //}
 }

@@ -41,7 +41,7 @@ Section Get_block_ptr.
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val_ptr_correct x v.
 
   Instance correct_function3_get_block_ptr : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
@@ -53,30 +53,29 @@ Section Get_block_ptr.
     repeat intro.
     get_invariant_more _mr.
 
-    unfold match_region in H1.
+    unfold match_region, my_match_region in H1.
     destruct H1 as (o & Hptr & Hmatch).
     unfold match_region_at_ofs in Hmatch.
-    destruct Hmatch as (_ & _ & _ & (vptr & Hptr_load & Hinj)).
+    destruct Hmatch as (_ & _ & _ & (b & ofs & Hptr_load & Hinj)).
     subst.
 
-    exists (Vint vptr), m, Events.E0.
+    exists (Vptr b ofs), m, Events.E0.
 
     repeat split; unfold step2.
     -
       repeat forward_star.
       simpl.
+      Transparent Archi.ptr64.
       unfold align, Ctypes.align_attr; simpl.
       unfold Mem.loadv in Hptr_load.
       rewrite Hptr_load; reflexivity.
 
       simpl.
-      Transparent Archi.ptr64.
       reflexivity.
     - assumption.
-    - exists vptr; assumption.
+    - exists b, ofs; assumption.
     - simpl.
       constructor.
-      reflexivity.
   Qed.
 
 End Get_block_ptr.

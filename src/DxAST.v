@@ -16,7 +16,7 @@ Definition well_chunk_Z (chunk: memory_chunk):Z :=
   | Mint16unsigned => 2
   | Mint32 => 4
   | Mint64 => 8
-  | _ => 0
+  | _ => 10
   end.
 
 Definition memory_chunk_to_valu32 (chunk: memory_chunk): valu32_t := 

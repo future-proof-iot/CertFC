@@ -34,7 +34,7 @@ const char old_words[][100] = {
 	"check_mem(2U",
 	"upd_reg(1U",
 	
-	"eval_mem_regions()",
+	"eval_mrs_regions()",
 	"void step_opcode_alu64(",
 	"step_opcode_alu64(dst64",
 	"void step_opcode_alu32(",
@@ -67,9 +67,9 @@ const char old_words[][100] = {
 	"store_mem_reg(2",
 	"store_mem_reg(4",
 	"store_mem_reg(8",
-	"unsigned int check_mem_aux(",
+	"unsigned int *check_mem_aux(",
 	"return check_mem_aux(",
-	"unsigned int check_mem(",
+	"unsigned int *check_mem(",
 	
 	"void step(",
 	"step(len, l);",
@@ -79,7 +79,7 @@ const char old_words[][100] = {
 	"struct memory_region *get_mem_region(",
 	"= get_mem_region(",
 	"return eval_reg(",
-	"eval_mem_num()",
+	"eval_mrs_num()",
 	"check_mem = check_mem_aux(",
 	
 	"unsigned long long list_get(",
@@ -102,8 +102,11 @@ const char old_words[][100] = {
 	"unsigned int get_sub(",
 	"unsigned int get_addr_ofs(",
 	"_Bool is_well_chunk_bool(",
-	"unsigned int check_mem_aux2(",
-	"_Bool comp_and_0x08_byte("
+	"unsigned int *check_mem_aux2(",
+	"_Bool comp_and_0x08_byte(",
+	
+	"unsigned long long *l",
+	"return ptr + lo_ofs"
 	
 	};
 
@@ -122,7 +125,7 @@ const char new_words[][100] = {
 	"check_mem(st, 2U",
 	"upd_reg(st, 1U",
 	
-	"eval_mem_regions(st)",
+	"eval_mrs_regions(st)",
 	"void step_opcode_alu64(struct bpf_state* st, ",
 	"step_opcode_alu64(st, dst64",
 	"void step_opcode_alu32(struct bpf_state* st, ",
@@ -155,9 +158,9 @@ const char new_words[][100] = {
 	"store_mem_reg(st, 2",
 	"store_mem_reg(st, 4",
 	"store_mem_reg(st, 8",
-	"unsigned int check_mem_aux(struct bpf_state* st, ",
+	"unsigned int *check_mem_aux(struct bpf_state* st, ",
 	"return check_mem_aux(st, ",
-	"unsigned int check_mem(struct bpf_state* st, ",
+	"unsigned int *check_mem(struct bpf_state* st, ",
 	
 	"void step(struct bpf_state* st, ",
 	"step(st, len, l); //print_bpf_state(st);",
@@ -167,7 +170,7 @@ const char new_words[][100] = {
 	"static struct memory_region *get_mem_region(struct bpf_state* st, ",
 	"= get_mem_region(st, ",
 	"return eval_reg(st, ",
-	"eval_mem_num(st)",
+	"eval_mrs_num(st)",
 	"check_mem = check_mem_aux(st, ",
 	
 	"static unsigned long long list_get(",
@@ -190,8 +193,11 @@ const char new_words[][100] = {
 	"static unsigned int get_sub(",
 	"static unsigned int get_addr_ofs(",
 	"static _Bool is_well_chunk_bool(",
-	"static unsigned int check_mem_aux2(",
-	"static _Bool comp_and_0x08_byte("
+	"static unsigned int *check_mem_aux2(",
+	"static _Bool comp_and_0x08_byte(",
+	
+	"const unsigned long long *l",
+	"return (unsigned int *) (uintptr_t) ((unsigned int) (uintptr_t) ptr + lo_ofs)"
 	
 	};
 	

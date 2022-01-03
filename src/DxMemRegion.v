@@ -10,17 +10,17 @@ From dx.Type Require Import Nat.
 From bpf.src Require Import IdentDef CoqIntegers DxIntegers DxValues DxMemType.
 
 Record memory_region : Type := mkmr{
-  start_addr : valu32_t;
+  start_addr : valptr32_t;
   block_size : valu32_t;   (**r should those be val32_t? *)
   block_perm : permission; (**r let's say it should be u32 *)
-  block_ptr  : valu32_t;
+  block_ptr  : valptr32_t;
 }.
 
 Definition default_memory_region := {|
-  start_addr := val32_zero;
+  start_addr := valptr_null;
   block_size := val32_zero;
   block_perm := Nonempty;
-  block_ptr  := val32_zero;
+  block_ptr  := valptr_null;
 |}.
 
 Module Memory_regions.
@@ -48,9 +48,22 @@ Fixpoint MyMemRegionsAdd (mr: memory_region) (l: MyMemRegionsType) :=
 Definition mem_region_type: Ctypes.type := Ctypes.Tpointer (Ctypes.Tstruct mem_region_id Ctypes.noattr) Ctypes.noattr.
 
 Definition mem_region_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U32); (size_id, C_U32); (perm_id, C_U32); (block_ptr_id, C_U32)] Ctypes.noattr.
+  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U32_pointer); (size_id, C_U32); (perm_id, C_U32); (block_ptr_id, C_U32_pointer)] Ctypes.noattr.
 
 Definition mem_regionCompilableType := MkCompilableType memory_region mem_region_type.
+
+(** Type for mem_region -> valptr32_t *)
+
+Definition mem_regionToValU32PTRCompilableSymbolType :=
+  MkCompilableSymbolType [mem_regionCompilableType] (Some valptr32CompilableType).
+
+Definition Const_block_ptr := 
+  MkPrimitive mem_regionToValU32PTRCompilableSymbolType 
+              block_ptr
+              (fun es => match es with
+                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) block_ptr_id C_U32_pointer)
+                         | _   => Err PrimitiveEncodingFailed
+                         end).
 
 (** Type for mem_region -> valu32_t *)
 
@@ -60,13 +73,6 @@ Definition mem_regionToValU32CompilableSymbolType :=
 Definition mem_regionTopermCompilableSymbolType :=
   MkCompilableSymbolType [mem_regionCompilableType] (Some permissionCompilableType).
 
-Definition Const_block_ptr := 
-  MkPrimitive mem_regionToValU32CompilableSymbolType 
-              block_ptr
-              (fun es => match es with
-                         | [e1] => Ok (Csyntax.Efield (Csyntax.Ederef e1 mem_region_type) block_ptr_id C_U32)
-                         | _   => Err PrimitiveEncodingFailed
-                         end).
 
 Definition Const_start_addr := 
   MkPrimitive mem_regionToValU32CompilableSymbolType 

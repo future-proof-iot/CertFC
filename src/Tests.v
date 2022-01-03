@@ -33,10 +33,10 @@ GenerateIntermediateRepresentation SymbolIRs
   upd_pc_incr
   eval_flag
   upd_flag
-  eval_mem_num
+  eval_mrs_num
   eval_reg
   upd_reg
-  eval_mem_regions(*
+  eval_mrs_regions(*
   add_mem_region
   add_mem_region_ctx*)
   load_mem

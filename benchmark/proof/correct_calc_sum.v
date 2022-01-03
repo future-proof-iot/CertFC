@@ -108,7 +108,7 @@ Ltac correct_body :=
     revert c.
     induction c0.
     { intros.
-      correct_function_from_body.
+      correct_function_from_body args.
       correct_body.
       repeat intro.
       unfold INV in H.
@@ -142,7 +142,7 @@ Ltac correct_body :=
       + econstructor;eauto.
     }
     intros.
-      correct_function_from_body.
+      correct_function_from_body args.
       correct_body.
       unfold f. unfold app.
       rewrite calc_sum_eq.
@@ -296,7 +296,7 @@ Ltac correct_body :=
         destruct Archi.ptr64.
         simpl. rewrite E. reflexivity.
         rewrite E. reflexivity.
-  Qed.
+  Defined.
 
 End Calc_sum.
 

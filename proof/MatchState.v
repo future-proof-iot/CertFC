@@ -1,7 +1,10 @@
 (** Definition of matching relation between Coq and C representation *)
-
 From bpf.src Require Import DxIntegers DxValues DxAST DxState DxMemRegion DxRegs DxFlag.
 From compcert Require Import Coqlib Integers Values AST Clight Memory Memtype.
+
+From bpf.proof Require Import CommonLib.
+From Coq Require Import ZArith.
+Open Scope Z_scope.
 
 (**r
 
@@ -24,74 +27,36 @@ Definition correct_perm (p: permission) (n: int): Prop :=
   | Nonempty => n = int32_0
   end.
 
+Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : Z) (m: mem)  : Prop :=
+  (exists vl,  Mem.load AST.Mint32 m bl_regions ofs = Some (Vint vl) /\ (start_addr mr) = Vint vl)    /\ (**r start_addr mr = Vint vl*)
+    (exists vl,  Mem.load AST.Mint32 m bl_regions (ofs + 4) = Some (Vint vl) /\ (block_size mr) = Vint vl) /\ (**r block_size mr = Vint vl*)
+    (exists vl,  Mem.load AST.Mint32 m bl_regions (ofs + 8) = Some (Vint vl) /\ correct_perm (block_perm mr)  vl) /\ (**r block_perm mr = Vint vl*)
+    (exists b o,  Mem.load AST.Mptr m bl_regions (ofs + 12) = Some (Vptr b o) /\ (block_ptr mr) = Vptr b o).
 
-Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
-  (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions ofs) = Some (Vint vl) /\ (start_addr mr) = Vint vl)    /\ (**r start_addr mr = Vint vl*)
-    (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 4))) = Some (Vint vl) /\ (block_size mr) = Vint vl) /\ (**r block_size mr = Vint vl*)
-    (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vint vl) /\ correct_perm (block_perm mr)  vl) /\ (**r block_perm mr = Vint vl*)
-    (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 12))) = Some (Vint vl) /\ (block_ptr mr) = Vint vl).
+Definition size_of_region  := 4 * 4. (* 4 * 32 bits *)
 
-Definition size_of_region  := Ptrofs.repr (4 * 4). (* 4 * 32 bits *)
-
-Fixpoint match_list_region  (m:mem) (bl_regions: block) (ofs:ptrofs) (l:list memory_region) :=
+Fixpoint match_list_region  (m:mem) (bl_regions: block) (ofs:Z) (l:list memory_region) :=
   match l with
   | nil => True
   | mr :: l' => match_region_at_ofs  mr bl_regions ofs m /\
-                  match_list_region  m bl_regions (Ptrofs.add ofs size_of_region) l'
+                  match_list_region  m bl_regions (ofs+size_of_region) l'
   end.
 
-Definition match_regions  (mrs:list memory_region) (bl_regions: block) (ofs : ptrofs) (m:mem) :=
+Definition match_regions  (mrs:list memory_region) (bl_regions: block) (ofs : Z) (m:mem) :=
     match_list_region m bl_regions ofs mrs.
 
-
-Definition id_of_reg (r:reg) : Z :=
-  match r with
-  | R0 => 0
-  | R1 => 1
-  | R2 => 2
-  | R3 => 3
-  | R4 => 4
-  | R5 => 5
-  | R6 => 6
-  | R7 => 7
-  | R8 => 8
-  | R9 => 9
-  | R10 => 10
-  end.
 
 Section S.
 
   (* [bl_state] is the memory block for the monadic state *)
   Variable bl_state : block.
 
-  Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
+  Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : Z) (m : mem) : Prop:=
     forall (r:reg),
-    exists vl, Mem.loadv Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some (Vlong vl) /\ (**r it should be `(eval_regmap r rmap)`*)
+    exists vl, Mem.load Mint64 m bl_reg (ofs + (8 * (id_of_reg r))) = Some (Vlong vl) /\ (**r it should be `(eval_regmap r rmap)`*)
             Vlong vl = eval_regmap r rmap.
            (*Val.inject inject_id (eval_regmap r rmap) (Vlong vl) . (**r each register is Vlong *)*)
 
-
-
-  Definition Z_of_flag (f:DxFlag.bpf_flag) : Z :=
-    match f with
-    | BPF_SUCC_RETURN  => 1
-    | BPF_OK  => 0
-    | BPF_ILLEGAL_INSTRUCTION => -1
-    | BPF_ILLEGAL_MEM => -2
-    | BPF_ILLEGAL_JUMP => -3
-    | BPF_ILLEGAL_CALL => -4
-    | BPF_ILLEGAL_LEN  => -5
-    | BPF_ILLEGAL_REGISTER => -6
-    | BPF_NO_RETURN => -7
-    | BPF_OUT_OF_BRANCHES => -8
-    | BPF_ILLEGAL_DIV => -9
-    | BPF_ILLEGAL_SHIFT => -10
-    | BPF_ILLEGAL_ALU => -11
-    | BPF_UNDEF_ERROR => -12
-    end.
-
-  Definition int_of_flag (f:bpf_flag)  :=
-    Int.repr (Z_of_flag f).
 
   Definition size_of_regs := 11 * 8. (**r we have 11 regs R0 - R10 *)
   Definition size_of_state (st: DxState.state) := 100 + 16 * (Z.of_nat (mrs_num st)).
@@ -112,12 +77,13 @@ Definition state_struct_def: Ctypes.composite_definition :=
   Record match_state  (st: DxState.state) (m: mem) : Prop :=
     {
       minj     : Mem.inject inject_id (bpf_m st) m;
-      mpc      : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
-      mflags   : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
-      mregs    : match_registers  (regs_st st) bl_state (Ptrofs.repr 8) m;
-      mrs_num : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (Int.repr (Z.of_nat (DxState.mrs_num st)))) /\ (Z.of_nat(DxState.mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)
-      mem_regs : match_regions (bpf_mrs st) bl_state (Ptrofs.repr (size_of_regs + 12)) m /\ List.length (bpf_mrs st) = (DxState.mrs_num st); (**r the number of bpf_mrs is exactly the mrs_num *)
-      mperm    : Mem.range_perm m bl_state 0 (size_of_state st) Cur Freeable
+      mpc      : Mem.load AST.Mint32 m bl_state 0 = Some (Vint  (pc_loc st));
+      mflags   : Mem.load AST.Mint32 m bl_state 4 = Some (Vint  (int_of_flag (flag st)));
+      mregs    : match_registers  (regs_st st) bl_state 8 m;
+      mrs_num  : Mem.load AST.Mint32 m bl_state (size_of_regs + 8) = Some (Vint  (Int.repr (Z.of_nat (DxState.mrs_num st)))) /\ (Z.of_nat(DxState.mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)
+      mem_regs : match_regions (bpf_mrs st) bl_state (size_of_regs + 12) m /\ List.length (bpf_mrs st) = (DxState.mrs_num st); (**r the number of bpf_mrs is exactly the mrs_num *)
+      mperm    : Mem.range_perm m bl_state 0 (size_of_state st) Cur Freeable;
+      minvalid : forall chunk ofs p, ~Mem.valid_access (bpf_m st) chunk bl_state ofs p /\ ~Mem.perm (bpf_m st) bl_state ofs Cur p(**r ysh: bl_state doesn't exist in st *)
     }.
 
 End S.
@@ -142,7 +108,7 @@ Lemma upd_pc_write_access:
     (Hst: match_state blk st m0),
     Mem.valid_access m0 Mint32 blk 0 Writable.
 Proof.
-  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mflags0 mrs_num0 mregs0; simpl in mem_regs0.
+  intros; unfold Mem.valid_access; destruct Hst; clear - mem_regs0 mperm0; simpl in mem_regs0.
   unfold match_regions, size_of_state in *.
   apply (Mem.range_perm_implies _ _ _ _ _ _ Writable) in mperm0; [idtac | constructor].
 
@@ -173,7 +139,7 @@ Lemma upd_flags_write_access:
     (Hst: match_state blk st m0),
     Mem.valid_access m0 Mint32 blk 4 Writable.
 Proof.
-  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0 mrs_num0; simpl in mperm0.
+  intros; unfold Mem.valid_access; destruct Hst; clear - mperm0; simpl in mperm0.
   unfold size_of_regs, size_of_state in *.
   apply (Mem.range_perm_implies _ _ _ _ _ _ Writable) in mperm0; [idtac | constructor].
 
@@ -204,7 +170,7 @@ Lemma upd_regs_write_access:
     (Hst: match_state blk st m0),
     Mem.valid_access m0 Mint64 blk (8 + (8 * (id_of_reg r))) Writable.
 Proof.
-  intros; unfold Mem.valid_access; destruct Hst; clear minj0 mpc0 mregs0 mflags0 mrs_num0; simpl in mperm0.
+  intros; unfold Mem.valid_access; destruct Hst; clear - mperm0; simpl in mperm0.
   unfold size_of_regs, size_of_state in *.
   apply (Mem.range_perm_implies _ _ _ _ _ _ Writable) in mperm0; [idtac | constructor].
   assert (H: 0<= Z.of_nat (DxState.mrs_num st)). { apply Nat2Z.is_nonneg. }
@@ -247,19 +213,19 @@ Require Import DxMonad.
 
 Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region o /\
-              match_region_at_ofs mr bl_region o m.
+              match_region_at_ofs mr bl_region (Ptrofs.unsigned o) m.
 
 (* Useful matching relations *)
 
 Definition match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
-  exists o, v = Vptr bl_region (Ptrofs.mul size_of_region  o) /\
-              match_region_at_ofs mr bl_region o m.
+  exists o, v = Vptr bl_region (Ptrofs.mul (Ptrofs.repr size_of_region) o) /\
+              match_region_at_ofs mr bl_region (Ptrofs.unsigned o) m.
 
 From bpf.proof Require Import Clightlogic.
 
 Lemma same_memory_match_region :
   forall bl_region st st' m m' mr v
-         (UMOD : unmodifies_effect nil m m'),
+         (UMOD : unmodifies_effect nil m m' st st'),
     match_region bl_region mr v st m ->
     match_region bl_region mr v st' m'.
 Proof.
@@ -270,14 +236,14 @@ Proof.
   split; auto.
   unfold match_region_at_ofs in *.
   unfold unmodifies_effect in UMOD.
-  unfold Mem.loadv.
+  destruct UMOD; subst.
   repeat rewrite <- UMOD by (simpl ; tauto).
   intuition.
 Qed.
 
 Lemma same_my_memory_match_region :
   forall bl_region st st' m m' mr v
-         (UMOD : unmodifies_effect nil m m'),
+         (UMOD : unmodifies_effect nil m m' st st'),
     my_match_region bl_region mr v st m ->
     my_match_region bl_region mr v st' m'.
 Proof.
@@ -288,7 +254,8 @@ Proof.
   split; auto.
   unfold match_region_at_ofs in *.
   unfold unmodifies_effect in UMOD.
-  unfold Mem.loadv.
+  destruct UMOD; subst.
   repeat rewrite <- UMOD by (simpl ; tauto).
   intuition.
 Qed.
+Close Scope Z_scope.

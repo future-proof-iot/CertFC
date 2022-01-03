@@ -5,17 +5,17 @@ defining bpf_flag
  */
 
 enum BPF_FLAG {
-    BPF_SUCC_RETURN         = 1,
-    BPF_OK                  = 0,
-    BPF_ILLEGAL_INSTRUCTION = -1,
-    BPF_ILLEGAL_MEM         = -2,
-    BPF_ILLEGAL_JUMP        = -3,
-    BPF_ILLEGAL_CALL        = -4,
-    BPF_ILLEGAL_LEN         = -5,
-    BPF_ILLEGAL_REGISTER    = -6,
-    BPF_NO_RETURN           = -7,
-    BPF_OUT_OF_BRANCHES     = -8,
-    BPF_ILLEGAL_DIV         = -9,
+    vBPF_SUCC_RETURN         = 1,
+    vBPF_OK                  = 0,
+    vBPF_ILLEGAL_INSTRUCTION = -1,
+    vBPF_ILLEGAL_MEM         = -2,
+    vBPF_ILLEGAL_JUMP        = -3,
+    vBPF_ILLEGAL_CALL        = -4,
+    vBPF_ILLEGAL_LEN         = -5,
+    vBPF_ILLEGAL_REGISTER    = -6,
+    vBPF_NO_RETURN           = -7,
+    vBPF_OUT_OF_BRANCHES     = -8,
+    vBPF_ILLEGAL_DIV         = -9,
 };
 
 /*                                                                              
@@ -33,7 +33,7 @@ struct memory_region {
   unsigned int start_addr;
   unsigned int block_size;
   unsigned int block_perm;
-  unsigned int block_ptr;
+  unsigned int* block_ptr;
 };
 
 struct bpf_state {
@@ -44,9 +44,4 @@ struct bpf_state {
   struct memory_region *mrs;
 };
 
-void add_mem_region(struct bpf_state *, struct memory_region *);
-
-void add_mem_region_ctx(struct bpf_state *, struct memory_region *);
-
-unsigned long long bpf_interpreter(struct bpf_state *, int, unsigned int, unsigned long long *);
-
+unsigned long long bpf_interpreter(struct bpf_state *, int, unsigned int,  const unsigned long long *);

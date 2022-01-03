@@ -1,10 +1,10 @@
 struct memory_region;
 struct bpf_state;
 struct memory_region {
-  unsigned int start_addr;
+  unsigned int *start_addr;
   unsigned int block_size;
   unsigned int block_perm;
-  unsigned int block_ptr;
+  unsigned int *block_ptr;
 };
 
 struct bpf_state {
@@ -55,7 +55,7 @@ extern unsigned int get_sub(unsigned int, unsigned int);
 
 extern unsigned int get_addr_ofs(unsigned long long, int);
 
-extern unsigned int get_block_ptr(struct memory_region *);
+extern unsigned int *get_block_ptr(struct memory_region *);
 
 extern unsigned int get_start_addr(struct memory_region *);
 
@@ -65,11 +65,11 @@ extern unsigned int get_block_perm(struct memory_region *);
 
 extern _Bool is_well_chunk_bool(unsigned int);
 
-extern unsigned int check_mem_aux2(struct memory_region *, unsigned int, unsigned int);
+extern unsigned int *check_mem_aux2(struct memory_region *, unsigned int, unsigned int);
 
-extern unsigned int check_mem_aux(unsigned int, unsigned int, unsigned int, unsigned int);
+extern unsigned int *check_mem_aux(unsigned int, unsigned int, unsigned int, unsigned int);
 
-extern unsigned int check_mem(unsigned int, unsigned int, unsigned int);
+extern unsigned int *check_mem(unsigned int, unsigned int, unsigned int);
 
 extern _Bool comp_and_0x08_byte(unsigned char);
 
@@ -103,13 +103,13 @@ extern int eval_flag(void);
 
 extern void upd_flag(int);
 
-extern unsigned int eval_mem_num(void);
+extern unsigned int eval_mrs_num(void);
 
 extern unsigned long long eval_reg(unsigned int);
 
 extern void upd_reg(unsigned int, unsigned long long);
 
-extern struct memory_region *eval_mem_regions(void);
+extern struct memory_region *eval_mrs_regions(void);
 
 extern unsigned long long load_mem(unsigned int, unsigned int);
 
@@ -125,7 +125,7 @@ unsigned long long list_get(unsigned long long *l, int idx)
 struct memory_region *get_mem_region(unsigned int n)
 {
   struct memory_region *mrs;
-  mrs = eval_mem_regions();
+  mrs = eval_mrs_regions();
   return mrs + n;
 }
 
@@ -156,7 +156,7 @@ int get_immediate(unsigned long long ins)
 
 unsigned long long eval_immediate(int ins)
 {
-  return (unsigned long long) ins;
+  return (unsigned long long) (unsigned int) ins;
 }
 
 unsigned char get_opcode_ins(unsigned long long ins)
@@ -216,10 +216,10 @@ unsigned int get_sub(unsigned int x, unsigned int y)
 
 unsigned int get_addr_ofs(unsigned long long x, int ofs)
 {
-  return (unsigned int) (x + (unsigned long long) (unsigned int) ofs);
+  return (unsigned int) (x + (unsigned long long) ofs);
 }
 
-unsigned int get_block_ptr(struct memory_region *mr)
+unsigned int *get_block_ptr(struct memory_region *mr)
 {
   return (*mr).block_ptr;
 }
@@ -256,10 +256,10 @@ _Bool is_well_chunk_bool(unsigned int chunk)
   }
 }
 
-unsigned int check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigned int chunk)
+unsigned int *check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigned int chunk)
 {
   _Bool well_chunk;
-  unsigned int ptr;
+  unsigned int *ptr;
   unsigned int start;
   unsigned int size;
   unsigned int lo_ofs;
@@ -275,31 +275,31 @@ unsigned int check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigne
       if (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk) {
         return ptr + lo_ofs;
       } else {
-        return 0U;
+        return 0;
       }
     } else {
-      return 0U;
+      return 0;
     }
   } else {
-    return 0U;
+    return 0;
   }
 }
 
-unsigned int check_mem_aux(unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr)
+unsigned int *check_mem_aux(unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr)
 {
   unsigned int n;
   struct memory_region *cur_mr;
   unsigned int mr_perm;
-  unsigned int check_mem;
+  unsigned int *check_mem;
   if (num == 0U) {
-    return 0U;
+    return 0;
   } else {
     n = num - 1U;
     cur_mr = get_mem_region(n);
     mr_perm = get_block_perm(cur_mr);
     if (mr_perm >= perm) {
       check_mem = check_mem_aux2(cur_mr, addr, chunk);
-      if (check_mem == 0U) {
+      if (check_mem == 0) {
         return check_mem_aux(n, perm, chunk, addr);
       } else {
         return check_mem;
@@ -310,22 +310,22 @@ unsigned int check_mem_aux(unsigned int num, unsigned int perm, unsigned int chu
   }
 }
 
-unsigned int check_mem(unsigned int perm, unsigned int chunk, unsigned int addr)
+unsigned int *check_mem(unsigned int perm, unsigned int chunk, unsigned int addr)
 {
   _Bool well_chunk;
   unsigned int mem_reg_num;
-  unsigned int check_mem;
+  unsigned int *check_mem;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
-    mem_reg_num = eval_mem_num();
+    mem_reg_num = eval_mrs_num();
     check_mem = check_mem_aux(mem_reg_num, perm, chunk, addr);
-    if (check_mem == 0U) {
-      return 0U;
+    if (check_mem == 0) {
+      return 0;
     } else {
       return check_mem;
     }
   } else {
-    return 0U;
+    return 0;
   }
 }
 
@@ -437,20 +437,24 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
   opcode_alu32 = get_opcode_alu32(op);
   switch (opcode_alu32) {
     case 0:
-      upd_reg(dst, (unsigned long long) (dst32 + src32));
+      upd_reg(dst,
+              (unsigned long long) (unsigned int) (dst32 + src32));
       upd_flag(0);
       return;
     case 16:
-      upd_reg(dst, (unsigned long long) (dst32 - src32));
+      upd_reg(dst,
+              (unsigned long long) (unsigned int) (dst32 - src32));
       upd_flag(0);
       return;
     case 32:
-      upd_reg(dst, (unsigned long long) (dst32 * src32));
+      upd_reg(dst,
+              (unsigned long long) (unsigned int) (dst32 * src32));
       upd_flag(0);
       return;
     case 48:
       if (src32 != 0U) {
-        upd_reg(dst, (unsigned long long) (dst32 / src32));
+        upd_reg(dst,
+                (unsigned long long) (unsigned int) (dst32 / src32));
         upd_flag(0);
         return;
       } else {
@@ -458,16 +462,19 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
         return;
       }
     case 64:
-      upd_reg(dst, (unsigned long long) (dst32 | src32));
+      upd_reg(dst,
+              (unsigned long long) (unsigned int) (dst32 | src32));
       upd_flag(0);
       return;
     case 80:
-      upd_reg(dst, (unsigned long long) (dst32 & src32));
+      upd_reg(dst,
+              (unsigned long long) (unsigned int) (dst32 & src32));
       upd_flag(0);
       return;
     case 96:
       if (src32 < 32U) {
-        upd_reg(dst, (unsigned long long) (dst32 << src32));
+        upd_reg(dst,
+                (unsigned long long) (unsigned int) (dst32 << src32));
         upd_flag(0);
         return;
       } else {
@@ -476,7 +483,8 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
       }
     case 112:
       if (src32 < 32U) {
-        upd_reg(dst, (unsigned long long) (dst32 >> src32));
+        upd_reg(dst,
+                (unsigned long long) (unsigned int) (dst32 >> src32));
         upd_flag(0);
         return;
       } else {
@@ -484,12 +492,13 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
         return;
       }
     case 128:
-      upd_reg(dst, (unsigned long long) -dst32);
+      upd_reg(dst, (unsigned long long) (unsigned int) -dst32);
       upd_flag(0);
       return;
     case 144:
       if (src32 != 0U) {
-        upd_reg(dst, (unsigned long long) (dst32 % src32));
+        upd_reg(dst,
+                (unsigned long long) (unsigned int) (dst32 % src32));
         upd_flag(0);
         return;
       } else {
@@ -497,7 +506,8 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
         return;
       }
     case 160:
-      upd_reg(dst, (unsigned long long) (dst32 ^ src32));
+      upd_reg(dst,
+              (unsigned long long) (unsigned int) (dst32 ^ src32));
       upd_flag(0);
       return;
     case 176:
@@ -506,7 +516,9 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
       return;
     case 192:
       if (src32 < 32U) {
-        upd_reg(dst, (unsigned long long) ((int) dst32 >> src32));
+        upd_reg(dst,
+                (unsigned long long) (unsigned int) ((int) dst32
+                                                      >> src32));
         upd_flag(0);
         return;
       } else {
@@ -650,8 +662,8 @@ void step_opcode_mem_ld_imm(int imm, int pc, int len, unsigned int dst, unsigned
         next_ins = list_get(l, pc + 1);
         next_imm = get_immediate(next_ins);
         upd_reg(dst,
-                (unsigned long long) (unsigned int) imm
-                  | (unsigned long long) (unsigned int) next_imm << 32U);
+                (unsigned long long) imm
+                  | (unsigned long long) next_imm << 32U);
         upd_pc_incr();
         upd_flag(0);
         return;
@@ -669,19 +681,19 @@ void step_opcode_mem_ld_imm(int imm, int pc, int len, unsigned int dst, unsigned
 void step_opcode_mem_ld_reg(unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_ld;
-  unsigned int addr_ptr;
+  unsigned int *addr_ptr;
   unsigned long long v;
-  unsigned int addr_ptr;
+  unsigned int *addr_ptr;
   unsigned long long v;
-  unsigned int addr_ptr;
+  unsigned int *addr_ptr;
   unsigned long long v;
-  unsigned int addr_ptr;
+  unsigned int *addr_ptr;
   unsigned long long v;
   opcode_ld = get_opcode_mem_ld_reg(op);
   switch (opcode_ld) {
     case 97:
       addr_ptr = check_mem(1U, 4U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -692,7 +704,7 @@ void step_opcode_mem_ld_reg(unsigned int addr, int pc, unsigned int dst, unsigne
       }
     case 105:
       addr_ptr = check_mem(1U, 2U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -703,7 +715,7 @@ void step_opcode_mem_ld_reg(unsigned int addr, int pc, unsigned int dst, unsigne
       }
     case 113:
       addr_ptr = check_mem(1U, 1U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -714,7 +726,7 @@ void step_opcode_mem_ld_reg(unsigned int addr, int pc, unsigned int dst, unsigne
       }
     case 121:
       addr_ptr = check_mem(1U, 8U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -733,15 +745,15 @@ void step_opcode_mem_ld_reg(unsigned int addr, int pc, unsigned int dst, unsigne
 void step_opcode_mem_st_imm(int imm, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
-  unsigned int addr_ptr;
-  unsigned int addr_ptr;
-  unsigned int addr_ptr;
-  unsigned int addr_ptr;
+  unsigned int *addr_ptr;
+  unsigned int *addr_ptr;
+  unsigned int *addr_ptr;
+  unsigned int *addr_ptr;
   opcode_st = get_opcode_mem_st_imm(op);
   switch (opcode_st) {
     case 98:
       addr_ptr = check_mem(2U, 4U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -751,7 +763,7 @@ void step_opcode_mem_st_imm(int imm, unsigned int addr, int pc, unsigned int dst
       }
     case 106:
       addr_ptr = check_mem(2U, 2U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -761,7 +773,7 @@ void step_opcode_mem_st_imm(int imm, unsigned int addr, int pc, unsigned int dst
       }
     case 114:
       addr_ptr = check_mem(2U, 1U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -771,7 +783,7 @@ void step_opcode_mem_st_imm(int imm, unsigned int addr, int pc, unsigned int dst
       }
     case 122:
       addr_ptr = check_mem(2U, 8U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -789,15 +801,15 @@ void step_opcode_mem_st_imm(int imm, unsigned int addr, int pc, unsigned int dst
 void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, int pc, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
-  unsigned int addr_ptr;
-  unsigned int addr_ptr;
-  unsigned int addr_ptr;
-  unsigned int addr_ptr;
+  unsigned int *addr_ptr;
+  unsigned int *addr_ptr;
+  unsigned int *addr_ptr;
+  unsigned int *addr_ptr;
   opcode_st = get_opcode_mem_st_reg(op);
   switch (opcode_st) {
     case 99:
       addr_ptr = check_mem(2U, 4U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -807,7 +819,7 @@ void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, int pc,
       }
     case 107:
       addr_ptr = check_mem(2U, 2U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -817,7 +829,7 @@ void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, int pc,
       }
     case 115:
       addr_ptr = check_mem(2U, 1U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
@@ -827,7 +839,7 @@ void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, int pc,
       }
     case 123:
       addr_ptr = check_mem(2U, 8U, addr);
-      if (addr_ptr == 0U) {
+      if (addr_ptr == 0) {
         upd_flag(-2);
         return;
       } else {
