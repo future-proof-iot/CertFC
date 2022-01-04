@@ -98,7 +98,7 @@ Section Upd_reg.
           - H3: Mem.perm (bpf_m st1) ... (the permission in the rbpf level)
           - goal: Mem.perm m1 ... (the permission in the Clight-level)
         *)
-      destruct Hst as (minj, _, _, _, _, _, _, minvalid).
+      destruct Hst as (minj, _, _, _, _, _, _, minvalid, mblk).
       apply (upd_reg_preserves_perm c (Vlong vl) _ _ st (bpf_m (DxState.upd_reg c (Vlong vl) st)) m m1 b2 _ ofs _ k0 p3 minj Hstore); [reflexivity | assumption].
     -
       intros.
@@ -110,19 +110,23 @@ Section Upd_reg.
       rewrite Z.add_0_r; subst.
       unfold DxState.upd_reg in H2.
       simpl in H2. (** however b2 = state_block does not exist in st! *)
+      destruct Hst as (minj, _, _, _, _, _, _, (minvalid_st & minvalid_ins), mblk).
+      destruct minj as (mi_inj, mi_freeblocks, _, _, _, _).
+      destruct mi_inj as (_, _ , mi_memval).
+      specialize (mi_memval b2 ofs b2 0%Z H0 H2).
+      rewrite Z.add_0_r in mi_memval.
       destruct (Pos.eqb b2 state_block) eqn: Hblk_eq.
       + (**r b2 = state_block *)
         apply Peqb_true_eq in Hblk_eq.
         subst b2.
         exfalso.
         (**r we should say inject_id state_block = None *)
-        destruct Hst as (minj, _, _, _, _, _, _, (minvalid_st & minvalid_ins)).
-        destruct minj as (mi_inj, mi_freeblocks, _, _, _, _).
+        
+        
         apply mi_freeblocks in minvalid_st.
         rewrite minvalid_st in H0.
         inversion H0.
-      + apply Pos.eqb_neq in Hblk_eq. (**r b2 <> state_block is not enough because b2 could be the block of input in clight... *)
-        admit.
+      + apply Pos.eqb_neq in Hblk_eq. (**r b2 <> state_block  *)
       exfalso.
       destruct Hst as (minj, _, _, _, _, _, _, minvalid).
       destruct minj as (mi_inj, mi_freeblocks, _, _, _, _).
