@@ -7,6 +7,14 @@ Import ListNotations.
 
 Open Scope Z_scope.
 
+Ltac my_reflex :=
+  match goal with
+  | |- ?X = Some _ =>
+      let x := (eval compute in X) in
+      replace X with x by reflexivity;
+      reflexivity
+  end.
+
 Lemma list_no_repet_dec : forall {A:Type} eq_dec (l:list A) H,
     list_norepet_dec eq_dec l = left H ->
     list_norepet l.

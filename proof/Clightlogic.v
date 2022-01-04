@@ -2750,6 +2750,68 @@ Section S.
 
 End S.
 
+Section S.
+  (** The program contains our function of interest [fn] *)
+  Variable p : Clight.program.
+
+  Variable res : Type.
+
+  Variable f : M res.
+
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Variable fn : Clight.function.
+
+  Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
+
+
+  Lemma correct_statement_switch :
+    forall (n:Z) e l
+           (modifies : list block)
+           (var_inv  : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
+      st le m
+
+      (C1 : correct_body p res f fn (seq_of_labeled_statement (select_switch n l))
+                         modifies  var_inv match_res st
+                         le m)
+      (TY : classify_switch (typeof e) = switch_case_i)
+      (EVAL: match_temp_env var_inv le st m ->
+               exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Vint (Int.repr n)))
+      (SMALL : 0 <= n < Int.modulus)
+    ,
+
+      correct_body p res f fn
+                          (Sswitch e l) modifies  var_inv match_res st le m.
+  Proof.
+    intros.
+    unfold correct_body.
+    intros PRE.
+    unfold correct_body in C1.
+    specialize(C1 PRE).
+    specialize (EVAL PRE).
+    destruct (f st) eqn:F1; try auto.
+    destruct p0 as (v',st').
+    intros.
+    destruct (C1 (Kswitch k)) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+    apply eval_expr_eval in EVAL.
+    exists v1,m1,t1.
+    repeat split.
+    eapply star_step.
+    econstructor ;eauto.
+    unfold sem_switch_arg.
+    rewrite TY. reflexivity.
+    rewrite Int.unsigned_repr_eq.
+    rewrite Zmod_small by auto.
+    eauto.
+    reflexivity.
+    auto.
+    auto.
+    auto.
+  Qed.
+
+End S.
+
+
+
 
 
 

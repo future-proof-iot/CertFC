@@ -121,8 +121,8 @@ Proof.
   (** goal: correct_body _ _ (bindM (is_well_chunk_bool ... *)
   correct_forward.
 
-  reflexivity.
-  reflexivity.
+  my_reflex.
+  my_reflex.
   reflexivity.
   typeclasses eauto.
 
@@ -186,8 +186,8 @@ Proof.
   eapply correct_statement_seq_body_pure.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
+  my_reflex.
+  my_reflex.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -229,8 +229,8 @@ Proof.
   eapply correct_statement_seq_body_pure.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
+  my_reflex.
+  my_reflex.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -264,8 +264,8 @@ Proof.
   eapply correct_statement_seq_body_pure.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
+  my_reflex.
+  my_reflex.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -300,8 +300,8 @@ Proof.
   eapply correct_statement_seq_body_pure.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
+  my_reflex.
+  my_reflex.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -338,8 +338,8 @@ Proof.
   eapply correct_statement_seq_body_pure.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
-  reflexivity.
-  reflexivity.
+  my_reflex.
+  my_reflex.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
