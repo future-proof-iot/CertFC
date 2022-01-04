@@ -532,6 +532,14 @@ Proof.
   assumption.
 Qed.
 
+Lemma Ptrofs_unsigned_repr_eq4:
+  Ptrofs.unsigned (Ptrofs.repr 4) = 4.
+Proof.
+  apply Ptrofs.unsigned_repr.
+  rewrite Ptrofs_max_unsigned_eq32.
+  lia.
+Qed.
+
 Lemma upd_reg_preserves_perm: forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
   (Hstate_inject: Mem.inject inject_id (bpf_m st) m) (**r (inject_bl_state b') *)
   (Hstore: Mem.store chunk m b' ofs' vl' = Some m2)
