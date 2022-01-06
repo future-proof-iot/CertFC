@@ -76,7 +76,7 @@ Section Upd_reg.
       *)
     exists Vundef, m1, Events.E0.
 
-    repeat split; unfold step2.
+    split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
       repeat forward_star.
 
@@ -88,88 +88,28 @@ Section Upd_reg.
       }
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
-    -
-      intros.
-      unfold inject_bl_state in H0.
-      inversion H0; subst.
-      clear H0; rewrite Z.add_0_r.
-      (**r the memory relation is:
-          - Hst: match_state _ st m (between rbpf's st Clight's m)
-          - H3: Mem.perm (bpf_m st1) ... (the permission in the rbpf level)
-          - goal: Mem.perm m1 ... (the permission in the Clight-level)
-        *)
-      destruct Hst as (minj, _, _, _, _, _, _, minvalid, mblk).
-      apply (upd_reg_preserves_perm c (Vlong vl) _ _ st (bpf_m (DxState.upd_reg c (Vlong vl) st)) m m1 b2 _ ofs _ k0 p3 minj Hstore); [reflexivity | assumption].
-    -
-      intros.
-      inversion H0.
-      apply Z.divide_0_r.
-
-    - intros. (**r inject_id is weak, we need inject_id' to say something about state_block *)
-      inversion H0.
-      rewrite Z.add_0_r; subst.
-      unfold DxState.upd_reg in H2.
-      simpl in H2. (** however b2 = state_block does not exist in st! *)
-      destruct Hst as (minj, _, _, _, _, _, _, (minvalid_st & minvalid_ins), mblk).
-      destruct minj as (mi_inj, mi_freeblocks, _, _, _, _).
-      destruct mi_inj as (_, _ , mi_memval).
-      specialize (mi_memval b2 ofs b2 0%Z H0 H2).
-      rewrite Z.add_0_r in mi_memval.
-      destruct (Pos.eqb b2 state_block) eqn: Hblk_eq.
-      + (**r b2 = state_block *)
-        apply Peqb_true_eq in Hblk_eq.
-        subst b2.
-        exfalso.
-        (**r we should say inject_id state_block = None *)
-        
-        
-        apply mi_freeblocks in minvalid_st.
-        rewrite minvalid_st in H0.
-        inversion H0.
-      + apply Pos.eqb_neq in Hblk_eq. (**r b2 <> state_block  *)
-      exfalso.
-      destruct Hst as (minj, _, _, _, _, _, _, minvalid).
-      destruct minj as (mi_inj, mi_freeblocks, _, _, _, _).
-      apply mi_freeblocks in minvalid.
-      rewrite 
-      destruct minvalid.
-      apply H0.
-      
-      
-      admit.
-    - intros.
-      exfalso.
-      apply H1.
-      destruct Hst. (**r TODO *) admit. ; clear mpc mflags mregs mrs_num mem_regs mperm.
-      (**r we have: It seems `inject_id` is too weak???
-        - minj : Mem.inject inject_id (bpf_m st) m
-        - H : Mem.store AST.Mint64 (bpf_m st) b 0 (Vlong vl) = (bpf_m (DxState.upd_reg c (Vlong vl) st)).
-        - F : inject_id b = Some (b, 0).
-        - VF: Val.inject inject_id (Vlong vl) (Vlong vl)
-        - we could get `exists n2, store AST.Mint64 m b 0 (Vlong vl) = Some n2
-    /\ inject inject_id (bpf_m (DxState.upd_reg c (Vlong vl) st)) n2`.
-        - Hstore : Mem.store AST.Mint64 m state_block (8 + 8 * id_of_reg c) (Vlong vl) =
-         Some m1
-        *)
-      apply Mem.valid_block_inject_2 with (f:=inject_id) (m1:= (bpf_m (DxState.upd_reg c (Vlong vl) st))) (b1:= b)(delta:= 0%Z).
+    - split.
+      eapply upd_reg_preserves_match_state.
+      apply Hst.
       reflexivity.
-      unfold Mem.inject.
-      
+      apply Hstore.
 
-    - intros.
-      simpl.
-      constructor.
-    - unfold unmodifies_effect, modifies, In.
-      intros.
-      destruct (Pos.eq_dec state_block b).
-      subst b.
-      exfalso.
-      apply H1.
-      left; reflexivity.
-      apply POrderedType.PositiveOrder.neq_sym in n.
-      symmetry.
-      apply (Mem.load_store_other AST.Mint64 m _ _ _ m1 Hstore chk _ _).
-      left; assumption.
+      split.
+
+      + intros.
+        simpl.
+        constructor.
+      + unfold unmodifies_effect, modifies, In.
+        intros.
+        destruct (Pos.eq_dec state_block b).
+        subst b.
+        exfalso.
+        apply H0.
+        left; reflexivity.
+        apply POrderedType.PositiveOrder.neq_sym in n.
+        symmetry.
+        apply (Mem.load_store_other AST.Mint64 m _ _ _ m1 Hstore chk _ _).
+        left; assumption.
 Qed.
 
 End Upd_reg.

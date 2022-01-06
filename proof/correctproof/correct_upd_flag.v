@@ -64,7 +64,7 @@ Section Upd_flag.
     apply (upd_flags_store _ _ _ _ (CommonLib.int_of_flag c)) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** we need to get the value of flag in the memory *)
-    destruct Hst; clear minj mpc mregs mperm.
+    destruct Hst; clear munchange mpc mregs mperm.
     unfold Mem.loadv in mflags.
     unfold size_of_regs in mflags; simpl in mflags.
     

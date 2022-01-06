@@ -48,7 +48,7 @@ Section List_get.
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => int64_correct x v.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => int64_correct x v (*/\ match_state ... st m*).
 
   Instance correct_function3_list_get : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.

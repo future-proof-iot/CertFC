@@ -14,6 +14,7 @@ step_opcode_alu64
      : val64_t -> val64_t -> DxRegs.reg -> int8_t -> M unit
 
 *)
+Open Scope Z_scope.
 
 Section Step_opcode_alu64.
 
@@ -29,11 +30,12 @@ Section Step_opcode_alu64.
   Definition f : arrow_type args (M res) := step_opcode_alu64.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
 
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_step_opcode_alu64.
@@ -125,8 +127,8 @@ Ltac correct_forward L :=
     (** goal: correct_body _ _ (bindM (get_opcode_alu64 _) ... *)
     correct_forward correct_statement_seq_body_nil.
 
-    reflexivity.
-    reflexivity.
+    my_reflex.
+    my_reflex.
     reflexivity.
     typeclasses eauto.
 
@@ -163,9 +165,55 @@ Ltac correct_forward L :=
               | op_BPF_ADD64 => bindM (upd_reg ... *)
     intros.
     unfold INV.
-    destruct x. (**r case discussion on each alu64_instruction *)
+    destruct x eqn: Halu. (**r case discussion on each alu64_instruction *)
     - (**r op_BPF_ADD64 *)
-      unfold correct_body.
+      eapply correct_statement_switch with (n:= 0).
+      + unfold list_rel_arg,app;
+        match goal with
+        |- correct_body _ _ _ _ ?B _ ?INV
+                     _ _ _ _ =>
+          let I := fresh "INV" in
+          set (I := INV) ; simpl in I;
+          let B1 := eval simpl in B in
+            change B with B1
+        end.
+        unfold correct_body. (**r here I could not avoid, because we must first finish upd_reg *)
+        unfold correct_body.
+        intros.
+        destruct (bindM _ _ _) eqn: HbindM; [| constructor].
+        destruct p0.
+        inversion HbindM; subst.
+        intros.
+        do 3 eexists.
+        repeat split.
+        forward_star.
+        simpl.
+        repeat forward_star.
+        forward_star.
+        repeat forward_star.
+        forward_star.
+        eapply step_call.
+        reflexivity.
+        econstructor; eauto.
+        econstructor; eauto.
+        (** eval_expr e le m a vf *)
+        idtac (* TODO *) |
+        (**  eval_exprlist e le m al tyargs vargs *)
+        idtac (* TODO *) |
+        (** Genv.find_funct ge vf = Some fd *)
+        reflexivity (**r or `econstructor; eauto`, which one is better *) |
+        (** type_of_fundef fd = Tfunction tyargs tyres cconv *)
+        reflexivity
+      ].
+        forward_star.
+
+
+
+
+
+
+        eapply Smallstep.star_step; eauto.
+        simpl.
       intros.
       correct_forward correct_statement_seq_body.
     - (**r op_BPF_SUB64 *)
@@ -224,5 +272,7 @@ Ltac correct_forward L :=
   Qed.
 
 End Step_opcode_alu64.
+
+Close Scope Z_scope.
 
 Existing Instance correct_function3_step_opcode_alu64.

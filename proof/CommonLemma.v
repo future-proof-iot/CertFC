@@ -1,7 +1,7 @@
 From compcert Require Import Coqlib Clight Integers Values Ctypes Memory.
-From bpf.src Require Import DxState DxMonad.
+From bpf.src Require Import DxRegs DxState DxMonad.
 From bpf.proof Require Import Clightlogic CommonLib.
-From Ltac2 Require Import Ltac2 Message.
+(* From Ltac2 Require Import Ltac2 Message. *)
 From Coq Require Import List Lia ZArith.
 Import ListNotations.
 
@@ -532,12 +532,108 @@ Proof.
   assumption.
 Qed.
 
-Lemma Ptrofs_unsigned_repr_eq4:
+Lemma Ptrofs_unsigned_ge_zero :
+  forall i,
+    Ptrofs.unsigned i >= 0.
+Proof.
+  intro.
+  assert (Hrange: 0 <= Ptrofs.unsigned i <= Ptrofs.max_unsigned). { apply Ptrofs.unsigned_range_2. }
+  destruct Hrange.
+  (**r Search (_ <= _). *)
+  apply Z.le_ge in H.
+  assumption.
+Qed.
+
+Lemma Ptrofs_unsigned_repr_4:
   Ptrofs.unsigned (Ptrofs.repr 4) = 4.
 Proof.
   apply Ptrofs.unsigned_repr.
   rewrite Ptrofs_max_unsigned_eq32.
   lia.
+Qed.
+
+Lemma Ptrofs_unsigned_repr_8:
+  Ptrofs.unsigned (Ptrofs.repr 8) = 8.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_12:
+ Ptrofs.unsigned (Ptrofs.repr 12) = 12.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_16:
+ Ptrofs.unsigned (Ptrofs.repr 16) = 16.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_96:
+  Ptrofs.unsigned (Ptrofs.repr 96) = 96.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_100:
+ Ptrofs.unsigned (Ptrofs.repr 100) = 100.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_104:
+ Ptrofs.unsigned (Ptrofs.repr 104) = 104.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_108:
+ Ptrofs.unsigned (Ptrofs.repr 108) = 108.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_112:
+ Ptrofs.unsigned (Ptrofs.repr 112) = 112.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_116:
+ Ptrofs.unsigned (Ptrofs.repr 116) = 116.
+Proof.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma eval_upd_regmap_same:
+  forall r regs v, eval_regmap r (upd_regmap r v regs) = v.
+Proof.
+  intros.
+  unfold eval_regmap, upd_regmap.
+  destruct r; reflexivity.
+Qed.
+
+Lemma eval_upd_regmap_other:
+  forall r0 r1 regs v,
+    r0 <> r1 -> 
+      eval_regmap r0 (upd_regmap r1 v regs) = eval_regmap r0 regs.
+Proof.
+  intros.
+  unfold eval_regmap, upd_regmap.
+  destruct r0; destruct r1; try reflexivity.
+  all: exfalso; apply H; reflexivity.
+Qed.
+
+Lemma Hreg_eq: 
+  forall r, (Ptrofs.unsigned
+              (Ptrofs.repr
+                 (Ptrofs.unsigned (Ptrofs.repr 8) +
+                  Ptrofs.unsigned (Ptrofs.repr (8 * id_of_reg r))))) = (8 + 8 * id_of_reg r)%Z.
+Proof.
+  intros.
+  repeat rewrite Ptrofs.unsigned_repr; try (rewrite Ptrofs_max_unsigned_eq32; unfold id_of_reg; destruct r; lia).
+  reflexivity.
 Qed.
 
 Lemma upd_reg_preserves_perm: forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
@@ -565,32 +661,5 @@ Proof.
     assumption.
 Qed.
 
-(*
-Lemma upd_reg_preserves_perm': forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
-  (Hstate_inject: Mem.inject (inject_bl_state b') (bpf_m st) m)
-  (Hstore: Mem.store chunk m b' ofs' vl' = Some m2)
-  (Hrbpf_m: bpf_m (DxState.upd_reg r vl st) = m1)
-  (Hrbpf_perm: Mem.perm m1 b ofs k p),
-    Mem.perm m2 b ofs k p.
-Proof.
-    unfold DxState.upd_reg; simpl; intros; subst.
-    destruct Hstate_inject as (mi_inj, mi_freeblocks, _, _, _, _).
-    apply Mem.perm_inject with (f:= inject_bl_state b') (m2:=m) (b2:= b) (delta:=0%Z)in Hrbpf_perm.
-    rewrite Z.add_0_r in Hrbpf_perm.
-    apply (Mem.perm_store_1 _ _ _ _ _ _ Hstore _ _ _ _ Hrbpf_perm).
-    unfold inject_bl_state in *.
-    destruct (Pos.eqb b b') eqn: Hblk_eq.
-    - (**r b = b' *)
-      (**r Search (Pos.eqb).*)
-      apply Peqb_true_eq in Hblk_eq.
-      subst b'; simpl in *.
-      destruct Hstate_inject as (mi_inj, mi_freeblocks, _, _, _, _).
-      destruct mi_inj as (mi_perm, _, _).
-      apply mi_perm with (b2:= , delta) in Hrbpf_perm.
-      destruct mi_inj.
-      rewrite Hblk_eq in Hstate_inject.
-    reflexivity.
-    assumption.
-Qed. *)
 
 Close Scope Z_scope.

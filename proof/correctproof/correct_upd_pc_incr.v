@@ -63,7 +63,7 @@ Section Upd_pc_incr.
     (** we need to get the proof of `upd_pc_incr` load/store permission *)
     apply (upd_pc_store _ _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
-    destruct Hst; clear minj mregs mflags mperm.
+    destruct Hst; clear munchange mregs mflags mperm.
     (** pc \in [ (state_block,0), (state_block,8) ) *)
 
     (**according to the type of upd_pc_incr:

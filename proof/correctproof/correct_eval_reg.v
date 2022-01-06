@@ -61,7 +61,7 @@ Section Eval_reg.
     destruct H0 as (Hptr & Hmatch).
     subst.
     destruct Hmatch.
-    clear minj mpc mflags mperm.
+    clear munchange mpc mflags mperm.
     unfold match_registers in mregs.
     simpl in c.
     specialize (mregs c).

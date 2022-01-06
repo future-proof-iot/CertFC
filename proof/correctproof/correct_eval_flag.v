@@ -58,7 +58,8 @@ Section Eval_flag.
     subst.
 
     (** we need to get the value of pc in the memory *)
-    destruct Hst; clear minj mpc mregs mperm.
+    destruct Hst.
+    clear munchange mpc mregs mperm.
     unfold Mem.loadv in mflags.
     unfold size_of_regs in mflags; simpl in mflags.
     (** pc \in [ (state_block,0), (state_block,8) ) *)

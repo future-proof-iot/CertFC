@@ -62,9 +62,9 @@ Section Eval_mrs_regions.
     unfold stateM_correct in H0.
     destruct H0 as (Hv_eq & Hst).
     destruct Hst.
-    clear minj mpc mflags mregs mperm.
+    clear munchange mpc mflags mregs mperm.
     destruct mrs_num as (Hmrs_num_ld & Hmrs_num_gt).
-    destruct mem_regs as (mem_regs & Hmem_regions_length).
+    destruct mem_regs as (mem_regs & Hmem_regions_length & _).
     subst v.
 
     destruct (bpf_mrs st).

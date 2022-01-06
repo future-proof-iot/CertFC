@@ -2,7 +2,7 @@
 From bpf.src Require Import DxIntegers DxValues DxAST DxState DxMemRegion DxRegs DxFlag.
 From compcert Require Import Coqlib Integers Values AST Clight Memory Memtype.
 
-From bpf.proof Require Import CommonLib.
+From bpf.proof Require Import CommonLemma CommonLib Clightlogic.
 From Coq Require Import ZArith.
 Open Scope Z_scope.
 
@@ -34,13 +34,13 @@ Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : pt
     (exists b o,  Mem.loadv AST.Mptr  m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 12))) = Some (Vptr b o) /\ (block_ptr mr) = Vptr b o).
 
 
-Definition size_of_region  := Ptrofs.repr (4 * 4). (* 4 * 32 bits *)
+Definition size_of_region  :=  16. (* 4 * 32 bits *)
 
 Fixpoint match_list_region  (m:mem) (bl_regions: block) (ofs:ptrofs) (l:list memory_region) :=
   match l with
   | nil => True
   | mr :: l' => match_region_at_ofs  mr bl_regions ofs m /\
-                  match_list_region  m bl_regions (Ptrofs.add ofs size_of_region) l'
+                  match_list_region  m bl_regions (Ptrofs.add ofs (Ptrofs.repr size_of_region)) l'
   end.
 
 Definition match_regions  (mrs:list memory_region) (bl_regions: block) (ofs : ptrofs) (m:mem) :=
@@ -52,7 +52,7 @@ Section S.
   (* [bl_state] is the memory block for the monadic state *)
   Variable bl_state : block.
 
-  Variable ins_block: block.
+  Variable ins_block: block. (**r ... *)
 
   Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
@@ -61,7 +61,7 @@ Section S.
            (*Val.inject inject_id (eval_regmap r rmap) (Vlong vl) . (**r each register is Vlong *)*)
 
 
-  Definition size_of_regs := 11 * 8. (**r we have 11 regs R0 - R10 *)
+  Definition size_of_regs := 88. (**r 11 * 8: we have 11 regs R0 - R10 *)
   Definition size_of_state (st: DxState.state) := 100 + 16 * (Z.of_nat (mrs_num st)).
 
 (**r
@@ -85,17 +85,22 @@ Definition is_byte_memval (mv: memval): Prop :=
 
   Record match_state  (st: DxState.state) (m: mem) : Prop :=
     {
-      minj     : Mem.inject inject_id (bpf_m st) m; (**r inject_id is enough because `mi_freeblocks` says the case `inject_id bl_state = None` and therefore we need the `minvalid` *)
+      munchange: Mem.unchanged_on (fun b _ => b <> bl_state /\ b <> ins_block) (bpf_m st) m; (**r (bpf_m st) = m - {bl_state, ins_block} *)
+      (*** minj     : Mem.inject inject_id (bpf_m st) m; *)
       mpc      : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
       mflags   : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
       mregs    : match_registers (regs_st st) bl_state (Ptrofs.repr 8) m;
-      mrs_num  : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (Int.repr (Z.of_nat (DxState.mrs_num st)))) /\ (Z.of_nat(DxState.mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)
-      mem_regs : match_regions (bpf_mrs st) bl_state (Ptrofs.repr (size_of_regs + 12)) m /\ List.length (bpf_mrs st) = (DxState.mrs_num st); (**r the number of bpf_mrs is exactly the mrs_num *)
+      mrs_num  : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr (size_of_regs + 8))) = Some (Vint  (Int.repr (Z.of_nat (DxState.mrs_num st)))) /\
+                 (Z.of_nat(DxState.mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)
+      mem_regs : match_regions (bpf_mrs st) bl_state (Ptrofs.repr (size_of_regs + 12)) m /\
+                 List.length (bpf_mrs st) = (DxState.mrs_num st) /\ (**r the number of bpf_mrs is exactly the mrs_num *)
+                 Z.of_nat (List.length (bpf_mrs st)) * 16 <= Int.max_unsigned - (size_of_regs + 12); (**r there is not overflow *)
       mperm    : Mem.range_perm m bl_state 0 (size_of_state st) Cur Freeable;
       minvalid : ~Mem.valid_block (bpf_m st) bl_state /\ ~Mem.valid_block (bpf_m st) ins_block;  (**r ysh: bl_state and ins_block don't exist in st *)
-      munchange: Mem.unchanged_on (fun b _ => b <> bl_state /\ b <> ins_block) (bpf_m st) m; (**r (bpf_m st) = m - {bl_state, ins_block} *)
-      mByte    : forall b ofs, (b <> bl_state /\ b <> ins_block) -> is_byte_memval (Maps.ZMap.get ofs (Maps.PMap.get b (Mem.mem_contents m)));
+      (*mByte    : forall b ofs, (b <> bl_state /\ b <> ins_block) -> is_byte_memval (Maps.ZMap.get ofs (Maps.PMap.get b (Mem.mem_contents m)));*)
     }.
+
+Print Mem.valid_block.
 
 End S.
 
@@ -228,10 +233,9 @@ Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) 
 (* Useful matching relations *)
 
 Definition match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: stateM) (m:Memory.Mem.mem) :=
-  exists o, v = Vptr bl_region (Ptrofs.mul size_of_region  o) /\
-              match_region_at_ofs mr bl_region o m.
+  exists o, v = Vptr bl_region (Ptrofs.repr (o * size_of_region)) /\
+              match_region_at_ofs mr bl_region (Ptrofs.repr o) m.
 
-From bpf.proof Require Import Clightlogic.
 
 Lemma same_memory_match_region :
   forall bl_region st st' m m' mr v
@@ -269,11 +273,47 @@ Proof.
   intuition.
 Qed.
 
-(**r a set of lemmas say upd_reg/flag/pc... don't change the memory of rbpf *)
+(**r a set of lemmas say upd_reg/flag/pc... don't change the memory/regs/flag/pc of rbpf *)
 
 Lemma upd_reg_same_mem:
   forall st0 r vl,
     bpf_m st0 = bpf_m (DxState.upd_reg r vl st0).
+Proof.
+  unfold DxState.upd_reg.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_reg_same_pc:
+  forall st0 r vl,
+    pc_loc st0 = pc_loc (DxState.upd_reg r vl st0).
+Proof.
+  unfold DxState.upd_reg.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_reg_same_flag:
+  forall st0 r vl,
+    flag st0 = flag (DxState.upd_reg r vl st0).
+Proof.
+  unfold DxState.upd_reg.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_reg_same_mrs:
+  forall st0 r vl,
+    bpf_mrs st0 = bpf_mrs (DxState.upd_reg r vl st0).
+Proof.
+  unfold DxState.upd_reg.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_reg_same_mrs_num:
+  forall st0 r vl,
+    DxState.mrs_num st0 = DxState.mrs_num (DxState.upd_reg r vl st0).
 Proof.
   unfold DxState.upd_reg.
   intros.
@@ -289,9 +329,81 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma upd_pc_same_regs:
+  forall st0 pc,
+    regs_st st0 = regs_st (DxState.upd_pc pc st0).
+Proof.
+  unfold DxState.upd_pc.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_pc_same_flag:
+  forall st0 pc,
+    flag st0 = flag (DxState.upd_pc pc st0).
+Proof.
+  unfold DxState.upd_pc.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_pc_same_mrs:
+  forall st0 pc,
+    bpf_mrs st0 = bpf_mrs (DxState.upd_pc pc st0).
+Proof.
+  unfold DxState.upd_pc.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_pc_same_mrs_num:
+  forall st0 pc,
+    DxState.mrs_num st0 = DxState.mrs_num (DxState.upd_pc pc st0).
+Proof.
+  unfold DxState.upd_pc.
+  intros.
+  reflexivity.
+Qed.
+
 Lemma upd_pc_incr_same_mem:
   forall st0,
     bpf_m st0 = bpf_m (DxState.upd_pc_incr st0).
+Proof.
+  unfold DxState.upd_pc_incr.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_pc_incr_same_regs:
+  forall st0,
+    regs_st st0 = regs_st (DxState.upd_pc_incr st0).
+Proof.
+  unfold DxState.upd_pc_incr.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_pc_incr_same_flag:
+  forall st0,
+    flag st0 = flag (DxState.upd_pc_incr st0).
+Proof.
+  unfold DxState.upd_pc_incr.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_pc_incr_same_mrs:
+  forall st0,
+    bpf_mrs st0 = bpf_mrs (DxState.upd_pc_incr st0).
+Proof.
+  unfold DxState.upd_pc_incr.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_pc_incr_same_mrs_num:
+  forall st0,
+    DxState.mrs_num st0 = DxState.mrs_num (DxState.upd_pc_incr st0).
 Proof.
   unfold DxState.upd_pc_incr.
   intros.
@@ -307,6 +419,42 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma upd_flag_same_regs:
+  forall st0 f,
+    regs_st st0 = regs_st (DxState.upd_flag f st0).
+Proof.
+  unfold DxState.upd_flag.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_flag_same_pc:
+  forall st0 f,
+    pc_loc st0 = pc_loc (DxState.upd_flag f st0).
+Proof.
+  unfold DxState.upd_flag.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_flag_same_mrs:
+  forall st0 f,
+    bpf_mrs st0 = bpf_mrs (DxState.upd_flag f st0).
+Proof.
+  unfold DxState.upd_flag.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma upd_flag_same_mrs_num:
+  forall st0 f,
+    DxState.mrs_num st0 = DxState.mrs_num (DxState.upd_flag f st0).
+Proof.
+  unfold DxState.upd_flag.
+  intros.
+  reflexivity.
+Qed.
+
 Lemma upd_unchanged_on:
   forall st m0 m1 blk ins chunk ofs vl
   (Hst    : match_state blk ins st m0)
@@ -314,9 +462,9 @@ Lemma upd_unchanged_on:
     Mem.unchanged_on (fun b _ => b <> blk /\ b <> ins) m0 m1.
 Proof.
   intros.
-  destruct Hst.
+  destruct Hst. (*
   destruct minj0.
-  clear - mi_inj mi_freeblocks minvalid0 munchange0 mByte0 Hstore.
+  clear - mi_inj mi_freeblocks minvalid0 munchange0 mByte0 Hstore. *)
   eapply Mem.store_unchanged_on.
   rewrite Hstore.
   reflexivity.
@@ -326,6 +474,246 @@ Proof.
   apply H0; reflexivity.
 Qed.
 
+Lemma upd_reg_preserves_match_list_region:
+  forall lmr m0 m1 blk ofs0 ofs1 vl
+  (Hmax_range: Z.of_nat (Datatypes.length lmr) * 16 <= Ptrofs.max_unsigned - 100)
+  (Hcomplex: forall n, 0 <= n < Z.of_nat (List.length lmr) ->
+    (ofs0 + 8 <= Ptrofs.unsigned (Ptrofs.add ofs1 (Ptrofs.repr (n * 16))) /\
+    0 <= Ptrofs.unsigned ofs1 + (n * 16) <= Ptrofs.max_unsigned) /\
+    (ofs0 + 8 <= Ptrofs.unsigned (Ptrofs.add (Ptrofs.add ofs1 (Ptrofs.repr (n * 16))) (Ptrofs.repr 4)) /\
+    0 <= Ptrofs.unsigned (Ptrofs.add ofs1 (Ptrofs.repr 16)) + n * 16 <= Ptrofs.max_unsigned) /\
+    ofs0 + 8 <= Ptrofs.unsigned (Ptrofs.add (Ptrofs.add ofs1 (Ptrofs.repr (n * 16))) (Ptrofs.repr 8)) /\
+  ofs0 + 8 <= Ptrofs.unsigned (Ptrofs.add (Ptrofs.add ofs1 (Ptrofs.repr (n * 16))) (Ptrofs.repr 12))
+  )
+  (Hstore : Mem.store Mint64 m0 blk ofs0 (Vlong vl) =
+         Some m1)
+  (mem_regs : match_list_region m0 blk ofs1
+              lmr),
+    match_list_region m1 blk ofs1 lmr.
+Proof.
+  induction lmr.
+  constructor.
+
+  intros.
+  simpl.
+
+
+  destruct mem_regs0 as (mem_regs0 & mem_regs0_1).
+  unfold match_region_at_ofs in *.
+  destruct mem_regs0 as ((vi0 & Hstart & Hvi0_eq) & (vi1 & Hsize & Hvi1_eq) & (vi2 & Hperm & Hvi2_eq) & (vi3 & ofs & Hptr & Hvi3_eq)).
+  unfold Mem.loadv in *.
+
+  assert (Hcomplex0_0: ofs0 + 8 <= Ptrofs.unsigned ofs1). {
+    specialize (Hcomplex 0).
+    fold Ptrofs.zero in Hcomplex.
+    simpl in Hcomplex.
+    fold Ptrofs.zero in Hcomplex.
+    rewrite Ptrofs.add_zero in Hcomplex.
+    assert (Hrange0: 0 <= 0 < Z.of_nat (Datatypes.length (a :: lmr))). { simpl. lia. }
+    specialize (Hcomplex Hrange0).
+    destruct Hcomplex as (Hcomplex0 & Hcomplex1 & Hcomplex2 & Hcomplex3).
+    destruct Hcomplex0; assumption.
+  }
+
+  assert (Hcomplex0_1: 
+    forall n,
+      0 <= n ->
+      0<= Ptrofs.unsigned ofs1 + 16 <= Ptrofs.max_unsigned ->
+      0<= (n + 1) * 16 <= Ptrofs.max_unsigned ->
+      Ptrofs.add ofs1 (Ptrofs.repr ((n + 1) * 16)) =
+      Ptrofs.add (Ptrofs.add ofs1 (Ptrofs.repr 16)) (Ptrofs.repr (n * 16))
+  ). {
+    intros.
+    unfold Ptrofs.add, Ptrofs.mul. (**r we must say n+1 is not overflow *)
+    rewrite Ptrofs_unsigned_repr_16 in *.
+    rewrite Ptrofs.unsigned_repr; [| assumption].
+    rewrite Ptrofs.unsigned_repr; [| assumption].
+    rewrite Ptrofs.unsigned_repr; [| lia].
+    rewrite Z.mul_add_distr_r.
+    simpl.
+    rewrite Zplus_assoc_reverse.
+    rewrite Z.add_comm with (n := n * 16).
+    reflexivity.
+   }
+
+  assert (Hcomplex1_0: ofs0 + 8 <= Ptrofs.unsigned (Ptrofs.add ofs1 (Ptrofs.repr 4))). {
+    specialize (Hcomplex 0).
+    fold Ptrofs.zero in Hcomplex.
+    simpl in Hcomplex.
+    fold Ptrofs.zero in Hcomplex.
+    rewrite Ptrofs.add_zero in Hcomplex.
+    assert (Hrange: 0 <= 0 < Z.of_nat (Datatypes.length (a :: lmr))). { simpl; lia. }
+    specialize (Hcomplex Hrange).
+    destruct Hcomplex as (Hcomplex0 & Hcomplex1 & Hcomplex2 & Hcomplex3).
+    destruct Hcomplex1; assumption.
+  }
+
+
+  assert (Hcomplex2_0: ofs0 + 8 <= Ptrofs.unsigned (Ptrofs.add ofs1 (Ptrofs.repr 8))). {
+    specialize (Hcomplex 0).
+    simpl in Hcomplex.
+    fold Ptrofs.zero in Hcomplex.
+    rewrite Ptrofs.add_zero in Hcomplex.
+    assert (Hrange: 0 <= 0 < Z.of_nat (Datatypes.length (a :: lmr))). { simpl; lia. }
+    specialize (Hcomplex Hrange).
+    destruct Hcomplex as (Hcomplex0 & Hcomplex1 & Hcomplex2 & Hcomplex3).
+    assumption.
+  }
+
+  assert (Hcomplex3_0: ofs0 + 8 <= Ptrofs.unsigned (Ptrofs.add ofs1 (Ptrofs.repr 12))). {
+    specialize (Hcomplex 0).
+    simpl in Hcomplex.
+    fold Ptrofs.zero in Hcomplex.
+    rewrite Ptrofs.add_zero in Hcomplex.
+    assert (Hrange: 0 <= 0 < Z.of_nat (Datatypes.length (a :: lmr))). { simpl; lia. }
+    specialize (Hcomplex Hrange).
+    destruct Hcomplex as (Hcomplex0 & Hcomplex1 & Hcomplex2 & Hcomplex3).
+    assumption.
+  }
+
+  split.
+
+  split.
+
+  exists vi0.
+  split; [| assumption].
+  rewrite <- Hstart.
+  eapply Mem.load_store_other; eauto.
+
+  split.
+  exists vi1.
+  split; [| assumption].
+  rewrite <- Hsize.
+  eapply Mem.load_store_other; eauto.
+
+  split.
+  exists vi2.
+  split; [| assumption].
+  rewrite <- Hperm.
+  eapply Mem.load_store_other; eauto.
+
+  exists vi3, ofs.
+  split; [| assumption].
+  rewrite <- Hptr.
+  eapply Mem.load_store_other; eauto.
+
+  specialize (IHlmr m0 m1 blk ofs0 (Ptrofs.add ofs1 (Ptrofs.repr 16)) vl).
+  apply IHlmr.
+  simpl in Hmax_range. simpl. lia.
+  intros.
+  assert (Hrange_1: 0 <= n+1 < Z.of_nat (Datatypes.length (a :: lmr))). {
+    simpl; lia.
+  }
+  specialize (Hcomplex (n+1)%Z) as Hcomplex'.
+  specialize (Hcomplex' Hrange_1).
+
+  destruct Hcomplex' as (Hcomplex0 & Hcomplex1 & Hcomplex2 & Hcomplex3).
+  -
+    split.
+    {
+      split.
+      rewrite <- Hcomplex0_1.
+      destruct Hcomplex0; assumption.
+      lia.
+
+      specialize (Hcomplex 1) as Hcomplex1'.
+      assert (Hlength1: 0 <= 1 < Z.of_nat (Datatypes.length (a :: lmr))). { lia. }
+      specialize (Hcomplex1' Hlength1).
+      destruct Hcomplex1' as ((_ & Hcomplex1') & _).
+      unfold Ptrofs.add in Hcomplex1'.
+      simpl in Hcomplex1'.
+      lia.
+      lia.
+
+      (**r the main idea: using `Hcomplex0` *)
+      specialize (Hcomplex n) as Hcomplex1'.
+      assert (Hlength1: 0 <= n < Z.of_nat (Datatypes.length (a :: lmr))). { lia. }
+      specialize (Hcomplex1' Hlength1).
+      destruct Hcomplex1' as (_ & ( _ & Hcomplex1') & _).
+      assumption.
+    }
+    split.
+    {
+      (**r the main idea: using `Hcomplex1` *)
+      specialize (Hcomplex0_1 n).
+      assert (Hn_ge_0: 0 <= n). { lia. }
+      specialize (Hcomplex0_1 Hn_ge_0).
+      specialize (Hcomplex 1) as Hcomplex1'.
+      assert (Hlength1: 0 <= 1 < Z.of_nat (Datatypes.length (a :: lmr))). { lia. }
+      specialize (Hcomplex1' Hlength1).
+      destruct Hcomplex1' as (( _ & Hcomplex1') & _).
+      simpl in Hcomplex1'.
+      specialize (Hcomplex0_1 Hcomplex1'). (**r here we get the constain that `0 <= Ptrofs.unsigned ofs1 + 16 <= Ptrofs.max_unsigned` *)
+
+      unfold Ptrofs.add.
+      rewrite Ptrofs_unsigned_repr_16.
+      rewrite Ptrofs.unsigned_repr with (z:= Ptrofs.unsigned ofs1 + 16); [| assumption].
+      rewrite Ptrofs.unsigned_repr with (z:= n * 16); [| lia].
+      rewrite Ptrofs_unsigned_repr_4.
+      destruct Hcomplex1 as (Hcomplex1_0' & Hcomplex1_1').
+      unfold Ptrofs.add in Hcomplex1_0'.
+      rewrite Ptrofs.unsigned_repr with (z:= (n + 1) * 16) in Hcomplex1_0'; [| lia].
+      rewrite Ptrofs_unsigned_repr_4 in Hcomplex1_0'.
+      assert (Hmul_eq: (n + 1) * 16 = 16 + n * 16). { rewrite Z.mul_add_distr_r, Z.mul_1_l, Z.add_comm. reflexivity. }
+      rewrite Hmul_eq in Hcomplex1_0'; clear Hmul_eq.
+      rewrite <- Zplus_assoc_reverse in Hcomplex1_0'.
+      split; [assumption |].
+
+      unfold Ptrofs.add in Hcomplex1_1'.
+      rewrite Ptrofs_unsigned_repr_16 in Hcomplex1_1'.
+      assert (Hmax_range_32: 0 <= Ptrofs.unsigned ofs1 + 16 + 16 <= Ptrofs.max_unsigned). {
+        rewrite Ptrofs.unsigned_repr in Hcomplex1_1'; [| assumption].
+        lia.
+      }
+      rewrite Ptrofs.unsigned_repr; [| lia].
+      rewrite Ptrofs.unsigned_repr in Hcomplex1_1'; [| lia].
+      assert (Hmul_eq: (n + 1) * 16 = 16 + n * 16). { rewrite Z.mul_add_distr_r, Z.mul_1_l, Z.add_comm. reflexivity. }
+      rewrite Hmul_eq in Hcomplex1_1'; clear Hmul_eq.
+      rewrite <- Zplus_assoc_reverse in Hcomplex1_1'.
+      lia.
+    }
+
+    specialize (Hcomplex0_1 n).
+    assert (Hn_ge_0: 0 <= n). { lia. }
+    specialize (Hcomplex0_1 Hn_ge_0).
+    specialize (Hcomplex 1) as Hcomplex1'.
+    assert (Hlength1: 0 <= 1 < Z.of_nat (Datatypes.length (a :: lmr))). { lia. }
+    specialize (Hcomplex1' Hlength1).
+    destruct Hcomplex1' as (( _ & Hcomplex1') & _).
+    simpl in Hcomplex1'.
+    specialize (Hcomplex0_1 Hcomplex1'). (**r here we get the constain that `0 <= Ptrofs.unsigned ofs1 + 16 <= Ptrofs.max_unsigned` *)
+
+    unfold Ptrofs.add.
+    rewrite Ptrofs_unsigned_repr_16.
+    rewrite Ptrofs.unsigned_repr with (z:= Ptrofs.unsigned ofs1 + 16); [| assumption].
+    rewrite Ptrofs.unsigned_repr with (z:= n * 16); [| lia].
+
+    split.
+    +
+      (**r the main idea: using `Hcomplex2` *)
+      unfold Ptrofs.add in Hcomplex2.
+      rewrite Ptrofs_unsigned_repr_8 in Hcomplex2.
+      rewrite Ptrofs.unsigned_repr with (z:= (n + 1) * 16) in Hcomplex2; [| lia].
+      assert (Hmul_eq: (n + 1) * 16 = 16 + n * 16). { rewrite Z.mul_add_distr_r, Z.mul_1_l, Z.add_comm. reflexivity. }
+      rewrite Hmul_eq in Hcomplex2; clear Hmul_eq.
+      rewrite <- Zplus_assoc_reverse in Hcomplex2.
+      assumption.
+    +
+      (**r the main idea: using `Hcomplex3` *)
+      unfold Ptrofs.add in Hcomplex3.
+      rewrite Ptrofs_unsigned_repr_12 in Hcomplex3.
+      rewrite Ptrofs.unsigned_repr with (z:= (n + 1) * 16) in Hcomplex3; [| lia].
+      assert (Hmul_eq: (n + 1) * 16 = 16 + n * 16). { rewrite Z.mul_add_distr_r, Z.mul_1_l, Z.add_comm. reflexivity. }
+      rewrite Hmul_eq in Hcomplex3; clear Hmul_eq.
+      rewrite <- Zplus_assoc_reverse in Hcomplex3.
+      assumption.
+
+  - assumption.
+  - unfold size_of_region in mem_regs0_1.
+    assumption.
+Qed.
+
+
 Lemma upd_reg_preserves_match_state:
   forall st0 st1 m0 m1 blk ins r vl
   (Hst    : match_state blk ins st0 m0)
@@ -334,114 +722,205 @@ Lemma upd_reg_preserves_match_state:
     match_state blk ins st1 m1.
 Proof.
   intros.
+  subst.
   set (Hst' := Hst).
   destruct Hst'.
   split; unfold Mem.loadv in *.
   -
-    destruct minj0.
-    split.
-    + (**r mi_inj *)
-      clear - Hst Hst1 mi_inj mi_freeblocks minvalid0 munchange0 mByte0 Hstore.
-      destruct minvalid0 as (minvalid_st & minvalid_ins).
-      destruct mi_inj.
-
-      (**r say rbpf blocks are all Byte *)
-      unfold is_byte_memval in mByte0.
-
-      split; intros; inversion H; subst; rewrite <- (upd_reg_same_mem _ r (Vlong vl)) in H0.
-      * (**r mi_perm *)
-        specialize (mi_perm b2 b2 0 ofs k p H H0).
-        (**r Search (Mem.perm).*)
-        apply Mem.perm_store_1 with (chunk:= Mint64) (m1:= m0) (b:=blk) (ofs:=(8 + 8 * id_of_reg r)%Z) (v:= (Vlong vl)).
-        assumption.
-        assumption.
-      * (**r mi_align *)
-        apply Z.divide_0_r.
-      * (**r mi_memval *)
-        specialize (mi_memval b2 ofs b2 0 H H0).
-        destruct munchange0.
-
-        (***r Search (memval_inject). *)
-        repeat rewrite Z.add_0_r.
-        destruct (Pos.eqb b2 blk) eqn: Hblk_eq.
-        ** (**r b2 = blk *)
-          apply Peqb_true_eq in Hblk_eq.
-          subst b2.
-          apply mi_freeblocks in minvalid_st.
-          rewrite minvalid_st in H.
-          inversion H.
-        ** (**r b2 <> blk *)
-          destruct (Pos.eqb b2 ins) eqn: Hins_eq.
-          ++ (**r b2 = ins *)
-            apply Peqb_true_eq in Hins_eq.
-            subst b2.
-            apply mi_freeblocks in minvalid_ins.
-            rewrite minvalid_ins in H.
-            inversion H.
-          ++ (**r b2 <> ins *)
-            (**r Search (Pos.eqb). *)
-            rewrite Pos.eqb_neq in *.
-            assert (Hb2_neq: b2 <> blk /\ b2 <> ins). {
-              split; assumption.
-            }
-            specialize (unchanged_on_contents b2 ofs Hb2_neq H0).
-            rewrite <- (upd_reg_same_mem _ r (Vlong vl)).
-            rewrite <- unchanged_on_contents.
-            assert (Hunchange: Mem.unchanged_on (fun b _ => b <> blk /\ b <> ins) m0 m1). {
-              eapply upd_unchanged_on.
-              apply Hst.
-              apply Hstore.
-            }
-            destruct Hunchange.
-            (**r we need : Mem.perm m0 b2 ofs0 Cur Readable *)
-            assert (Hm0_perm: Mem.perm m0 b2 ofs Cur Readable). {
-              specialize (mi_perm b2 b2 0 ofs Cur Readable H H0).
-              rewrite Z.add_0_r in mi_perm.
-              assumption.
-            }
-            specialize (unchanged_on_contents0 b2 ofs Hb2_neq Hm0_perm).
-            rewrite unchanged_on_contents0.
-            specialize (mByte0 b2 ofs Hb2_neq).
-            destruct (Maps.ZMap.get _ (Maps.PMap.get _ (Mem.mem_contents _))) eqn: HByte in mByte0; [ inversion mByte0| idtac | inversion mByte0].
-            rewrite HByte.
-            constructor.
-    + (**r mi_freeblocks *)
+    rewrite <- (upd_reg_same_mem _ r (Vlong vl)).
+    assert (Hunchanged_on': Mem.unchanged_on (fun (b : block) (_ : Z) => b <> blk /\ b <> ins) m0 m1). {
+      eapply Mem.store_unchanged_on; eauto.
       intros.
+      intro.
+      destruct H0.
+      apply H0; reflexivity.
+    }
+    apply Mem.unchanged_on_trans with(m2:= m0); auto.
+  -
+    rewrite <- (upd_reg_same_pc _ r (Vlong vl)).
+    rewrite <- mpc0.
+    eapply Mem.load_store_other; eauto.
+    right; left.
+    unfold id_of_reg; simpl.
+    fold Ptrofs.zero.
+    rewrite Ptrofs.unsigned_zero.
+    destruct r; try lia.
+  - rewrite <- (upd_reg_same_flag _ r (Vlong vl)).
+    rewrite <- mflags0.
+    eapply Mem.load_store_other; eauto.
+    right; left.
+    rewrite Ptrofs_unsigned_repr_4.
+    unfold id_of_reg; simpl; destruct r; try lia.
+  - unfold match_registers in *.
+    intros.
+    specialize (mregs0 r0).
+    destruct mregs0 as (vl0 & mregs0 & mregs1).
+    unfold Mem.loadv, Ptrofs.add in *.
+    
+    rewrite Hreg_eq in *.
+    destruct (reg_eq r0 r).
+    + (**r case: r0 = r *)
       subst.
-      rewrite <- (upd_reg_same_mem _ r (Vlong vl)) in H.
-      apply mi_freeblocks.
-      assumption.
-    + (**r mi_mappedblocks *)
-      intros.
-      assert (Hunchange: Mem.unchanged_on (fun b _ => b <> blk /\ b <> ins) m0 m1). {
-        eapply upd_unchanged_on; eauto.
-      }
-      eapply Mem.valid_block_unchanged_on; eauto.
-    + (**r mi_no_overlap *)
-      subst.
-      rewrite <- (upd_reg_same_mem _ r (Vlong vl)).
-      assumption.
-    + (**r mi_representable *)
-      subst.
-      rewrite <- (upd_reg_same_mem _ r (Vlong vl)).
-      assumption.
-    + (**r mi_perm_inv *)
-      subst.
-      rewrite <- (upd_reg_same_mem _ r (Vlong vl)).
-      intros.
-      eapply mi_perm_inv; eauto.
-      eapply Mem.perm_unchanged_on_2; eauto.
-      eapply upd_unchanged_on; eauto.
-      simpl.
-      inversion H; subst.
-      destruct minvalid0 as (minvalid_st & minvalid_ins).
+      exists vl.
       split.
-      * specialize (mi_freeblocks _ minvalid_st); intro; subst; rewrite mi_freeblocks in H; inversion H.
-      * specialize (mi_freeblocks _ minvalid_ins); intro; subst; rewrite mi_freeblocks in H; inversion H.
-   -
-    eapply Mem.load_unchanged_on; eauto. admit.
-    eapply upd_unchanged_on; eauto.
-    intros; simpl.
+      assert (Hload_result: Val.load_result Mint64 (Vlong vl) = (Vlong vl)). {
+        reflexivity.
+      }
+      rewrite <- Hload_result.
+      eapply Mem.load_store_same; eauto.
+      unfold DxState.upd_reg; simpl.
+      rewrite eval_upd_regmap_same.
+      reflexivity.
+    +
+      exists vl0.
+      unfold DxState.upd_reg, regs_st.
+      
+      rewrite eval_upd_regmap_other.
+      split.
+      2:{
+        rewrite mregs1.
+        reflexivity.
+      }
+      rewrite <- mregs0.
+      eapply Mem.load_store_other; eauto.
+      right.
+      2:{ assumption. }
+      destruct r0, r; simpl; [try (exfalso; apply n; reflexivity) || (try left; lia) || (try right; lia) ..].
+  - unfold size_of_regs in *; simpl.
+    destruct mrs_num0 as (mrs_num0 & mrs_num1).
+    split; [| assumption].
+    simpl in mrs_num0.
+    
+    rewrite Ptrofs_unsigned_repr_96 in *.
+    rewrite <- mrs_num0.
+    eapply Mem.load_store_other; eauto.
+    right; right.
+    unfold id_of_reg, size_chunk; destruct r; lia.
+  - rewrite <- (upd_reg_same_mrs _ r (Vlong vl)).
+    destruct mem_regs0 as (mem_regs0 & mem_regs1).
     split.
+    unfold match_regions in *.
+    destruct (bpf_mrs st0).
+
+    constructor.
+    simpl.
+    unfold size_of_regs in *; simpl in mem_regs0.
+    destruct mem_regs0 as (mem_regs0 & mem_regs0_1).
+    split.
+    unfold match_region_at_ofs in *.
+    destruct mem_regs0 as ((vi0 & Hstart & Hvi0_eq) & (vi1 & Hsize & Hvi1_eq) & (vi2 & Hperm & Hvi2_eq) & (vi3 & ofs & Hptr & Hvi3_eq)).
+    unfold Mem.loadv in *.
+    
+    unfold Ptrofs.add in *.
+    rewrite Ptrofs_unsigned_repr_100 in *.
+    
+
+    split.
+    exists vi0.
+    split; [| assumption].
+    rewrite <- Hstart.
+    eapply Mem.load_store_other; eauto.
+    right; right.
+    unfold id_of_reg, size_chunk; destruct r; lia.
+
+    split.
+    exists vi1.
+    split; [| assumption].
+    rewrite <- Hsize.
+    eapply Mem.load_store_other; eauto.
+    right; right.
+    rewrite Ptrofs_unsigned_repr_4 in *.
+    simpl; simpl in Hsize.
+    rewrite Ptrofs_unsigned_repr_104 in *.
+    unfold id_of_reg, size_chunk; destruct r; try lia.
+
+    split.
+    exists vi2.
+    split; [| assumption].
+    rewrite <- Hperm.
+    eapply Mem.load_store_other; eauto.
+    right; right.
+    rewrite Ptrofs_unsigned_repr_8 in *.
+    simpl; simpl in Hperm.
+    rewrite Ptrofs_unsigned_repr_108 in *.
+    unfold id_of_reg, size_chunk; destruct r; lia.
+
+    exists vi3, ofs.
+    split; [| assumption].
+    rewrite <- Hptr.
+    eapply Mem.load_store_other; eauto.
+    right; right.
+    rewrite Ptrofs_unsigned_repr_12 in *.
+    simpl; simpl in Hperm.
+    rewrite Ptrofs_unsigned_repr_112 in *.
+    unfold id_of_reg, size_chunk; destruct r; lia.
+
+    unfold size_of_region in *.
+    assert (Heq_116: (Ptrofs.add (Ptrofs.repr 100) (Ptrofs.repr 16)) = Ptrofs.repr 116). {
+      unfold Ptrofs.add.
+      rewrite Ptrofs_unsigned_repr_16.
+      rewrite Ptrofs_unsigned_repr_100.
+      simpl.
+      reflexivity.
+    }
+    rewrite Heq_116 in *.
+    +
+      eapply upd_reg_preserves_match_list_region; [idtac | idtac | apply Hstore | apply mem_regs0_1].
+      * destruct mem_regs1 as (_ & mem_regs1).
+        simpl in mem_regs1.
+        rewrite Ptrofs_max_unsigned_eq32; simpl.
+        lia.
+      * intros.
+        rewrite Ptrofs_unsigned_repr_116.
+        clear - H mem_regs1.
+        destruct mem_regs1 as (_ & mem_regs1).
+        assert (Hle_114: 8 + 8 * id_of_reg r + 8 <= 114). { unfold id_of_reg; destruct r; lia. }
+        unfold Ptrofs.add.
+        assert (Hn_16_max: n * 16 <= Ptrofs.max_unsigned). { simpl in mem_regs1. rewrite Ptrofs_max_unsigned_eq32; lia. }
+        assert (Hn_16 : Ptrofs.unsigned (Ptrofs.repr (n * 16)) = n * 16). { rewrite Ptrofs.unsigned_repr; [reflexivity | lia]. }
+        rewrite Hn_16; clear Hn_16 Hn_16_max.
+        rewrite Ptrofs_unsigned_repr_116.
+        assert (Hn_116_max: 116 + n * 16 <= Ptrofs.max_unsigned). { simpl in mem_regs1. rewrite Ptrofs_max_unsigned_eq32; lia. }
+        assert (Hn_16 : Ptrofs.unsigned (Ptrofs.repr (116 + n * 16)) = 116 + n * 16). { rewrite Ptrofs.unsigned_repr; [reflexivity | lia]. }
+        rewrite Hn_16; clear Hn_16 Hn_116_max.
+        rewrite Ptrofs_unsigned_repr_4, Ptrofs_unsigned_repr_8, Ptrofs_unsigned_repr_12.
+
+        assert (Hn_116_4_max: 116 + n * 16 + 4 <= Ptrofs.max_unsigned). { simpl in mem_regs1. rewrite Ptrofs_max_unsigned_eq32; lia. }
+        assert (Hn_16 : Ptrofs.unsigned (Ptrofs.repr (116 + n * 16 + 4)) = 116 + n * 16 + 4). { rewrite Ptrofs.unsigned_repr; [reflexivity | lia]. }
+        rewrite Hn_16; clear Hn_16 Hn_116_4_max.
+
+        assert (Hn_116_8_max: 116 + n * 16 + 8 <= Ptrofs.max_unsigned). { simpl in mem_regs1. rewrite Ptrofs_max_unsigned_eq32; lia. }
+        assert (Hn_16 : Ptrofs.unsigned (Ptrofs.repr (116 + n * 16 + 8)) = 116 + n * 16 + 8). { rewrite Ptrofs.unsigned_repr; [reflexivity | lia]. }
+        rewrite Hn_16; clear Hn_16 Hn_116_8_max.
+
+        assert (Hn_116_max: 116 + n * 16 + 12 <= Ptrofs.max_unsigned). { simpl in mem_regs1. rewrite Ptrofs_max_unsigned_eq32; lia. }
+        assert (Hn_16 : Ptrofs.unsigned (Ptrofs.repr (116 + n * 16 + 12)) = 116 + n * 16 + 12). { rewrite Ptrofs.unsigned_repr; [reflexivity | lia]. }
+        rewrite Hn_16; clear Hn_16 Hn_116_max.
+        rewrite Ptrofs_unsigned_repr_16.
+        assert (H132 : Ptrofs.unsigned (Ptrofs.repr (116 + 16)) = 132). {
+          rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+        }
+        rewrite H132; clear H132.
+        repeat split; try lia.
+        {
+          simpl in mem_regs1. rewrite Ptrofs_max_unsigned_eq32; lia.
+        }
+        {
+          simpl in mem_regs1. rewrite Ptrofs_max_unsigned_eq32; lia.
+        }
+    + rewrite <- upd_reg_same_mrs_num.
+      assumption.
+  - clear - mperm0 Hstore.
+    unfold Mem.range_perm in *.
+    intros.
+    eapply Mem.perm_store_1.
+    apply Hstore.
+    apply mperm0.
+    unfold size_of_state in *.
+    rewrite <- upd_reg_same_mrs_num in *.
+    assumption.
+  - rewrite <- upd_reg_same_mem.
+    assumption.
+Qed.
 
 Close Scope Z_scope.
