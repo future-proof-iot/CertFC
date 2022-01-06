@@ -7,7 +7,7 @@ From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof.correctproof Require Import correct_get_opcode_alu64.
+From bpf.proof.correctproof Require Import correct_get_opcode_alu64 correct_upd_reg.
 (**
 Check step_opcode_alu64.
 step_opcode_alu64
@@ -168,7 +168,11 @@ Ltac correct_forward L :=
     destruct x eqn: Halu. (**r case discussion on each alu64_instruction *)
     - (**r op_BPF_ADD64 *)
       eapply correct_statement_switch with (n:= 0).
-      + unfold list_rel_arg,app;
+      + eapply correct_statement_seq_body.
+        change_app_for_statement. admit.
+Admitted.
+        eapply correct_statement_call.
+        unfold list_rel_arg,app;
         match goal with
         |- correct_body _ _ _ _ ?B _ ?INV
                      _ _ _ _ =>
