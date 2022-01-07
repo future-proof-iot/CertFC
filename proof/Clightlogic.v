@@ -537,6 +537,12 @@ Definition post {r: Type}
            (vr : positive * Ctypes.type) (res : r)  (st:stateM) (le: temp_env) (m: Memory.Mem.mem) :=
   match_temp_env ((vr, match_res res) :: var_inv) le st m.
 
+Definition post_unit (match_res : unit -> val -> stateM -> Memory.Mem.mem -> Prop)
+           (var_inv : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
+           (r : unit) (st:stateM) (le: temp_env) (m: Memory.Mem.mem) :=
+  match_temp_env var_inv le st m /\ match_res r Vundef st m.
+
+
 
 Section S.
   Variable p : Clight.program.
@@ -2053,6 +2059,139 @@ Section S.
   Qed.
 
 End S.
+
+Section S.
+  Variable p : program.
+  Variable fn: Clight.function.
+
+  Check correct_statement.
+
+  Lemma correct_statement_call_none :
+    forall args  (f : arrow_type args (M unit)) is_pure a loc
+           fvar targs ti eargs fct modifies
+           (FS : Globalenvs.Genv.find_symbol (globalenv (semantics2 p)) fvar = Some loc)
+           (FF : Globalenvs.Genv.find_funct (globalenv (semantics2 p))
+                                            (Vptr loc Ptrofs.zero) = Some (Ctypes.Internal fct))
+           (TF : type_of_fundef (Ctypes.Internal fct) =
+                   Ctypes.Tfunction targs ti AST.cc_default)
+
+           (match_arg : DList.t (fun x : Type => x -> val -> stateM -> Memory.Mem.mem -> Prop) (all_args args is_pure))
+           (match_res : unit -> val  -> stateM -> Memory.Mem.mem -> Prop)
+           (match_res_Vundef : forall x v st m, match_res x v st m -> v = Vundef)
+           (C : forall a, correct_function3 p args unit f fct modifies is_pure match_arg match_res a)
+           (var_inv : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
+           (le : temp_env) (m : Memory.Mem.mem) (st : stateM)
+           (VARINV: var_inv_preserve var_inv match_res modifies  le)
+           (TI    : ti = fn_return fct)
+           (TARGS : targs = type_of_list (map typeof eargs))
+           (TARGS1 : map typeof eargs = map snd (fn_params fct))
+           (CASTED  : List.forallb (vc_casted (List.map fst var_inv)) eargs = true)
+           (LENEARGS : List.length eargs = (List.length (all_args args is_pure)))
+           (LVAL  :
+             Forall (match_elt st m le) var_inv ->
+             exists lval,
+               map_opt (exec_expr (Clight.globalenv p) empty_env le m) eargs = Some lval
+            /\ forall (LEN :List.length lval = (List.length (all_args args is_pure))),
+      DList.Forall2 (fun (a : Type) (R : a -> val -> stateM -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
+                    (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
+    ,
+      correct_statement p unit (app f a) fn
+       (Scall None
+          (Evar fvar
+             (Ctypes.Tfunction targs ti AST.cc_default))
+          eargs)
+    modifies (pre  var_inv) (post_unit match_res  var_inv) st le m.
+  Proof.
+    repeat intro.
+    rename H into PRE.
+    destruct (C a).
+    specialize (fn_eval_ok4  st).
+    destruct (app f a st); try congruence.
+    destruct p0 as (v',st').
+    intros s' k k' K.
+    unfold pre in PRE. unfold match_temp_env in PRE.
+    destruct (LVAL PRE) as (lval & MAP & ALL).
+    clear LVAL.
+    assert (LEN : Datatypes.length lval = Datatypes.length (all_args args is_pure)).
+    {
+      apply length_map_opt in MAP.
+      rewrite <- MAP.
+      rewrite LENEARGS.
+      reflexivity.
+      }
+      specialize (ALL LEN).
+      specialize (fn_eval_ok4 (DList.of_list_sl lval (all_args args is_pure) LEN)
+                            (Kcall None fn empty_env le
+                                    k) m).
+    assert (EQ: lval = (DList.to_list (fun (_ : Type) (v : val) => v)
+                                   (DList.of_list_sl lval (all_args args is_pure) LEN))).
+    { apply (DList.to_list_of_list_sl ). }
+    assert (ALLCASTED : Forall2 (fun (v : val) (t : AST.ident * Ctypes.type) => val_casted v (snd t))
+    lval (fn_params fct)).
+    {
+      eapply check_cast; eauto.
+      eapply var_casted_list_map_fst; eauto.
+    }
+    destruct (fn_eval_ok4 ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD).
+    rewrite <- EQ. assumption.
+    assert (v1 = Vundef). eapply match_res_Vundef; eauto.
+    subst.
+    do 3 eexists.
+    split.
+    eapply star_step.
+    econstructor ;eauto.
+    simpl. reflexivity.
+    econstructor ;eauto.
+    eapply eval_Evar_global.
+    apply Maps.PTree.gempty.
+    eauto.
+    eapply deref_loc_reference.
+    simpl; reflexivity.
+    { instantiate (1:= lval).
+      revert PRE CASTED  MAP.
+      clear. intro. revert lval.
+      induction eargs.
+      - simpl. intros. inv MAP.
+        constructor.
+      - simpl.
+        intros. subst.
+        destruct (exec_expr (Clight.globalenv p) empty_env le m a) eqn:E; try congruence.
+        destruct (map_opt (exec_expr (Clight.globalenv p) empty_env le m) eargs) eqn:MO; try discriminate.
+        inv MAP.
+        rewrite andb_true_iff in CASTED.
+        destruct CASTED as (C1 & C2).
+        econstructor; eauto.
+        apply eval_expr_eval in E.
+        eauto.
+        apply Cop.cast_val_casted.
+        eapply vc_casted_correct; eauto.
+        eapply var_casted_list_map_fst; eauto.
+    }
+    eapply star_trans.
+    rewrite <- EQ in STAR.
+    eauto.
+    unfold call_cont.
+    eapply star_step.
+    econstructor ; eauto.
+    unfold set_opttemp.
+    eapply star_step.
+    eapply apply_cont_cont; eauto.
+    apply star_refl.
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    unfold post_unit.
+    repeat split; auto.
+    unfold match_temp_env.
+    revert PRE.
+    eapply VARINV. auto.
+    eauto.
+  Qed.
+
+End S.
+
+
 
 Section S.
   Variable p : program.
