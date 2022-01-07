@@ -2064,8 +2064,6 @@ Section S.
   Variable p : program.
   Variable fn: Clight.function.
 
-  Check correct_statement.
-
   Lemma correct_statement_call_none :
     forall args  (f : arrow_type args (M unit)) is_pure a loc
            fvar targs ti eargs fct modifies
@@ -2077,8 +2075,9 @@ Section S.
 
            (match_arg : DList.t (fun x : Type => x -> val -> stateM -> Memory.Mem.mem -> Prop) (all_args args is_pure))
            (match_res : unit -> val  -> stateM -> Memory.Mem.mem -> Prop)
-           (match_res_Vundef : forall x v st m, match_res x v st m -> v = Vundef)
            (C : forall a, correct_function3 p args unit f fct modifies is_pure match_arg match_res a)
+           (match_res_Vundef : forall x v st m, match_res x v st m -> v = Vundef)
+
            (var_inv : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
            (le : temp_env) (m : Memory.Mem.mem) (st : stateM)
            (VARINV: var_inv_preserve var_inv match_res modifies  le)
@@ -2636,7 +2635,126 @@ Section S.
     all: constructor.
   Qed.
 
+
+
 End S.
+
+Section S.
+  (** The program contains our function of interest [fn] *)
+  Variable p : Clight.program.
+
+  Variable f1 : M unit.
+
+  Variable res2 : Type.
+
+  Variable f2 : unit -> (M res2).
+
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Variable fn : Clight.function.
+
+  Variable modifies : list block.
+
+  Variable match_res1 : unit -> val -> stateM -> Memory.Mem.mem -> Prop.
+
+  Variable match_res2 : res2  -> val -> stateM -> Memory.Mem.mem -> Prop.
+
+  Lemma correct_statement_seq_body_unit :
+    forall (s1 s2:Clight.statement)
+           (var_inv  : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
+      st le m
+      (C1 : correct_statement p unit f1 fn s1 modifies (pre  var_inv) (post_unit  match_res1 var_inv) st le m)
+      (C2 : forall le m st x, correct_body p res2 (f2 x) fn s2 modifies  var_inv match_res2 st le m)
+    ,
+             correct_body p  res2 (bindM f1 f2) fn
+             (Ssequence s1 s2) modifies  var_inv match_res2 st le m.
+  Proof.
+    intros.
+    unfold correct_body.
+    intros PRE.
+    unfold bindM.
+    unfold runM at 1.
+    unfold correct_statement in C1.
+    destruct (f1 st) eqn:F1 ; try congruence.
+    destruct p0 as (v1,st1).
+    unfold runM.
+    destruct (f2 v1 st1) eqn:F2; try congruence.
+    destruct p0 as (v2,st2).
+    intros.
+    destruct (C1 PRE s2 (Kseq s2 k) k  eq_refl) as
+      (le'& m' & t & ST & MR & MOD).
+    specialize (C2 le' m' st1 v1).
+    unfold correct_body in C2.
+    rewrite F2 in C2.
+    assert (PRE2 : pre  var_inv st1 le' m').
+    {
+      unfold pre. unfold post_unit in MR.
+      tauto.
+    }
+    destruct (C2  PRE2  k) as
+      (le2& m2 & t2 & ST2 & MR2).
+    exists le2. exists m2. exists (t ++ t2).
+    split;auto.
+    eapply star_step.
+    econstructor ; eauto.
+    eapply star_trans.
+    eauto.
+    eauto.
+    reflexivity.
+    reflexivity.
+    repeat split ; try tauto.
+    eapply unmodifies_effect_trans; eauto.
+    tauto.
+    auto.
+    auto.
+  Qed.
+
+End S.
+
+Section S.
+  (** The program contains our function of interest [fn] *)
+  Variable p : Clight.program.
+
+  Variable res : Type.
+
+  Variable f : M res.
+
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Variable fn : Clight.function.
+
+  Variable match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop.
+
+
+  Lemma correct_statement_seq_body_drop :
+    forall (s1 s2:Clight.statement)
+           (modifies : list block)
+           (var_inv  : list (positive * Ctypes.type * (val -> stateM -> Memory.Mem.mem -> Prop)))
+      st le m
+      (C2 : forall le m st, correct_body p res f fn s1 modifies  var_inv match_res st le m)
+    ,
+             correct_body p  res f fn
+             (Ssequence s1 s2) modifies  var_inv match_res st le m.
+  Proof.
+    intros.
+    unfold correct_body.
+    intros PRE.
+    unfold correct_body in C2.
+    specialize (C2 le m st PRE).
+    destruct (f st) eqn:F1 ; try congruence.
+    destruct p0 as (v1,st1).
+    intros.
+    destruct (C2 (Kseq s2 k)) as (vr & mr & tr & STAR & MR & VC & UNM).
+    exists vr, mr,tr.
+    repeat split; auto.
+    eapply star_step.
+    econstructor;eauto.
+    eauto. reflexivity.
+  Qed.
+
+
+
+End S.
+
+
 
 Lemma bind_id_left : forall {A: Type} (f: M A) x  , f x = bindM (returnM tt) (fun _ => f) x.
 Proof.
@@ -2656,6 +2774,27 @@ Proof.
   apply H.
   apply H0.
 Qed.
+
+Lemma bind_id_right : forall {A: Type} (f: M A) x  , f x = bindM f returnM x.
+Proof.
+  intros.
+  unfold bindM.
+  unfold runM,returnM.
+  destruct (f x); auto. destruct p; auto.
+Qed.
+
+Lemma correct_body_id_right : forall p (res:Type) (f: M res) fn (s:statement) md pr pst st le m,
+    correct_body p res (bindM f returnM) fn s md pr pst st le m ->
+    correct_body p res f fn s md pr pst st le m.
+Proof.
+  repeat intro.
+  unfold correct_body in H.
+  rewrite <- bind_id_right in H.
+  apply H; auto.
+Qed.
+
+
+
 
 Section S.
   (** The program contains our function of interest [fn] *)
@@ -2949,10 +3088,32 @@ Section S.
 
 End S.
 
+Lemma correct_body_Sreturn_None :
+  forall p fn modifies inv
+         (match_res : unit -> val -> stateM -> Memory.Mem.mem -> Prop)
+         st le m,
+    (match_temp_env inv le st m -> match_res tt Vundef st m) ->
+    (fn_return fn = Ctypes.Tvoid) ->
 
-
-
-
+    correct_body p unit (returnM tt) fn (Sreturn None) modifies
+               inv match_res st le m.
+Proof.
+  repeat intro.
+  eexists Vundef.
+  exists m. exists Events.E0.
+  repeat split.
+  eapply star_step.
+  econstructor ; eauto.
+  reflexivity.
+  eapply star_refl.
+  reflexivity.
+  auto.
+  rewrite H0.
+  constructor.
+  unfold unmodifies_effect.
+  destruct modifies. tauto.
+  reflexivity.
+Qed.
 
 Lemma match_temp_env_ex : forall l' l le st m ,
     incl l' (List.map fst l) ->

@@ -47,7 +47,7 @@ Section Upd_reg.
           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ st m => match_state state_block ins_block st m.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block ins_block st m /\ v = Vundef.
 
   Instance correct_function3_upd_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -89,11 +89,12 @@ Section Upd_reg.
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
     - split.
+      split.
       eapply upd_reg_preserves_match_state.
       apply Hst.
       reflexivity.
       apply Hstore.
-
+      reflexivity.
       split.
 
       + intros.

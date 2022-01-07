@@ -75,12 +75,12 @@ bench:
 bench_clight:
 	@echo $@
 	cd benchmark && $(CLIGHTGEN32) clightlogicexample.c
-	
+
 COQSRC = $(wildcard src/*.v)
 
 compile:
 	@echo $@
-	rm src/*.vo
+#	rm -f src/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(COQSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 	$(CP) TestMain.ml src # mv -> cp to avoid when running `make` again, it doesn't find the two files
@@ -127,21 +127,23 @@ PROOF = $(addprefix proof/correctproof/, correct_upd_pc.v correct_eval_pc.v corr
 
 CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v CommonLib.v Clightlogic.v MatchState.v CorrectRel.v CommonLemma.v)
 
+
 clightproof:
 	@echo $@
-	rm proof/*.vo
+	rm -f proof/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
+
 
 # PROOF = $(wildcard proof/correctproof/*.v)
 correctproof:
 	@echo $@
-	rm proof/correctproof/*.vo
+	rm -f proof/correctproof/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(PROOF) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 
 GITDIR=/home/shyuan/GitLab/rbpf-dx
-	
+
 gitpush:
 	@echo $@
 	cp src/*.v $(GITDIR)/src
@@ -163,7 +165,7 @@ gitpush:
 	cp compcertsrc-I $(GITDIR)
 	cp compcertcprinter-cmx-args $(GITDIR)
 	cp *.md $(GITDIR)
-	
+
 gitpull:
 	@echo $@
 	cp $(GITDIR)/src/*.v ./src
@@ -188,6 +190,8 @@ gitpull:
 
 clean :
 	@echo $@
+	make -f CoqMakefile clean
+	make -f CoqMakefilePrf clean
 	find . -name "*\.vo" -exec rm {} \;
 	find . -name "*\.cmi" -exec rm {} \;
 	find . -name "*\.cmx" -exec rm {} \;
