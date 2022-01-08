@@ -44,7 +44,7 @@ Definition reg_int64_correct (x:int64_t) (v: val) :=
 
 Definition opcode_alu64_correct (opcode: opcode_alu64) (v: val) :=
   match opcode with
-  | op_BPF_ADD64
+  | op_BPF_ADD64 => v = Vint (Int.repr 0)
   | op_BPF_SUB64
   | op_BPF_MUL64
   | op_BPF_DIV64

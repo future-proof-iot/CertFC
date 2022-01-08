@@ -3,7 +3,7 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLib.
 
 From bpf.clight Require Import interpreter.
 
@@ -45,7 +45,7 @@ Section Upd_flag.
                              (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => True.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block ins_block st m /\ v = Vundef.
 
   Instance correct_function3_upd_flag : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -61,12 +61,12 @@ Section Upd_flag.
     subst.
 
     simpl in c.
-    apply (upd_flags_store _ _ _ _ (CommonLib.int_of_flag c)) in Hst as Hstore.
+    apply (upd_flags_store _ _ _ _ (int_of_flag c)) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** we need to get the value of flag in the memory *)
-    destruct Hst; clear munchange mpc mregs mperm.
-    unfold Mem.loadv in mflags.
-    unfold size_of_regs in mflags; simpl in mflags.
+    set (Hst' := Hst).
+    destruct Hst' as (_ , _, Hflag, _, _, _, _, _).
+    unfold Mem.loadv in Hflag.
     
     (** pc \in [ (state_block,0), (state_block,8) ) *)
     (**according to the type:
@@ -76,12 +76,20 @@ Section Upd_flag.
       *)
     exists Vundef, m1, Events.E0.
 
-    repeat split; unfold step2.
-    - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      repeat forward_star.
-    - simpl.
+    split; unfold step2.
+    - repeat forward_star.
+    - split.
+      split.
+      eapply upd_flag_preserves_match_state.
+      apply Hst.
+      reflexivity.
+      apply Hstore.
+      reflexivity.
+      split.
+
+      simpl.
       constructor.
-    -
+
       unfold unmodifies_effect.
       simpl.
       intros.

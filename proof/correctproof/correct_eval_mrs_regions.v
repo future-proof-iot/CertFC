@@ -77,7 +77,7 @@ Section Eval_mrs_regions.
     destruct mem_regs as (Hmem_regs & _).
     unfold match_region_at_ofs in Hmem_regs.
     destruct Hmem_regs as ((vl & Hstart_addr & _) & _).
-    unfold Mem.loadv, size_of_regs in Hstart_addr.
+    unfold Mem.loadv in Hstart_addr.
     simpl in Hstart_addr.
 
     eexists. exists m, Events.E0.

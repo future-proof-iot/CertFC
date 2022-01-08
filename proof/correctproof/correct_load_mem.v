@@ -1,22 +1,18 @@
-From dx.tests Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From bpf.src Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma interpreter.
+From bpf.clight Require Import interpreter.
+
+From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
+
 
 (**
-static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned long long v){
-  switch (chunk) {
-    case 1: return (unsigned long long) *(unsigned char * ) (intptr_t)v;
-    case 2: return (unsigned long long) *(unsigned short * ) (intptr_t)v;
-    case 4: return (unsigned long long) *(unsigned int * ) (intptr_t)v;
-    case 8: return (unsigned long long) *(unsigned long long * ) (intptr_t) v;
-    default: /*printf ("load:addr = %" PRIu64 "\n", v);*/ /*( *st).bpf_flag = BPF_ILLEGAL_MEM; */ return 0;
-  }
-}
+Check load_mem.
 
-Definition load_mem (chunk: memory_chunk) (ptr: val64_t): M val64_t := fun st => Some (load_mem chunk ptr st, st).
+load_mem
+     : memory_chunk -> valu32_t -> M val64_t
 
  *)
 
@@ -28,31 +24,30 @@ Section Load_mem.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(memory_chunk:Type); val64_t].
+  Definition args : list Type := [(memory_chunk:Type); valu32_t].
   Definition res : Type := (val64_t:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := DxMonad.load_mem.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_load_mem.
 
-  Definition modifies : list block := [state_block]. (* of the C code *)
-
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m /\ match_regions (bpf_mrs stm) state_block m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
                 (DList.DCons (stateless match_chunk)
-                             (DList.DCons (stateless val64_correct)
+                             (DList.DCons (stateless val_ptr_correct)
                                           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block ins_block st m.
 Ltac exec_seq_of_labeled_statement :=
   match goal with
   | |- context[seq_of_labeled_statement ?X] =>
@@ -60,34 +55,32 @@ Ltac exec_seq_of_labeled_statement :=
       change (seq_of_labeled_statement X) with x
   end.
 
-  Instance correct_function3_load_mem : correct_function3 p args res f fn modifies false match_arg_list match_res.
-  Proof.
-    correct_function_from_body.
-    correct_body.
-    unfold f, INV.
-    repeat intro.
-    get_invariant_more _st.
-    get_invariant_more _chunk.
-    get_invariant_more _v.
-    unfold stateM_correct in H1.
-    unfold stateless, match_chunk in H3.
-    unfold stateless, val64_correct in H5.
-    destruct H1 as (Hptr & Hmatch).
-    destruct H5 as (Hc0_eq & (vl & Hvl_eq)).
-    subst v v1 c0.
-    
-    destruct Hmatch.
-    clear mpc mregs mflags mperm.
+  Instance correct_function3_load_mem : forall a, correct_function3 p args res f fn [] false match_arg_list match_res a.
+Proof.
+  correct_function_from_body args.
+  correct_body.
+  unfold f, INV.
+  repeat intro.
+  get_invariant_more _st.
+  get_invariant_more _chunk.
+  get_invariant_more _addr.
+  unfold stateM_correct in H0.
+  unfold stateless, match_chunk in H2.
+  unfold stateless, val_ptr_correct in H4.
+  destruct H0 as (Hptr & Hmatch).
+  destruct H4 as (Hc0_eq & (b & ofs & Hptr_eq)).
+  subst.
 
-    (**according to:
-         static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned long long v)
-       1. return value should be Vlong.
-       2. the memory is same
-     *)
-    
-    destruct c.
-    - exists (Vlong (Int64.repr 0)); subst v0; exists m, Events.E0.
-      repeat split.
+  (**according to:
+       static unsigned long long load_mem(struct bpf_state* st, unsigned int chunk, unsigned long long v)
+     1. return value should be Vlong.
+     2. the memory is same
+   *)
+  
+  destruct c.
+  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
+    split.
+    {
       eapply Smallstep.star_step; eauto.
       econstructor; eauto.
       econstructor; eauto.
@@ -98,43 +91,38 @@ Ltac exec_seq_of_labeled_statement :=
                                              econstructor; eauto|]].
       eapply Smallstep.star_refl.
       reflexivity.
-      
-      simpl.
-      rewrite Int.signed_repr.
-      eapply Smallstep.star_refl.
-      
-      
-    - 
-    repeat split.
-    - eapply Smallstep.star_step; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor.
-      unfold Int.one.
+    }
+    split.
+    { (**r match_res *)
+      unfold match_res.
+      split.
+      unfold val64_correct.
+      unfold DxState.load_mem.
+      split; unfold val64_zero.
       reflexivity.
+      eexists; reflexivity.
+      (**r match_state *)
+      assumption.
+    }
+    split.
+    constructor.
+    simpl; auto.
+  - eexists. exists m, Events.E0.
+    split.
+    {
+      forward_star.
+      repeat forward_star.
+      unfold DxAST.well_chunk_Z.
+      fold Int.one; rewrite Int.unsigned_one.
+      simpl.
+      forward_star.
+      repeat forward_star.
+      forward_star.
+      repeat forward_star. admit.
+      forward_star.
+      repeat forward_star.
 
-      
-      destruct c; subst v0.
-      + 
-        eapply Smallstep.plus_left'; eauto.
-        repeat econstructor; eauto.
-        reflexivity.
-        eapply Smallstep.plus_left'; eauto.
-        econstructor;eauto.
-        simpl.
-        eapply Smallstep.plus_one; eauto.
-        eapply step_return_1.
-        exec_seq_of_labeled_statement.
-
-
-
-        
-        eapply Smallstep.plus_left'; eauto.
-        repeat econstructor; eauto.
-        eapply Smallstep.plus_one; eauto.
-        econstructor; eauto.
-      econstructor; eauto.
-
+    }
 
 
 

@@ -34,8 +34,6 @@ Section Eval_reg.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_reg.
 
-  Definition modifies : list block := [state_block]. (* of the C code *)
-
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
@@ -48,7 +46,7 @@ Section Eval_reg.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
 
-  Instance correct_function3_eval_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
+  Instance correct_function3_eval_reg : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

@@ -7,6 +7,12 @@ Import ListNotations.
 
 Open Scope Z_scope.
 
+Ltac correct_Forall :=
+match goal with
+| H: Forall (match_elt ?st ?m ?le) ?L |- _ =>
+  change (match_temp_env L le st m) in H
+end.
+
 Ltac my_reflex :=
   match goal with
   | |- ?X = Some _ =>
@@ -604,6 +610,24 @@ Lemma Ptrofs_unsigned_repr_116:
  Ptrofs.unsigned (Ptrofs.repr 116) = 116.
 Proof.
   rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+Lemma Ptrofs_unsigned_repr_id_of_reg:
+  forall r,
+  Ptrofs.unsigned (Ptrofs.repr (8 * id_of_reg r)) = 8 * id_of_reg r.
+Proof.
+  intros.
+  unfold id_of_reg; destruct r;
+  rewrite Ptrofs.unsigned_repr; try rewrite Ptrofs_max_unsigned_eq32; try lia.
+Qed.
+
+Lemma Ptrofs_unsigned_repr_id_of_reg_8:
+  forall r,
+  0 <= (8 + 8 * id_of_reg r) <= Ptrofs.max_unsigned.
+Proof.
+  intros.
+  unfold id_of_reg; destruct r;
+  rewrite Ptrofs_max_unsigned_eq32; try lia.
 Qed.
 
 Lemma eval_upd_regmap_same:

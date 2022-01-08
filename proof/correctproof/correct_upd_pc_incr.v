@@ -46,7 +46,7 @@ Section Upd_pc_incr.
     DList.DCons stateM_correct (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block ins_block st m /\ v = Vundef.
 
   Lemma correct_function3_upd_pc_incr : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -63,7 +63,6 @@ Section Upd_pc_incr.
     (** we need to get the proof of `upd_pc_incr` load/store permission *)
     apply (upd_pc_store _ _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
-    destruct Hst; clear munchange mregs mflags mperm.
     (** pc \in [ (state_block,0), (state_block,8) ) *)
 
     (**according to the type of upd_pc_incr:
@@ -73,19 +72,30 @@ Section Upd_pc_incr.
       *)
     exists Vundef, m1, Events.E0.
 
-    repeat split; unfold step2.
+    split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
       repeat forward_star.
 
       rewrite Ptrofs.add_zero.
-      fold Ptrofs.zero in mpc.
-      rewrite mpc; reflexivity.
+      destruct Hst as (_ , Hpc, _, _, _, _, _, _).
+      fold Ptrofs.zero in Hpc.
+      rewrite Hpc; reflexivity.
       reflexivity.
       reflexivity.
-    -
+    - split.
+      split.
+      eapply upd_pc_preserves_match_state.
+      apply Hst.
+      unfold DxState.upd_pc, DxState.upd_pc_incr.
+      reflexivity.
+      apply Hstore.
+      reflexivity.
+
       simpl.
-      econstructor.
-    - unfold unmodifies_effect, modifies, In.
+      constructor.
+      constructor.
+
+      unfold unmodifies_effect, modifies, In.
       intros.
       destruct (Pos.eq_dec state_block b).
       subst b.
@@ -99,3 +109,5 @@ Section Upd_pc_incr.
 Qed.
 
 End Upd_pc_incr.
+
+Existing Instance correct_function3_upd_pc_incr.

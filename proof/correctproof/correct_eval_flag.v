@@ -33,8 +33,6 @@ Section Eval_flag.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_flag.
 
-  Definition modifies : list block := [state_block]. (* of the C code *)
-
   Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
 
@@ -45,7 +43,7 @@ Section Eval_flag.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => flag_correct x v.
 
-  Instance correct_function3_eval_flag : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
+  Instance correct_function3_eval_flag : forall a, correct_function3 p args res f fn [] false match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -61,7 +59,6 @@ Section Eval_flag.
     destruct Hst.
     clear munchange mpc mregs mperm.
     unfold Mem.loadv in mflags.
-    unfold size_of_regs in mflags; simpl in mflags.
     (** pc \in [ (state_block,0), (state_block,8) ) *)
     (**according to the type:
          static int eval_flag(struct bpf_state* st)

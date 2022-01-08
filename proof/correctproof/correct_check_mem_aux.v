@@ -207,11 +207,6 @@ Proof.
   reflexivity.
   reflexivity.
 
-  Ltac correct_Forall :=
-  match goal with
-  | H: Forall (match_elt ?st ?m ?le) ?L |- _ =>
-    change (match_temp_env L le st m) in H
-  end.
 
   {
     unfold INV; intro H.

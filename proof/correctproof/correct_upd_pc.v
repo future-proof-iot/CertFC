@@ -45,7 +45,7 @@ Section Upd_pc.
                              (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
+  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block ins_block st m /\ v = Vundef.
 
   Instance correct_function3_upd_pc : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -74,12 +74,22 @@ Section Upd_pc.
       *)
     exists Vundef, m1, Events.E0.
 
-    repeat split; unfold step2.
+    split; unfold step2.
     - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
       repeat forward_star.
-    - simpl.
+    - split.
+      split.
+      eapply upd_pc_preserves_match_state.
+      apply Hst.
+      reflexivity.
+      apply Hstore.
+      reflexivity.
+
+      split.
+      simpl.
       constructor.
-    - unfold unmodifies_effect, modifies, In.
+
+      unfold unmodifies_effect, modifies, In.
       intros.
       destruct (Pos.eq_dec state_block b).
       subst b.

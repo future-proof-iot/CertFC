@@ -117,6 +117,39 @@ Definition upd_mem (m: Mem.mem) (st: state): state := {| (**r never be used I gu
 |}.
 
 Definition load_mem (chunk: memory_chunk) (ptr: valu32_t) (st: state) :=
+  match chunk with
+  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
+    match Mem.loadv chunk (bpf_m st) ptr with
+    | Some res => res
+    | None => val64_zero
+    end
+  | _ => val64_zero
+  end
+.
+
+Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) (st: state): state :=
+  match chunk with
+  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
+    match Mem.storev chunk (bpf_m st) ptr v with
+    | Some m => upd_mem m st
+    | None => upd_flag BPF_UNDEF_ERROR st
+    end
+  | _ => upd_flag BPF_ILLEGAL_MEM st
+  end
+.
+
+Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) (st: state): state :=
+  match chunk with
+  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
+    match Mem.storev chunk (bpf_m st) ptr v with
+    | Some m => upd_mem m st
+    | None => upd_flag BPF_UNDEF_ERROR st
+    end
+  | _ => upd_flag BPF_ILLEGAL_MEM st
+  end.
+
+(*
+Definition load_mem (chunk: memory_chunk) (ptr: valu32_t) (st: state) :=
   match ptr with
   | Vptr b ofs =>
     match Mem.load chunk (bpf_m st) b (Ptrofs.unsigned ofs) with
@@ -144,7 +177,7 @@ Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) (st:
     | None => upd_flag BPF_ILLEGAL_MEM st
     end
   | _ => upd_flag BPF_ILLEGAL_MEM st
-  end.
+  end. *)
 
 (******************** Dx Related *******************)
 
