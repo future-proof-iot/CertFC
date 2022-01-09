@@ -116,10 +116,22 @@ Definition upd_mem (m: Mem.mem) (st: state): state := {| (**r never be used I gu
   bpf_m   := m;
 |}.
 
-Definition load_mem (chunk: memory_chunk) (ptr: valu32_t) (st: state) :=
+Definition _to_vlong (v: val): val :=
+  match v with
+  | Vlong n => Vlong n (**r Mint64 *)
+  | Vint  n => Vlong (Int64.repr (Int.unsigned n)) (**r Mint8unsigned, Mint16unsigned, Mint32 *) (* (u64) v *)
+  | _       => Vundef
+  end.
+
+Definition load_mem (chunk: memory_chunk) (ptr: valptr8_t) (st: state) :=
   match chunk with
-  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
+  | Mint8unsigned | Mint16unsigned | Mint32 =>
     match Mem.loadv chunk (bpf_m st) ptr with
+    | Some res => _to_vlong res
+    | None => val64_zero
+    end
+  | Mint64 =>
+    match Mem.loadv Mint64 (bpf_m st) ptr with
     | Some res => res
     | None => val64_zero
     end
@@ -127,7 +139,7 @@ Definition load_mem (chunk: memory_chunk) (ptr: valu32_t) (st: state) :=
   end
 .
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) (st: state): state :=
+Definition store_mem_imm (chunk: memory_chunk) (ptr: valptr8_t) (v: vals32_t) (st: state): state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
     match Mem.storev chunk (bpf_m st) ptr v with
@@ -138,7 +150,7 @@ Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) (st
   end
 .
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) (st: state): state :=
+Definition store_mem_reg (chunk: memory_chunk) (ptr: valptr8_t) (v: val64_t) (st: state): state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
     match Mem.storev chunk (bpf_m st) ptr v with

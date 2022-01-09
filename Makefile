@@ -123,7 +123,7 @@ clight:
 	$(COQMAKEFILE) -f _CoqProject clight/interpreter.v COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 
-PROOF = $(addprefix proof/correctproof/, correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v  correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_regions.v correct_get_addr_ofs.v correct_get_dst.v correct_get_immediate.v correct_get_opcode_alu64.v correct_list_get.v correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_add.v correct_get_sub.v correct_check_mem_aux.v correct_upd_reg.v correct_step_opcode_alu64.v)
+PROOF = $(addprefix proof/correctproof/, correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v  correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_regions.v correct_get_addr_ofs.v correct_get_dst.v correct_get_immediate.v correct_get_opcode_alu64.v correct_list_get.v correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_add.v correct_get_sub.v correct_check_mem_aux.v correct_upd_reg.v correct_step_opcode_alu64.v correct_load_mem.v)
 
 CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v CommonLib.v Clightlogic.v MatchState.v CorrectRel.v CommonLemma.v)
 

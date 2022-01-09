@@ -24,7 +24,7 @@ Section Load_mem.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(memory_chunk:Type); valu32_t].
+  Definition args : list Type := [(memory_chunk:Type); valptr8_t].
   Definition res : Type := (val64_t:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -107,7 +107,8 @@ Proof.
     split.
     constructor.
     simpl; auto.
-  - eexists. exists m, Events.E0.
+  - (**r destruct Hmatch. *)
+    eexists. exists m, Events.E0.
     split.
     {
       forward_star.
@@ -118,7 +119,14 @@ Proof.
       forward_star.
       repeat forward_star.
       forward_star.
-      repeat forward_star. admit.
+      repeat forward_star. (**r I don't know if I lose something *)
+      admit.
+      eapply Mem.load_unchanged_on.
+      apply munchange.
+      intros.
+      simpl.
+
+      admit.
       forward_star.
       repeat forward_star.
 
