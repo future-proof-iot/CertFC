@@ -117,16 +117,18 @@ int main(){
   struct bpf_state st = {
     .state_pc = 0,
     .bpf_flag = vBPF_OK,
+    .regsmap  = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
     .mrs_num  = 2,
-    .regsmap = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
-    .mrs = my_memory_regions
+    .mrs      = my_memory_regions,
+    .ins_len  = sizeof(bpf_fletcher32_bpf_bin),
+    .ins      = (const unsigned long long *) bpf_fletcher32_bpf_bin
   };
   
   //print_normal_addr(&st);
   
   clock_t begin1 = clock();
   //for (int j = 0; j < 1000; j++) { //TODO: why a loop returns a wrong result? 
-    result = bpf_interpreter(&st, sizeof(bpf_fletcher32_bpf_bin), 10000, (const unsigned long long *) bpf_fletcher32_bpf_bin);
+    result = bpf_interpreter(&st, 10000);
     //}
   clock_t end1 = clock();
   printf("execution time:%f\n", (double)(end1-begin1)/CLOCKS_PER_SEC);

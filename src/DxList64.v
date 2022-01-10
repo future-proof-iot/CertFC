@@ -27,6 +27,8 @@ Definition MyListType := MyList.t.
 Definition MyListIndexs32 := MyList.index_s32.
 Definition MyListIndexnat := MyList.index_nat.
 
+Definition default_list: MyListType :=  [].
+
 
 (******************** Dx Related *******************)
 

@@ -7,14 +7,12 @@ Definition stateM := state. (*This one must be int_64 defined in DxIntegers *)
 
 Definition M (A: Type) := stateM -> option (A * state).
 
-Definition runM {A: Type} (x: M A) (st: stateM) := x st.
 Definition returnM {A: Type} (a: A) : M A := fun st => Some (a, st).
-Definition emptyM {A: Type} : M A := fun st => None.
 Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B :=
   fun st =>
-    match runM x st with
+    match x st with
     | None => None
-    | Some (x', st') => runM (f x') st'
+    | Some (x', st') => (f x') st'
     end.
 
 Definition eval_pc: M sint32_t := fun st => Some (eval_pc st, st).
@@ -41,6 +39,9 @@ Definition load_mem (chunk: memory_chunk) (ptr: valu32_t): M val64_t := fun st =
 Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) : M unit := fun st => Some (tt, store_mem_imm chunk ptr v st).
 
 Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) : M unit := fun st => Some (tt, store_mem_reg chunk ptr v st).
+
+Definition eval_ins_len : M sint32_t := fun st => Some (eval_ins_len st, st).
+Definition eval_ins (idx: sint32_t) : M int64_t := fun st => Some (eval_ins idx st, st).
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

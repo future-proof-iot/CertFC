@@ -52,8 +52,6 @@ Section S.
   (* [bl_state] is the memory block for the monadic state *)
   Variable bl_state : block.
 
-  Variable ins_block: block. (**r ... *)
-
   Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
     exists vl, Mem.loadv Mint64 m (Vptr bl_reg (Ptrofs.add ofs (Ptrofs.repr (8 * (id_of_reg r))))) = Some (Vlong vl) /\ (**r it should be `(eval_regmap r rmap)`*)
@@ -85,7 +83,7 @@ Definition is_byte_memval (mv: memval): Prop :=
 
   Record match_state  (st: DxState.state) (m: mem) : Prop :=
     {
-      munchange: Mem.unchanged_on (fun b _ => b <> bl_state /\ b <> ins_block) (bpf_m st) m; (**r (bpf_m st) = m - {bl_state, ins_block} *)
+      munchange: Mem.unchanged_on (fun b _ => b <> bl_state) (bpf_m st) m; (**r (bpf_m st) = m - {bl_state} *)
       (*** minj     : Mem.inject inject_id (bpf_m st) m; *)
       mpc      : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
       mflags   : Mem.loadv AST.Mint32 m (Vptr bl_state (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
@@ -96,7 +94,7 @@ Definition is_byte_memval (mv: memval): Prop :=
                  List.length (bpf_mrs st) = (DxState.mrs_num st) /\ (**r the number of bpf_mrs is exactly the mrs_num *)
                  Z.of_nat (List.length (bpf_mrs st)) * 16 <= Ptrofs.max_unsigned - 100; (**r there is not overflow *)
       mperm    : Mem.range_perm m bl_state 0 (size_of_state st) Cur Freeable;
-      minvalid : ~Mem.valid_block (bpf_m st) bl_state /\ ~Mem.valid_block (bpf_m st) ins_block;  (**r ysh: bl_state and ins_block don't exist in st *)
+      minvalid : ~Mem.valid_block (bpf_m st) bl_state;  (**r ysh: bl_state and ins_block don't exist in st *)
       (*mByte    : forall b ofs, (b <> bl_state /\ b <> ins_block) -> is_byte_memval (Maps.ZMap.get ofs (Maps.PMap.get b (Mem.mem_contents m)));*)
     }.
 
@@ -118,8 +116,8 @@ Qed.
 
 (** Permission Lemmas: upd_pc *)
 Lemma upd_pc_write_access:
-  forall m0 blk ins st
-    (Hst: match_state blk ins st m0),
+  forall m0 blk st
+    (Hst: match_state blk st m0),
     Mem.valid_access m0 Mint32 blk 0 Writable.
 Proof.
   intros; unfold Mem.valid_access; destruct Hst; clear - mem_regs0 mperm0; simpl in mem_regs0.
@@ -135,8 +133,8 @@ Proof.
 Qed.
 
 Lemma upd_pc_store:
-  forall m0 blk ins pc st
-    (Hst: match_state blk ins st m0),
+  forall m0 blk pc st
+    (Hst: match_state blk st m0),
     exists m1,
     Mem.store AST.Mint32 m0 blk 0 (Vint pc) = Some m1.
 Proof.
@@ -149,8 +147,8 @@ Qed.
 
 (** Permission Lemmas: upd_flags *)
 Lemma upd_flags_write_access:
-  forall m0 blk ins st
-    (Hst: match_state blk ins st m0),
+  forall m0 blk st
+    (Hst: match_state blk st m0),
     Mem.valid_access m0 Mint32 blk 4 Writable.
 Proof.
   intros; unfold Mem.valid_access; destruct Hst; clear - mperm0; simpl in mperm0.
@@ -165,8 +163,8 @@ Proof.
 Qed.
 
 Lemma upd_flags_store:
-  forall m0 blk ins st v
-    (Hst: match_state blk ins st m0),
+  forall m0 blk st v
+    (Hst: match_state blk st m0),
     exists m1,
     Mem.store AST.Mint32 m0 blk 4 (Vint v) = Some m1.
 Proof.
@@ -179,8 +177,8 @@ Qed.
 
 (** Permission Lemmas: upd_regs *)
 Lemma upd_regs_write_access:
-  forall m0 blk ins st r
-    (Hst: match_state blk ins st m0),
+  forall m0 blk st r
+    (Hst: match_state blk st m0),
     Mem.valid_access m0 Mint64 blk (8 + (8 * (id_of_reg r))) Writable.
 Proof.
   intros; unfold Mem.valid_access; destruct Hst; clear - mperm0; simpl in mperm0.
@@ -204,13 +202,13 @@ Proof.
 Qed.
 
 Lemma upd_regs_store:
-  forall m0 blk ins st r v
-    (Hst: match_state blk ins st m0),
+  forall m0 blk st r v
+    (Hst: match_state blk st m0),
     exists m1,
     Mem.store AST.Mint64 m0 blk (8 + (8 * (id_of_reg r))) (Vlong v) = Some m1.
 Proof.
   intros.
-  apply (upd_regs_write_access _ _ _ _ r) in Hst.
+  apply (upd_regs_write_access _ _ _ r) in Hst.
   apply (Mem.valid_access_store _ _ _ _ (Vlong v)) in Hst.
   destruct Hst as (m2 & Hstore).
   exists m2; assumption.
@@ -454,10 +452,10 @@ Proof.
 Qed.
 
 Lemma upd_unchanged_on:
-  forall st m0 m1 blk ins chunk ofs vl
-  (Hst    : match_state blk ins st m0)
+  forall st m0 m1 blk chunk ofs vl
+  (Hst    : match_state blk st m0)
   (Hstore : Mem.store chunk m0 blk ofs vl = Some m1),
-    Mem.unchanged_on (fun b _ => b <> blk /\ b <> ins) m0 m1.
+    Mem.unchanged_on (fun b _ => b <> blk) m0 m1.
 Proof.
   intros.
   destruct Hst. (*
@@ -468,7 +466,6 @@ Proof.
   reflexivity.
   intros.
   intro.
-  destruct H0.
   apply H0; reflexivity.
 Qed.
 
@@ -710,11 +707,11 @@ Qed.
 
 
 Lemma upd_reg_preserves_match_state:
-  forall st0 st1 m0 m1 blk ins r vl
-  (Hst    : match_state blk ins st0 m0)
+  forall st0 st1 m0 m1 blk r vl
+  (Hst    : match_state blk st0 m0)
   (Hst1   : DxState.upd_reg r (Vlong vl) st0 = st1)
   (Hstore : Mem.store AST.Mint64 m0 blk (8 + 8 * id_of_reg r) (Vlong vl) = Some m1),
-    match_state blk ins st1 m1.
+    match_state blk st1 m1.
 Proof.
   intros.
   subst.
@@ -723,12 +720,8 @@ Proof.
   split; unfold Mem.loadv in *.
   -
     rewrite <- (upd_reg_same_mem _ r (Vlong vl)).
-    assert (Hunchanged_on': Mem.unchanged_on (fun (b : block) (_ : Z) => b <> blk /\ b <> ins) m0 m1). {
+    assert (Hunchanged_on': Mem.unchanged_on (fun (b : block) (_ : Z) => b <> blk) m0 m1). {
       eapply Mem.store_unchanged_on; eauto.
-      intros.
-      intro.
-      destruct H0.
-      apply H0; reflexivity.
     }
     apply Mem.unchanged_on_trans with(m2:= m0); auto.
   -
@@ -919,11 +912,11 @@ Qed.
 
 
 Lemma upd_pc_preserves_match_state:
-  forall st0 st1 m0 m1 blk ins pc
-  (Hst    : match_state blk ins st0 m0)
+  forall st0 st1 m0 m1 blk pc
+  (Hst    : match_state blk st0 m0)
   (Hst1   : DxState.upd_pc pc st0 = st1)
   (Hstore : Mem.store AST.Mint32 m0 blk 0 (Vint pc) = Some m1),
-    match_state blk ins st1 m1.
+    match_state blk st1 m1.
 Proof.
   intros.
   subst.
@@ -932,12 +925,8 @@ Proof.
   -
     destruct Hst' as (Hunchanged_on, _, _, _, _, _, _, _).
     rewrite <- upd_pc_same_mem.
-    assert (Hunchanged_on': Mem.unchanged_on (fun (b : block) (_ : Z) => b <> blk /\ b <> ins) m0 m1). {
+    assert (Hunchanged_on': Mem.unchanged_on (fun (b : block) (_ : Z) => b <> blk) m0 m1). {
       eapply Mem.store_unchanged_on; eauto.
-      intros.
-      intro.
-      destruct H0.
-      apply H0; reflexivity.
     }
     apply Mem.unchanged_on_trans with(m2:= m0); auto.
   -
@@ -1034,11 +1023,11 @@ Proof.
 Qed.
 
 Lemma upd_flag_preserves_match_state:
-  forall st0 st1 m0 m1 blk ins flag
-  (Hst    : match_state blk ins st0 m0)
+  forall st0 st1 m0 m1 blk flag
+  (Hst    : match_state blk st0 m0)
   (Hst1   : DxState.upd_flag flag st0 = st1)
   (Hstore : Mem.store AST.Mint32 m0 blk 4 (Vint (int_of_flag flag)) = Some m1),
-    match_state blk ins st1 m1.
+    match_state blk st1 m1.
 Proof.
   intros.
   subst.
@@ -1047,12 +1036,8 @@ Proof.
   -
     destruct Hst' as (Hunchanged_on, _, _, _, _, _, _, _).
     rewrite <- upd_flag_same_mem.
-    assert (Hunchanged_on': Mem.unchanged_on (fun (b : block) (_ : Z) => b <> blk /\ b <> ins) m0 m1). {
+    assert (Hunchanged_on': Mem.unchanged_on (fun (b : block) (_ : Z) => b <> blk) m0 m1). {
       eapply Mem.store_unchanged_on; eauto.
-      intros.
-      intro.
-      destruct H0.
-      apply H0; reflexivity.
     }
     apply Mem.unchanged_on_trans with(m2:= m0); auto.
   -

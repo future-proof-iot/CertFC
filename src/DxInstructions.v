@@ -9,8 +9,9 @@ From bpf.src Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode D
 
 Open Scope monad_scope.
 
+(*
 Definition list_get (l: MyListType) (idx: sint32_t): M int64_t :=
-  returnM (MyListIndexs32 l idx).
+  returnM (MyListIndexs32 l idx). *)
 
 Definition get_mem_region (n:nat): M memory_region :=
   do mrs      <- eval_mrs_regions;
@@ -80,7 +81,7 @@ Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
   | _ => returnM false
   end.
 
-Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_chunk): M valptr8_t :=
+Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: valu32_t) (chunk: memory_chunk): M valptr8_t :=
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then
       do ptr    <- get_block_ptr mr; (**r Vptr b 0 *)
@@ -91,7 +92,11 @@ Definition check_mem_aux2 (mr: memory_region) (addr: valu32_t) (chunk: memory_ch
         if (andb (compu_le_32 val32_zero lo_ofs) (compu_lt_32 hi_ofs size)) then
           if (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
                    (comp_eq_32 val32_zero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))) then
-            returnM (Val.add ptr lo_ofs) (**r Vptr b lo_ofs *)
+            do mr_perm  <- get_block_perm mr;
+              if (perm_ge mr_perm perm) then
+                returnM (Val.add ptr lo_ofs) (**r Vptr b lo_ofs *)
+              else
+                returnM valptr_null
           else
             returnM valptr_null (**r = 0 *)
         else
@@ -104,15 +109,11 @@ Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr
   | O => returnM valptr_null
   | S n =>
     do cur_mr   <- get_mem_region n;
-    do mr_perm  <- get_block_perm cur_mr;
-      if (perm_ge mr_perm perm) then
-        do check_mem <- check_mem_aux2 cur_mr addr chunk;
-          if comp_eq_ptr8_zero check_mem then
-            check_mem_aux n perm chunk addr
-          else
-            returnM check_mem
-      else
+    do check_mem <- check_mem_aux2 cur_mr perm addr chunk;
+      if comp_eq_ptr8_zero check_mem then
         check_mem_aux n perm chunk addr
+      else
+        returnM check_mem
   end.
 
 Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: valu32_t): M valptr8_t :=
@@ -333,12 +334,13 @@ Definition step_opcode_branch (dst64: val64_t) (src64: val64_t) (pc: sint32_t) (
   | op_BPF_JMP_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_ld_imm (imm: sint32_t) (pc: sint32_t) (len: sint32_t) (dst: reg) (op: int8_t)  (l: MyListType): M unit :=
+Definition step_opcode_mem_ld_imm (imm: sint32_t) (pc: sint32_t) (dst: reg) (op: int8_t): M unit :=
+  do len  <- eval_ins_len;
   do opcode_ld <- get_opcode_mem_ld_imm op;
   match opcode_ld with
   | op_BPF_LDDW      =>
     if (Int.lt (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
-      do next_ins <- list_get l (Int.add pc Int.one);
+      do next_ins <- eval_ins (Int.add pc Int.one);
       do next_imm <- get_immediate next_ins;
       do _ <- upd_reg dst (Val.or (Val.longofint (sint32_to_vint imm)) (Val.shl  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint int32_32)));
       do _ <- upd_pc_incr;
@@ -454,9 +456,9 @@ Definition step_opcode_mem_st_reg (src64: val64_t) (addr: valu32_t) (pc: sint32_
   | op_BPF_STX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step (len: sint32_t) (l: MyListType): M unit :=
+Definition step: M unit :=
   do pc   <- eval_pc;
-  do ins  <- list_get l pc;
+  do ins  <- eval_ins pc;
   do op   <- get_opcode_ins ins;
   do opc  <- get_opcode op;
   match opc with
@@ -504,7 +506,7 @@ Definition step (len: sint32_t) (l: MyListType): M unit :=
   | op_BPF_Mem_ld_imm  =>
     do dst    <- get_dst ins;
     do imm    <- get_immediate ins;
-    step_opcode_mem_ld_imm imm pc len dst op l                (**r 0xX8 *)
+    step_opcode_mem_ld_imm imm pc dst op                (**r 0xX8 *)
   | op_BPF_Mem_ld_reg  =>
     do dst    <- get_dst ins;
     do src    <- get_src ins;
@@ -530,27 +532,28 @@ Definition step (len: sint32_t) (l: MyListType): M unit :=
   | op_BPF_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Fixpoint bpf_interpreter_aux (len: sint32_t) (fuel: nat) (l: MyListType) {struct fuel}: M unit :=
+Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
   match fuel with
   | O => upd_flag BPF_ILLEGAL_LEN
   | S fuel0 =>
+    do len  <- eval_ins_len;
     do pc <- eval_pc;
       if(andb (Int_le int32_0 pc) (Int.lt pc len)) then (**r 0 < pc < len: pc is less than the length of l *)
-        do _ <- step len l;
+        do _ <- step;
         do _ <- upd_pc_incr;
         do f <- eval_flag;
           if flag_eq f BPF_OK then
-            bpf_interpreter_aux len fuel0 l
+            bpf_interpreter_aux fuel0
           else
             returnM tt
       else
         upd_flag BPF_ILLEGAL_LEN
   end.
 
-Definition bpf_interpreter (len: sint32_t) (fuel: nat) (l: MyListType): M val64_t :=
+Definition bpf_interpreter (fuel: nat): M val64_t :=
   do bpf_ctx  <- get_mem_region 0;
   do _        <- upd_reg R1 (start_addr bpf_ctx); (**r let's say the ctx memory region is also be the first one *)
-  do _        <- bpf_interpreter_aux len fuel l;
+  do _        <- bpf_interpreter_aux fuel;
   do f        <- eval_flag;
     if flag_eq f BPF_SUCC_RETURN then
       eval_reg R0

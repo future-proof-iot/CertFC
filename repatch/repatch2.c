@@ -1,5 +1,5 @@
 /**
- * 1. deleting all lines before `unsigned long long list_get`
+ * 1. deleting all lines before `struct memory_region *get_mem_region`
  * 2. deleting `\n\n`.
  * 2. deleting all `extern` lines
  * 3. adding `st` to all possible places
@@ -16,7 +16,7 @@
 void replaceAll(char *str, const char *oldWord, const char *newWord);
 
 
-const char start_point[] = "unsigned long long list_get";
+const char start_point[] = "struct memory_region *get_mem_region";
 
 
 const char old_words[][100] = {
@@ -71,10 +71,10 @@ const char old_words[][100] = {
 	"return check_mem_aux(",
 	"unsigned char *check_mem(",
 	
-	"void step(",
-	"step(len, l);",
+	"void step(void)",
+	"step();",
 	"void bpf_interpreter_aux(",
-	"bpf_interpreter_aux(len",	
+	"bpf_interpreter_aux(fuel",	
 	"unsigned long long bpf_interpreter(",
 	"struct memory_region *get_mem_region(",
 	"= get_mem_region(",
@@ -82,7 +82,6 @@ const char old_words[][100] = {
 	"eval_mrs_num()",
 	"check_mem = check_mem_aux(",
 	
-	"unsigned long long list_get(",
 	"unsigned int get_dst(",
 	"unsigned int reg64_to_reg32(",
 	"unsigned int get_src(",
@@ -105,7 +104,9 @@ const char old_words[][100] = {
 	"unsigned char *check_mem_aux2(",
 	"_Bool comp_and_0x08_byte(",
 	
-	"unsigned long long *l"
+	"unsigned long long *l",
+	"eval_ins_len()",
+	"eval_ins("
 	
 	};
 
@@ -161,10 +162,10 @@ const char new_words[][100] = {
 	"return check_mem_aux(st, ",
 	"unsigned char *check_mem(struct bpf_state* st, ",
 	
-	"void step(struct bpf_state* st, ",
-	"step(st, len, l); //print_bpf_state(st);",
+	"void step(struct bpf_state* st)",
+	"step(st); //print_bpf_state(st);",
 	"void bpf_interpreter_aux(struct bpf_state* st, ",
-	"bpf_interpreter_aux(st, len",
+	"bpf_interpreter_aux(st, fuel",
 	"unsigned long long bpf_interpreter(struct bpf_state* st, ",
 	"static struct memory_region *get_mem_region(struct bpf_state* st, ",
 	"= get_mem_region(st, ",
@@ -172,7 +173,6 @@ const char new_words[][100] = {
 	"eval_mrs_num(st)",
 	"check_mem = check_mem_aux(st, ",
 	
-	"static unsigned long long list_get(",
 	"static unsigned int get_dst(",
 	"static unsigned int reg64_to_reg32(",
 	"static unsigned int get_src(",	
@@ -195,7 +195,9 @@ const char new_words[][100] = {
 	"static unsigned char *check_mem_aux2(",
 	"static _Bool comp_and_0x08_byte(",
 	
-	"const unsigned long long *l"
+	"const unsigned long long *l",
+	"eval_ins_len(st)",
+	"eval_ins(st, "
 	
 	};
 	
@@ -235,7 +237,7 @@ int main()
     while ((fgets(buffer, BUFFER_SIZE, ptr_r)) != NULL)
     {  //printf("%d\n", CNT-counter);
     	//if ((counter --) == 0) { break; }
-    	/* deleting all lines before `unsigned long long list_get` */
+    	/* deleting all lines before `struct memory_region *get_mem_region` */
     	if (before_start_point == 0 && strstr(buffer, start_point) == NULL){
     	  /* we just skip this line and don't write it */
     	  continue;

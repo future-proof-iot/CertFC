@@ -8,14 +8,14 @@ struct memory_region {
 };
 
 struct bpf_state {
-  unsigned int state_pc;
+  int state_pc;
   int bpf_flag;
   unsigned long long regsmap[11];
   struct memory_region *mrs;
   unsigned int mrs_num;
+  int ins_len;
+  unsigned long long *ins;
 };
-
-extern unsigned long long list_get(unsigned long long *, int);
 
 extern struct memory_region *get_mem_region(unsigned int);
 
@@ -65,7 +65,7 @@ extern unsigned int get_block_perm(struct memory_region *);
 
 extern _Bool is_well_chunk_bool(unsigned int);
 
-extern unsigned char *check_mem_aux2(struct memory_region *, unsigned int, unsigned int);
+extern unsigned char *check_mem_aux2(struct memory_region *, unsigned int, unsigned int, unsigned int);
 
 extern unsigned char *check_mem_aux(unsigned int, unsigned int, unsigned int, unsigned int);
 
@@ -79,7 +79,7 @@ extern void step_opcode_alu32(unsigned int, unsigned int, unsigned int, unsigned
 
 extern void step_opcode_branch(unsigned long long, unsigned long long, int, int, unsigned char);
 
-extern void step_opcode_mem_ld_imm(int, int, int, unsigned int, unsigned char, unsigned long long *);
+extern void step_opcode_mem_ld_imm(int, int, unsigned int, unsigned char);
 
 extern void step_opcode_mem_ld_reg(unsigned int, int, unsigned int, unsigned char);
 
@@ -87,11 +87,11 @@ extern void step_opcode_mem_st_imm(int, unsigned int, int, unsigned int, unsigne
 
 extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, int, unsigned int, unsigned char);
 
-extern void step(int, unsigned long long *);
+extern void step(void);
 
-extern void bpf_interpreter_aux(int, unsigned int, unsigned long long *);
+extern void bpf_interpreter_aux(unsigned int);
 
-extern unsigned long long bpf_interpreter(int, unsigned int, unsigned long long *);
+extern unsigned long long bpf_interpreter(unsigned int);
 
 extern int eval_pc(void);
 
@@ -117,10 +117,9 @@ extern void store_mem_imm(unsigned int, unsigned int, int);
 
 extern void store_mem_reg(unsigned int, unsigned int, unsigned long long);
 
-unsigned long long list_get(unsigned long long *l, int idx)
-{
-  return *(l + idx);
-}
+extern int eval_ins_len(void);
+
+extern unsigned long long eval_ins(int);
 
 struct memory_region *get_mem_region(unsigned int n)
 {
@@ -256,7 +255,7 @@ _Bool is_well_chunk_bool(unsigned int chunk)
   }
 }
 
-unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int addr, unsigned int chunk)
+unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int perm, unsigned int addr, unsigned int chunk)
 {
   _Bool well_chunk;
   unsigned char *ptr;
@@ -264,6 +263,7 @@ unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int addr, unsig
   unsigned int size;
   unsigned int lo_ofs;
   unsigned int hi_ofs;
+  unsigned int mr_perm;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
     ptr = get_block_ptr(mr);
@@ -273,7 +273,12 @@ unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int addr, unsig
     hi_ofs = get_add(lo_ofs, chunk);
     if (0U <= lo_ofs && hi_ofs < size) {
       if (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk) {
-        return ptr + lo_ofs;
+        mr_perm = get_block_perm(mr);
+        if (mr_perm >= perm) {
+          return ptr + lo_ofs;
+        } else {
+          return 0;
+        }
       } else {
         return 0;
       }
@@ -289,23 +294,17 @@ unsigned char *check_mem_aux(unsigned int num, unsigned int perm, unsigned int c
 {
   unsigned int n;
   struct memory_region *cur_mr;
-  unsigned int mr_perm;
   unsigned char *check_mem;
   if (num == 0U) {
     return 0;
   } else {
     n = num - 1U;
     cur_mr = get_mem_region(n);
-    mr_perm = get_block_perm(cur_mr);
-    if (mr_perm >= perm) {
-      check_mem = check_mem_aux2(cur_mr, addr, chunk);
-      if (check_mem == 0) {
-        return check_mem_aux(n, perm, chunk, addr);
-      } else {
-        return check_mem;
-      }
-    } else {
+    check_mem = check_mem_aux2(cur_mr, perm, addr, chunk);
+    if (check_mem == 0) {
       return check_mem_aux(n, perm, chunk, addr);
+    } else {
+      return check_mem;
     }
   }
 }
@@ -650,16 +649,18 @@ void step_opcode_branch(unsigned long long dst64, unsigned long long src64, int 
   }
 }
 
-void step_opcode_mem_ld_imm(int imm, int pc, int len, unsigned int dst, unsigned char op, unsigned long long *l)
+void step_opcode_mem_ld_imm(int imm, int pc, unsigned int dst, unsigned char op)
 {
+  int len;
   unsigned char opcode_ld;
   unsigned long long next_ins;
   int next_imm;
+  len = eval_ins_len();
   opcode_ld = get_opcode_mem_ld_imm(op);
   switch (opcode_ld) {
     case 24:
       if (pc + 1 < len) {
-        next_ins = list_get(l, pc + 1);
+        next_ins = eval_ins(pc + 1);
         next_imm = get_immediate(next_ins);
         upd_reg(dst,
                 (unsigned long long) imm
@@ -854,7 +855,7 @@ void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, int pc,
   }
 }
 
-void step(int len, unsigned long long *l)
+void step(void)
 {
   int pc;
   unsigned long long ins;
@@ -902,7 +903,7 @@ void step(int len, unsigned long long *l)
   int ofs;
   unsigned int addr;
   pc = eval_pc();
-  ins = list_get(l, pc);
+  ins = eval_ins(pc);
   op = get_opcode_ins(ins);
   opc = get_opcode(op);
   switch (opc) {
@@ -956,8 +957,7 @@ void step(int len, unsigned long long *l)
     case 0:
       dst = get_dst(ins);
       imm = get_immediate(ins);
-      step_opcode_mem_ld_imm(imm, pc, len, dst, op,
-                             l);
+      step_opcode_mem_ld_imm(imm, pc, dst, op);
       return;
     case 1:
       dst = get_dst(ins);
@@ -991,9 +991,10 @@ void step(int len, unsigned long long *l)
   }
 }
 
-void bpf_interpreter_aux(int len, unsigned int fuel, unsigned long long *l)
+void bpf_interpreter_aux(unsigned int fuel)
 {
   unsigned int fuel0;
+  int len;
   int pc;
   int f;
   if (fuel == 0U) {
@@ -1001,13 +1002,14 @@ void bpf_interpreter_aux(int len, unsigned int fuel, unsigned long long *l)
     return;
   } else {
     fuel0 = fuel - 1U;
+    len = eval_ins_len();
     pc = eval_pc();
     if (0U <= pc && pc < len) {
-      step(len, l);
+      step();
       upd_pc_incr();
       f = eval_flag();
       if (f == 0) {
-        bpf_interpreter_aux(len, fuel0, l);
+        bpf_interpreter_aux(fuel0);
         return;
       } else {
         return;
@@ -1019,13 +1021,13 @@ void bpf_interpreter_aux(int len, unsigned int fuel, unsigned long long *l)
   }
 }
 
-unsigned long long bpf_interpreter(int len, unsigned int fuel, unsigned long long *l)
+unsigned long long bpf_interpreter(unsigned int fuel)
 {
   struct memory_region *bpf_ctx;
   int f;
   bpf_ctx = get_mem_region(0U);
   upd_reg(1U, (*bpf_ctx).start_addr);
-  bpf_interpreter_aux(len, fuel, l);
+  bpf_interpreter_aux(fuel);
   f = eval_flag();
   if (f == 1) {
     return eval_reg(0U);

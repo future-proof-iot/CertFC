@@ -80,7 +80,7 @@ COQSRC = $(wildcard src/*.v)
 
 compile:
 	@echo $@
-#	rm -f src/*.vo
+	rm -f src/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(COQSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 	$(CP) TestMain.ml src # mv -> cp to avoid when running `make` again, it doesn't find the two files

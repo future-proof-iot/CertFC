@@ -2495,11 +2495,9 @@ Section S.
     unfold correct_body.
     intros PRE.
     unfold bindM.
-    unfold runM at 1.
     unfold correct_statement in C1.
     destruct (f1 st) eqn:F1 ; try congruence.
     destruct p0 as (v1,st1).
-    unfold runM.
     destruct (f2 v1 st1) eqn:F2; try congruence.
     destruct p0 as (v2,st2).
     intros.
@@ -2546,11 +2544,9 @@ Section S.
     unfold correct_body.
     intros PRE.
     unfold bindM.
-    unfold runM at 1.
     unfold correct_statement in C1.
     destruct (f1 st) eqn:F1 ; [| constructor].
     destruct p0 as (v1,st1).
-    unfold runM.
     destruct (f2 v1 st1) eqn:F2; [| constructor].
     destruct p0 as (v2,st2).
     intros.
@@ -2597,11 +2593,9 @@ Section S.
     unfold correct_body.
     intros PRE.
     unfold bindM.
-    unfold runM at 1.
     unfold correct_statement in C1.
     destruct (f1 st) eqn:F1 ; try congruence.
     destruct p0 as (v1,st1).
-    unfold runM.
     destruct (f2 v1 st1) eqn:F2; try congruence.
     destruct p0 as (v2,st2).
     intros.
@@ -2672,11 +2666,9 @@ Section S.
     unfold correct_body.
     intros PRE.
     unfold bindM.
-    unfold runM at 1.
     unfold correct_statement in C1.
     destruct (f1 st) eqn:F1 ; try congruence.
     destruct p0 as (v1,st1).
-    unfold runM.
     destruct (f2 v1 st1) eqn:F2; try congruence.
     destruct p0 as (v2,st2).
     intros.
@@ -2760,7 +2752,7 @@ Lemma bind_id_left : forall {A: Type} (f: M A) x  , f x = bindM (returnM tt) (fu
 Proof.
   intros.
   unfold bindM.
-  unfold runM,returnM.
+  unfold returnM.
   reflexivity.
 Qed.
 
@@ -2779,7 +2771,7 @@ Lemma bind_id_right : forall {A: Type} (f: M A) x  , f x = bindM f returnM x.
 Proof.
   intros.
   unfold bindM.
-  unfold runM,returnM.
+  unfold returnM.
   destruct (f x); auto. destruct p; auto.
 Qed.
 

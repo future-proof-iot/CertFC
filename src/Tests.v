@@ -36,14 +36,13 @@ GenerateIntermediateRepresentation SymbolIRs
   eval_mrs_num
   eval_reg
   upd_reg
-  eval_mrs_regions(*
-  add_mem_region
-  add_mem_region_ctx*)
+  eval_mrs_regions
   load_mem
   store_mem_imm
   store_mem_reg
+  eval_ins_len
+  eval_ins
   __
-  list_get
   get_mem_region
   get_dst
   reg64_to_reg32
@@ -88,4 +87,4 @@ Definition dxModuleTest := makeDXModuleWithUserIds
   [ mem_region_def; state_struct_def]
   [
    "memory_region"; "start_addr"; "block_size"; "block_perm"; "block_ptr";
-   "bpf_state"; "state_pc"; "bpf_flag"; "regsmap"; "mrs_num"; "mrs"] SymbolIRs.
+   "bpf_state"; "state_pc"; "bpf_flag"; "regsmap"; "mrs_num"; "mrs"; "ins_len"; "ins"] SymbolIRs.
