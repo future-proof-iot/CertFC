@@ -1,7 +1,9 @@
-From compcert Require Import AST Memory.
+From compcert Require Import AST Integers Memory.
+
+From bpf.comm Require Import Monad Flag Regs MemRegion.
 From bpf.src Require Import DxIntegers DxValues DxRegs DxFlag DxMemRegion DxState.
 
-
+(*
 Definition stateM := state. (*This one must be int_64 defined in DxIntegers *)
 
 
@@ -13,35 +15,34 @@ Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B :=
     match x st with
     | None => None
     | Some (x', st') => (f x') st'
-    end.
+    end. *)
 
-Definition eval_pc: M sint32_t := fun st => Some (eval_pc st, st).
-Definition upd_pc (p: sint32_t): M unit := fun st => Some (tt, upd_pc p st).
-Definition upd_pc_incr: M unit := fun st => Some (tt, upd_pc_incr st).
+Definition M (A: Type) := Monad.M A.
+Definition returnM {A: Type} (a: A) : M A := Monad.returnM a.
+Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B := Monad.bindM x f.
 
-Definition eval_flag: M bpf_flag := fun st => Some (eval_flag st, st).
-Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag f st).
+Definition eval_pc: M sint32_t := Monad.eval_pc.
+Definition upd_pc (p: sint32_t): M unit := Monad.upd_pc p.
+Definition upd_pc_incr: M unit := Monad.upd_pc_incr.
 
-Definition eval_mrs_num: M nat := fun st => Some (eval_mem_num st, st).
+Definition eval_flag: M bpf_flag := Monad.eval_flag.
+Definition upd_flag (f:bpf_flag) : M unit := Monad.upd_flag f.
 
-Definition eval_reg (r: reg) : M val64_t := fun st => Some (eval_reg r st, st).
-Definition upd_reg (r: reg) (v: val64_t) : M unit := fun st => Some (tt, upd_reg r v st).
+Definition eval_mrs_num: M nat := Monad.eval_mrs_num.
 
-Definition eval_mrs_regions : M MyMemRegionsType := fun st => Some (eval_mem_regions st, st).
+Definition eval_reg (r: reg) : M val64_t := Monad.eval_reg r.
+Definition upd_reg (r: reg) (v: val64_t) : M unit := Monad.upd_reg r v.
 
-(*
-Definition bpf_add_mem_region (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region mr st).
+Definition eval_mrs_regions : M MyMemRegionsType := Monad.eval_mrs_regions.
 
-Definition bpf_add_region_ctx (mr: memory_region) : M unit := fun st => Some (tt, add_mem_region_ctx mr st).*)
+Definition load_mem (chunk: memory_chunk) (ptr: valu32_t): M val64_t := Monad.load_mem chunk ptr.
 
-Definition load_mem (chunk: memory_chunk) (ptr: valu32_t): M val64_t := fun st => Some (load_mem chunk ptr st, st).
+Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) : M unit := Monad.store_mem_imm chunk ptr v.
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: valu32_t) (v: vals32_t) : M unit := fun st => Some (tt, store_mem_imm chunk ptr v st).
+Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) : M unit := Monad.store_mem_reg chunk ptr v.
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) : M unit := fun st => Some (tt, store_mem_reg chunk ptr v st).
-
-Definition eval_ins_len : M sint32_t := fun st => Some (eval_ins_len st, st).
-Definition eval_ins (idx: sint32_t) : M int64_t := fun st => Some (eval_ins idx st, st).
+Definition eval_ins_len : M sint32_t := Monad.eval_ins_len.
+Definition eval_ins (idx: sint32_t) : M int64_t := Monad.eval_ins idx.
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

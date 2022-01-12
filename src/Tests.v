@@ -9,7 +9,9 @@ From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
-From bpf.src Require Import DxIntegers DxList64 DxValues DxRegs DxState DxOpcode DxMonad DxFlag DxInstructions DxAST DxMemRegion DxMemType.
+
+From bpf.comm Require Import Int16 MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs.
+From bpf.src Require Import DxIntegers DxList64 DxValues DxRegs DxState DxOpcode DxFlag DxInstructions DxAST DxMemRegion DxMemType DxMonad.
 
 (***************************************)
 

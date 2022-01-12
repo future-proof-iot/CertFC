@@ -2,17 +2,14 @@ From compcert.cfrontend Require Csyntax Ctypes Cop.
 From compcert.common Require Import Values Memory AST.
 From compcert.lib Require Import Integers.
 
-From dx Require Import ResultMonad IR.
-From dx.Type Require Bool Nat.
-
-From bpf.comm Require Import State.
-From bpf.src Require Import IdentDef CoqIntegers DxIntegers DxValues DxFlag DxRegs DxMemRegion DxList64.
+From bpf.comm Require Import List64 Flag Regs MemRegion.
 
 From Coq Require Import List ZArith.
 Import ListNotations.
-(*
+
+
 Record state := mkst {
-  pc_loc  : sint32_t;  (**r should pc_loc be u32 or s32: because ofs is s16, res = pc_loc+ofs may be negative! we should test res before calculating *)
+  pc_loc  : int;  (**r should pc_loc be u32 or s32: because ofs is s16, res = pc_loc+ofs may be negative! we should test res before calculating *)
   flag    : bpf_flag;
   regs_st : regmap;
   mrs_num : nat;  (**r number of memory regions, put it here to guarantee align *)
@@ -22,7 +19,7 @@ Record state := mkst {
   bpf_m   : Memory.mem;
 }.
 
-Definition init_mem: Memory.mem := Memory.Mem.empty.
+Definition init_mem: mem := Mem.empty.
 
 Definition init_state: state := {|
   pc_loc  := Int.zero;
@@ -35,9 +32,9 @@ Definition init_state: state := {|
   bpf_m   := init_mem;
  |}.
 
-Definition eval_pc (st: state): sint32_t := pc_loc st.
+Definition eval_pc (st: state): int := pc_loc st.
 
-Definition upd_pc (p: sint32_t) (st:state): state := {|
+Definition upd_pc (p: int) (st:state): state := {|
   pc_loc  := p;
   flag    := flag st;
   regs_st := regs_st st;
@@ -74,10 +71,10 @@ Definition upd_flag (f: bpf_flag) (st:state): state := {|
 
 Definition eval_mem_num (st:state): nat := (mrs_num st). (**r uint32_t -> nat*)
 
-Definition eval_reg (r: reg) (st:state): val64_t :=
+Definition eval_reg (r: reg) (st:state): val :=
   eval_regmap r (regs_st st).
 
-Definition upd_reg (r:reg) (v:val64_t) (st:state): state := {|
+Definition upd_reg (r:reg) (v:val) (st:state): state := {|
   pc_loc  := pc_loc st;
   flag    := flag st;
   regs_st := upd_regmap r v (regs_st st);
@@ -121,7 +118,7 @@ Definition vlong_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
   | _       => Vundef
   end.
 
-Definition load_mem (chunk: memory_chunk) (ptr: valptr8_t) (st: state) :=
+Definition load_mem (chunk: memory_chunk) (ptr: val) (st: state) :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 =>
     match Mem.loadv chunk (bpf_m st) ptr with
@@ -137,7 +134,7 @@ Definition load_mem (chunk: memory_chunk) (ptr: valptr8_t) (st: state) :=
   end
 .
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: valptr8_t) (v: vals32_t) (st: state): option state :=
+Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) (st: state): option state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
     let src := vlong_to_vint_or_vlong chunk v in
@@ -149,7 +146,7 @@ Definition store_mem_imm (chunk: memory_chunk) (ptr: valptr8_t) (v: vals32_t) (s
   end
 .
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr: valptr8_t) (v: val64_t) (st: state): option state :=
+Definition store_mem_reg (chunk: memory_chunk) (ptr: val) (v: val) (st: state): option state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
     match Mem.storev chunk (bpf_m st) ptr v with
@@ -159,25 +156,5 @@ Definition store_mem_reg (chunk: memory_chunk) (ptr: valptr8_t) (v: val64_t) (st
   | _ => Some (upd_flag BPF_ILLEGAL_MEM st)
   end.
 
-Definition eval_ins_len (st: state): sint32_t := Int.repr (Z.of_nat (ins_len st)).
-Definition eval_ins (idx: sint32_t) (st: state): int64_t := MyListIndexs32 (ins st) idx.
-*)
-(******************** Dx Related *******************)
-
-(** Coq2C: state -> 
-            struct state {
-              unsigned int pc;
-              unsigned long long regmap[11];
-            };
-  *)
-
-Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noattr.
-
-Definition state_struct_def: Ctypes.composite_definition := 
-  Ctypes.Composite state_id Ctypes.Struct [(pc_id, C_S32); (flag_id, C_S32); (regmaps_id, C_regmap); (mem_num_id, C_U32); (mem_regs_id, mem_region_type); (ins_len_id, C_S32); (ins_id, C_U64_pointer)] Ctypes.noattr.
-
-Definition stateCompilableType := MkCompilableType state state_struct_type.
-
-Module Exports.
-  Definition stateCompilableType := stateCompilableType.
-End Exports.
+Definition eval_ins_len (st: state): int := Int.repr (Z.of_nat (ins_len st)).
+Definition eval_ins (idx: int) (st: state): int64 := MyListIndexs32 (ins st) idx.

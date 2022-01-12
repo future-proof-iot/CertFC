@@ -4,8 +4,10 @@ Import ListNotations.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool.
 
+From bpf.comm Require Import Flag.
 From bpf.src Require Import CoqIntegers DxIntegers.
 
+(*
 Inductive bpf_flag: Type := 
   | BPF_SUCC_RETURN         (**r =  1, *)
   | BPF_OK                  (**r =  0, *)
@@ -29,7 +31,7 @@ decide equality. Defined.
 (** flag_eq: flag -> flag -> bool
   *)
 Definition flag_eq (x y: bpf_flag): bool := if bpf_flag_eq x y then true else false.
-
+*)
 (******************** Dx Related *******************)
 
 (** bpf_flag -> sint32_t *)
@@ -54,7 +56,6 @@ Definition Const_BPF_OUT_OF_BRANCHES     := constant flagSymboalType BPF_OUT_OF_
 Definition Const_BPF_ILLEGAL_DIV         := constant flagSymboalType BPF_ILLEGAL_DIV C_S32_m9.           (**r = -9, *)
 Definition Const_BPF_ILLEGAL_SHIFT       := constant flagSymboalType BPF_ILLEGAL_SHIFT C_S32_m10.        (**r = -10,*)
 Definition Const_BPF_ILLEGAL_ALU         := constant flagSymboalType BPF_ILLEGAL_ALU C_S32_m11.          (**r = -11,*)
-Definition Const_BPF_UNDEF_ERROR         := constant flagSymboalType BPF_UNDEF_ERROR C_S32_m12.          (**r = -12,*)
 
 Definition flagToflagToboolSymbolType :=
   MkCompilableSymbolType [flagCompilableType; flagCompilableType] (Some boolCompilableType).
@@ -82,6 +83,5 @@ Module Exports.
   Definition Const_BPF_ILLEGAL_DIV         := Const_BPF_ILLEGAL_DIV.
   Definition Const_BPF_ILLEGAL_SHIFT       := Const_BPF_ILLEGAL_SHIFT.
   Definition Const_BPF_ILLEGAL_ALU         := Const_BPF_ILLEGAL_ALU.
-  Definition Const_BPF_UNDEF_ERROR         := Const_BPF_UNDEF_ERROR.
   Definition Const_flag_eq                 := Const_flag_eq.
 End Exports.

@@ -1,3 +1,5 @@
+-R comm bpf.comm
+-R model bpf.model
 -R src bpf.src
 -R /home/shyuan/.opam/4.11.1/lib/coq-variant/compcert32/compcert compcert
 -R benchmark bpf.benchmark

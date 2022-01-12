@@ -5,7 +5,8 @@ From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
-From bpf.src Require Import Int16 DxIntegers DxList64 DxRegs DxValues DxOpcode DxMonad DxFlag DxAST DxMemRegion DxMemType.
+From bpf.comm Require Import Int16 MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs.
+From bpf.src Require Import DxIntegers DxList64 DxRegs DxValues DxOpcode DxFlag DxMemRegion DxMemType DxMonad.
 
 Open Scope monad_scope.
 

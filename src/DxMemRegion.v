@@ -7,8 +7,9 @@ From compcert Require Import Integers Values Memtype.
 From dx Require Import ResultMonad IR IRtoC.
 From dx.Type Require Import Nat.
 
+From bpf.comm Require Import MemRegion.
 From bpf.src Require Import IdentDef CoqIntegers DxIntegers DxValues DxMemType.
-
+(*
 Record memory_region : Type := mkmr{
   start_addr : valptr8_t;
   block_size : valu32_t;   (**r should those be val32_t? *)
@@ -35,7 +36,7 @@ Definition MyMemRegionsType := Memory_regions.t.
 Definition MyMemRegionsIndexnat := Memory_regions.index_nat.
 
 Definition default_memory_regions: MyMemRegionsType :=  [].
-
+*)
 Fixpoint MyMemRegionsAdd (mr: memory_region) (l: MyMemRegionsType) :=
   match l with
   | [] => [mr]

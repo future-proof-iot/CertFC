@@ -1,4 +1,4 @@
-From bpf.src Require Import DxIntegers DxValues DxAST DxRegs DxFlag.
+From bpf.comm Require Import rBPFValues rBPFAST Regs Flag.
 From compcert Require Import Integers Values.
 From Coq Require Import ZArith.
 Open Scope Z_scope.
@@ -37,7 +37,6 @@ Definition Z_of_flag (f:bpf_flag) : Z :=
   | BPF_ILLEGAL_DIV => -9
   | BPF_ILLEGAL_SHIFT => -10
   | BPF_ILLEGAL_ALU => -11
-  | BPF_UNDEF_ERROR => -12
   end.
 
 Definition int_of_flag (f:bpf_flag)  :=

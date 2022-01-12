@@ -11,8 +11,8 @@ struct bpf_state {
   int state_pc;
   int bpf_flag;
   unsigned long long regsmap[11];
-  struct memory_region *mrs;
   unsigned int mrs_num;
+  struct memory_region *mrs;
   int ins_len;
   unsigned long long *ins;
 };

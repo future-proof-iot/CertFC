@@ -8,9 +8,10 @@ From compcert.lib Require Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Nat.
 
+From bpf.comm Require Import List64.
 From bpf.src Require Import CoqIntegers DxIntegers.
 
-
+(*
 Module MyList.
 
   Definition t := list int64_t.
@@ -28,7 +29,7 @@ Definition MyListIndexs32 := MyList.index_s32.
 Definition MyListIndexnat := MyList.index_nat.
 
 Definition default_list: MyListType :=  [].
-
+*)
 
 (******************** Dx Related *******************)
 

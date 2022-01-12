@@ -8,7 +8,8 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-From bpf.src Require Import Int16 CoqIntegers DxIntegers InfComp.
+From bpf.comm Require Import Int16 rBPFValues.
+From bpf.src Require Import CoqIntegers DxIntegers InfComp.
 
 (** Coq2C: Values.val -> unsigned long long or unsigned int
   *)
@@ -20,11 +21,12 @@ Definition valptr_null := Vnullptr.
 Definition C_U8ptr_zero: Csyntax.expr :=
   Csyntax.Eval valptr_null C_U8_pointer.
 
+(*
 Definition comp_eq_ptr8_zero (x: val): bool :=
   match x with
   | Vint n1 => Int.eq n1 Int.zero
   | _ => false
-  end.
+  end. *)
 
 Definition valptr8CompilableType :=
   MkCompilableType valptr8_t C_U8_pointer.
@@ -58,7 +60,7 @@ Definition val32_2    := Vint int32_2. (**r ==> Writable *)
 Definition val32_3    := Vint int32_3. (**r ==> Freeable *)
 Definition val32_32   := Vint int32_32.
 Definition val32_max_unsigned := Vint int32_max_unsigned.
-
+(*
 (** Type signature: val -> val -> option val
     we use `val32_divu` to replace `Val.divu`
   *)
@@ -102,7 +104,7 @@ Definition compu_le_32 (x y: val): bool :=
   | Vint n1, Vint n2 => negb (Int.ltu n2 n1)
   | _, _ => false
   end.
-
+*)
 (******************** Val2S32 *******************)
 
 Definition vals32_t := val.
@@ -114,7 +116,7 @@ Definition val64_t := val.
 Definition val64_zero := Vlong Int64.zero.
 Definition val64_64 := Vlong int64_64. (*
 Definition val64_max_unsigned := Vlong int64_max_unsigned.*)
-
+(*
 (** Type signature: val -> val -> option val
     we use `val64_divlu` to replace `Val.divlu`
   *)
@@ -230,7 +232,7 @@ Definition sint32_to_vint (v: sint32_t): val := Vint v.
 (** int64_to_vlong: long -> Vlong
   *)
 Definition int64_to_vlong (v: int64): val := Vlong v.
-
+*)
 (******************** Dx Related *******************)
 
 

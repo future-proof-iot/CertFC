@@ -27,6 +27,8 @@ OCAMLINCS := -I extr # -I src
 
 all:
 	@echo $@
+	@$(MAKE) comm
+	@$(MAKE) model
 	@$(MAKE) compile
 	@$(MAKE) extract
 	@$(MAKE) repatch
@@ -76,7 +78,24 @@ bench_clight:
 	@echo $@
 	cd benchmark && $(CLIGHTGEN32) clightlogicexample.c
 
-COQSRC = $(wildcard src/*.v)
+COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
+COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
+
+COQCOMM = $(wildcard comm/*.v)
+#COQMODEL = $(wildcard model/*.v)
+#COQSRC = $(wildcard src/*.v)
+
+comm:
+	@echo $@
+	rm -f comm/*.vo
+	$(COQMAKEFILE) -f _CoqProject $(COQCOMM) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+
+model:
+	@echo $@
+	rm -f model/*.vo
+	$(COQMAKEFILE) -f _CoqProject $(COQMODEL) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
 
 compile:
 	@echo $@
@@ -148,6 +167,9 @@ gitpush:
 	@echo $@
 	cp src/*.v $(GITDIR)/src
 	cp src/*.c $(GITDIR)/src
+	cp comm/*.v $(GITDIR)/comm
+	cp model/*.v $(GITDIR)/model
+	cp equivalence/*.v $(GITDIR)/equivalence
 	cp benchmark/*.v $(GITDIR)/benchmark
 	cp benchmark/*.c $(GITDIR)/benchmark
 	cp benchmark/*.h $(GITDIR)/benchmark
@@ -170,6 +192,9 @@ gitpull:
 	@echo $@
 	cp $(GITDIR)/src/*.v ./src
 	cp $(GITDIR)/src/*.c ./src
+	cp $(GITDIR)/comm/*.v ./comm
+	cp $(GITDIR)/model/*.v ./model
+	cp $(GITDIR)/equivalence/*.v ./equivalence
 	cp $(GITDIR)/benchmark/*.v ./benchmark
 	cp $(GITDIR)/benchmark/*.c ./benchmark
 	cp $(GITDIR)/benchmark/*.h ./benchmark
@@ -200,4 +225,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all test bench bench_clight compile extract repatch clight proof correctproof clean
+.PHONY: all test bench bench_clight comm model compile extract repatch clight proof correctproof clean

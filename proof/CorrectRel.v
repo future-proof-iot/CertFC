@@ -1,4 +1,6 @@
-From bpf.src Require Import DxIntegers DxValues DxAST DxList64 DxOpcode DxMemRegion DxRegs DxState DxMonad DxFlag.
+From bpf.comm Require Import rBPFAST List64 MemRegion Regs State Monad Flag.
+
+From bpf.src Require Import DxIntegers DxValues DxOpcode.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
@@ -66,7 +68,7 @@ Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   | op_BPF_LDX_IMM_ILLEGAL_INS => exists vi, v = Vint vi (*v = Vundef*)
   end.
 
-Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
   v = Vptr b Ptrofs.zero /\
     forall pc, 0 <= Z.of_nat pc < Z.of_nat len ->
     exists vl,

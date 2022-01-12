@@ -7,15 +7,16 @@ From compcert Require Import Integers Values Memtype Memory.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
+From bpf.comm Require Import rBPFMemType.
 From bpf.src Require Import CoqIntegers DxIntegers DxValues GenMatchable.
 
 Open Scope Z_scope.
 
 (** permission_eq_eq: permission_eq -> permission_eq -> bool
   *)
-
+(*
 Definition perm_ge (x y: permission): bool := if (Mem.perm_order_dec x y) then true else false.
-
+*)
 (******************** Dx Related *******************)
 
 Definition permissionCompilableType :=

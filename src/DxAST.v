@@ -8,8 +8,10 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
+From bpf.comm Require Import rBPFAST.
 From bpf.src Require Import CoqIntegers DxIntegers DxValues.
 
+(*
 Definition well_chunk_Z (chunk: memory_chunk):Z := 
   match chunk with
   | Mint8unsigned => 1
@@ -24,7 +26,7 @@ Definition memory_chunk_to_valu32 (chunk: memory_chunk): valu32_t :=
 
 Definition memory_chunk_to_valu32_upbound (chunk: memory_chunk): valu32_t :=
   Vint (Int.repr (Int.max_unsigned-(well_chunk_Z chunk))).
-
+*)
 (******************** Dx Related *******************)
 
 Definition memoryChunkCompilableType :=

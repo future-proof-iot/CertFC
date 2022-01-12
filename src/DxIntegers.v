@@ -8,7 +8,8 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool.
 
-From bpf.src Require Import CoqIntegers Int16 InfComp.
+From bpf.comm Require Import Int16 rBPFValues.
+From bpf.src Require Import CoqIntegers InfComp.
 
 (******************** UInt8 *******************)
 Definition int8_t := byte.
@@ -88,6 +89,7 @@ Definition int64_0xf    := Int64.repr 0xf.
 (*
 Definition int64_max_unsigned := Int64.repr Int64.max_unsigned.*)
 
+(*
 (******************** Int64 Type Casting *******************)
 
 (** int64_to_int8: int64_t -> int8_t
@@ -110,7 +112,7 @@ Definition int64_to_sint16 (x: int64_t): sint16_t := Int16.repr (Int64.unsigned 
   *)
 Definition int64_to_sint32 (x: int64_t): sint32_t := Int.repr (Int64.unsigned x).
 
-
+*)
 (******************** Dx Related *******************)
 
 
@@ -560,8 +562,8 @@ Definition Const_sint32_lt :=
                            | [e1; e2] => Ok (Csyntax.Ebinop Cop.Olt e1 e2 C_S32)
                            | _       => Err PrimitiveEncodingFailed
                            end).
-
-Definition Int_le (x y: int): bool := negb (Int.lt y x).
+(*
+Definition Int_le (x y: int): bool := negb (Int.lt y x). *)
 
 Definition Const_sint32_le :=
   MkPrimitive sint32Tosint32ToboolSymbolType
