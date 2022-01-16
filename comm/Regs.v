@@ -2,6 +2,7 @@ From compcert.cfrontend Require Csyntax Ctypes Cop.
 From compcert.common Require Import Values Memory.
 From compcert.lib Require Import Integers.
 
+From bpf.comm Require Import rBPFValues.
 From Coq Require Import List ZArith.
 Import ListNotations.
 
@@ -254,3 +255,9 @@ Definition int64_to_dst_reg (ins: int64): reg :=
 
 Definition int64_to_src_reg (ins: int64): reg :=
   z_to_reg (get_src ins).
+
+Definition get_opcode (ins:int64): nat := Z.to_nat (Int64.unsigned (Int64.and ins (Int64.repr 0xff))).
+
+Definition get_offset (i:int64) := sint16_to_sint32 (int64_to_sint16 (Int64.shru (Int64.shl i (Int64.repr 32)) (Int64.repr 48))).
+
+Definition get_immediate (i1:int64) := int64_to_sint32 (Int64.shru i1 (Int64.repr 32)).

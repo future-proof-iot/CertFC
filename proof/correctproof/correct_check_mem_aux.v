@@ -1,7 +1,9 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.src Require Import DxIntegers DxValues DxAST DxMemRegion DxState DxMonad DxInstructions.
+From bpf.comm Require Import MemRegion Regs State Monad.
+From bpf.src Require Import DxNat DxValues DxInstructions.
+
 From compcert Require Import Coqlib Values Clight Memory Integers.
 
 From bpf.clight Require Import interpreter.
@@ -16,6 +18,8 @@ Section Check_mem_aux2.
 
 (** The program contains our function of interest [fn] *)
 Definition p : Clight.program := prog.
+
+(**r TODO: check_mem_aux2: memory_region -> perm -> addr -> chunk -> ptr *)
 
 (* [Args,Res] provides the mapping between the Coq and the C types *)
 Definition args  := [(memory_region:Type) ; valu32_t; (AST.memory_chunk: Type)].
@@ -36,7 +40,7 @@ Definition is_vlong (v: val) :=
 Variable bl_region : block.
 
 Definition match_arg  :
-  DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
+  DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
   DList.DCons
     (my_match_region bl_region)
     (DList.DCons

@@ -11,7 +11,7 @@ From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
 
 From bpf.comm Require Import Int16 MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs.
-From bpf.src Require Import DxIntegers DxList64 DxValues DxRegs DxState DxOpcode DxFlag DxInstructions DxAST DxMemRegion DxMemType DxMonad.
+From bpf.src Require Import DxIntegers DxList64 DxValues DxRegs DxState DxOpcode DxFlag DxInstructions DxAST DxMemRegion DxMemType DxMonad DxNat.
 
 (***************************************)
 
@@ -30,6 +30,7 @@ GenerateIntermediateRepresentation SymbolIRs
   DxAST.Exports
   DxMemRegion.Exports
   DxMemType.Exports
+  DxNat.Exports
   eval_pc
   upd_pc
   upd_pc_incr

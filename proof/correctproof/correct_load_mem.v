@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From bpf.comm Require Import State Monad.
+From bpf.src Require Import DxValues DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
@@ -28,26 +29,25 @@ Section Load_mem.
   Definition res : Type := (val64_t:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := DxMonad.load_mem.
+  Definition f : arrow_type args (M res) := Monad.load_mem.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_load_mem.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
+  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
                 (DList.DCons (stateless match_chunk)
                              (DList.DCons (stateless val_ptr_correct)
                                           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block st m.
 Ltac exec_seq_of_labeled_statement :=
   match goal with
   | |- context[seq_of_labeled_statement ?X] =>
@@ -97,7 +97,7 @@ Proof.
       unfold match_res.
       split.
       unfold val64_correct.
-      unfold DxState.load_mem.
+      unfold State.load_mem.
       split; unfold val64_zero.
       reflexivity.
       eexists; reflexivity.
@@ -113,13 +113,13 @@ Proof.
     {
       forward_star.
       repeat forward_star.
-      unfold DxAST.well_chunk_Z.
+      unfold rBPFAST.well_chunk_Z.
       fold Int.one; rewrite Int.unsigned_one.
       simpl.
       forward_star.
       repeat forward_star.
       forward_star.
-      repeat forward_star. (**r I don't know if I lose something *)
+      repeat forward_star. (**r we lose something in the precondition! *)
       admit.
       eapply Mem.load_unchanged_on.
       apply munchange.

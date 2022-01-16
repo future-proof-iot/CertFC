@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxState DxMonad DxInstructions.
+From bpf.comm Require Import State Monad.
+From bpf.src Require Import DxIntegers DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -25,10 +26,9 @@ Section Upd_pc_incr.
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := DxMonad.upd_pc_incr.
+  Definition f : arrow_type args (M res) := Monad.upd_pc_incr.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_pc_incr.
@@ -38,15 +38,15 @@ Section Upd_pc_incr.
   (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
 
 
-  Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
+  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block ins_block st m /\ v = Vundef.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block st m /\ v = Vundef.
 
   Lemma correct_function3_upd_pc_incr : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -61,7 +61,7 @@ Section Upd_pc_incr.
     subst.
 
     (** we need to get the proof of `upd_pc_incr` load/store permission *)
-    apply (upd_pc_store _ _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
+    apply (upd_pc_store _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** pc \in [ (state_block,0), (state_block,8) ) *)
 
@@ -77,7 +77,7 @@ Section Upd_pc_incr.
       repeat forward_star.
 
       rewrite Ptrofs.add_zero.
-      destruct Hst as (_ , Hpc, _, _, _, _, _, _).
+      destruct Hst as (_ , Hpc, _, _, _, _, _, _, _, _).
       fold Ptrofs.zero in Hpc.
       rewrite Hpc; reflexivity.
       reflexivity.
@@ -86,7 +86,7 @@ Section Upd_pc_incr.
       split.
       eapply upd_pc_preserves_match_state.
       apply Hst.
-      unfold DxState.upd_pc, DxState.upd_pc_incr.
+      unfold State.upd_pc, State.upd_pc_incr.
       reflexivity.
       apply Hstore.
       reflexivity.

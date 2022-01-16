@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxOpcode DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From bpf.comm Require Import Regs State Monad.
+From bpf.src Require Import DxNat DxValues DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -24,25 +25,24 @@ Section Step_opcode_alu64.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(val64_t:Type); (val64_t:Type); (reg:Type); (int8_t:Type)].
+  Definition args : list Type := [(val64_t:Type); (val64_t:Type); (reg:Type); (nat8:Type)].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := step_opcode_alu64.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable ins_block: block.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
 
-  Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
+  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_step_opcode_alu64.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     (DList.DCons stateM_correct
       (DList.DCons (stateless val64_correct)
        (DList.DCons (stateless val64_correct)
@@ -51,7 +51,7 @@ Section Step_opcode_alu64.
                     (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block st m.
 
 
 Ltac build_app_aux T :=

@@ -10,7 +10,7 @@ From dx.Type Require Import Bool.
 
 From bpf.comm Require Import Int16 rBPFValues.
 From bpf.src Require Import CoqIntegers InfComp.
-
+(*
 (******************** UInt8 *******************)
 Definition int8_t := byte.
 
@@ -19,7 +19,7 @@ Definition int8_0xf0 := Byte.repr 0xf0.
 Definition int8_0x07 := Byte.repr 0x07.
 Definition int8_0xff := Byte.repr 0xff.
 Definition int8_0x08 := Byte.repr 0x08.
-Definition int8_zero := Byte.zero.
+Definition int8_zero := Byte.zero. *)
 
 (******************** UInt16 *******************)
 Definition uint16_t := int16.
@@ -120,7 +120,7 @@ Definition int64_to_sint32 (x: int64_t): sint32_t := Int.repr (Int64.unsigned x)
 
 (** Values only has Vint, so we use Int.zero to replace Byte.zero.
   *)
-
+(*
 Definition C_U8_zero: Csyntax.expr :=
   Csyntax.Eval (Vint Int.zero) C_U8.
 
@@ -180,7 +180,7 @@ Definition Const_int8_and :=
                            | [e1;e2] => Ok (C_U8_and e1 e2)
                            | _       => Err PrimitiveEncodingFailed
                            end).
-
+*)
 (******************** UInt16 *******************)
 
 Definition C_U16_zero: Csyntax.expr :=
@@ -313,6 +313,19 @@ Definition C_U32_64: Csyntax.expr :=
 Definition C_U32_max_unsigned: Csyntax.expr :=
   Csyntax.Eval (Vint int32_max_unsigned) C_U32.
 
+(**r masking operations *)
+Definition C_U32_0xf0: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0xf0) C_U32.
+
+Definition C_U32_0x07: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0x07) C_U32.
+
+Definition C_U32_0xff: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0xff) C_U32.
+
+Definition C_U32_0x08: Csyntax.expr :=
+  Csyntax.Eval (Vint int32_0x08) C_U32.
+
 Definition uint32CompilableType :=
   MkCompilableType uint32_t C_U32.
 
@@ -348,6 +361,11 @@ Definition Const_uint32_32 := constant uint32SymbolType int32_32 C_U32_32.
 Definition Const_uint32_64 := constant uint32SymbolType int32_64 C_U32_64.
 
 Definition Const_uint32_max_unsigned := constant uint32SymbolType int32_max_unsigned C_U32_max_unsigned.
+
+Definition Const_int32_0xf0 := constant uint32SymbolType int32_0xf0 C_U32_0xf0.
+Definition Const_int32_0x07 := constant uint32SymbolType int32_0x07 C_U32_0x07.
+Definition Const_int32_0xff := constant uint32SymbolType int32_0xff C_U32_0xff.
+Definition Const_int32_0x08 := constant uint32SymbolType int32_0x08 C_U32_0x08.
 
 Definition uint32Touint32SymbolType :=
   MkCompilableSymbolType [uint32CompilableType] (Some uint32CompilableType).
@@ -739,7 +757,7 @@ Definition Const_int64_ltu :=
                            end).
 
 (******************** Int64 Type Casting *******************)
-
+(*
 Definition int16Toint8SymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some int8CompilableType).
 
@@ -749,7 +767,7 @@ Definition Const_int64_to_int8 :=
                 (fun es => match es with
                            | [e1] => Ok (Csyntax.Ecast e1 C_U8)
                            | _       => Err PrimitiveEncodingFailed
-                           end).
+                           end). *)
 
 Definition sint16Toint64SymbolType :=
   MkCompilableSymbolType [sint16CompilableType] (Some int64CompilableType).
@@ -784,7 +802,7 @@ Definition Const_int64_to_sint32 :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
-Module Exports.
+Module Exports. (*
   Definition int8CompilableType    := int8CompilableType.
 
   (** masking operation *)
@@ -794,7 +812,7 @@ Module Exports.
   Definition Const_int8_0x08       := Const_int8_0x08.
   Definition Const_int8_eq         := Const_int8_eq.
   Definition Const_int8_and        := Const_int8_and.
-  Definition Const_int8_zero       := Const_int8_zero.
+  Definition Const_int8_zero       := Const_int8_zero. *)
 
   Definition uint16CompilableType  := uint16CompilableType.
   Definition Const_uint16_zero     := Const_uint16_zero.
@@ -822,6 +840,11 @@ Module Exports.
   Definition Const_uint32_32       := Const_uint32_32.
   Definition Const_uint32_64       := Const_uint32_64.
   Definition Const_uint32_max_unsigned := Const_uint32_max_unsigned.
+  Definition Const_int32_0xf0       := Const_int32_0xf0.
+  Definition Const_int32_0x07       := Const_int32_0x07.
+  Definition Const_int32_0xff       := Const_int32_0xff.
+  Definition Const_int32_0x08       := Const_int32_0x08.
+
   Definition Const_uint32_neg      := Const_uint32_neg.
   Definition Const_uint32_add      := Const_uint32_add.
   Definition Const_uint32_sub      := Const_uint32_sub.
@@ -885,8 +908,8 @@ Module Exports.
   Definition Const_int64_eq        := Const_int64_eq.
   Definition Const_int64_lt        := Const_int64_lt.
   Definition Const_int64_ltu       := Const_int64_ltu.
-
-  Definition Const_int64_to_int8   := Const_int64_to_int8.
+  (*
+  Definition Const_int64_to_int8   := Const_int64_to_int8. *)
   Definition Const_sint16_to_int64 := Const_sint16_to_int64.
   Definition Const_int64_to_sint16 := Const_int64_to_sint16.
   Definition Const_int64_to_sint32 := Const_int64_to_sint32.

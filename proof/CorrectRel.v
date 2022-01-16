@@ -1,6 +1,6 @@
 From bpf.comm Require Import rBPFAST List64 MemRegion Regs State Monad Flag.
 
-From bpf.src Require Import DxIntegers DxValues DxOpcode.
+From bpf.src Require Import DxIntegers DxValues DxOpcode DxNat.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
@@ -27,8 +27,8 @@ Definition addr_valu32_correct (x:valu32_t) (v: val) :=
 Definition sint32_correct (x: sint32_t) (v: val) :=
   Vint x = v.
 
-Definition int8_correct (x: int8_t) (v: val) :=
-  Vint (Int.repr (Byte.unsigned x)) = v.
+Definition nat8_correct (x: nat8) (v: val) :=
+  Vint (Int.repr (Z.of_nat x)) = v.
 
 Definition nat_correct (x: nat) (v: val) :=
   Vint (Int.repr (Z.of_nat x)) = v /\

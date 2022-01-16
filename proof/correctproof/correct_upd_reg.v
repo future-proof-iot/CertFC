@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From bpf.comm Require Import Regs State Monad.
+From bpf.src Require Import DxValues DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory Memdata.
 Import ListNotations.
@@ -26,28 +27,27 @@ Section Upd_reg.
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := DxMonad.upd_reg.
+  Definition f : arrow_type args (M res) := Monad.upd_reg.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_reg.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
 
-  Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block ins_block stm m.
+  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
       (DList.DCons (stateless reg_correct)
         (DList.DCons (stateless val64_correct)
           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block ins_block st m /\ v = Vundef.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block st m /\ v = Vundef.
 
   Instance correct_function3_upd_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -66,7 +66,7 @@ Section Upd_reg.
     subst.
 
     simpl in c.
-    apply (upd_regs_store m _ _ _ c vl) in Hst as Hstore.
+    apply (upd_regs_store m _ _ c vl) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
 
     (**according to the type:

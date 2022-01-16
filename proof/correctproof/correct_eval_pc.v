@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxState DxMonad DxInstructions.
+From bpf.comm Require Import State Monad.
+From bpf.src Require Import DxIntegers.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -25,22 +26,22 @@ Section Eval_pc.
   Definition res : Type := (sint32_t:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := DxMonad.eval_pc.
+  Definition f : arrow_type args (M res) := Monad.eval_pc.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_pc.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:stateM) (m: Memory.Mem.mem) :=
+  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => sint32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => sint32_correct x v.
 
   Instance correct_function3_eval_pc : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
   Proof.

@@ -59,6 +59,7 @@ Definition val32_one  := Vint int32_1.   (**r ==> Readable *)
 Definition val32_2    := Vint int32_2. (**r ==> Writable *)
 Definition val32_3    := Vint int32_3. (**r ==> Freeable *)
 Definition val32_32   := Vint int32_32.
+Definition val32_64   := Vint int32_64.
 Definition val32_max_unsigned := Vint int32_max_unsigned.
 (*
 (** Type signature: val -> val -> option val
@@ -250,6 +251,7 @@ Definition Const_val32_2    := constant valU32SymbolType val32_2    C_U32_2.
 Definition Const_val32_3    := constant valU32SymbolType val32_3    C_U32_3.
 
 Definition Const_val32_32 := constant valU32SymbolType val32_32 C_U32_32.
+Definition Const_val32_64 := constant valU32SymbolType val32_64 C_U32_64.
 
 Definition Const_val32_max_unsigned := constant valU32SymbolType val32_max_unsigned C_U32_max_unsigned.
 
@@ -502,6 +504,7 @@ Module Exports.
   Definition Const_val32_2          := Const_val32_2.
   Definition Const_val32_3          := Const_val32_3.
   Definition Const_val32_32         := Const_val32_32.
+  Definition Const_val32_64         := Const_val32_64.
   Definition Const_val32_max_unsigned := Const_val32_max_unsigned.
   Definition Const_valU32_neg       := Const_valU32_neg.
   Definition Const_valU32_add       := Const_valU32_add.

@@ -114,12 +114,12 @@ Definition step_alu_binary_operation (a: arch) (bop: binOp) (d :reg) (s: reg+imm
       | BPF_OR   => upd_reg d (Val.orl   d64 s64)
       | BPF_AND  => upd_reg d (Val.andl  d64 s64)
       (**r we must do type-checking of 's64' first, to ensure it is exactly 'vint' *)
-      | BPF_LSH  => if complu_lt (val_intuoflongu s64) (Vlong (Int64.repr 64)) then
-                      upd_reg d (Val.shll d64 s64)
+      | BPF_LSH  => if compu_lt_32 (val_intuoflongu s64) (Vint (Int.repr 64)) then
+                      upd_reg d (Val.shll d64 (val_intuoflongu s64))
                     else
                       upd_flag BPF_ILLEGAL_SHIFT  (**r if 's' of 'shl d s' is 's > 64', then there is a acceptable error *)
-      | BPF_RSH  => if complu_lt (val_intuoflongu s64) (Vlong (Int64.repr 64)) then
-                      upd_reg d (Val.shrlu d64 s64)
+      | BPF_RSH  => if compu_lt_32 (val_intuoflongu s64) (Vint (Int.repr 64)) then
+                      upd_reg d (Val.shrlu d64 (val_intuoflongu s64))
                     else
                       upd_flag BPF_ILLEGAL_SHIFT  (**r if 's' of 'shr d s' is 's > 64', then there is a acceptable error *)
       | BPF_MOD  => if compl_ne s64 val64_zero then (** run-time checking *)
@@ -146,8 +146,8 @@ And the semantics function does:
  *)
       | BPF_XOR  => upd_reg d (Val.xorl  d64 s64)
       | BPF_MOV  => upd_reg d s64
-      | BPF_ARSH => if complu_lt (val_intuoflongu s64) (Vlong (Int64.repr 64)) then
-                      upd_reg d (Val.shrl d64 s64)
+      | BPF_ARSH => if compu_lt_32 (val_intuoflongu s64) (Vint (Int.repr 64)) then
+                      upd_reg d (Val.shrl d64 (val_intuoflongu s64))
                     else
                       upd_flag BPF_ILLEGAL_SHIFT  (**r if 's' of 'shru d s' is 's > 64', then there is a acceptable error? *)
       end
@@ -263,8 +263,7 @@ Definition step_load_x_operation (chunk: memory_chunk) (d:reg) (s:reg) (ofs:off)
       upd_flag BPF_ILLEGAL_MEM
     else
       do v <- load_mem chunk ptr;
-      do _ <- upd_reg d v;
-        upd_flag BPF_OK
+      do _ <- upd_reg d v; returnM tt
 .
 
 Definition step_store_operation (chunk: memory_chunk) (d: reg) (s: reg+imm) (ofs: off): M unit :=
@@ -272,19 +271,22 @@ Definition step_store_operation (chunk: memory_chunk) (d: reg) (s: reg+imm) (ofs
   do mrs  <- eval_mem_regions;
   do dv   <- eval_reg d;
   do addr <- get_addr_ofs dv ofs;
-  do ptr  <- check_mem Writable chunk addr;
-    if comp_eq_ptr8_zero ptr then
-      upd_flag BPF_ILLEGAL_MEM
-    else
-      match s with
-      | inl r =>
-        do src <- eval_reg r;
-        do _ <- store_mem_reg chunk ptr src;
-          upd_flag BPF_OK
-      | inr i =>
-        do _ <- store_mem_imm chunk ptr (Val.longofintu (sint32_to_vint i));
-          upd_flag BPF_OK
-      end
+
+    match s with
+    | inl r =>
+      do src <- eval_reg r;
+      do ptr  <- check_mem Writable chunk addr;
+        if comp_eq_ptr8_zero ptr then
+          upd_flag BPF_ILLEGAL_MEM
+        else
+          do _ <- store_mem_reg chunk ptr src; returnM tt
+    | inr i =>
+      do ptr  <- check_mem Writable chunk addr;
+        if comp_eq_ptr8_zero ptr then
+          upd_flag BPF_ILLEGAL_MEM
+        else
+          do _ <- store_mem_imm chunk ptr (sint32_to_vint i); returnM tt
+    end
 .
 
 Definition decodeM (i: int64) : M instruction := returnM (decode i).
@@ -312,7 +314,7 @@ Definition step : M unit :=
       if cond then
         upd_pc (Int.add pc ofs)
       else
-        upd_flag BPF_OK
+        returnM tt
     | BPF_LDDW d i =>
       do len  <- eval_ins_len;
         if (Int.lt (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
@@ -320,7 +322,7 @@ Definition step : M unit :=
           do next_imm <- get_immediate next_ins;
           do _ <- upd_reg d (Val.or (Val.longofint (sint32_to_vint i)) (Val.shl  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint (Int.repr 32))));
           do _ <- upd_pc_incr;
-            upd_flag BPF_OK
+            returnM tt
         else
           upd_flag BPF_ILLEGAL_LEN
     | BPF_LDX chunk d s ofs =>
@@ -340,10 +342,10 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
     do pc <- eval_pc;
       if(andb (Int_le Int.zero pc) (Int.lt pc len)) then (**r 0 < pc < len: pc is less than the length of l *)
         do _ <- step;
-        do _ <- upd_pc_incr;
         do f <- eval_flag;
           if flag_eq f BPF_OK then
-            bpf_interpreter_aux fuel0
+            do _ <- upd_pc_incr;
+              bpf_interpreter_aux fuel0
           else
             returnM tt
       else

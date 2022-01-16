@@ -7,15 +7,9 @@ From bpf.model Require Import Syntax.
 (** Overview:
     This module is used to translate `int64` binary code to bpf instructions~ Normally a bpf instruction has opcode+dst+src+offset+immedate.
   *)
-Open Scope Z_scope.
+Open Scope nat_scope.
 
-Definition get_opcode (ins:int64) := Int64.unsigned (Int64.and ins (Int64.repr 0xff)).
-
-Definition get_offset (i:int64) := sint16_to_sint32 (int64_to_sint16 (Int64.shru (Int64.shl i (Int64.repr 32)) (Int64.repr 48))).
-
-Definition get_immediate (i1:int64) := int64_to_sint32 (Int64.shru i1 (Int64.repr 32)).
-
-Definition get_instruction (opcode:Z) (rd rs:reg) (ofs: int) (i: int): instruction :=
+Definition get_instruction (opcode:nat) (rd rs:reg) (ofs: int) (i: int): instruction :=
   match opcode with
   (*ALU64*)
   | 0x07 => BPF_BINARY A64 BPF_ADD  rd (inr i)
@@ -112,7 +106,7 @@ Definition get_instruction (opcode:Z) (rd rs:reg) (ofs: int) (i: int): instructi
 
   | _    => BPF_ERR
   end.
-Close Scope Z_scope.
+Close Scope nat_scope.
 
 Definition decode (ins: int64): instruction :=
   let n_opcode := get_opcode ins in

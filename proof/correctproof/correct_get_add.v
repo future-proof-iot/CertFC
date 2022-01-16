@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
+From bpf.comm Require Import State Monad.
+From bpf.src Require Import DxValues DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -35,13 +36,13 @@ Section Get_add.
   Definition fn: Clight.function := f_get_add.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
     (DList.DCons (stateless valu32_correct)
        (DList.DCons (stateless valu32_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
 
   Instance correct_function3_get_add : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.

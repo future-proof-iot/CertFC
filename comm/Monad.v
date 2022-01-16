@@ -5,6 +5,7 @@ From bpf.comm Require Import Regs Flag MemRegion State.
 Definition M (A: Type) := state -> option (A * state).
 
 Definition returnM {A: Type} (a: A) : M A := fun st => Some (a, st).
+Definition returnS: M state := fun st => Some (st, st).
 Definition errorM {A: Type} : M A := fun st => None.
 Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B :=
   fun st =>
@@ -23,7 +24,11 @@ Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag f st).
 Definition eval_mrs_num: M nat := fun st => Some (eval_mem_num st, st).
 
 Definition eval_reg (r: reg) : M val := fun st => Some (eval_reg r st, st).
-Definition upd_reg (r: reg) (v: val) : M unit := fun st => Some (tt, upd_reg r v st).
+Definition upd_reg (r: reg) (v: val) : M unit := fun st =>
+  match v with
+  | Vlong _ => Some (tt, upd_reg r v st)
+  | _ => None
+  end.
 
 Definition eval_mrs_regions : M MyMemRegionsType := fun st => Some (eval_mem_regions st, st).
 

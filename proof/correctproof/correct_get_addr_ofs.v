@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxMemRegion DxState DxMonad DxInstructions.
+From bpf.comm Require Import State Monad.
+From bpf.src Require Import DxIntegers DxValues DxInstructions.
 From Coq Require Import List Lia.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -37,19 +38,18 @@ Section Get_addr_ofs.
   Definition f : arrow_type args (M res) := get_addr_ofs.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_addr_ofs.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
     (DList.DCons (stateless val64_correct)
        (DList.DCons (stateless sint32_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
 
   Instance correct_function3_get_addr_ofs : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.

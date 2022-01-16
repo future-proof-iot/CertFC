@@ -5,9 +5,9 @@ From compcert Require Import Integers.
 
 From dx Require Import ResultMonad IR.
 
-From bpf.src Require Import CoqIntegers DxIntegers InfComp GenMatchable.
+From bpf.src Require Import CoqIntegers DxIntegers DxNat InfComp GenMatchable.
 
-Open Scope Z_scope.
+Open Scope nat_scope.
 
 Inductive opcode_alu64: Type := (**r 0xX7 *)
   (** ALU64:13 *)
@@ -45,8 +45,8 @@ Inductive opcode_alu64: Type := (**r 0xX7 *)
 
 *)
 
-Definition byte_to_opcode_alu64 (op: int8_t): opcode_alu64 :=
-  let opcode_alu := Byte.unsigned (Byte.and op int8_0xf0) in (**r masking operation *)
+Definition byte_to_opcode_alu64 (op: nat): opcode_alu64 :=
+  let opcode_alu := Nat.land op 0xf0 in (**r masking operation *)
     match opcode_alu with
     | 0x00 => op_BPF_ADD64
     | 0x10 => op_BPF_SUB64
@@ -56,7 +56,7 @@ Definition byte_to_opcode_alu64 (op: int8_t): opcode_alu64 :=
     | 0x50 => op_BPF_AND64
     | 0x60 => op_BPF_LSH64
     | 0x70 => op_BPF_RSH64
-    | 0x80 => op_BPF_NEG64
+    | 0x80 => if Nat.eqb op 0x87 then op_BPF_NEG64 else op_BPF_ALU64_ILLEGAL_INS
     | 0x90 => op_BPF_MOD64
     | 0xa0 => op_BPF_XOR64
     | 0xb0 => op_BPF_MOV64
@@ -82,8 +82,8 @@ Inductive opcode_alu32: Type := (**r 0xX4 *)
   | op_BPF_ALU32_ILLEGAL_INS.
 
 
-Definition byte_to_opcode_alu32 (op: int8_t): opcode_alu32 :=
-  let opcode_alu := Byte.unsigned (Byte.and op int8_0xf0) in (**r masking operation *)
+Definition byte_to_opcode_alu32 (op: nat): opcode_alu32 :=
+  let opcode_alu := Nat.land op 0xf0 in (**r masking operation *)
     match opcode_alu with
     | 0x00 => op_BPF_ADD32
     | 0x10 => op_BPF_SUB32
@@ -93,7 +93,7 @@ Definition byte_to_opcode_alu32 (op: int8_t): opcode_alu32 :=
     | 0x50 => op_BPF_AND32
     | 0x60 => op_BPF_LSH32
     | 0x70 => op_BPF_RSH32
-    | 0x80 => op_BPF_NEG32
+    | 0x80 => if Nat.eqb op 0x84 then op_BPF_NEG32 else op_BPF_ALU32_ILLEGAL_INS
     | 0x90 => op_BPF_MOD32
     | 0xa0 => op_BPF_XOR32
     | 0xb0 => op_BPF_MOV32
@@ -137,10 +137,20 @@ Inductive opcode_branch: Type := (**r 0xX5 *)
 #define BPF_INSTRUCTION_BRANCH_EXIT     0x90
 *)
 
-Definition byte_to_opcode_branch (op: int8_t): opcode_branch :=
-  let opcode_jmp := Byte.unsigned (Byte.and op int8_0xf0) in (**r masking operation *)
+(**r
+there is an error:
+
+opcode = 0x0d -> ja
+
+0x0d & 0x07 = 0x05 i.e. op_BPF_Branch
+
+0x0d & 0xf0 = 0x00 i.e. op_BPF_JA
+
+*)
+Definition byte_to_opcode_branch (op: nat): opcode_branch :=
+  let opcode_jmp := Nat.land op 0xf0 in (**r masking operation *)
     match opcode_jmp with
-    | 0x00 => op_BPF_JA
+    | 0x00 => if Nat.eqb op 0x05 then op_BPF_JA else op_BPF_JMP_ILLEGAL_INS
     | 0x10 => op_BPF_JEQ
     | 0x20 => op_BPF_JGT
     | 0x30 => op_BPF_JGE
@@ -154,7 +164,7 @@ Definition byte_to_opcode_branch (op: int8_t): opcode_branch :=
     | 0xd0 => op_BPF_JSLE
   (*
     | 0x85 => op_BPF_CALL*)
-    | 0x90 => op_BPF_RET
+    | 0x90 => if Nat.eqb op 0x95 then op_BPF_RET else op_BPF_JMP_ILLEGAL_INS
     | _    => op_BPF_JMP_ILLEGAL_INS
     end.
 
@@ -163,8 +173,8 @@ Inductive opcode_mem_ld_imm: Type :=  (**r 0xX8 *)
   | op_BPF_LDDW
   | op_BPF_LDX_IMM_ILLEGAL_INS.
 
-Definition byte_to_opcode_mem_ld_imm (op: int8_t): opcode_mem_ld_imm :=
-  let opcode_ld := Byte.unsigned (Byte.and op int8_0xff) in (**r masking operation *)
+Definition byte_to_opcode_mem_ld_imm (op: nat): opcode_mem_ld_imm :=
+  let opcode_ld := Nat.land op 0xff in (**r masking operation *)
     match opcode_ld with
     | 0x18 => op_BPF_LDDW
     | _    => op_BPF_LDX_IMM_ILLEGAL_INS
@@ -178,8 +188,8 @@ Inductive opcode_mem_ld_reg: Type :=  (**r 0xX1/0xX9 *)
   | op_BPF_LDXDW
   | op_BPF_LDX_REG_ILLEGAL_INS.
 
-Definition byte_to_opcode_mem_ld_reg (op: int8_t): opcode_mem_ld_reg :=
-  let opcode_ld := Byte.unsigned (Byte.and op int8_0xff) in (**r masking operation *)
+Definition byte_to_opcode_mem_ld_reg (op: nat): opcode_mem_ld_reg :=
+  let opcode_ld := Nat.land op 0xff in (**r masking operation *)
     match opcode_ld with
     | 0x61 => op_BPF_LDXW
     | 0x69 => op_BPF_LDXH
@@ -195,8 +205,8 @@ Inductive opcode_mem_st_imm: Type :=  (**r 0xX2/0xXa *)
   | op_BPF_STDW
   | op_BPF_ST_ILLEGAL_INS.
 
-Definition byte_to_opcode_mem_st_imm (op: int8_t): opcode_mem_st_imm :=
-  let opcode_st := Byte.unsigned (Byte.and op int8_0xff) in (**r masking operation *)
+Definition byte_to_opcode_mem_st_imm (op: nat): opcode_mem_st_imm :=
+  let opcode_st := Nat.land op 0xff in (**r masking operation *)
     match opcode_st with
     | 0x62 => op_BPF_STW
     | 0x6a => op_BPF_STH
@@ -212,8 +222,8 @@ Inductive opcode_mem_st_reg: Type :=  (**r 0xX3/0xXb *)
   | op_BPF_STXDW
   | op_BPF_STX_ILLEGAL_INS.
 
-Definition byte_to_opcode_mem_st_reg (op: int8_t): opcode_mem_st_reg :=
-  let opcode_st := Byte.unsigned (Byte.and op int8_0xff) in (**r masking operation *)
+Definition byte_to_opcode_mem_st_reg (op: nat): opcode_mem_st_reg :=
+  let opcode_st := Nat.land op 0xff in (**r masking operation *)
     match opcode_st with
     | 0x63 => op_BPF_STXW
     | 0x6b => op_BPF_STXH
@@ -244,8 +254,8 @@ Inductive opcode: Type :=
 #define BPF_INSTRUCTION_CLS_BRANCH      0x05
 #define BPF_INSTRUCTION_CLS_ALU64       0x07
 *)
-Definition byte_to_opcode (op: int8_t): opcode :=
-  let opc := Byte.unsigned (Byte.and op int8_0x07) in (**r masking operation *)
+Definition byte_to_opcode (op: nat): opcode :=
+  let opc := Nat.land op 0x07 in (**r masking operation *)
     match opc with
     | 0x07 => op_BPF_ALU64
     | 0x04 => op_BPF_ALU32
@@ -257,7 +267,7 @@ Definition byte_to_opcode (op: int8_t): opcode :=
     | _    => op_BPF_ILLEGAL_INS
     end.
 
-Definition int64_to_opcode (ins: int64_t): int8_t := Byte.repr (Int64.unsigned (Int64.and ins int64_0xff)).
+Definition int64_to_opcode (ins: int64_t): nat := Z.to_nat (Int64.unsigned (Int64.and ins int64_0xff)).
 
 (******************** Dx related *******************)
 
@@ -369,6 +379,7 @@ Definition opcode_eqb (o o' : opcode) : bool :=
   end.
 
 
+Open Scope Z_scope.
 Definition opcode_alu64CompilableType :=
   MkCompilableType opcode_alu64 C_U8.
 
@@ -509,16 +520,16 @@ Definition opcodeCompilableTypeMatchableType : MatchableType:=
        :: (op_BPF_Mem_st_reg, 0x03):: nil)
     op_BPF_ILLEGAL_INS
     (fun m A => opcode_rect (fun _ => m A))).
-
+Close Scope Z_scope.
 
 Definition byteToopcodeSymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcodeCompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcodeCompilableType).
 
 Definition int64ToopcodeSymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some opcodeCompilableType).
 
 
-Instance CINT : CType int8_t := mkCType _ (cType int8CompilableType).
+Instance CINT : CType nat := mkCType _ (cType nat8CompilableType).
 Instance COP : CType opcode := mkCType _ (cType opcodeCompilableType).
 Instance CINT64 : CType int64_t := mkCType _ (cType int64CompilableType).
 
@@ -533,95 +544,95 @@ Definition Const_int64_to_opcode :=
 Definition Const_byte_to_opcode :=
   ltac: (mkprimitive byte_to_opcode
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0x07 C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0x07 C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
 Definition byte_to_opcode_alu64SymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcode_alu64CompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcode_alu64CompilableType).
 
 Instance COP_alu64 : CType opcode_alu64 := mkCType _ (cType opcode_alu64CompilableType).
 
 Definition Const_byte_to_opcode_alu64 :=
   ltac: (mkprimitive byte_to_opcode_alu64
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0xf0 C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0xf0 C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
 Definition byte_to_opcode_alu32SymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcode_alu32CompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcode_alu32CompilableType).
 
 Instance COP_alu32 : CType opcode_alu32 := mkCType _ (cType opcode_alu32CompilableType).
 
 Definition Const_byte_to_opcode_alu32 :=
   ltac: (mkprimitive byte_to_opcode_alu32
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0xf0 C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0xf0 C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
 Definition byte_to_opcode_branchSymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcode_branchCompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcode_branchCompilableType).
 
 Instance COP_opcode_branch : CType opcode_branch := mkCType _ (cType opcode_branchCompilableType).
 
 Definition Const_byte_to_opcode_branch :=
   ltac: (mkprimitive byte_to_opcode_branch
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0xf0 C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0xf0 C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
 Definition byte_to_opcode_mem_ld_immSymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcode_mem_ld_immCompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcode_mem_ld_immCompilableType).
 
 Instance COP_opcode_mem_ld_imm : CType opcode_mem_ld_imm := mkCType _ (cType opcode_mem_ld_immCompilableType).
 
 Definition Const_byte_to_opcode_mem_ld_imm :=
   ltac: (mkprimitive byte_to_opcode_mem_ld_imm
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0xff C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0xff C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
 Definition byte_to_opcode_mem_ld_regSymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcode_mem_ld_regCompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcode_mem_ld_regCompilableType).
 
 Instance COP_opcode_mem_ld_reg : CType opcode_mem_ld_reg := mkCType _ (cType opcode_mem_ld_regCompilableType).
 
 Definition Const_byte_to_opcode_mem_ld_reg :=
   ltac: (mkprimitive byte_to_opcode_mem_ld_reg
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0xff C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0xff C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
 Definition byte_to_opcode_mem_st_immSymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcode_mem_st_immCompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcode_mem_st_immCompilableType).
 
 Instance COP_opcode_mem_st_imm : CType opcode_mem_st_imm := mkCType _ (cType opcode_mem_st_immCompilableType).
 
 Definition Const_byte_to_opcode_mem_st_imm :=
   ltac: (mkprimitive byte_to_opcode_mem_st_imm
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0xff C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0xff C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
 Definition byte_to_opcode_mem_st_regSymbolType :=
-  MkCompilableSymbolType [int8CompilableType] (Some opcode_mem_st_regCompilableType).
+  MkCompilableSymbolType [nat8CompilableType] (Some opcode_mem_st_regCompilableType).
 
 Instance COP_opcode_mem_st_reg : CType opcode_mem_st_reg := mkCType _ (cType opcode_mem_st_regCompilableType).
 
 Definition Const_byte_to_opcode_mem_st_reg :=
   ltac: (mkprimitive byte_to_opcode_mem_st_reg
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U8_0xff C_U8) C_U8)
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_NAT8_0xff C_U8) C_U8)
                            | _       => Err PrimitiveEncodingFailed
                            end)).
 
-Close Scope Z_scope.
+Close Scope nat_scope.
 
 Module Exports.
   Definition opcode_alu64CompilableTypeMatchableType      := opcode_alu64CompilableTypeMatchableType.

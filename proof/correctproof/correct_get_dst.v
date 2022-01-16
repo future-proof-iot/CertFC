@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxMonad DxMemRegion DxRegs DxState DxMonad DxInstructions.
+From bpf.comm Require Import Regs State Monad.
+From bpf.src Require Import DxIntegers DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -36,12 +37,12 @@ Section Get_dst.
   Definition fn: Clight.function := f_get_dst.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
     (DList.DCons (stateless reg_int64_correct)
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => reg_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => reg_correct x v.
 
   Instance correct_function3_get_dst : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
@@ -63,7 +64,7 @@ Section Get_dst.
        2. the memory is same
      *)
     unfold int64_to_dst_reg.
-    unfold z_to_reg, DxRegs.get_dst.
+    unfold z_to_reg, Regs.get_dst.
     simpl in c.
     exists (Vint (Int.repr (Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8))))), m, Events.E0.
 
@@ -73,7 +74,6 @@ Section Get_dst.
     -
       unfold match_res.
       unfold reg_correct. (**r we need the invariant reg \in [0; 10] *)
-      unfold int64_0xfff, int64_8.
       remember ((Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8)))) as X.
       Ltac zeqb :=
       match goal with

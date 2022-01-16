@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxOpcode DxMemRegion DxState DxMonad DxInstructions.
+From bpf.comm Require Import Regs State Monad.
+From bpf.src Require Import DxNat DxOpcode DxIntegers DxInstructions.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -22,7 +23,7 @@ Section Get_opcode_alu64.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(int8_t:Type)].
+  Definition args : list Type := [(nat8:Type)].
   Definition res : Type := (opcode_alu64:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -34,12 +35,12 @@ Section Get_opcode_alu64.
   Definition fn: Clight.function := f_get_opcode_alu64.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless int8_correct)
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
+    (DList.DCons (stateless nat8_correct)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => opcode_alu64_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => opcode_alu64_correct x v.
 
   Instance correct_function3_get_opcode_alu64 : forall a, correct_function3 p args res f fn nil true match_arg_list match_res a.
   Proof.
@@ -51,7 +52,7 @@ Section Get_opcode_alu64.
     repeat intro.
     get_invariant_more _op.
 
-    unfold stateless, int8_correct in H0.
+    unfold stateless, nat8_correct in H0.
     subst.
 
     eexists. exists m, Events.E0.

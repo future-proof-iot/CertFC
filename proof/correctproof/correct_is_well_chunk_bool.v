@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxAST DxState DxMonad DxInstructions.
+From bpf.comm Require Import rBPFAST State Monad.
+From bpf.src Require Import DxValues DxInstructions.
 From dx.Type Require Import Bool.
 From dx Require Import IR.
 From Coq Require Import List ZArith.
@@ -26,8 +27,8 @@ Locate f_is_well_chunk_bool.
 (* [fn] is the Cligth function which has the same behaviour as [f] *)
 Definition fn: Clight.function := f_is_well_chunk_bool.
 
-Definition match_state (st_block ins_block : block) (_ : unit) (v : val) (st: stateM) (m : Memory.Mem.mem) : Prop :=
-  v = Vptr st_block Ptrofs.zero /\ match_state st_block ins_block st m.
+Definition match_state (st_block : block) (_ : unit) (v : val) (st: State.state) (m : Memory.Mem.mem) : Prop :=
+  v = Vptr st_block Ptrofs.zero /\ match_state st_block st m.
 
 Ltac exec_seq_of_labeled_statement :=
   match goal with

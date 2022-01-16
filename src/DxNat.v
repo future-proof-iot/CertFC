@@ -1,0 +1,135 @@
+(**************************************************************************)
+(*  This file is part of dx, a tool to derive C from monadic Gallina.     *)
+(*                                                                        *)
+(*  Copyright (C) 2021 Université de Lille & CNRS                         *)
+(*                                                                        *)
+(*  This program is free software; you can redistribute it and/or modify  *)
+(*  it under the terms of the GNU General Public License as published by  *)
+(*  the Free Software Foundation; either version 2 of the License, or     *)
+(*  (at your option) any later version.                                   *)
+(*                                                                        *)
+(*  This program is distributed in the hope that it will be useful,       *)
+(*  but WITHOUT ANY WARRANTY; without even the implied warranty of        *)
+(*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *)
+(*  GNU General Public License for more details.                          *)
+(**************************************************************************)
+
+Require Import List.
+Import ListNotations.
+
+From compcert.cfrontend Require Csyntax Ctypes Cop.
+From compcert Require Import Integers Values.
+
+From dx Require Import ResultMonad IR.
+From dx.Type Require Import Bool.
+
+From bpf.src Require Import CoqIntegers.
+From Coq Require Import ZArith.
+
+(* Derive Nat as unsigned int *)
+(* To ensure soundness, S is not derived as +1, only O is derivable *)
+(* One can still provide a primitive encoding for specific constants *)
+Open Scope nat_scope.
+
+Definition nat8 := nat.
+
+(** masking operation *)
+Definition nat8_0xf0 := 0xf0.
+Definition nat8_0x07 := 0x07.
+Definition nat8_0xff := 0xff.
+Definition nat8_0x08 := 0x08.
+Definition nat8_zero := 0x00.
+
+Definition nat8_0x05 := 0x05.
+Definition nat8_0x84 := 0x84.
+Definition nat8_0x87 := 0x87.
+Definition nat8_0x95 := 0x95.
+
+Definition nat8CompilableType :=
+  MkCompilableType nat8 C_U8.
+
+(**r masking operations *)
+Definition C_NAT8_0xf0: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0xf0))) C_U8.
+
+Definition C_NAT8_0x07: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0x07))) C_U8.
+
+Definition C_NAT8_0xff: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0xff))) C_U8.
+
+Definition C_NAT8_0x08: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0x08))) C_U8.
+
+Definition C_NAT8_0x00: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_zero))) C_U8.
+
+Definition C_NAT8_0x05: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0x05))) C_U8.
+
+Definition C_NAT8_0x84: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0x84))) C_U8.
+
+Definition C_NAT8_0x87: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0x87))) C_U8.
+
+Definition C_NAT8_0x95: Csyntax.expr :=
+  Csyntax.Eval (Vint (Int.repr (Z.of_nat nat8_0x95))) C_U8.
+
+
+Definition nat8SymbolType :=
+  MkCompilableSymbolType nil (Some nat8CompilableType).
+
+
+Definition Const_nat8_0xf0 := constant nat8SymbolType nat8_0xf0 C_NAT8_0xf0.
+Definition Const_nat8_0x07 := constant nat8SymbolType nat8_0x07 C_NAT8_0x07.
+Definition Const_nat8_0xff := constant nat8SymbolType nat8_0xff C_NAT8_0xff.
+Definition Const_nat8_0x08 := constant nat8SymbolType nat8_0x08 C_NAT8_0x08.
+Definition Const_nat8_zero := constant nat8SymbolType nat8_zero C_NAT8_0x00.
+Definition Const_nat8_0x05 := constant nat8SymbolType nat8_0x05 C_NAT8_0x05.
+Definition Const_nat8_0x84 := constant nat8SymbolType nat8_0x84 C_NAT8_0x84.
+Definition Const_nat8_0x87 := constant nat8SymbolType nat8_0x87 C_NAT8_0x87.
+Definition Const_nat8_0x95 := constant nat8SymbolType nat8_0x95 C_NAT8_0x95.
+
+Definition nat8Tonat8ToboolSymbolType :=
+  MkCompilableSymbolType [nat8CompilableType; nat8CompilableType] (Some boolCompilableType).
+
+Definition C_NAT8_eq (x y: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oeq x y C_U8.
+
+Definition Const_nat8_eq :=
+  MkPrimitive nat8Tonat8ToboolSymbolType
+                Nat.eqb
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_NAT8_eq e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Definition nat8Tonat8Tonat8SymbolType :=
+  MkCompilableSymbolType [nat8CompilableType; nat8CompilableType] (Some nat8CompilableType).
+
+Definition C_NAT8_and (x y: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oand x y C_U8.
+
+Definition Const_nat8_and :=
+  MkPrimitive nat8Tonat8Tonat8SymbolType
+                Nat.land
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_NAT8_and e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
+Module Exports.
+  Definition nat8CompilableType := nat8CompilableType.
+  Definition Const_nat8_0xf0    := Const_nat8_0xf0.
+  Definition Const_nat8_0x07    := Const_nat8_0x07.
+  Definition Const_nat8_0xff    := Const_nat8_0xff.
+  Definition Const_nat8_0x08    := Const_nat8_0x08.
+  Definition Const_nat8_zero    := Const_nat8_zero.
+  Definition Const_nat8_eq      := Const_nat8_eq.
+  Definition Const_nat8_and     := Const_nat8_and.
+  Definition Const_nat8_0x05    := Const_nat8_0x05.
+  Definition Const_nat8_0x84    := Const_nat8_0x84.
+  Definition Const_nat8_0x87    := Const_nat8_0x87.
+  Definition Const_nat8_0x95    := Const_nat8_0x95.
+End Exports.

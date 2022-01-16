@@ -1,4 +1,5 @@
-From bpf.src Require Import DxIntegers DxValues DxAST DxMemRegion DxState DxMonad DxInstructions.
+From bpf.comm Require Import MemRegion State Monad.
+From bpf.src Require Import DxValues DxInstructions.
 From dx.Type Require Import Bool.
 From dx Require Import IR.
 From Coq Require Import List ZArith.
@@ -36,12 +37,12 @@ Section Get_block_ptr.
   Definition fn: Clight.function := f_get_block_ptr.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> stateM -> Memory.Mem.mem -> Prop) args :=
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
     (DList.DCons (my_match_region state_block)
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> stateM -> Memory.Mem.mem -> Prop := fun x v st m => val_ptr_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val_ptr_correct x v.
 
   Instance correct_function3_get_block_ptr : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
