@@ -115,7 +115,16 @@ Definition vals32_t := val.
 Definition val64_t := val.
 
 Definition val64_zero := Vlong Int64.zero.
-Definition val64_64 := Vlong int64_64. (*
+Definition val64_64 := Vlong int64_64.
+
+(******************** Val2S64 *******************)
+
+Definition vals64_t := val.
+
+Definition vals64_zero := Vlong Int64.zero.
+Definition vals64_64 := Vlong int64_64.
+
+ (*
 Definition val64_max_unsigned := Vlong int64_max_unsigned.*)
 (*
 (** Type signature: val -> val -> option val
@@ -376,6 +385,26 @@ Definition Const_val64_shr := ltac: (mkprimitive Val.shrlu (binop_expr Cop.Oshr 
 Definition Const_val64_mod := ltac: (mkprimitive val64_modlu (binop_expr Cop.Omod C_U64)).
 Definition Const_val64_xor := ltac: (mkprimitive Val.xorl (binop_expr Cop.Oxor C_U64)).
 
+(******************** Val2S64 *******************)
+Definition valS64CompilableType :=
+  MkCompilableType vals64_t C_S64.
+
+
+(** S32_to_S64: Val_slongofint
+  *)
+
+Definition Val_slongofint (i:val) := Val.longofint i.
+Definition valS32TovalS64SymbolType :=
+  MkCompilableSymbolType [valS32CompilableType] (Some valS64CompilableType).
+
+Definition Const_valS32TovalS64 :=
+  MkPrimitive valS32TovalS64SymbolType
+                Val_slongofint
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_S64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 (** Type signature: val -> val -> val
   *)
 Definition val64Toval64Toval64SymbolType :=
@@ -555,7 +584,10 @@ Module Exports.
   Definition Const_val64u_gt        := Const_val64u_gt.
   Definition Const_val64u_ge        := Const_val64u_ge.
   Definition Const_complu_set       := Const_complu_set.
-  
+
+  Definition valS64CompilableType   := valS64CompilableType.
+  Definition Const_valS32TovalS64   := Const_valS32TovalS64.
+
   Definition Const_sint16_to_vlong  := Const_sint16_to_vlong.
   Definition Const_val64TovalU32    := Const_val64TovalU32.
   Definition Const_val64TovalS32    := Const_val64TovalS32.

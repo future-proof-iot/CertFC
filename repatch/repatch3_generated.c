@@ -31,9 +31,9 @@ static int get_immediate(unsigned long long ins)
   return (int) (ins >> 32LLU);
 }
 
-static unsigned long long eval_immediate(int ins)
+static long long eval_immediate(int ins)
 {
-  return (unsigned long long) ins;
+  return (long long) ins;
 }
 
 static unsigned char get_opcode_ins(unsigned long long ins)
@@ -616,7 +616,7 @@ static void step(struct bpf_state* st)
   unsigned long long dst64;
   _Bool is_imm;
   int imm;
-  unsigned long long imm64;
+  long long imm64;
   unsigned int src;
   unsigned long long src64;
   unsigned int dst32;

@@ -550,17 +550,44 @@ Proof.
   assumption.
 Qed.
 
+Lemma mem_inv_store_aux:
+  forall m m0 chunk l b i v
+    (Hwell_chunk: is_well_chunk chunk)
+    (Hmem_inv : inv_memory_regions m0 l)
+    (Hstore: Mem.store chunk m0 b (Ptrofs.unsigned i) v = Some m),
+      inv_memory_regions m l.
+Proof.
+  induction l.
+  simpl; intros.
+  constructor.
+
+  simpl; intros.
+  destruct Hmem_inv as (Hmem_inv_mr & Hmem_inv_mrs).
+  split.
+  unfold inv_memory_region in *.
+  destruct Hmem_inv_mr as (b0 & Hptr & Hvalid & Hbyte & base & len & Hstart & Hsize & Hperm & Hrange_perm).
+  exists b0.
+  repeat (split; [try assumption | idtac]).
+  eapply Mem.store_valid_block_1; eauto.
+  TBC.
+Qed.
+
 Lemma mem_inv_upd_mem:
-  forall st1 st2 m
+  forall st1 st2 m chunk ptr v
     (Hmem_inv: memory_inv st1)
-    (Hmem: upd_mem m st1 = st2),
+    (Hstorev: Mem.storev chunk (bpf_m st1) ptr v = Some m)
+    (Hst: upd_mem m st1 = st2),
       memory_inv st2.
 Proof.
-  unfold memory_inv, upd_mem.
+  unfold memory_inv, upd_mem, Mem.storev.
   intros.
-  rewrite <- Hmem.
+  rewrite <- Hst.
   simpl.
   split; [intuition | split; [intuition|idtac]].
+  clear Hst.
+  destruct ptr; try inversion Hstorev.
+  destruct Hmem_inv as (_ & _ & Hmem_inv).
+  generalize (bpf_mrs st1).
   unfold inv_memory_regions.
   TBC.
 Qed.

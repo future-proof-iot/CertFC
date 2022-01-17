@@ -29,7 +29,7 @@ extern int get_offset(unsigned long long);
 
 extern int get_immediate(unsigned long long);
 
-extern unsigned long long eval_immediate(int);
+extern long long eval_immediate(int);
 
 extern unsigned char get_opcode_ins(unsigned long long);
 
@@ -153,9 +153,9 @@ int get_immediate(unsigned long long ins)
   return (int) (ins >> 32LLU);
 }
 
-unsigned long long eval_immediate(int ins)
+long long eval_immediate(int ins)
 {
-  return (unsigned long long) ins;
+  return (long long) ins;
 }
 
 unsigned char get_opcode_ins(unsigned long long ins)
@@ -752,7 +752,7 @@ void step(void)
   unsigned long long dst64;
   _Bool is_imm;
   int imm;
-  unsigned long long imm64;
+  long long imm64;
   unsigned int src;
   unsigned long long src64;
   unsigned int dst;
@@ -768,7 +768,7 @@ void step(void)
   int ofs;
   _Bool is_imm;
   int imm;
-  unsigned long long imm64;
+  long long imm64;
   _Bool res;
   unsigned int src;
   unsigned long long src64;
