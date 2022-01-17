@@ -33,7 +33,7 @@ Definition get_offset (ins:int64_t ):M sint32_t := returnM (sint16_to_sint32 (in
 
 Definition get_immediate (ins:int64_t):M sint32_t := returnM (int64_to_sint32 (Int64.shru ins int64_32)).
 
-Definition eval_immediate (ins: sint32_t): M val64_t := returnM ((Val.longofintu (sint32_to_vint ins))).
+Definition eval_immediate (ins: sint32_t): M val64_t := returnM ((Val.longofint (sint32_to_vint ins))).
 
 Definition get_opcode_ins (ins: int64_t): M nat8 :=
   returnM (int64_to_opcode ins).

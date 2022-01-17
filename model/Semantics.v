@@ -11,8 +11,18 @@ Open Scope monad_scope.
 Definition eval_src (s:reg+imm): M val :=
   match s with
   | inl r => eval_reg r
-  | inr i => returnM (Val.longofintu (sint32_to_vint i)) (**r the immediate is always int *)
+  | inr i => returnM (Val.longofint (sint32_to_vint i)) (**r the immediate is always int *)
   end.
+
+Definition eval_reg32 (r:reg): M val :=
+  do v <- eval_reg r; returnM (val_intuoflongu v).
+
+Definition eval_src32 (s:reg+imm): M val :=
+  match s with
+  | inl r => eval_reg32 r
+  | inr i => returnM (sint32_to_vint i) (**r the immediate is always int *)
+  end.
+
 
 Definition _to_vlong (v: val): val :=
   match v with
@@ -58,12 +68,10 @@ Close Scope Z_scope.
 Definition val_intuoflonguM (vl: val) := returnM (val_intuoflongu vl).
 
 Definition step_alu_binary_operation (a: arch) (bop: binOp) (d :reg) (s: reg+imm): M unit :=
-  do d64 <- eval_reg d;
-  do s64 <- eval_src s;
   match a with
   | A32 => 
-    do d32 <- val_intuoflonguM d64;
-    do s32 <- val_intuoflonguM s64; (**r (u32) DST, (u32) SRC/IMM *)
+    do d32 <- eval_reg32 d;
+    do s32 <- eval_src32 s; (**r (u32) DST, (u32) SRC/IMM *)
     match bop with
     | BPF_ADD  => upd_reg d (Val.longofintu (Val.add  d32 s32))
     | BPF_SUB  => upd_reg d (Val.longofintu (Val.sub  d32 s32))
@@ -100,6 +108,8 @@ Definition step_alu_binary_operation (a: arch) (bop: binOp) (d :reg) (s: reg+imm
                     upd_flag BPF_ILLEGAL_SHIFT (**r if 's' of 'shr d s' is 's > 32', then there is a acceptable error *)
     end
   | A64 =>
+      do d64 <- eval_reg d;
+      do s64 <- eval_src s;
       match bop with
       | BPF_ADD  => upd_reg d (Val.addl  d64 s64)
       | BPF_SUB  => upd_reg d (Val.subl  d64 s64)

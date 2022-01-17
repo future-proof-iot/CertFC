@@ -155,7 +155,7 @@ int get_immediate(unsigned long long ins)
 
 unsigned long long eval_immediate(int ins)
 {
-  return (unsigned long long) (unsigned int) ins;
+  return (unsigned long long) ins;
 }
 
 unsigned char get_opcode_ins(unsigned long long ins)
@@ -426,38 +426,31 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
   opcode_alu32 = get_opcode_alu32(op);
   switch (opcode_alu32) {
     case 0:
-      upd_reg(dst,
-              (unsigned long long) (unsigned int) (dst32 + src32));
+      upd_reg(dst, (unsigned long long) (dst32 + src32));
       return;
     case 16:
-      upd_reg(dst,
-              (unsigned long long) (unsigned int) (dst32 - src32));
+      upd_reg(dst, (unsigned long long) (dst32 - src32));
       return;
     case 32:
-      upd_reg(dst,
-              (unsigned long long) (unsigned int) (dst32 * src32));
+      upd_reg(dst, (unsigned long long) (dst32 * src32));
       return;
     case 48:
       if (src32 != 0U) {
-        upd_reg(dst,
-                (unsigned long long) (unsigned int) (dst32 / src32));
+        upd_reg(dst, (unsigned long long) (dst32 / src32));
         return;
       } else {
         upd_flag(-9);
         return;
       }
     case 64:
-      upd_reg(dst,
-              (unsigned long long) (unsigned int) (dst32 | src32));
+      upd_reg(dst, (unsigned long long) (dst32 | src32));
       return;
     case 80:
-      upd_reg(dst,
-              (unsigned long long) (unsigned int) (dst32 & src32));
+      upd_reg(dst, (unsigned long long) (dst32 & src32));
       return;
     case 96:
       if (src32 < 32U) {
-        upd_reg(dst,
-                (unsigned long long) (unsigned int) (dst32 << src32));
+        upd_reg(dst, (unsigned long long) (dst32 << src32));
         return;
       } else {
         upd_flag(-10);
@@ -465,8 +458,7 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
       }
     case 112:
       if (src32 < 32U) {
-        upd_reg(dst,
-                (unsigned long long) (unsigned int) (dst32 >> src32));
+        upd_reg(dst, (unsigned long long) (dst32 >> src32));
         return;
       } else {
         upd_flag(-10);
@@ -474,7 +466,7 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
       }
     case 128:
       if (op == 132) {
-        upd_reg(dst, (unsigned long long) (unsigned int) -dst32);
+        upd_reg(dst, (unsigned long long) -dst32);
         return;
       } else {
         upd_flag(-1);
@@ -482,25 +474,21 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
       }
     case 144:
       if (src32 != 0U) {
-        upd_reg(dst,
-                (unsigned long long) (unsigned int) (dst32 % src32));
+        upd_reg(dst, (unsigned long long) (dst32 % src32));
         return;
       } else {
         upd_flag(-9);
         return;
       }
     case 160:
-      upd_reg(dst,
-              (unsigned long long) (unsigned int) (dst32 ^ src32));
+      upd_reg(dst, (unsigned long long) (dst32 ^ src32));
       return;
     case 176:
-      upd_reg(dst, (unsigned long long) (unsigned int) src32);
+      upd_reg(dst, (unsigned long long) src32);
       return;
     case 192:
       if (src32 < 32U) {
-        upd_reg(dst,
-                (unsigned long long) (unsigned int) ((int) dst32
-                                                      >> src32));
+        upd_reg(dst, (unsigned long long) ((int) dst32 >> src32));
         return;
       } else {
         upd_flag(-10);

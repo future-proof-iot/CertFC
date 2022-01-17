@@ -489,7 +489,7 @@ Definition Const_valU32Toval64 :=
   MkPrimitive valU32Toval64SymbolType
                 Val.longofintu
                 (fun es => match es with
-                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ecast e1 C_U32) C_U64)
+                           | [e1] => Ok (Csyntax.Ecast e1 C_U64)
                            | _       => Err PrimitiveEncodingFailed
                            end).
 

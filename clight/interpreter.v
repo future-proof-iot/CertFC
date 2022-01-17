@@ -608,7 +608,7 @@ Definition f_eval_immediate := {|
   fn_vars := nil;
   fn_temps := nil;
   fn_body :=
-(Sreturn (Some (Ecast (Ecast (Etempvar _ins tint) tuint) tulong)))
+(Sreturn (Some (Ecast (Etempvar _ins tint) tulong)))
 |}.
 
 Definition f_get_opcode_ins := {|

@@ -45,7 +45,7 @@ Proof.
   intros; subst.
   rewrite Byte.eq_true; reflexivity.
 Qed.*)
-
+(*
 Lemma Int64_unsigned_repr_Int_unsigned:
   forall j, Int64.unsigned (Int64.repr (Int.unsigned j)) = Int.unsigned j.
 Proof.
@@ -59,7 +59,7 @@ Proof.
   simpl.
   lia.
   + lia.
-Qed.
+Qed. *)
 
 (*
 Ltac byte_unsigned_and :=
@@ -185,16 +185,15 @@ Ltac Hopcode_solve_alu32 HOP HOP_eq OP NAME :=
   | |- _ =>
     Hopcode_solve HOP HOP_eq OP NAME;
     [ try unfold rBPFValues.sint32_to_vint;
-  try rewrite Int64_unsigned_repr_Int_unsigned; try rewrite Int.repr_unsigned;
-  unfold upd_reg;
-  destruct Val.longofintu; try reflexivity | idtac]
+      unfold upd_reg;
+      destruct Val.longofintu; try reflexivity | idtac]
   end.
 
 
 Ltac Hopcode_simpl :=
   match goal with
   | H :  ?X <> ?X |- _ =>
-    exfalso; apply H; reflexivity; clear H
+    exfalso; apply H; reflexivity
   | |- _ => repeat compute_land; unfold eval_ins_len; reflexivity
   end.
 
@@ -426,7 +425,6 @@ Proof.
   Hopcode_solve Hopcode HeqHopcode 0x34 Hdiv32i.
 
   unfold DxIntegers.int32_0.
-  rewrite Int64_unsigned_repr_Int_unsigned; rewrite Int.repr_unsigned.
   destruct negb; try reflexivity.
   destruct Val.divu; try reflexivity.
   unfold upd_reg.
@@ -457,7 +455,6 @@ Proof.
   Hopcode_solve Hopcode HeqHopcode 0x64 Hlsh32i.
 
   unfold DxIntegers.int32_32.
-  rewrite Int64_unsigned_repr_Int_unsigned; rewrite Int.repr_unsigned.
   destruct (Int.ltu _ _); try reflexivity.
   unfold upd_reg.
   destruct Val.longofintu; try reflexivity.
@@ -474,7 +471,6 @@ Proof.
   Hopcode_solve Hopcode HeqHopcode 0x74 Hrsh32i.
 
   unfold DxIntegers.int32_32.
-  rewrite Int64_unsigned_repr_Int_unsigned; rewrite Int.repr_unsigned.
   destruct (Int.ltu _ _); try reflexivity.
   unfold upd_reg.
   destruct Val.longofintu; try reflexivity.
@@ -494,7 +490,6 @@ Proof.
   Hopcode_solve Hopcode HeqHopcode 0x94 Hmod32i.
 
   unfold DxIntegers.int32_0.
-  rewrite Int64_unsigned_repr_Int_unsigned; rewrite Int.repr_unsigned.
   destruct negb; try reflexivity.
   destruct Val.modu; try reflexivity.
   unfold upd_reg.
@@ -517,7 +512,6 @@ Proof.
 
   (**r Hmov32i *)
   Hopcode_solve Hopcode HeqHopcode 0xb4 Hmov32i.
-  rewrite Int64_unsigned_repr_Int_unsigned; rewrite Int.repr_unsigned.
   reflexivity.
 
   (**r Hmov32r *)
@@ -529,7 +523,6 @@ Proof.
   Hopcode_solve Hopcode HeqHopcode 0xc4 Harsh32i.
 
   unfold DxIntegers.int32_32.
-  rewrite Int64_unsigned_repr_Int_unsigned; rewrite Int.repr_unsigned.
   destruct (Int.ltu _ _); try reflexivity.
   unfold upd_reg.
   destruct Val.longofintu; try reflexivity.
