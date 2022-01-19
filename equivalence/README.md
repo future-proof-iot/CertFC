@@ -2,6 +2,8 @@
 
 This folder is used to prove the equality between rbpf-coq interpreter and rbpf-coq-dx interpreter. 
 
+*using the make command: `make equivalence`*
+
 **NB: The coq proof checking are time-costing because we must traverse `opcode \in [0,255]` in order to prove the different decoding ways are exactly same.**
 
 The target thoerem is:

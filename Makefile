@@ -74,6 +74,7 @@ bench_clight:
 COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
 COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxNat.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
 COQEQUIV =  $(addprefix equivalence/, switch.v equivalence.v)
+COQISOLATION = $(wildcard isolation/*.v)
 
 COQCOMM = $(wildcard comm/*.v)
 #COQMODEL = $(wildcard model/*.v)
@@ -89,6 +90,12 @@ model:
 	@echo $@
 #	rm -f model/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(COQMODEL) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+
+isolation:
+	@echo $@
+#	rm -f isolation/*.vo
+	$(COQMAKEFILE) -f _CoqProject $(COQISOLATION) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 
 equivalence:
@@ -173,6 +180,8 @@ gitpush:
 	cp model/*.v $(GITDIR)/model
 	cp equivalence/*.v $(GITDIR)/equivalence
 	cp equivalence/*.md $(GITDIR)/equivalence
+	cp isolation/*.v $(GITDIR)/isolation
+	cp isolation/*.md $(GITDIR)/isolation
 	cp benchmark/*.v $(GITDIR)/benchmark
 	cp benchmark/*.c $(GITDIR)/benchmark
 	cp benchmark/*.h $(GITDIR)/benchmark
@@ -199,6 +208,8 @@ gitpull:
 	cp $(GITDIR)/model/*.v ./model
 	cp $(GITDIR)/equivalence/*.v ./equivalence
 	cp $(GITDIR)/equivalence/*.md ./equivalence
+	cp $(GITDIR)/isolation/*.v ./isolation
+	cp $(GITDIR)/isolation/*.md ./isolation
 	cp $(GITDIR)/benchmark/*.v ./benchmark
 	cp $(GITDIR)/benchmark/*.c ./benchmark
 	cp $(GITDIR)/benchmark/*.h ./benchmark

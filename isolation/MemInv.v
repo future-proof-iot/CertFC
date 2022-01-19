@@ -1,6 +1,7 @@
 From compcert Require Import Coqlib Integers AST Maps Values Memory Memtype Memdata.
 From bpf.comm Require Import MemRegion State.
-From bpf.model Require Import Semantics AlignChunk.
+From bpf.model Require Import Semantics.
+From bpf.isolation Require Import AlignChunk.
 From Coq Require Import ZArith Lia List.
 Import ListNotations.
 
@@ -48,6 +49,22 @@ Fixpoint inv_memory_regions (m:mem) (mrs: list memory_region): Prop :=
   | [] => True
   | hd :: tl => inv_memory_region m hd /\ inv_memory_regions m tl
   end.
+
+Lemma In_inv_memory_regions:
+  forall mr m l,
+    List.In mr l -> inv_memory_regions m l ->
+      inv_memory_region m mr.
+Proof.
+  intros.
+  induction l;
+  simpl in *.
+  inversion H.
+  destruct H.
+  - subst. intuition.
+  - apply IHl.
+    assumption.
+    intuition.
+Qed.
 
 Definition memory_inv (st: state): Prop :=
   List.length (bpf_mrs st) = mrs_num st /\
@@ -255,6 +272,20 @@ Proof.
   destruct chunk in *; try inversion Hwell_chunk; rewrite <- Hvint_vlong; simpl; try apply (inj_bytes_is_byte_list_memval _).
 Qed.
 
+Lemma encode_val_is_byte_list_memval_vint:
+  forall chunk v src
+    (Hwell_chunk: is_well_chunk chunk)
+    (Hvint: exists vi, v = Vint vi)
+    (Hvint_vlong: vint_to_vint_or_vlong chunk v = src),
+    is_byte_list_memval (encode_val chunk src).
+Proof.
+  unfold vint_to_vint_or_vlong.
+  intros.
+  destruct Hvint as [vl Hvint].
+  rewrite -> Hvint in Hvint_vlong.
+  destruct chunk in *; try inversion Hwell_chunk; rewrite <- Hvint_vlong; simpl; try apply (inj_bytes_is_byte_list_memval _).
+Qed.
+
 Lemma setN_other_is_byte_list_memval:
   forall vl c p q,
     is_byte_list_memval vl ->
@@ -344,6 +375,33 @@ Proof.
   apply (setN_is_byte_list_memval _ _ _ _ His_byte_list Hperm).
 Qed.
 
+Lemma store_is_byte_block_vint:
+  forall chunk m1 blk ofs v m2
+    (Hwell_chunk: is_well_chunk chunk)
+    (HVint: exists vi, v = Vint vi)
+    (Hstore: Mem.store chunk m1 blk ofs (vint_to_vint_or_vlong chunk v) = Some m2)
+    (His_byte: is_byte_block blk m1),
+      is_byte_block blk m2.
+Proof.
+  intros.
+  unfold is_byte_block.
+  intros o Hperm.
+  apply (Mem.perm_store_2 _ _ _ _ _ _ Hstore) in Hperm.
+  apply His_byte in Hperm.
+  
+  Transparent Mem.store.
+  unfold Mem.store in Hstore.
+  destruct (Mem.valid_access_dec _ _ _ _ _) in Hstore. 2:{ inversion Hstore. }
+  inversion Hstore; clear Hstore H0.
+  simpl.
+
+  assert (His_byte_list: is_byte_list_memval (encode_val chunk (vint_to_vint_or_vlong chunk v))). {
+    apply (encode_val_is_byte_list_memval_vint _ _ _ Hwell_chunk HVint); reflexivity.
+  }
+  rewrite PMap.gss.
+  apply (setN_is_byte_list_memval _ _ _ _ His_byte_list Hperm).
+Qed.
+
 Lemma store_is_byte_block_disjoint:
   forall chunk m1 m2 b1 b2 ofs v,
     is_byte_list_memval (encode_val chunk v) ->
@@ -418,6 +476,8 @@ Proof.
   apply Hperm2 in Hofs0_range.
   apply (Mem.perm_store_1 _ _ _ _ _ _ H6); assumption.
 Qed.
+
+
 
 (*
 Definition inv_memory_regions_state (st: state) := inv_memory_regions (eval_mem st) (eval_mem_regions st). *)
@@ -550,11 +610,22 @@ Proof.
   assumption.
 Qed.
 
-Lemma mem_inv_store_aux:
-  forall m m0 chunk l b i v
+Lemma Mem_range_perm_store:
+  forall m m0 b b0 lo hi k p chunk i v
+  (Hrange_perm : Mem.range_perm m0 b0 lo hi k p)
+  (Hstore : Mem.store chunk m0 b i v = Some m),
+    Mem.range_perm m b0 lo hi k p.
+Proof.
+  unfold Mem.range_perm.
+  intros.
+  eapply Mem.perm_store_1; eauto.
+Qed.
+
+Lemma mem_inv_store_mem_regions_vlong:
+  forall m m0 chunk l b i vl
     (Hwell_chunk: is_well_chunk chunk)
     (Hmem_inv : inv_memory_regions m0 l)
-    (Hstore: Mem.store chunk m0 b (Ptrofs.unsigned i) v = Some m),
+    (Hstore: Mem.store chunk m0 b (Ptrofs.unsigned i) (vlong_to_vint_or_vlong chunk (Vlong vl)) = Some m),
       inv_memory_regions m l.
 Proof.
   induction l.
@@ -564,33 +635,242 @@ Proof.
   simpl; intros.
   destruct Hmem_inv as (Hmem_inv_mr & Hmem_inv_mrs).
   split.
-  unfold inv_memory_region in *.
-  destruct Hmem_inv_mr as (b0 & Hptr & Hvalid & Hbyte & base & len & Hstart & Hsize & Hperm & Hrange_perm).
-  exists b0.
-  repeat (split; [try assumption | idtac]).
-  eapply Mem.store_valid_block_1; eauto.
-  TBC.
+  -
+    unfold inv_memory_region in *.
+    destruct Hmem_inv_mr as (b0 & Hptr & Hvalid & Hbyte & base & len & Hstart & Hsize & Hperm & Hrange_perm).
+    exists b0.
+    repeat (split; [try assumption | idtac]).
+    + eapply Mem.store_valid_block_1; eauto.
+    + destruct ((b =? b0)%positive) eqn: Hb_eq.
+      * rewrite Pos.eqb_eq in Hb_eq.
+        subst.
+        eapply store_is_byte_block; eauto.
+      * rewrite Pos.eqb_neq in Hb_eq.
+        unfold is_byte_block in *.
+        erewrite Mem.store_mem_contents; eauto.
+        erewrite PMap.gso; eauto.
+        intros.
+        apply Hbyte.
+        eapply Mem.perm_store_2; eauto.
+    + exists base, len.
+      repeat (split; [try assumption | idtac]).
+      eapply Mem_range_perm_store; eauto.
+  - eapply IHl; eauto.
 Qed.
 
-Lemma mem_inv_upd_mem:
-  forall st1 st2 m chunk ptr v
+Lemma mem_inv_store_mem_regions_vint:
+  forall m m0 chunk l b i vl
+    (Hwell_chunk: is_well_chunk chunk)
+    (Hmem_inv : inv_memory_regions m0 l)
+    (Hstore: Mem.store chunk m0 b (Ptrofs.unsigned i) (vint_to_vint_or_vlong chunk (Vint vl)) = Some m),
+      inv_memory_regions m l.
+Proof.
+  induction l.
+  simpl; intros.
+  constructor.
+
+  simpl; intros.
+  destruct Hmem_inv as (Hmem_inv_mr & Hmem_inv_mrs).
+  split.
+  -
+    unfold inv_memory_region in *.
+    destruct Hmem_inv_mr as (b0 & Hptr & Hvalid & Hbyte & base & len & Hstart & Hsize & Hperm & Hrange_perm).
+    exists b0.
+    repeat (split; [try assumption | idtac]).
+    + eapply Mem.store_valid_block_1; eauto.
+    + destruct ((b =? b0)%positive) eqn: Hb_eq.
+      * rewrite Pos.eqb_eq in Hb_eq.
+        subst.
+        eapply store_is_byte_block_vint with (v:= Vint vl); eauto.
+      * rewrite Pos.eqb_neq in Hb_eq.
+        unfold is_byte_block in *.
+        erewrite Mem.store_mem_contents; eauto.
+        erewrite PMap.gso; eauto.
+        intros.
+        apply Hbyte.
+        eapply Mem.perm_store_2; eauto.
+    + exists base, len.
+      repeat (split; [try assumption | idtac]).
+      eapply Mem_range_perm_store; eauto.
+  - eapply IHl; eauto.
+Qed.
+
+Lemma mem_inv_store_length:
+  forall st1 st2 m chunk b i vl
+    (Hmem_inv : Datatypes.length (bpf_mrs st1) = mrs_num st1)
+    (Hstore: Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned i) (vlong_to_vint_or_vlong chunk (Vlong vl)) = Some m)
+    (Hst2: upd_mem m st1 = st2),
+      Datatypes.length (bpf_mrs st2) = mrs_num st2.
+Proof.
+  intros.
+  subst.
+  unfold upd_mem, bpf_mrs in *.
+  intuition.
+Qed.
+
+Lemma mem_inv_store_disjoint:
+  forall st1 st2 m chunk b i vl
+    (Hmem_inv : disjoint_blocks 0 (bpf_mrs st1))
+    (Hstore: Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned i) (vlong_to_vint_or_vlong chunk (Vlong vl)) = Some m)
+    (Hst2: upd_mem m st1 = st2),
+      disjoint_blocks 0 (bpf_mrs st2).
+Proof.
+  intros.
+  subst.
+  unfold upd_mem, bpf_mrs in *.
+  intuition.
+Qed.
+
+Lemma mem_inv_store_length_vint:
+  forall st1 st2 m chunk b i vl
+    (Hmem_inv : Datatypes.length (bpf_mrs st1) = mrs_num st1)
+    (Hstore: Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned i) (vint_to_vint_or_vlong chunk (Vint vl)) = Some m)
+    (Hst2: upd_mem m st1 = st2),
+      Datatypes.length (bpf_mrs st2) = mrs_num st2.
+Proof.
+  intros.
+  subst.
+  unfold upd_mem, bpf_mrs in *.
+  intuition.
+Qed.
+
+Lemma mem_inv_store_disjoint_vint:
+  forall st1 st2 m chunk b i vl
+    (Hmem_inv : disjoint_blocks 0 (bpf_mrs st1))
+    (Hstore: Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned i) (vint_to_vint_or_vlong chunk (Vint vl)) = Some m)
+    (Hst2: upd_mem m st1 = st2),
+      disjoint_blocks 0 (bpf_mrs st2).
+Proof.
+  intros.
+  subst.
+  unfold upd_mem, bpf_mrs in *.
+  intuition.
+Qed.
+
+Lemma mem_inv_store_reg:
+  forall st1 st2 chunk addr src
+    (Hwell_chunk: is_well_chunk chunk)
     (Hmem_inv: memory_inv st1)
-    (Hstorev: Mem.storev chunk (bpf_m st1) ptr v = Some m)
-    (Hst: upd_mem m st1 = st2),
+    (Hstore: store_mem_reg chunk addr (Vlong src) st1 = Some st2),
       memory_inv st2.
 Proof.
-  unfold memory_inv, upd_mem, Mem.storev.
-  intros.
-  rewrite <- Hst.
-  simpl.
-  split; [intuition | split; [intuition|idtac]].
-  clear Hst.
-  destruct ptr; try inversion Hstorev.
-  destruct Hmem_inv as (_ & _ & Hmem_inv).
-  generalize (bpf_mrs st1).
-  unfold inv_memory_regions.
-  TBC.
+  unfold store_mem_reg, State.vlong_to_vint_or_vlong, Mem.storev; intros.
+  assert (Hmem_inv' := Hmem_inv).
+  unfold memory_inv in Hmem_inv'.
+  destruct Hmem_inv' as (Hmem_inv_length & Hmem_inv_disjoint &_ ).
+  unfold memory_inv.
+
+  assert (Heq: match chunk with
+         | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
+             match
+               match addr with
+               | Vptr b ofs =>
+                   Mem.store chunk (bpf_m st1) b 
+                     (Ptrofs.unsigned ofs)
+                     match chunk with
+                     | Mint8unsigned | Mint16unsigned | Mint32 =>
+                         Vint (Int.repr (Int64.unsigned src))
+                     | Mint64 => Vlong src
+                     | _ => Vundef
+                     end
+               | _ => None
+               end
+             with
+             | Some m => Some (upd_mem m st1)
+             | None => None
+             end
+         | _ => Some (upd_flag Flag.BPF_ILLEGAL_MEM st1)
+          end =
+             match
+               match addr with
+               | Vptr b ofs =>
+                   Mem.store chunk (bpf_m st1) b 
+                     (Ptrofs.unsigned ofs)
+                     match chunk with
+                     | Mint8unsigned | Mint16unsigned | Mint32 =>
+                         Vint (Int.repr (Int64.unsigned src))
+                     | Mint64 => Vlong src
+                     | _ => Vundef
+                     end
+               | _ => None
+               end
+             with
+             | Some m => Some (upd_mem m st1)
+             | None => None
+             end). {
+      destruct chunk; inversion Hwell_chunk.
+      all: reflexivity.
+    }
+    rewrite Heq in Hstore; clear Heq.
+    destruct addr; try inversion Hstore; clear Hstore.
+    destruct (Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned i)) eqn: Hstore; try inversion H0.
+    clear H0.
+
+    split;[eapply mem_inv_store_length; eauto | split; [ eapply mem_inv_store_disjoint; eauto|idtac]].
+    subst.
+    clear Hmem_inv_length Hmem_inv_disjoint.
+    eapply mem_inv_store_mem_regions_vlong; eauto.
+    unfold memory_inv in Hmem_inv.
+    intuition.
 Qed.
+
+Lemma mem_inv_store_imm:
+  forall st1 st2 chunk addr i
+    (Hwell_chunk: is_well_chunk chunk)
+    (Hmem_inv: memory_inv st1)
+    (Hstore: store_mem_imm chunk addr (Vint i) st1 = Some st2),
+      memory_inv st2.
+Proof.
+  unfold store_mem_imm, State.vlong_to_vint_or_vlong, Mem.storev; intros.
+  assert (Hmem_inv' := Hmem_inv).
+  unfold memory_inv in Hmem_inv'.
+  destruct Hmem_inv' as (Hmem_inv_length & Hmem_inv_disjoint &_ ).
+  unfold memory_inv.
+
+  assert (Heq: match chunk with
+         | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
+             match
+               match addr with
+               | Vptr b ofs =>
+                   Mem.store chunk (bpf_m st1) b 
+                     (Ptrofs.unsigned ofs)
+                     (vint_to_vint_or_vlong chunk (Vint i))
+               | _ => None
+               end
+             with
+             | Some m => Some (upd_mem m st1)
+             | None => None
+             end
+         | _ => Some (upd_flag Flag.BPF_ILLEGAL_MEM st1)
+         end =
+             match
+               match addr with
+               | Vptr b ofs =>
+                   Mem.store chunk (bpf_m st1) b 
+                     (Ptrofs.unsigned ofs)
+                     (vint_to_vint_or_vlong chunk (Vint i))
+               | _ => None
+               end
+             with
+             | Some m => Some (upd_mem m st1)
+             | None => None
+             end). {
+      destruct chunk; inversion Hwell_chunk.
+      all: reflexivity.
+    }
+    rewrite Heq in Hstore; clear Heq.
+    destruct addr; try inversion Hstore; clear Hstore.
+    destruct (Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned i0)) eqn: Hstore; try inversion H0.
+    clear H0.
+
+    split;[eapply mem_inv_store_length_vint; eauto | split; [ eapply mem_inv_store_disjoint_vint; eauto|idtac]].
+    subst.
+    clear Hmem_inv_length Hmem_inv_disjoint.
+    eapply mem_inv_store_mem_regions_vint; eauto.
+    unfold memory_inv in Hmem_inv.
+    intuition.
+Qed.
+
 
 Lemma mem_inv_upd_pc:
   forall st1 st2 p
@@ -601,7 +881,6 @@ Proof.
   unfold memory_inv.
   intros.
   rewrite <- Hpc.
-  unfold upd_pc.
   simpl; assumption.
 Qed.
 
@@ -614,9 +893,7 @@ Proof.
   unfold memory_inv.
   intros.
   rewrite <- Hpc.
-  unfold upd_pc.
   simpl; assumption.
 Qed.
-
 
 Close Scope Z_scope.

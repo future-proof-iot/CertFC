@@ -118,6 +118,17 @@ Definition vlong_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
   | _       => Vundef
   end.
 
+Definition vint_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
+  match v with
+  | Vint n =>
+    match chunk with
+    | Mint8unsigned | Mint16unsigned | Mint32 => Vint n
+    | Mint64 => Vlong (Int64.repr (Int.unsigned n))
+    | _      => Vundef
+    end
+  | _       => Vundef
+  end.
+
 Definition load_mem (chunk: memory_chunk) (ptr: val) (st: state) :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 =>
@@ -137,7 +148,7 @@ Definition load_mem (chunk: memory_chunk) (ptr: val) (st: state) :=
 Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) (st: state): option state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
-    let src := vlong_to_vint_or_vlong chunk v in
+    let src := vint_to_vint_or_vlong chunk v in
       match Mem.storev chunk (bpf_m st) ptr src with
       | Some m => Some (upd_mem m st)
       | None => None
@@ -149,7 +160,8 @@ Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) (st: state): 
 Definition store_mem_reg (chunk: memory_chunk) (ptr: val) (v: val) (st: state): option state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
-    match Mem.storev chunk (bpf_m st) ptr v with
+    let src := vlong_to_vint_or_vlong chunk v in
+    match Mem.storev chunk (bpf_m st) ptr src with
     | Some m => Some (upd_mem m st)
     | None => None
     end

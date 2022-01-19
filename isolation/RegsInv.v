@@ -130,39 +130,37 @@ Proof.
   destruct r; intuition.
 Qed.
 (*
-Lemma reg_inv_upd_reg_eval_flag:
-  forall st1 st2 r v
-    (Hreg: upd_reg r v st1 = st2),
-      eval_flag st1 = eval_flag st2.
+Lemma reg_inv_store_aux:
+  forall st1 st2 chunk addr src
+    (Hstore: store_mem_reg chunk addr src st1 = Some st2),
+      regs_st st1 = regs_st st2.
 Proof.
+  unfold store_mem_reg, vlong_to_vint_or_vlong, upd_mem, upd_flag; intros.
+  destruct chunk; inversion Hstore.
+  all: intuition.
+  all: destruct Memory.Mem.storev; inversion H0; intuition.
+Qed. *)
+
+Lemma reg_inv_store_reg:
+  forall st1 st2 chunk addr src
+    (Hreg : register_inv st1)
+    (Hstore: store_mem_reg chunk addr (Vlong src) st1 = Some st2),
+      register_inv st2.
+Proof.
+  unfold store_mem_reg, upd_mem, upd_flag, register_inv;
   intros.
-  rewrite <- Hreg.
-  unfold upd_reg, eval_flag.
-  simpl.
-  reflexivity.
+  destruct chunk; inversion Hstore; try assumption.
+  all: destruct Memory.Mem.storev; inversion H0; intuition.
 Qed.
 
-Lemma reg_inv_upd_pc_eval_flag:
-  forall st1 st2 p
-    (Hpc: upd_pc p st1 = st2),
-      eval_flag st1 = eval_flag st2.
+Lemma reg_inv_store_imm:
+  forall st1 st2 chunk addr src
+    (Hreg : register_inv st1)
+    (Hstore: store_mem_imm chunk addr (Vint src) st1 = Some st2),
+      register_inv st2.
 Proof.
+  unfold store_mem_imm, upd_mem, upd_flag, register_inv;
   intros.
-  rewrite <- Hpc.
-  unfold upd_pc, eval_flag.
-  simpl.
-  reflexivity.
+  destruct chunk; inversion Hstore; try assumption.
+  all: destruct Memory.Mem.storev; inversion H0; intuition.
 Qed.
-
-Lemma reg_inv_upd_pc_incr_eval_flag:
-  forall st1 st2
-    (Hpc: upd_pc_incr st1 = st2),
-      eval_flag st1 = eval_flag st2.
-Proof.
-  intros.
-  rewrite <- Hpc.
-  unfold upd_pc_incr, eval_flag.
-  simpl.
-  reflexivity.
-Qed.
-*)

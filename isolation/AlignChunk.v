@@ -1,5 +1,6 @@
 From compcert Require Import Coqlib Integers AST Maps Values Memory Memtype Memdata.
-From bpf.model Require Import Semantics CommonLib.
+From bpf.model Require Import Semantics.
+From bpf.isolation Require Import CommonLib.
 From Coq Require Import ZArith Lia List.
 Import ListNotations.
 

@@ -17,7 +17,7 @@ struct bpf_state {
   unsigned long long *ins;
 };
 
-extern struct memory_region *get_mem_region(unsigned int);
+extern struct memory_region *get_mem_region(unsigned int, struct memory_region *);
 
 extern unsigned int get_dst(unsigned long long);
 
@@ -67,7 +67,7 @@ extern _Bool is_well_chunk_bool(unsigned int);
 
 extern unsigned char *check_mem_aux2(struct memory_region *, unsigned int, unsigned int, unsigned int);
 
-extern unsigned char *check_mem_aux(unsigned int, unsigned int, unsigned int, unsigned int);
+extern unsigned char *check_mem_aux(unsigned int, unsigned int, unsigned int, unsigned int, struct memory_region *);
 
 extern unsigned char *check_mem(unsigned int, unsigned int, unsigned int);
 
@@ -121,10 +121,8 @@ extern int eval_ins_len(void);
 
 extern unsigned long long eval_ins(int);
 
-struct memory_region *get_mem_region(unsigned int n)
+struct memory_region *get_mem_region(unsigned int n, struct memory_region *mrs)
 {
-  struct memory_region *mrs;
-  mrs = eval_mrs_regions();
   return mrs + n;
 }
 
@@ -290,7 +288,7 @@ unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int perm, unsig
   }
 }
 
-unsigned char *check_mem_aux(unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr)
+unsigned char *check_mem_aux(unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr, struct memory_region *mrs)
 {
   unsigned int n;
   struct memory_region *cur_mr;
@@ -299,10 +297,10 @@ unsigned char *check_mem_aux(unsigned int num, unsigned int perm, unsigned int c
     return 0;
   } else {
     n = num - 1U;
-    cur_mr = get_mem_region(n);
+    cur_mr = get_mem_region(n, mrs);
     check_mem = check_mem_aux2(cur_mr, perm, addr, chunk);
     if (check_mem == 0) {
-      return check_mem_aux(n, perm, chunk, addr);
+      return check_mem_aux(n, perm, chunk, addr, mrs);
     } else {
       return check_mem;
     }
@@ -313,11 +311,14 @@ unsigned char *check_mem(unsigned int perm, unsigned int chunk, unsigned int add
 {
   _Bool well_chunk;
   unsigned int mem_reg_num;
+  struct memory_region *mrs;
   unsigned char *check_mem;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
     mem_reg_num = eval_mrs_num();
-    check_mem = check_mem_aux(mem_reg_num, perm, chunk, addr);
+    mrs = eval_mrs_regions();
+    check_mem =
+      check_mem_aux(mem_reg_num, perm, chunk, addr, mrs);
     if (check_mem == 0) {
       return 0;
     } else {
@@ -922,9 +923,11 @@ void bpf_interpreter_aux(unsigned int fuel)
 
 unsigned long long bpf_interpreter(unsigned int fuel)
 {
+  struct memory_region *mrs;
   struct memory_region *bpf_ctx;
   int f;
-  bpf_ctx = get_mem_region(0U);
+  mrs = eval_mrs_regions();
+  bpf_ctx = get_mem_region(0U, mrs);
   upd_reg(1U, (*bpf_ctx).start_addr);
   bpf_interpreter_aux(fuel);
   f = eval_flag();

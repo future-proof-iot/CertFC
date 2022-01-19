@@ -1,8 +1,6 @@
 
-static struct memory_region *get_mem_region(struct bpf_state* st, unsigned int n)
+static struct memory_region *get_mem_region(struct bpf_state* st, unsigned int n, struct memory_region *mrs)
 {
-  struct memory_region *mrs;
-  mrs = eval_mrs_regions(st);
   return mrs + n;
 }
 
@@ -168,7 +166,7 @@ static unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int perm
   }
 }
 
-static unsigned char *check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr)
+static unsigned char *check_mem_aux(struct bpf_state* st, unsigned int num, unsigned int perm, unsigned int chunk, unsigned int addr, struct memory_region *mrs)
 {
   unsigned int n;
   struct memory_region *cur_mr;
@@ -177,10 +175,10 @@ static unsigned char *check_mem_aux(struct bpf_state* st, unsigned int num, unsi
     return 0;
   } else {
     n = num - 1U;
-    cur_mr = get_mem_region(st, n);
+    cur_mr = get_mem_region(st, n, mrs);
     check_mem = check_mem_aux2(cur_mr, perm, addr, chunk);
     if (check_mem == 0) {
-      return check_mem_aux(st, n, perm, chunk, addr);
+      return check_mem_aux(st, n, perm, chunk, addr, mrs);
     } else {
       return check_mem;
     }
@@ -191,11 +189,14 @@ static unsigned char *check_mem(struct bpf_state* st, unsigned int perm, unsigne
 {
   _Bool well_chunk;
   unsigned int mem_reg_num;
+  struct memory_region *mrs;
   unsigned char *check_mem;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
     mem_reg_num = eval_mrs_num(st);
-    check_mem = check_mem_aux(st, mem_reg_num, perm, chunk, addr);
+    mrs = eval_mrs_regions(st);
+    check_mem =
+      check_mem_aux(st, mem_reg_num, perm, chunk, addr, mrs);
     if (check_mem == 0) {
       return 0;
     } else {
@@ -755,9 +756,11 @@ static void bpf_interpreter_aux(struct bpf_state* st, unsigned int fuel)
 
 unsigned long long bpf_interpreter(struct bpf_state* st, unsigned int fuel)
 {
+  struct memory_region *mrs;
   struct memory_region *bpf_ctx;
   int f;
-  bpf_ctx = get_mem_region(st, 0U);
+  mrs = eval_mrs_regions(st);
+  bpf_ctx = get_mem_region(st, 0U, mrs);
   upd_reg(st, 1U, (*bpf_ctx).start_addr);
   bpf_interpreter_aux(st, fuel);
   f = eval_flag(st);

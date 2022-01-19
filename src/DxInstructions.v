@@ -14,8 +14,7 @@ Open Scope monad_scope.
 Definition list_get (l: MyListType) (idx: sint32_t): M int64_t :=
   returnM (MyListIndexs32 l idx). *)
 
-Definition get_mem_region (n:nat): M memory_region :=
-  do mrs      <-- eval_mrs_regions;
+Definition get_mem_region (n:nat) (mrs: MyMemRegionsType): M memory_region :=
   returnM (MyMemRegionsIndexnat mrs n).
 
 Definition get_dst (ins: int64_t): M reg :=
@@ -105,14 +104,14 @@ Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: valu32_t
     else
       returnM valptr_null.
 
-Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: valu32_t) {struct num}: M valptr8_t :=
+Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: valu32_t) (mrs: MyMemRegionsType) {struct num}: M valptr8_t :=
   match num with
   | O => returnM valptr_null
   | S n =>
-    do cur_mr   <-- get_mem_region n;
+    do cur_mr    <-- get_mem_region n mrs;
     do check_mem <-- check_mem_aux2 cur_mr perm addr chunk;
       if comp_eq_ptr8_zero check_mem then
-        check_mem_aux n perm chunk addr
+        check_mem_aux n perm chunk addr mrs
       else
         returnM check_mem
   end.
@@ -121,7 +120,8 @@ Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: valu32_t): 
   do well_chunk <-- is_well_chunk_bool chunk;
     if well_chunk then
       do mem_reg_num <-- eval_mrs_num;
-      do check_mem <-- check_mem_aux mem_reg_num perm chunk addr;
+      do mrs       <-- eval_mrs_regions;
+      do check_mem <-- check_mem_aux mem_reg_num perm chunk addr mrs;
         if comp_eq_ptr8_zero check_mem then
           returnM valptr_null
         else
@@ -275,7 +275,7 @@ Definition step_opcode_mem_ld_imm (imm: sint32_t) (pc: sint32_t) (dst: reg) (op:
     if (Int.lt (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
       do next_ins <-- eval_ins (Int.add pc Int.one);
       do next_imm <-- get_immediate next_ins;
-      do _ <-- upd_reg dst (Val.or (Val.longofint (sint32_to_vint imm)) (Val.shl  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint int32_32)));
+      do _ <-- upd_reg dst (Val.orl (Val.longofint (sint32_to_vint imm)) (Val.shll  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint int32_32)));
       do _ <-- upd_pc_incr; returnM tt
     else
       upd_flag BPF_ILLEGAL_LEN
@@ -473,7 +473,8 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
   end.
 
 Definition bpf_interpreter (fuel: nat): M val64_t :=
-  do bpf_ctx  <-- get_mem_region 0;
+  do mrs      <-- eval_mrs_regions;
+  do bpf_ctx  <-- get_mem_region 0 mrs;
   do _        <-- upd_reg R1 (start_addr bpf_ctx); (**r let's say the ctx memory region is also be the first one *)
   do _        <-- bpf_interpreter_aux fuel;
   do f        <-- eval_flag;

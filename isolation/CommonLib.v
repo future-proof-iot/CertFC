@@ -67,6 +67,16 @@ Proof.
   destruct Hrange as [Ha Hb]; assumption.
 Qed.
 
+Lemma Int_unsigned_ge_0:
+  forall v, 0 <= Int.unsigned v.
+Proof.
+  intro v.
+  assert (Hrange: 0 <= Int.unsigned v <= Int.max_unsigned). {
+    apply Int.unsigned_range_2.
+  }
+  destruct Hrange as [Ha Hb]; assumption.
+Qed.
+
 Lemma Int_repr_zero:
   forall v, 0<=v<=Int.max_unsigned -> Int.unsigned (Int.repr v) = Int.unsigned (Int.zero) -> v = 0.
 Proof.
@@ -96,28 +106,28 @@ Qed.
 
 Lemma Cle_implies_Zle:
   forall lo ofs,
-    negb (Int64.ltu ofs lo) = true ->
-      Int64.unsigned lo <= Int64.unsigned ofs.
+    negb (Int.ltu ofs lo) = true ->
+      Int.unsigned lo <= Int.unsigned ofs.
 Proof.
   intros.
   rewrite negb_true_iff in H.
-  unfold Int64.ltu in H.
+  unfold Int.ltu in H.
   destruct (zlt _ _) in H; try inversion H.
   lia.
 Qed.
 
 Lemma Clt_implies_Zlt:
   forall ofs hi,
-    Int64.ltu ofs hi = true ->
-      Int64.unsigned ofs < Int64.unsigned hi.
+    Int.ltu ofs hi = true ->
+      Int.unsigned ofs < Int.unsigned hi.
 Proof.
   intros.
-  unfold Int64.ltu in H.
+  unfold Int.ltu in H.
   destruct (zlt _ _) in H; try inversion H.
   lia.
 Qed.
 
-Lemma unsigned_size_chunk_ge_0:
+Lemma Int64_unsigned_size_chunk_ge_0:
   forall ofs chunk,
     0 <= Int64.unsigned ofs + size_chunk chunk.
 Proof.
@@ -127,7 +137,17 @@ Proof.
   unfold size_chunk; destruct chunk; rewrite Z.add_comm; try lia.
 Qed.
 
-Lemma unsigned_ofs_size_chunk_ge_0:
+Lemma Int_unsigned_size_chunk_ge_0:
+  forall ofs chunk,
+    0 <= Int.unsigned ofs + size_chunk chunk.
+Proof.
+  intros.
+  assert (Hchunk_lo: 0 < size_chunk chunk). apply size_chunk_gt_zero.
+  assert (Hofs_lo: 0<= Int.unsigned ofs). apply Int_unsigned_ge_0.
+  unfold size_chunk; destruct chunk; rewrite Z.add_comm; try lia.
+Qed.
+
+Lemma Int64_unsigned_ofs_size_chunk_ge_0:
   forall ofs chunk,
     Int64.unsigned ofs < Int64.unsigned ofs + size_chunk chunk.
 Proof.
@@ -137,50 +157,60 @@ Proof.
   lia.
 Qed.
 
+Lemma Int_unsigned_ofs_size_chunk_ge_0:
+  forall ofs chunk,
+    Int.unsigned ofs < Int.unsigned ofs + size_chunk chunk.
+Proof.
+  intros.
+  assert (Hchunk_lo: 0 < size_chunk chunk). apply size_chunk_gt_zero.
+  assert (Hofs_lo: 0<= Int.unsigned ofs). apply Int_unsigned_ge_0.
+  lia.
+Qed.
+
 (**r Here is a problem, 'ofs+size_chunk':Z may be greater than Int64.mex_unsigned! 
      While the 'Vlong (Int64.repr (ofs+size_chunk))': Val is always within the range!
  *)
-(*
+
 Lemma hi_ofs_max_unsigned:
   forall ofs chunk,
     negb
-         (Int64.ltu (Int64.repr (Int64.max_unsigned-(size_chunk chunk))) ofs) = true ->
-      0 <= Int64.unsigned ofs + size_chunk chunk <= Int64.max_unsigned.
+         (Int.ltu (Int.repr (Int.max_unsigned-(size_chunk chunk))) ofs) = true ->
+      0 <= Int.unsigned ofs + size_chunk chunk <= Int.max_unsigned.
 Proof.
   intros ofs chunk Hcmp.
-  rewrite Int64_max_unsigned_eq in *.
-  remember ((Int64.ltu (Int64.repr (18446744073709551615 - size_chunk chunk))) ofs) as k eqn: Hk.
+  rewrite Int_max_unsigned_eq in *.
+  remember ((Int.ltu (Int.repr (4294967295 - size_chunk chunk))) ofs) as k eqn: Hk.
   rewrite Hk in Hcmp; clear Hk.
   rewrite negb_true_iff in Hcmp.
-  unfold Int64.ltu in Hcmp.
+  unfold Int.ltu in Hcmp.
   destruct (zlt _ _) in Hcmp.
   - inversion Hcmp.
   - clear Hcmp.
-    assert (Heq_max: 0 <= 18446744073709551615 - size_chunk chunk <= Int64.max_unsigned). {
-      rewrite Int64_max_unsigned_eq.
+    assert (Heq_max: 0 <= 4294967295 - size_chunk chunk <= Int.max_unsigned). {
+      rewrite Int_max_unsigned_eq.
       unfold size_chunk; destruct chunk; try lia.
     }
-    rewrite (Int64.unsigned_repr _ Heq_max) in g.
+    rewrite (Int.unsigned_repr _ Heq_max) in g.
     split.
-    apply unsigned_size_chunk_ge_0.
+    apply Int_unsigned_size_chunk_ge_0.
     lia.
 Qed.
 
 Lemma Clt_implies_Zlt_add:
-  forall ofs chunk hi, Int64.ltu (Int64.add ofs (Int64.repr (size_chunk chunk))) hi = true ->
-    0 <= (Int64.unsigned ofs + size_chunk chunk) <= Int64.max_unsigned ->
-      0<= Int64.unsigned ofs + (size_chunk chunk) < Int64.unsigned hi.
+  forall ofs chunk hi, Int.ltu (Int.add ofs (Int.repr (size_chunk chunk))) hi = true ->
+    0 <= (Int.unsigned ofs + size_chunk chunk) <= Int.max_unsigned ->
+      0<= Int.unsigned ofs + (size_chunk chunk) < Int.unsigned hi.
 Proof.
   intros.
   split.
-  apply unsigned_size_chunk_ge_0.
-  unfold Int64.ltu, Int64.add in H.
+  apply Int_unsigned_size_chunk_ge_0.
+  unfold Int.ltu, Int.add in H.
   destruct (zlt _ _) in H; try inversion H.
-  assert (H5: Int64.unsigned (Int64.repr (size_chunk chunk)) = size_chunk chunk). { apply Int64.unsigned_repr; apply size_chunk_int64_range; assumption. }
+  assert (H5: Int.unsigned (Int.repr (size_chunk chunk)) = size_chunk chunk). { apply Int.unsigned_repr; apply size_chunk_int_range; assumption. }
   rewrite H5 in l.
-  assert (H6: Int64.unsigned (Int64.repr (Int64.unsigned ofs + size_chunk chunk)) = 
-              (Int64.unsigned ofs + size_chunk chunk)). { apply Int64.unsigned_repr; assumption. }
+  assert (H6: Int.unsigned (Int.repr (Int.unsigned ofs + size_chunk chunk)) = 
+              (Int.unsigned ofs + size_chunk chunk)). { apply Int.unsigned_repr; assumption. }
   rewrite H6 in l; assumption.
 Qed.
-*)
+
 Close Scope Z_scope.

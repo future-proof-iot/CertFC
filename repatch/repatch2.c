@@ -81,6 +81,7 @@ const char old_words[][100] = {
 	"return eval_reg(",
 	"eval_mrs_num()",
 	"check_mem = check_mem_aux(",
+	"check_mem_aux(mem_reg_num",
 	
 	"unsigned int get_dst(",
 	"unsigned int reg64_to_reg32(",
@@ -176,6 +177,7 @@ const char new_words[][100] = {
 	"return eval_reg(st, ",
 	"eval_mrs_num(st)",
 	"check_mem = check_mem_aux(st, ",
+	"check_mem_aux(st, mem_reg_num",
 	
 	"static unsigned int get_dst(",
 	"static unsigned int reg64_to_reg32(",

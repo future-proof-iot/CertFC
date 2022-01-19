@@ -23,8 +23,11 @@ Definition default_memory_region := {|
 Module Memory_regions.
 
   Definition t := list memory_region.
-  Definition index_nat (l: t) (idx: nat): memory_region := 
-    List.nth idx l (default_memory_region).
+  Definition index_nat (l: t) (idx: nat): memory_region :=
+    match List.nth_error l idx with
+    | Some mr => mr
+    | None => default_memory_region
+    end.
 
 End Memory_regions.
 

@@ -192,8 +192,7 @@ Definition step_branch_cond (c: cond) (d: reg) (s: reg+imm): M bool :=
     end
   end).
 
-Definition get_mem_region (n:nat): M memory_region :=
-  do mrs      <- eval_mrs_regions;
+Definition get_mem_region (n:nat) (mrs: MyMemRegionsType): M memory_region :=
   returnM (MyMemRegionsIndexnat mrs n).
 
 Definition get_add (x y: val): M val := returnM (Val.add x y).
@@ -239,14 +238,14 @@ Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (ch
     else
       returnM Vnullptr.
 
-Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: val) {struct num}: M val :=
+Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: val) (mrs: MyMemRegionsType) {struct num}: M val :=
   match num with
   | O => returnM Vnullptr
   | S n =>
-    do cur_mr   <- get_mem_region n;
+    do cur_mr   <- get_mem_region n mrs;
     do check_mem <- check_mem_aux2 cur_mr perm addr chunk;
       if comp_eq_ptr8_zero check_mem then
-        check_mem_aux n perm chunk addr
+        check_mem_aux n perm chunk addr mrs
       else
         returnM check_mem
   end.
@@ -255,7 +254,8 @@ Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: val): M val
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then
       do mem_reg_num <- eval_mrs_num;
-      do check_mem <- check_mem_aux mem_reg_num perm chunk addr;
+      do mrs      <- eval_mrs_regions;
+      do check_mem <- check_mem_aux mem_reg_num perm chunk addr mrs;
         if comp_eq_ptr8_zero check_mem then
           returnM Vnullptr
         else
@@ -330,7 +330,7 @@ Definition step : M unit :=
         if (Int.lt (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
           do next_ins <- eval_ins (Int.add pc Int.one);
           do next_imm <- get_immediate next_ins;
-          do _ <- upd_reg d (Val.or (Val.longofint (sint32_to_vint i)) (Val.shl  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint (Int.repr 32))));
+          do _ <- upd_reg d (Val.orl (Val.longofint (sint32_to_vint i)) (Val.shll  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint (Int.repr 32))));
           do _ <- upd_pc_incr;
             returnM tt
         else
@@ -363,7 +363,8 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
   end.
 
 Definition bpf_interpreter (fuel: nat): M val :=
-  do bpf_ctx  <- get_mem_region 0;
+  do mrs      <- eval_mem_regions;
+  do bpf_ctx  <- get_mem_region 0 mrs;
   do _        <- upd_reg R1 (start_addr bpf_ctx); (**r let's say the ctx memory region is also be the first one *)
   do _        <- bpf_interpreter_aux fuel;
   do f        <- eval_flag;
