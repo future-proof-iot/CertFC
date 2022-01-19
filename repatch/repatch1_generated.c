@@ -77,7 +77,7 @@ extern void step_opcode_alu64(unsigned long long, unsigned long long, unsigned i
 
 extern void step_opcode_alu32(unsigned int, unsigned int, unsigned int, unsigned char);
 
-extern _Bool step_opcode_branch(unsigned long long, unsigned long long, unsigned char);
+extern void step_opcode_branch(unsigned long long, unsigned long long, int, int, unsigned char);
 
 extern void step_opcode_mem_ld_imm(int, int, unsigned int, unsigned char);
 
@@ -502,50 +502,107 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
   }
 }
 
-_Bool step_opcode_branch(unsigned long long dst64, unsigned long long src64, unsigned char op)
+void step_opcode_branch(unsigned long long dst64, unsigned long long src64, int pc, int ofs, unsigned char op)
 {
   unsigned char opcode_jmp;
   opcode_jmp = get_opcode_branch(op);
   switch (opcode_jmp) {
     case 0:
       if (op == 5) {
-        return 1;
+        upd_pc(pc + ofs);
+        return;
       } else {
         upd_flag(-1);
-        return 0;
+        return;
       }
     case 16:
-      return dst64 == src64;
+      if (dst64 == src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 32:
-      return dst64 > src64;
+      if (dst64 > src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 48:
-      return dst64 >= src64;
+      if (dst64 >= src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 160:
-      return dst64 < src64;
+      if (dst64 < src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 176:
-      return dst64 <= src64;
+      if (dst64 <= src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 64:
-      return (dst64 & src64) != 0LLU;
+      if ((dst64 & src64) != 0LLU) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 80:
-      return dst64 != src64;
+      if (dst64 != src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 96:
-      return (long long) dst64 > (long long) src64;
+      if ((long long) dst64 > (long long) src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 112:
-      return (long long) dst64 >= (long long) src64;
+      if ((long long) dst64 >= (long long) src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 192:
-      return (long long) dst64 < (long long) src64;
+      if ((long long) dst64 < (long long) src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 208:
-      return (long long) dst64 <= (long long) src64;
+      if ((long long) dst64 <= (long long) src64) {
+        upd_pc(pc + ofs);
+        return;
+      } else {
+        return;
+      }
     case 144:
       if (op == 149) {
         upd_flag(1);
-        return 0;
+        return;
       } else {
-        return 0;
+        upd_flag(-1);
+        return;
       }
     default:
       upd_flag(-1);
-      return 0;
+      return;
     
   }
 }
@@ -770,10 +827,8 @@ void step(void)
   _Bool is_imm;
   int imm;
   long long imm64;
-  _Bool res;
   unsigned int src;
   unsigned long long src64;
-  _Bool res;
   unsigned int dst;
   int imm;
   unsigned int dst;
@@ -836,23 +891,13 @@ void step(void)
       if (is_imm) {
         imm = get_immediate(ins);
         imm64 = eval_immediate(imm);
-        res = step_opcode_branch(dst64, imm64, op);
-        if (res) {
-          upd_pc(pc + ofs);
-          return;
-        } else {
-          return;
-        }
+        step_opcode_branch(dst64, imm64, pc, ofs, op);
+        return;
       } else {
         src = get_src(ins);
         src64 = eval_reg(src);
-        res = step_opcode_branch(dst64, src64, op);
-        if (res) {
-          upd_pc(pc + ofs);
-          return;
-        } else {
-          return;
-        }
+        step_opcode_branch(dst64, src64, pc, ofs, op);
+        return;
       }
     case 0:
       dst = get_dst(ins);

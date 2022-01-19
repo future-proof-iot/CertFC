@@ -19,7 +19,7 @@ void replaceAll(char *str, const char *oldWord, const char *newWord);
 const char start_point[] = "struct memory_region *get_mem_region";
 
 
-const char old_words[][100] = {
+const char old_words[][200] = {
 	"eval_pc()",
 	"upd_pc(pc",
 	"upd_pc_incr()",
@@ -39,7 +39,7 @@ const char old_words[][100] = {
 	"step_opcode_alu64(dst64",
 	"void step_opcode_alu32(",
 	"step_opcode_alu32(dst32",
-	"_Bool step_opcode_branch(",
+	"void step_opcode_branch(",
 	"step_opcode_branch(dst64",
 	"void step_opcode_mem_ld_imm(",
 	"step_opcode_mem_ld_imm(imm",
@@ -115,7 +115,7 @@ const char old_words[][100] = {
 	
 	};
 
-const char new_words[][100] = {
+const char new_words[][200] = {
 	"eval_pc(st)",
 	"upd_pc(st, pc",
 	"upd_pc_incr(st)",
@@ -131,20 +131,20 @@ const char new_words[][100] = {
 	"upd_reg(st, 1U",
 	
 	"eval_mrs_regions(st)",
-	"static void step_opcode_alu64(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void step_opcode_alu64(struct bpf_state* st, ",
 	"step_opcode_alu64(st, dst64",
-	"static void step_opcode_alu32(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void step_opcode_alu32(struct bpf_state* st, ",
 	"step_opcode_alu32(st, dst32",
-	"static _Bool step_opcode_branch(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void step_opcode_branch(struct bpf_state* st, ",
 	"step_opcode_branch(st, dst64",
-	"static void step_opcode_mem_ld_imm(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void step_opcode_mem_ld_imm(struct bpf_state* st, ",
 	"step_opcode_mem_ld_imm(st, imm",
-	"static void step_opcode_mem_ld_reg(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void step_opcode_mem_ld_reg(struct bpf_state* st, ",
 	
 	"step_opcode_mem_ld_reg(st, addr",
-	"static void step_opcode_mem_st_imm(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct bpf_state* st, ",
 	"step_opcode_mem_st_imm(st, imm",
-	"static void step_opcode_mem_st_reg(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void step_opcode_mem_st_reg(struct bpf_state* st, ",
 	"step_opcode_mem_st_reg(st, src",
 	"load_mem(st, 1",
 	"load_mem(st, 2",
@@ -163,47 +163,47 @@ const char new_words[][100] = {
 	"store_mem_reg(st, 2",
 	"store_mem_reg(st, 4",
 	"store_mem_reg(st, 8",
-	"static unsigned char *check_mem_aux(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline unsigned char *check_mem_aux(struct bpf_state* st, ",
 	"return check_mem_aux(st, ",
-	"static unsigned char *check_mem(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline unsigned char *check_mem(struct bpf_state* st, ",
 	
-	"static void step(struct bpf_state* st)",
+	"static __attribute__((always_inline)) inline void step(struct bpf_state* st)",
 	"step(st); //print_bpf_state(st);",
-	"static void bpf_interpreter_aux(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline void bpf_interpreter_aux(struct bpf_state* st, ",
 	"bpf_interpreter_aux(st, fuel",
 	"unsigned long long bpf_interpreter(struct bpf_state* st, ",
-	"static struct memory_region *get_mem_region(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline struct memory_region *get_mem_region(struct bpf_state* st, ",
 	"= get_mem_region(st, ",
 	"return eval_reg(st, ",
 	"eval_mrs_num(st)",
 	"check_mem = check_mem_aux(st, ",
 	"check_mem_aux(st, mem_reg_num",
 	
-	"static unsigned int get_dst(",
-	"static unsigned int reg64_to_reg32(",
-	"static unsigned int get_src(",	
-	"static int get_offset(",
-	"static int get_immediate(",
-	"static long long eval_immediate(",
-	"static unsigned char get_opcode_ins(",
-	"static unsigned char get_opcode_alu64(",
-	"static unsigned char get_opcode_alu32(",
-	"static unsigned char get_opcode_branch(",
-	"static unsigned char get_opcode_mem_ld_imm(",
-	"static unsigned char get_opcode_mem_ld_reg(",
-	"static unsigned char get_opcode_mem_st_imm(",
-	"static unsigned char get_opcode_mem_st_reg(",
-	"static unsigned char get_opcode(",
-	"static unsigned int get_add(",
-	"static unsigned int get_sub(",
-	"static unsigned int get_addr_ofs(",
-	"static _Bool is_well_chunk_bool(",
-	"static unsigned char *check_mem_aux2(",
-	"static _Bool comp_and_0x08_byte(",
-	"static unsigned char *get_block_ptr",
-	"static unsigned int get_start_addr",
-	"static unsigned int get_block_size",
-	"static unsigned int get_block_perm",
+	"static __attribute__((always_inline)) inline unsigned int get_dst(",
+	"static __attribute__((always_inline)) inline unsigned int reg64_to_reg32(",
+	"static __attribute__((always_inline)) inline unsigned int get_src(",	
+	"static __attribute__((always_inline)) inline int get_offset(",
+	"static __attribute__((always_inline)) inline int get_immediate(",
+	"static __attribute__((always_inline)) inline long long eval_immediate(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_ins(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_alu64(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_alu32(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_branch(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_mem_ld_imm(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_mem_ld_reg(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_mem_st_imm(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode_mem_st_reg(",
+	"static __attribute__((always_inline)) inline unsigned char get_opcode(",
+	"static __attribute__((always_inline)) inline unsigned int get_add(",
+	"static __attribute__((always_inline)) inline unsigned int get_sub(",
+	"static __attribute__((always_inline)) inline unsigned int get_addr_ofs(",
+	"static __attribute__((always_inline)) inline _Bool is_well_chunk_bool(",
+	"static __attribute__((always_inline)) inline unsigned char *check_mem_aux2(",
+	"static __attribute__((always_inline)) inline _Bool comp_and_0x08_byte(",
+	"static __attribute__((always_inline)) inline unsigned char *get_block_ptr",
+	"static __attribute__((always_inline)) inline unsigned int get_start_addr",
+	"static __attribute__((always_inline)) inline unsigned int get_block_size",
+	"static __attribute__((always_inline)) inline unsigned int get_block_perm",
 	
 	"const unsigned long long *l",
 	"eval_ins_len(st)",
@@ -280,7 +280,7 @@ int main()
     
     	//printf("readline: %s\n", buffer);
         // Replace all occurrence of word from current line
-        for (index = 0; index < sizeof(old_words)/100; index ++){
+        for (index = 0; index < sizeof(old_words)/200; index ++){
           replaceAll(buffer, old_words[index], new_words[index]);
         }
 

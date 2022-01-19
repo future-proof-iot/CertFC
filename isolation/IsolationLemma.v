@@ -1,7 +1,7 @@
 From compcert Require Import Integers Values Memory AST.
 From bpf.comm Require Import State Monad.
 From bpf.model Require Import Syntax Semantics.
-From bpf.isolation Require Import CommonLib AlignChunk RegsInv MemInv.
+From bpf.isolation Require Import CommonISOLib AlignChunk RegsInv MemInv.
 
 From Coq Require Import ZArith List.
 Import ListNotations.

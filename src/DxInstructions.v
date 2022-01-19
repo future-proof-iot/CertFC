@@ -236,6 +236,7 @@ Definition step_opcode_alu32 (dst32: valu32_t) (src32: valu32_t) (dst: reg) (op:
   | op_BPF_ALU32_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
+(*
 (**r ofs should be sint16_t *)
 Definition step_opcode_branch (dst64: val64_t) (src64: val64_t) (op: nat8) : M bool :=
   do opcode_jmp <-- get_opcode_branch op;
@@ -266,6 +267,189 @@ Definition step_opcode_branch (dst64: val64_t) (src64: val64_t) (op: nat8) : M b
       returnM false
   | op_BPF_JMP_ILLEGAL_INS => do _ <-- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM false
   end.
+*)
+(**r ofs should be sint16_t *)
+Definition step_opcode_branch (dst64: val64_t) (src64: val64_t) (pc: sint32_t) (ofs: sint32_t) (op: nat8) : M unit :=
+  do opcode_jmp <-- get_opcode_branch op;
+  match opcode_jmp with
+  | op_BPF_JA       =>
+    if Nat.eqb op nat8_0x05 then
+      upd_pc (Int.add pc ofs)
+    else
+      upd_flag BPF_ILLEGAL_INSTRUCTION
+  | op_BPF_JEQ     =>
+    if compl_eq dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JGT     =>
+    if complu_gt dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JGE     =>
+    if complu_ge dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JLT     =>
+    if complu_lt dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JLE     =>
+    if complu_le dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JSET     =>
+    if complu_set dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JNE     =>
+    if compl_ne dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JSGT     =>
+    if compl_gt dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JSGE     =>
+    if compl_ge dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JSLT     =>
+    if compl_lt dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+  | op_BPF_JSLE     =>
+    if compl_le dst64 src64 then
+      upd_pc (Int.add pc ofs)
+    else
+      returnM tt
+
+  | op_BPF_RET => 
+    if Nat.eqb op nat8_0x95 then
+      upd_flag BPF_SUCC_RETURN
+    else
+      upd_flag BPF_ILLEGAL_INSTRUCTION
+  | op_BPF_JMP_ILLEGAL_INS =>
+      upd_flag BPF_ILLEGAL_INSTRUCTION
+  end.
+(*
+Definition step_opcode_mem_ld_imm (imm: sint32_t) (pc: sint32_t) (dst: reg) (op: nat8): M unit :=
+  do len  <-- eval_ins_len;
+  do opcode_ld <-- get_opcode_mem_ld_imm op;
+  match opcode_ld with
+  | op_BPF_LDDW      =>
+    if (Int.lt (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
+      do next_ins <-- eval_ins (Int.add pc Int.one);
+      do next_imm <-- get_immediate next_ins;
+      do _ <-- upd_reg dst (Val.orl (Val.longofint (sint32_to_vint imm)) (Val.shll  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint int32_32)));
+      upd_pc_incr
+    else
+      upd_flag BPF_ILLEGAL_LEN
+  | op_BPF_LDX_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
+  end.
+
+Definition step_opcode_mem_ld_reg (addr: valu32_t) (pc: sint32_t) (dst: reg) (op: nat8): M unit :=
+  do opcode_ld <-- get_opcode_mem_ld_reg op;
+  match opcode_ld with
+  | op_BPF_LDXW      =>
+    do addr_ptr <-- check_mem Readable Mint32 addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        do v <-- load_mem Mint32 addr_ptr;
+        upd_reg dst v
+  | op_BPF_LDXH      =>
+    do addr_ptr <-- check_mem Readable Mint16unsigned addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        do v <-- load_mem Mint16unsigned addr_ptr;
+        upd_reg dst v
+  | op_BPF_LDXB      =>
+    do addr_ptr <-- check_mem Readable Mint8unsigned addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        do v <-- load_mem Mint8unsigned addr_ptr;
+        upd_reg dst v
+  | op_BPF_LDXDW     =>
+    do addr_ptr <-- check_mem Readable Mint64 addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        do v <-- load_mem Mint64 addr_ptr;
+        upd_reg dst v
+  | op_BPF_LDX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
+  end.
+
+Definition step_opcode_mem_st_imm (imm: vals32_t) (addr: valu32_t) (pc: sint32_t) (dst: reg) (op: nat8): M unit :=
+  do opcode_st <-- get_opcode_mem_st_imm op;
+  match opcode_st with
+  | op_BPF_STW       =>
+    do addr_ptr <-- check_mem Writable Mint32 addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_imm Mint32 addr_ptr imm
+  | op_BPF_STH       =>
+    do addr_ptr <-- check_mem Writable Mint16unsigned addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_imm Mint16unsigned addr_ptr imm
+  | op_BPF_STB       =>
+    do addr_ptr <-- check_mem Writable Mint8unsigned addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_imm Mint8unsigned addr_ptr imm
+  | op_BPF_STDW      =>
+    do addr_ptr <-- check_mem Writable Mint64 addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_imm Mint64 addr_ptr imm
+  | op_BPF_ST_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
+  end.
+
+Definition step_opcode_mem_st_reg (src64: val64_t) (addr: valu32_t) (pc: sint32_t) (dst: reg) (op: nat8): M unit :=
+  do opcode_st <-- get_opcode_mem_st_reg op;
+  match opcode_st with
+  | op_BPF_STXW      =>
+    do addr_ptr <-- check_mem Writable Mint32 addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_reg Mint32 addr_ptr src64
+  | op_BPF_STXH      =>
+    do addr_ptr <-- check_mem Writable Mint16unsigned addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_reg Mint16unsigned addr_ptr src64
+  | op_BPF_STXB      =>
+    do addr_ptr <-- check_mem Writable Mint8unsigned addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_reg Mint8unsigned addr_ptr src64
+  | op_BPF_STXDW     =>
+    do addr_ptr <-- check_mem Writable Mint64 addr;
+      if comp_eq_ptr8_zero addr_ptr then
+        upd_flag BPF_ILLEGAL_MEM
+      else
+        store_mem_reg Mint64 addr_ptr src64
+  | op_BPF_STX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
+  end.*)
 
 Definition step_opcode_mem_ld_imm (imm: sint32_t) (pc: sint32_t) (dst: reg) (op: nat8): M unit :=
   do len  <-- eval_ins_len;
@@ -281,6 +465,7 @@ Definition step_opcode_mem_ld_imm (imm: sint32_t) (pc: sint32_t) (dst: reg) (op:
       upd_flag BPF_ILLEGAL_LEN
   | op_BPF_LDX_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
+
 
 Definition step_opcode_mem_ld_reg (addr: valu32_t) (pc: sint32_t) (dst: reg) (op: nat8): M unit :=
   do opcode_ld <-- get_opcode_mem_ld_reg op;
@@ -376,6 +561,7 @@ Definition step_opcode_mem_st_reg (src64: val64_t) (addr: valu32_t) (pc: sint32_
   | op_BPF_STX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
+
 Definition step: M unit :=
   do pc   <-- eval_pc;
   do ins  <-- eval_ins pc;
@@ -418,17 +604,15 @@ Definition step: M unit :=
       if is_imm then
         do imm    <-- get_immediate ins;
         do imm64  <-- eval_immediate imm;
-        do res    <-- step_opcode_branch dst64 imm64 op;
-          if res then upd_pc (Int.add pc ofs) else returnM tt
+        step_opcode_branch dst64 imm64 pc ofs op
       else
         do src    <-- get_src ins;
         do src64  <-- eval_reg src;
-        do res    <-- step_opcode_branch dst64 src64 op;                   (**r 0xX5 / 0xXd *)
-          if res then upd_pc (Int.add pc ofs) else returnM tt
+        step_opcode_branch dst64 src64 pc ofs op                    (**r 0xX5 / 0xXd *)
   | op_BPF_Mem_ld_imm  =>
     do dst    <-- get_dst ins;
     do imm    <-- get_immediate ins;
-    step_opcode_mem_ld_imm imm pc dst op                (**r 0xX8 *)
+    step_opcode_mem_ld_imm imm pc dst op              (**r 0xX8 *)
   | op_BPF_Mem_ld_reg  =>
     do dst    <-- get_dst ins;
     do src    <-- get_src ins;
