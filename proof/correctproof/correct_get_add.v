@@ -30,8 +30,6 @@ Section Get_add.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := get_add.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_add.
 

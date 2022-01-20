@@ -33,12 +33,14 @@ Section Eval_mrs_regions.
   Definition f : arrow_type args (M res) := eval_mrs_regions.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable mrs_block: block.
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_mrs_regions.
 
   Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -63,7 +65,7 @@ Section Eval_mrs_regions.
     destruct Hst.
     clear munchange mpc mflags mregs mperm.
     destruct mmrs_num as (Hmrs_num_ld & Hmrs_num_gt).
-    destruct mem_regs as (mem_regs & Hmem_regions_length & _).
+    destruct mem_regs as (Hload & Hmem_regions_length & _ & mem_regs).
     subst v.
 
     destruct (bpf_mrs st).
@@ -89,12 +91,15 @@ Section Eval_mrs_regions.
       rewrite Ptrofs.add_zero_l.
       unfold Coqlib.align, AST.Mptr; simpl.
 
-      rewrite Hstart_addr; reflexivity.
+      destruct mins as (mins & _).
+      rewrite <- mins.
+      unfold AST.Mptr.
+      simpl.
+      reflexivity.
 
       reflexivity.
     - simpl.
       constructor.
-      reflexivity.
   Qed.
 
 End Eval_mrs_regions.

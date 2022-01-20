@@ -12,7 +12,10 @@ From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState Comm
 From bpf.clight Require Import interpreter.
 
 Section Is_well_chunk_bool.
+
 Variable st_block : block.
+Variable mrs_block: block.
+Variable ins_block: block.
 
 (** The program contains our function of interest [fn] *)
 Definition p : Clight.program := prog.
@@ -28,7 +31,7 @@ Locate f_is_well_chunk_bool.
 Definition fn: Clight.function := f_is_well_chunk_bool.
 
 Definition match_state (st_block : block) (_ : unit) (v : val) (st: State.state) (m : Memory.Mem.mem) : Prop :=
-  v = Vptr st_block Ptrofs.zero /\ match_state st_block st m.
+  v = Vptr st_block Ptrofs.zero /\ match_state st_block mrs_block ins_block st m.
 
 Ltac exec_seq_of_labeled_statement :=
   match goal with

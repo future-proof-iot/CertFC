@@ -32,13 +32,15 @@ Section Get_block_size.
   Definition f : arrow_type args (M res) := get_block_size.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable mrs_block: block.
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_block_size.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (my_match_region state_block)
+    (DList.DCons (my_match_region mrs_block)
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)

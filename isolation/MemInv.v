@@ -37,7 +37,7 @@ Definition inv_memory_region (m:mem) (mr: memory_region): Prop :=
       start_addr mr = Vint base /\ block_size mr = Vint len /\
       perm_order (block_perm mr) Readable /\
       Mem.range_perm m b 0 (Int.unsigned len) Cur (block_perm mr).
-
+(**TODO: exists start_blk, ... *)
 Fixpoint disjoint_blocks (n:nat) (mrs: list memory_region): Prop :=
   match mrs with
   | [] => True

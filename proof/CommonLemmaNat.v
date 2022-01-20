@@ -1,0 +1,79 @@
+From compcert Require Import Integers.
+From bpf.src Require Import DxOpcode.
+From Coq Require Import Lia ZArith.
+
+Open Scope Z_scope.
+
+Lemma nat8_land_240_255_eq:
+  forall (n:nat)
+    (Hnat8: (n <= 255)%nat),
+    (Int.and (Int.and (Int.repr (Z.of_nat n)) (Int.repr 240)) (Int.repr 255)) = Int.repr (Z.of_nat (Nat.land n 240)).
+Proof.
+  intros.
+  do 255 (destruct n; [reflexivity | apply le_S_n in Hnat8]).
+  destruct n; [reflexivity | idtac].
+  exfalso; apply Nat.nle_succ_0 in Hnat8; assumption.
+Qed.
+
+Open Scope nat_scope.
+Definition byte_to_opcode_alu64_if (op: nat): opcode_alu64 :=
+  let opcode_alu := Nat.land op 0xf0 in (**r masking operation *)
+    if opcode_alu =? 0x00 then op_BPF_ADD64
+    else if opcode_alu =? 0x10 then op_BPF_SUB64
+    else if opcode_alu =? 0x20 then op_BPF_MUL64
+    else if opcode_alu =? 0x30 then op_BPF_DIV64
+    else if opcode_alu =? 0x40 then op_BPF_OR64
+    else if opcode_alu =? 0x50 then op_BPF_AND64
+    else if opcode_alu =? 0x60 then op_BPF_LSH64
+    else if opcode_alu =? 0x70 then op_BPF_RSH64
+    else if opcode_alu =? 0x80 then if Nat.eqb op 0x87 then op_BPF_NEG64 else op_BPF_ALU64_ILLEGAL_INS
+    else if opcode_alu =? 0x90 then op_BPF_MOD64
+    else if opcode_alu =? 0xa0 then op_BPF_XOR64
+    else if opcode_alu =? 0xb0 then op_BPF_MOV64
+    else if opcode_alu =? 0xc0 then op_BPF_ARSH64
+    else op_BPF_ALU64_ILLEGAL_INS
+  .
+
+Lemma byte_to_opcode_alu64_if_same:
+  forall (op: nat),
+    byte_to_opcode_alu64 op = byte_to_opcode_alu64_if op.
+Proof.
+  intros.
+  unfold byte_to_opcode_alu64, byte_to_opcode_alu64_if.
+  generalize (Nat.land op 240); intro.
+  do 192 (destruct n; [reflexivity | idtac]).
+  destruct n; [reflexivity | reflexivity].
+Qed.
+
+
+Ltac simpl_nat :=
+  match goal with
+  | H: ?X <> ?Y |- context [if (?X =? ?Y) then _ else _] =>
+    destruct (X =? Y) eqn: Ht; [rewrite Nat.eqb_eq in Ht; intuition | try reflexivity]; clear Ht
+  end.
+
+Lemma byte_to_opcode_alu64_if_default:
+  forall op
+    (Hadd: Nat.land op 240 <> 0x00)
+    (Hsub: Nat.land op 240 <> 0x10)
+    (Hmul: Nat.land op 240 <> 0x20)
+    (Hdiv: Nat.land op 240 <> 0x30)
+    (Hor:  Nat.land op 240 <> 0x40)
+    (Hand: Nat.land op 240 <> 0x50)
+    (Hlsh: Nat.land op 240 <> 0x60)
+    (Hrsh: Nat.land op 240 <> 0x70)
+    (Hneg: Nat.land op 240 <> 0x80)
+    (Hmod: Nat.land op 240 <> 0x90)
+    (Hxor: Nat.land op 240 <> 0xa0)
+    (Hmov: Nat.land op 240 <> 0xb0)
+    (Harsh: Nat.land op 240 <> 0xc0),
+      byte_to_opcode_alu64_if op = op_BPF_ALU64_ILLEGAL_INS.
+Proof.
+  intros.
+  unfold byte_to_opcode_alu64_if.
+  repeat simpl_nat.
+Qed.
+
+Close Scope nat_scope.
+
+Close Scope Z_scope.

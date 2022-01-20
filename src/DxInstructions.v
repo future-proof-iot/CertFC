@@ -146,7 +146,7 @@ Definition step_opcode_alu64 (dst64: val64_t) (src64: val64_t) (dst: reg) (op: n
     if compl_ne src64 val64_zero then
       do _ <-- upd_reg dst (val64_divlu dst64 src64); returnM tt
     else
-      upd_flag BPF_ILLEGAL_DIV
+      do _ <-- upd_flag BPF_ILLEGAL_DIV; returnM tt (**r we do it for the clightproof , we could omit it later *)
   | op_BPF_OR64    =>
     do _ <-- upd_reg dst (Val.orl     dst64 src64); returnM tt
   | op_BPF_AND64   =>
@@ -156,23 +156,23 @@ Definition step_opcode_alu64 (dst64: val64_t) (src64: val64_t) (dst: reg) (op: n
     if compu_lt_32 src32 val32_64 then
       do _ <-- upd_reg dst (Val.shll    dst64 src32); returnM tt
     else
-      upd_flag BPF_ILLEGAL_SHIFT
+      do _ <-- upd_flag BPF_ILLEGAL_SHIFT; returnM tt
   | op_BPF_RSH64   =>
     do src32 <-- reg64_to_reg32 src64;
     if compu_lt_32 src32 val32_64 then
       do _ <-- upd_reg dst (Val.shrlu   dst64 src32); returnM tt
     else
-      upd_flag BPF_ILLEGAL_SHIFT
+      do _ <-- upd_flag BPF_ILLEGAL_SHIFT; returnM tt
   | op_BPF_NEG64    =>
     if Nat.eqb op nat8_0x87 then
       do _ <-- upd_reg dst (Val.negl    dst64); returnM tt
     else
-      upd_flag BPF_ILLEGAL_INSTRUCTION
+      do _ <-- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   | op_BPF_MOD64   =>
     if compl_ne src64 val64_zero then
       do _ <-- upd_reg dst (val64_modlu dst64 src64); returnM tt
     else
-      upd_flag BPF_ILLEGAL_DIV
+      do _ <-- upd_flag BPF_ILLEGAL_DIV; returnM tt
   | op_BPF_XOR64   =>
     do _ <-- upd_reg dst (Val.xorl      dst64 src64); returnM tt
   | op_BPF_MOV64   =>
@@ -182,8 +182,8 @@ Definition step_opcode_alu64 (dst64: val64_t) (src64: val64_t) (dst: reg) (op: n
     if compu_lt_32 src32 val32_64 then
       do _ <-- upd_reg dst (Val.shrl    dst64 src32); returnM tt
     else
-      upd_flag BPF_ILLEGAL_SHIFT
-  | op_BPF_ALU64_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
+      do _ <-- upd_flag BPF_ILLEGAL_SHIFT; returnM tt
+  | op_BPF_ALU64_ILLEGAL_INS => do _ <-- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   end.
 
 Definition step_opcode_alu32 (dst32: valu32_t) (src32: valu32_t) (dst: reg) (op: nat8): M unit :=

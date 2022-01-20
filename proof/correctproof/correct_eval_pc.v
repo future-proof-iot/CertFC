@@ -29,12 +29,14 @@ Section Eval_pc.
   Definition f : arrow_type args (M res) := Monad.eval_pc.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable mrs_block: block.
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_pc.
 
   Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=

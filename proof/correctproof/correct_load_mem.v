@@ -32,12 +32,14 @@ Section Load_mem.
   Definition f : arrow_type args (M res) := Monad.load_mem.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable mrs_block: block.
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_load_mem.
 
   Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -47,7 +49,7 @@ Section Load_mem.
                                           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block mrs_block ins_block st m.
 Ltac exec_seq_of_labeled_statement :=
   match goal with
   | |- context[seq_of_labeled_statement ?X] =>

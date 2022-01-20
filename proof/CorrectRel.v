@@ -30,6 +30,12 @@ Definition sint32_correct (x: sint32_t) (v: val) :=
 Definition nat8_correct (x: nat8) (v: val) :=
   Vint (Int.repr (Z.of_nat x)) = v.
 
+Definition opcode_alu64_nat8_correct (x: nat8) (v: val) :=
+   Vint (Int.repr (Z.of_nat x)) = v /\ Nat.land x 0x07%nat = 0x07%nat /\ (x <= 255)%nat.
+  (*Vint (Int.repr (Z.of_nat x)) = v /\
+  (v = Vint (Int.repr 0)  -> Vint (Int.zero_ext 8 (Int.and (Int.repr (Z.of_nat x)) (Int.repr 240))) = v) /\
+  (v = Vint (Int.repr 16) -> Vint (Int.zero_ext 8 (Int.and (Int.repr (Z.of_nat x)) (Int.repr 240))) = v). *)
+
 Definition nat_correct (x: nat) (v: val) :=
   Vint (Int.repr (Z.of_nat x)) = v /\
     (* Avoid overflow *)
@@ -46,19 +52,19 @@ Definition reg_int64_correct (x:int64_t) (v: val) :=
 
 Definition opcode_alu64_correct (opcode: opcode_alu64) (v: val) :=
   match opcode with
-  | op_BPF_ADD64 => v = Vint (Int.repr 0)
-  | op_BPF_SUB64
-  | op_BPF_MUL64
-  | op_BPF_DIV64
-  | op_BPF_OR64
-  | op_BPF_AND64
-  | op_BPF_LSH64
-  | op_BPF_RSH64
-  | op_BPF_NEG64
-  | op_BPF_MOD64
-  | op_BPF_XOR64
-  | op_BPF_MOV64
-  | op_BPF_ARSH64 => exists vi, v = Vint vi
+  | op_BPF_ADD64 => v = Vint (Int.repr 0x00)
+  | op_BPF_SUB64 => v = Vint (Int.repr 0x10)
+  | op_BPF_MUL64 => v = Vint (Int.repr 0x20)
+  | op_BPF_DIV64 => v = Vint (Int.repr 0x30)
+  | op_BPF_OR64  => v = Vint (Int.repr 0x40)
+  | op_BPF_AND64 => v = Vint (Int.repr 0x50)
+  | op_BPF_LSH64 => v = Vint (Int.repr 0x60)
+  | op_BPF_RSH64 => v = Vint (Int.repr 0x70)
+  | op_BPF_NEG64 => v = Vint (Int.repr 0x80)
+  | op_BPF_MOD64 => v = Vint (Int.repr 0x90)
+  | op_BPF_XOR64 => v = Vint (Int.repr 0xa0)
+  | op_BPF_MOV64 => v = Vint (Int.repr 0xb0)
+  | op_BPF_ARSH64=> v = Vint (Int.repr 0xc0)
   | op_BPF_ALU64_ILLEGAL_INS => exists vi, v = Vint vi
   end.
 
@@ -88,6 +94,14 @@ Definition match_chunk (x : memory_chunk) (b: val) :=
 
 Definition flag_correct (f: bpf_flag) (v: val) :=
   v = Vint (int_of_flag f).
+
+Definition perm_correct (p: permission) (n: val): Prop :=
+  match p with
+  | Freeable => n = Vint int32_3
+  | Writable => n = Vint int32_2
+  | Readable => n = Vint int32_1
+  | Nonempty => n = Vint int32_0
+  end.
 
 Definition correct_perm (p: permission) (n: int): Prop :=
   match p with

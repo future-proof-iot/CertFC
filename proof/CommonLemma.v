@@ -550,6 +550,16 @@ Proof.
   assumption.
 Qed.
 
+Lemma Ptrofs_unsigned_repr_n:
+  forall n,
+  0 <= n <= 4294967295 ->
+  Ptrofs.unsigned (Ptrofs.repr n) = n.
+Proof.
+  intros.
+  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
+Qed.
+
+(*
 Lemma Ptrofs_unsigned_repr_4:
   Ptrofs.unsigned (Ptrofs.repr 4) = 4.
 Proof.
@@ -611,6 +621,7 @@ Lemma Ptrofs_unsigned_repr_116:
 Proof.
   rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
 Qed.
+*)
 
 Lemma Ptrofs_unsigned_repr_id_of_reg:
   forall r,
@@ -684,6 +695,5 @@ Proof.
     reflexivity.
     assumption.
 Qed.
-
 
 Close Scope Z_scope.

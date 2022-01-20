@@ -29,6 +29,8 @@ Section Upd_pc.
   Definition f : arrow_type args (M res) := Monad.upd_pc.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable mrs_block: block.
+  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_pc.
@@ -36,7 +38,7 @@ Section Upd_pc.
   Definition modifies : list block := [state_block]. (* of the C code *)
   
   Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block stm m.
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -45,7 +47,7 @@ Section Upd_pc.
                              (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block st m /\ v = Vundef.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
 
   Instance correct_function3_upd_pc : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
   Proof.
@@ -62,7 +64,7 @@ Section Upd_pc.
     subst.
     
     (** we need to get the proof of `upd_pc` store permission *)
-    apply (upd_pc_store _ _ c _) in Hst as Hstore.
+    apply (upd_pc_store _ _ _ _ c _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** pc \in [ (state_block,0), (state_block,8) ) *)
 
