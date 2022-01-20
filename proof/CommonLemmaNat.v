@@ -74,6 +74,23 @@ Proof.
   repeat simpl_nat.
 Qed.
 
+Lemma nat8_neq_135:
+  forall n
+    (Hrange : n <= 255)
+    (Hc2_eq : n <> 135),
+      Int.repr (Z.of_nat n) <> Int.repr 135.
+Proof.
+  intros.
+  Transparent Int.repr.
+  do 100 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  do 35 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  apply Hc2_eq; reflexivity.
+  do 119 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | ]).
+  exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
+Qed.
+
 Close Scope nat_scope.
 
 Close Scope Z_scope.
