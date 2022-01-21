@@ -1165,6 +1165,91 @@ Definition vc_binary_operation_casted (o: Cop.binary_operation) (t1 t2: Ctypes.t
   | Oeq | One | Olt | Ogt | Ole | Oge  => is_VBool r
   end.
 
+(*
+Definition classify_notint_eq (t1 t2:  classify_notint_cases) : bool :=
+  match t1, t2 with
+  | notint_case_i _ , notint_case_i _ => true
+  | notint_case_l _ , notint_case_l _ => true
+  | notint_default , notint_default   => true
+  | _ , _ => false
+  end.
+*)
+
+Definition vc_unary_operation_casted (o: Cop.unary_operation) (t1 : Ctypes.type) (r :Ctypes.type): bool :=
+  match o with
+  | Onotbool => is_VBool r
+  | Onotint  => match classify_notint t1 with
+                | notint_case_i s => is_Vint r
+                | notint_case_l s => is_Vlong r
+                | notint_default  => true
+                end
+  | Oneg     => match classify_neg t1 with
+                | neg_case_i s => is_Vint r
+                | neg_case_l s => is_Vlong r
+                | neg_case_f   => is_Vfloat r
+                | neg_case_s   => is_Vsingle r
+                | neg_default  => true
+                end
+  | Oabsfloat => is_Vfloat r
+  end.
+
+
+Lemma vc_casted_unary_operation_correct : forall o v1 t1  t v m
+    (VC : Cop.val_casted v1 t1)
+    (UO : vc_unary_operation_casted o t1  t = true)
+    (SO : Cop.sem_unary_operation o v1 t1 m = Some v),
+  Cop.val_casted v t.
+Proof.
+  destruct o; simpl; intros.
+  - unfold sem_notbool in SO.
+    destruct (bool_val v1 t1 m) eqn:BV; try discriminate.
+    simpl in SO.
+    inv SO.
+    apply val_casted_is_VBool.
+    apply UO.
+  - unfold sem_notint in SO.
+    destruct (classify_notint t1) eqn:CT1.
+    + destruct v1 ; try discriminate.
+      inv SO.
+      apply is_Vint_casted.
+      apply UO.
+    + destruct v1 ; try discriminate.
+      inv SO.
+      apply is_Vlong_casted.
+      apply UO.
+    + discriminate.
+  - unfold sem_neg in SO.
+    destruct (classify_neg t1) eqn:CN.
+    + destruct v1 ; try discriminate.
+      inv SO.
+      apply is_Vint_casted.
+      apply UO.
+    + destruct v1 ; try discriminate.
+      inv SO.
+      apply is_Vfloat_casted.
+      apply UO.
+    + destruct v1 ; try discriminate.
+      inv SO.
+      apply is_Vsingle_casted.
+      apply UO.
+    + destruct v1 ; try discriminate.
+      inv SO.
+      apply is_Vlong_casted.
+      apply UO.
+    + discriminate.
+  - unfold sem_absfloat in SO.
+    destruct (classify_neg t1) eqn:CN; destruct v1 ; try discriminate.
+    inv SO.
+    apply is_Vfloat_casted; auto.
+    inv SO.
+    apply is_Vfloat_casted; auto.
+    inv SO.
+    apply is_Vfloat_casted; auto.
+    inv SO.
+    apply is_Vfloat_casted; auto.
+Qed.
+
+
 
 Definition var_casted_list (l: list (positive * Ctypes.type)) (le: temp_env) : Prop:=
   forall i t v,  In (i, t) l ->
@@ -1280,6 +1365,9 @@ Proof.
   + destruct v0,v3 ; try discriminate. inv H2.
   eapply val_casted_is_VBool;eauto.
 Qed.
+
+
+
 
 Lemma vc_casted_binary_operation_correct : forall ge o v1 t1 v2 t2 t v m,
     Cop.val_casted v1 t1 ->
@@ -1686,7 +1774,7 @@ Fixpoint vc_casted (inv: list (positive * Ctypes.type)) (e:expr) :=
   | Etempvar v t     => existsb (fun x => if Ctypes.type_eq t (snd x) then Pos.eqb v (fst x) else false) inv
   | Ederef e _       => false (**r ysh: `false` -> `vc_casted inv e` *)
   | Eaddrof _ _       => false
-  | Eunop o e t       => false
+  | Eunop o e t       => vc_casted inv e && vc_unary_operation_casted o (typeof e) t
   | Ebinop o e1 e2 t    => vc_casted inv e1 && vc_casted inv e2 &&
                              vc_binary_operation_casted o (typeof e1) (typeof e2) t
   | Ecast e ty        => vc_casted inv e &&
@@ -1720,6 +1808,11 @@ Proof.
     destruct (Ctypes.type_eq t t'); try congruence.
     apply Peqb_true_eq in P. subst.
     eapply INV;eauto.
+  - intros.
+    destruct (exec_expr ge empty_env le m a) eqn:E1; try discriminate.
+    repeat rewrite andb_true_iff in H.
+    destruct H as (H1, H3).
+    eapply vc_casted_unary_operation_correct in H0; eauto.
   (*- (**r Ederef *)
     intros. (**r ysh: `old` -> `new` *)
     destruct (exec_expr ge empty_env le m a) eqn:E1; try discriminate.
