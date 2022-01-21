@@ -191,6 +191,7 @@ gitpush:
 	cp clight/*.c $(GITDIR)/clight
 	cp clight/*.h $(GITDIR)/clight
 	cp proof/*.v $(GITDIR)/proof
+	cp proof/*.md $(GITDIR)/proof
 	cp proof/correctproof/*.v $(GITDIR)/proof/correctproof
 	cp repatch/*.c $(GITDIR)/repatch
 	cp Makefile $(GITDIR)
@@ -219,6 +220,7 @@ gitpull:
 	cp $(GITDIR)/clight/*.c ./clight
 	cp $(GITDIR)/clight/*.h ./clight
 	cp $(GITDIR)/proof/*.v ./proof
+	cp $(GITDIR)/proof/*.md ./proof
 	cp $(GITDIR)/proof/correctproof/*.v ./proof/correctproof
 	cp $(GITDIR)/repatch/*.c ./repatch
 	cp $(GITDIR)/Makefile .
