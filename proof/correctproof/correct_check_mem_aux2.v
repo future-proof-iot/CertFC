@@ -10,7 +10,7 @@ From bpf.clight Require Import interpreter.
 
 From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
 
-From bpf.proof.correctproof Require Import correct_is_well_chunk_bool correct_get_sub correct_get_add correct_get_block_ptr correct_get_start_addr correct_get_block_size.
+From bpf.proof.correctproof Require Import correct_is_well_chunk_bool correct_get_sub correct_get_add correct_get_block_ptr correct_get_start_addr correct_get_block_size correct_get_block_perm.
 
 Open Scope Z_scope.
 
@@ -299,6 +299,44 @@ Proof.
   simpl;intros.
   intuition eauto.
   intros.
+  (**r goal: correct_body p val (bindM (get_block_perm c) ... *)
+  eapply correct_statement_seq_body_pure.
+  change_app_for_statement.
+  eapply correct_statement_call with (has_cast := false).
+  my_reflex.
+  my_reflex.
+  reflexivity.
+  typeclasses eauto.
+  { unfold INV.
+    unfold var_inv_preserve.
+    intros.
+    unfold match_temp_env in *.
+    rewrite Forall_fold_right in *.
+    simpl in *.
+    destruct H; subst.
+    intuition.
+  }
+  reflexivity.
+  reflexivity.
+  reflexivity.
+  prove_in_inv.
+  prove_in_inv.
+  reflexivity.
+  reflexivity.
+
+  unfold INV; intro H.
+  correct_Forall.
+  get_invariant _mr.
+  (**  exists lval : list val, _ [Etempvar _mr3 _] = Some lval *)
+  exists (v::nil).
+  split.
+  unfold map_opt, exec_expr.
+  rewrite p0; reflexivity.
+  simpl;intros.
+  intuition eauto.
+  intros.
+
+
   (** goal:  correct_body _ _ (bindM (get_sub c0 x0) ... *)
   eapply correct_statement_seq_body_pure.
   change_app_for_statement.
@@ -378,14 +416,15 @@ Proof.
   unfold stateless, match_chunk, memory_chunk_to_valu32, well_chunk_Z in H2.
   intuition eauto.
   intros.
+
   (** goal: correct_body _ _ (if then else ... *)
 
-  destruct (match x2 with
+  destruct (match x3 with
   | Vint n2 => negb (Int.ltu n2 int32_0)
   | _ => false
-  end && compu_lt_32 x3 x1) eqn: Hcond1.
-  destruct (compu_le_32 x2 (memory_chunk_to_valu32_upbound c2) &&
-  match val32_modu x2 (memory_chunk_to_valu32 c2) with
+  end && compu_lt_32 x4 x1) eqn: Hcond1.
+  destruct (compu_le_32 x3 (memory_chunk_to_valu32_upbound c2) &&
+  match val32_modu x3 (memory_chunk_to_valu32 c2) with
   | Vint n2 => Int.eq int32_0 n2
   | _ => false
   end) eqn: Hcond2.
@@ -710,7 +749,440 @@ Proof.
     intuition.
     constructor; reflexivity.
   }
-  (**r goal: correct_body p val (bindM (get_block_perm c) ... *)
+
+  (**r goal: correct_body p val (if rBPFMemType.perm_ge x2 c0 then returnM (Val.add x x3) else returnM valptr_null) fn (Ssequence (Sifthenelse ... *)
+  destruct (rBPFMemType.perm_ge x2 c0) eqn: Hperm_ge.
+
+    unfold list_rel_arg,app;
+    match goal with
+    |- correct_body _ _ _ _ ?B _ ?INV
+                 _ _ _ _ =>
+      let I := fresh "INV" in
+      set (I := INV) ; simpl in I;
+      let B1 := eval simpl in B in
+        change B with B1
+    end.
+    unfold correct_body.
+    unfold returnM, Monad.returnM.
+    intros.
+
+    unfold INV0, INV in H.
+    get_invariant_more _hi_ofs.
+    get_invariant_more _lo_ofs.
+    get_invariant_more _size.
+    get_invariant_more _chunk.
+    get_invariant_more _ptr.
+    get_invariant_more _perm.
+    get_invariant_more _mr_perm.
+
+    unfold correct_get_add.match_res, valu32_correct in H0.
+    destruct H0 as (H0_eq & (vi0 & Hvi0_eq)).
+    unfold correct_get_sub.match_res, valu32_correct in H2.
+    destruct H2 as (H2_eq & (vi2 & Hvi2_eq)).
+    unfold correct_get_block_size.match_res, valu32_correct in H4.
+    destruct H4 as (H4_eq & (vi4 & Hvi4_eq)).
+    unfold stateless, match_chunk, memory_chunk_to_valu32 in H6.
+    unfold correct_get_block_ptr.match_res, val_ptr_correct in H8.
+    destruct H8 as (H9_eq & (b & ofs & Hvi9_eq)).
+    unfold stateless, perm_correct in H10.
+    unfold correct_get_block_perm.match_res, perm_correct in H12.
+    subst.
+
+    eexists; exists m, Events.E0.
+    repeat split.
+    Transparent Archi.ptr64.
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+    simpl.
+    rewrite andb_true_iff in Hcond1.
+    destruct Hcond1 as (Hcond1 & _).
+    unfold int32_0, Int.zero in Hcond1.
+    rewrite negb_true_iff in Hcond1.
+    rewrite Hcond1.
+    reflexivity.
+
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    simpl.
+    rewrite andb_true_iff in Hcond1.
+    destruct Hcond1 as (_ & Hcond1).
+    unfold compu_lt_32 in Hcond1.
+    rewrite Hcond1.
+    reflexivity.
+
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+
+    rewrite Maps.PTree.gss.
+    rewrite Int_eq_one_zero.
+    reflexivity.
+
+    reflexivity.
+
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _lo_ofs, _t'9.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _chunk, _t'9.
+    intro Hneq; inversion Hneq.
+
+    reflexivity.
+    reflexivity.
+    simpl.
+    rewrite andb_true_iff in Hcond2.
+    destruct Hcond2 as (Hcond2 & _).
+    unfold compu_le_32, memory_chunk_to_valu32_upbound in Hcond2.
+    unfold Int.sub.
+    assert (Hwell_chunk_unsigned: Int.unsigned (Int.repr (well_chunk_Z c2)) = well_chunk_Z c2). {
+      destruct c2; simpl; try (fold Int.zero; apply Int.unsigned_zero); try rewrite Int.unsigned_repr; try reflexivity; try rewrite Int_max_unsigned_eq64; try lia.
+    }
+    rewrite Hwell_chunk_unsigned; clear Hwell_chunk_unsigned.
+    fold Int.mone.
+    rewrite Int.unsigned_mone.
+    unfold Int.modulus, Int.wordsize, Wordsize_32.wordsize.
+    assert (Heq: two_power_nat 32 - 1 = 4294967295). { reflexivity. }
+    rewrite Heq; clear Heq.
+    rewrite Int_max_unsigned_eq64 in Hcond2.
+    rewrite Hcond2.
+    reflexivity.
+
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _lo_ofs, _t'9.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _chunk, _t'9.
+    intro Hneq; inversion Hneq.
+    simpl.
+    unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+    assert (Hchunk_ne_zero: Int.eq (Int.repr (well_chunk_Z c2)) Int.zero = false). {
+      unfold Int.zero.
+      destruct c2; unfold Int.eq; simpl;
+      repeat rewrite Int.unsigned_repr; try rewrite Int_max_unsigned_eq64; try apply zeq_false; try lia.
+    }
+    rewrite Hchunk_ne_zero; clear Hchunk_ne_zero.
+    reflexivity.
+
+    reflexivity.
+    unfold Cop.sem_cast; simpl.
+    rewrite andb_true_iff in Hcond2.
+    destruct Hcond2 as (_ & Hcond2).
+    unfold val32_modu, memory_chunk_to_valu32, Val.modu, int32_0, Int.zero in Hcond2.
+    destruct (Int.eq _ _) eqn: Hmodu; [inversion Hcond2 |].
+    
+    rewrite Hcond2.
+    reflexivity.
+
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gss.
+    rewrite Int_eq_one_zero.
+    reflexivity.
+    reflexivity.
+    forward_star.
+    repeat forward_star.
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _mr_perm, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _mr_perm, _t'8.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _mr_perm, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _mr_perm, _t'8.
+    intro Hneq; inversion Hneq.
+    unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.sem_binarith; simpl.
+    unfold int32_0, int32_1, int32_2, int32_3, Int.one, Int.zero in *.
+    unfold Cop.sem_cast; simpl.
+    unfold rBPFMemType.perm_ge in Hperm_ge.
+   destruct c0, x2; rewrite H10, H12; unfold Int.ltu; repeat rewrite Int_unsigned_repr_n; try reflexivity; try lia; simpl in Hperm_ge; inversion Hperm_ge.
+
+    simpl.
+    reflexivity.
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _ptr, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _ptr, _t'8.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _lo_ofs, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _lo_ofs, _t'8.
+    intro Hneq; inversion Hneq.
+    reflexivity.
+    reflexivity.
+    simpl.
+    fold Ptrofs.one.
+    rewrite Ptrofs.mul_commut.
+    rewrite Ptrofs.mul_one.
+    forward_star.
+    reflexivity.
+    left.
+    eexists; eexists; reflexivity.
+    simpl.
+    constructor.
+
+    unfold list_rel_arg,app;
+    match goal with
+    |- correct_body _ _ _ _ ?B _ ?INV
+                 _ _ _ _ =>
+      let I := fresh "INV" in
+      set (I := INV) ; simpl in I;
+      let B1 := eval simpl in B in
+        change B with B1
+    end.
+    unfold correct_body.
+    unfold returnM, Monad.returnM, valptr_null.
+    intros.
+
+    unfold INV0, INV in H.
+    get_invariant_more _hi_ofs.
+    get_invariant_more _lo_ofs.
+    get_invariant_more _size.
+    get_invariant_more _chunk.
+    get_invariant_more _ptr.
+    get_invariant_more _perm.
+    get_invariant_more _mr_perm.
+
+    unfold correct_get_add.match_res, valu32_correct in H0.
+    destruct H0 as (H0_eq & (vi0 & Hvi0_eq)).
+    unfold correct_get_sub.match_res, valu32_correct in H2.
+    destruct H2 as (H2_eq & (vi2 & Hvi2_eq)).
+    unfold correct_get_block_size.match_res, valu32_correct in H4.
+    destruct H4 as (H4_eq & (vi4 & Hvi4_eq)).
+    unfold stateless, match_chunk, memory_chunk_to_valu32 in H6.
+    unfold correct_get_block_ptr.match_res, val_ptr_correct in H8.
+    destruct H8 as (H9_eq & (b & ofs & Hvi9_eq)).
+    unfold stateless, perm_correct in H10.
+    unfold correct_get_block_perm.match_res, perm_correct in H12.
+    subst.
+
+    eexists; exists m, Events.E0.
+    repeat split.
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+    simpl.
+
+    rewrite andb_true_iff in Hcond1.
+    destruct Hcond1 as (Hcond1 & _).
+    unfold int32_0, Int.zero in Hcond1.
+    rewrite negb_true_iff in Hcond1.
+    rewrite Hcond1.
+    reflexivity.
+
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    simpl.
+    rewrite andb_true_iff in Hcond1.
+    destruct Hcond1 as (_ & Hcond1).
+    unfold compu_lt_32 in Hcond1.
+    rewrite Hcond1.
+    reflexivity.
+
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+
+    rewrite Maps.PTree.gss.
+    rewrite Int_eq_one_zero.
+    reflexivity.
+
+    reflexivity.
+
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _lo_ofs, _t'9.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _chunk, _t'9.
+    intro Hneq; inversion Hneq.
+
+    reflexivity.
+    reflexivity.
+    simpl.
+    rewrite andb_true_iff in Hcond2.
+    destruct Hcond2 as (Hcond2 & _).
+    unfold compu_le_32, memory_chunk_to_valu32_upbound in Hcond2.
+    unfold Int.sub.
+    assert (Hwell_chunk_unsigned: Int.unsigned (Int.repr (well_chunk_Z c2)) = well_chunk_Z c2). {
+      destruct c2; simpl; try (fold Int.zero; apply Int.unsigned_zero); try rewrite Int.unsigned_repr; try reflexivity; try rewrite Int_max_unsigned_eq64; try lia.
+    }
+    rewrite Hwell_chunk_unsigned; clear Hwell_chunk_unsigned.
+    fold Int.mone.
+    rewrite Int.unsigned_mone.
+    unfold Int.modulus, Int.wordsize, Wordsize_32.wordsize.
+    assert (Heq: two_power_nat 32 - 1 = 4294967295). { reflexivity. }
+    rewrite Heq; clear Heq.
+    rewrite Int_max_unsigned_eq64 in Hcond2.
+    rewrite Hcond2.
+    reflexivity.
+
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _lo_ofs, _t'9.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _chunk, _t'9.
+    intro Hneq; inversion Hneq.
+    simpl.
+    unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+    assert (Hchunk_ne_zero: Int.eq (Int.repr (well_chunk_Z c2)) Int.zero = false). {
+      unfold Int.zero.
+      destruct c2; unfold Int.eq; simpl;
+      repeat rewrite Int.unsigned_repr; try rewrite Int_max_unsigned_eq64; try apply zeq_false; try lia.
+    }
+    rewrite Hchunk_ne_zero; clear Hchunk_ne_zero.
+    reflexivity.
+
+    reflexivity.
+    unfold Cop.sem_cast; simpl.
+    rewrite andb_true_iff in Hcond2.
+    destruct Hcond2 as (_ & Hcond2).
+    unfold val32_modu, memory_chunk_to_valu32, Val.modu, int32_0, Int.zero in Hcond2.
+    destruct (Int.eq _ _) eqn: Hmodu; [inversion Hcond2 |].
+    
+    rewrite Hcond2.
+    reflexivity.
+
+    forward_star.
+    repeat forward_star.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gss.
+    rewrite Int_eq_one_zero.
+    reflexivity.
+    reflexivity.
+    forward_star.
+    repeat forward_star.
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _mr_perm, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _mr_perm, _t'8.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _mr_perm, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _mr_perm, _t'8.
+    intro Hneq; inversion Hneq.
+    unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.sem_binarith; simpl.
+    unfold int32_0, int32_1, int32_2, int32_3, Int.one, Int.zero in *.
+    unfold Cop.sem_cast; simpl.
+    unfold rBPFMemType.perm_ge in Hperm_ge.
+   destruct c0, x2; rewrite H10, H12; unfold Int.ltu; repeat rewrite Int_unsigned_repr_n; try reflexivity; try lia; simpl in Hperm_ge; inversion Hperm_ge.
+
+    admit. (**r TODO *)
+    simpl.
+    reflexivity.
+    admit.
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    forward_star.
+    repeat forward_star.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _ptr, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _ptr, _t'8.
+    intro Hneq; inversion Hneq.
+    rewrite Maps.PTree.gso.
+    eauto.
+    rewrite Maps.PTree.gso.
+    eauto.
+    unfold _lo_ofs, _t'9.
+    intro Hneq; inversion Hneq.
+    unfold _lo_ofs, _t'8.
+    intro Hneq; inversion Hneq.
+    reflexivity.
+    reflexivity.
+    simpl.
+    fold Ptrofs.one.
+    rewrite Ptrofs.mul_commut.
+    rewrite Ptrofs.mul_one.
+    forward_star.
+    reflexivity.
+    left.
+    eexists; eexists; reflexivity.
+    simpl.
+    constructor.
+
+    reflexivity.
+
+  
+
+  eapply correct_statement_seq_body_unit.
+  change_app_for_statement.
+  (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+  eapply correct_statement_call_none.
   TODO.
   unfold list_rel_arg,app;
   match goal with

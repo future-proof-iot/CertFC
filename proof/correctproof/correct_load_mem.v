@@ -41,11 +41,23 @@ Section Load_mem.
   Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
+Definition val_ptr_correctM (blk: block) (x:valu32_t) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
+    x = v /\
+    (exists ofs, v = Vptr blk ofs) /\
+    (exists res, Mem.loadv Mint8unsigned m v = Some (Vint res) /\
+     Mem.loadv Mint8unsigned (bpf_m stm) v = Some (Vint res)) /\
+    (exists res, Mem.loadv Mint16unsigned m v = Some (Vint res) /\
+     Mem.loadv Mint16unsigned (bpf_m stm) v = Some (Vint res)) /\
+    (exists res, Mem.loadv Mint32 m v = Some (Vint res) /\
+     Mem.loadv Mint32 (bpf_m stm) v = Some (Vint res)) /\
+    (exists res, Mem.loadv Mint64 m v = Some (Vlong res) /\
+     Mem.loadv Mint64 (bpf_m stm) v = Some (Vlong res)).
+
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
                 (DList.DCons (stateless match_chunk)
-                             (DList.DCons (stateless val_ptr_correct)
+                             (DList.DCons (val_ptr_correctM mrs_block)
                                           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -68,9 +80,9 @@ Proof.
   get_invariant_more _addr.
   unfold stateM_correct in H0.
   unfold stateless, match_chunk in H2.
-  unfold stateless, val_ptr_correct in H4.
+  unfold val_ptr_correctM in H4.
   destruct H0 as (Hptr & Hmatch).
-  destruct H4 as (Hc0_eq & (b & ofs & Hptr_eq)).
+  destruct H4 as (Heq_c0 & (ofs & Heq_ptr) & (res0 & Hload0 & Hst0)  & (res1 & Hload1 & Hst1) & (res2 & Hload2 & Hst2) & (res3 & Hload3 & Hst3)).
   subst.
 
   (**according to:
@@ -121,76 +133,276 @@ Proof.
       forward_star.
       repeat forward_star.
       forward_star.
-      repeat forward_star. (**r we lose something in the precondition! *)
-      admit.
-      eapply Mem.load_unchanged_on.
-      apply munchange.
-      intros.
+      repeat forward_star.
+      apply Hload0.
       simpl.
+      unfold Cop.sem_cast; simpl.
+      reflexivity.
+      repeat forward_star.
+      reflexivity.
+    }
+    split.
+    unfold State.load_mem.
+    unfold _to_vlong, Regs.val64_zero.
+    unfold match_res, val64_correct.
+    split; [| assumption].
+    rewrite Hst0.
+    split; [reflexivity |].
+    eexists; reflexivity.
 
-      admit.
+    split.
+    simpl.
+    constructor.
+    simpl.
+    split; reflexivity.
+  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
+    split.
+    {
+      eapply Smallstep.star_step; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor.
+      eapply Smallstep.star_step; eauto;
+      [econstructor;eauto |
+        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
+                                             econstructor; eauto|]].
+      eapply Smallstep.star_refl.
+      reflexivity.
+    }
+    split.
+    { (**r match_res *)
+      unfold match_res.
+      split.
+      unfold val64_correct.
+      unfold State.load_mem.
+      split; unfold val64_zero.
+      reflexivity.
+      eexists; reflexivity.
+      (**r match_state *)
+      assumption.
+    }
+    split.
+    constructor.
+    simpl; auto.
+  -
+    eexists. exists m, Events.E0.
+    split.
+    {
       forward_star.
       repeat forward_star.
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-      forward_plus.
-      eapply Smallstep.plus_one; eauto.
-      repeat (econstructor; eauto; try (deref_loc_tactic)).
-
-      Transparent Archi.ptr64.
-
-      rewrite Ptrofs.add_zero_l.
-      unfold Coqlib.align; simpl.
-      unfold Mem.loadv in Hreg_load.
-      assert (Heq: Ptrofs.repr (8 * id_of_reg c) = Ptrofs.mul (Ptrofs.repr 8) (Ptrofs.of_intu (Int.repr (id_of_reg c)))). {
-        unfold Ptrofs.mul, Ptrofs.of_intu.
-        unfold Ptrofs.of_int.
-        repeat rewrite Ptrofs.unsigned_repr.
-        rewrite Int.unsigned_repr.
-        reflexivity.
-        rewrite Int_max_unsigned_eq64.
-        unfold id_of_reg; destruct c; lia.
-        rewrite Ptrofs_max_unsigned_eq64.
-        rewrite Int.unsigned_repr.
-        unfold id_of_reg; destruct c; lia.
-        rewrite Int_max_unsigned_eq64.
-        unfold id_of_reg; destruct c; lia.
-        rewrite Ptrofs_max_unsigned_eq64.
-        lia.
-      }
-      rewrite Heq in Hreg_load.
-      rewrite Hreg_load.
-      reflexivity.
-
-      unfold Cop.sem_cast; reflexivity.
-    -
-      unfold match_res.
-      unfold val64_correct.
-      unfold DxState.eval_reg.
-      symmetry; assumption.
-    - unfold DxState.eval_reg; exists vl; symmetry; assumption.
-    -
+      unfold rBPFAST.well_chunk_Z.
+      rewrite Int_unsigned_repr_n with (n:=2%Z); [| try lia].
       simpl.
-      constructor.
-  Qed.
-  
+      forward_star.
+      repeat forward_star.
+      forward_star.
+      repeat forward_star.
+      apply Hload1.
+      simpl.
+      unfold Cop.sem_cast; simpl.
+      reflexivity.
+      repeat forward_star.
+      reflexivity.
+    }
+    split.
+    unfold State.load_mem.
+    unfold _to_vlong, Regs.val64_zero.
+    unfold match_res, val64_correct.
+    split; [| assumption].
+    rewrite Hst1.
+    split; [reflexivity |].
+    eexists; reflexivity.
+
+    split.
+    simpl.
+    constructor.
+    simpl.
+    split; reflexivity.
+  -
+    eexists. exists m, Events.E0.
+    split.
+    {
+      forward_star.
+      repeat forward_star.
+      unfold rBPFAST.well_chunk_Z.
+      rewrite Int_unsigned_repr_n with (n:=4%Z); [| try lia].
+      simpl.
+      forward_star.
+      repeat forward_star.
+      forward_star.
+      repeat forward_star.
+      apply Hload2.
+      simpl.
+      unfold Cop.sem_cast; simpl.
+      reflexivity.
+      repeat forward_star.
+      reflexivity.
+    }
+    split.
+    unfold State.load_mem.
+    unfold _to_vlong, Regs.val64_zero.
+    unfold match_res, val64_correct.
+    split; [| assumption].
+    rewrite Hst2.
+    split; [reflexivity |].
+    eexists; reflexivity.
+
+    split.
+    simpl.
+    constructor.
+    simpl.
+    split; reflexivity.
+  -
+    eexists. exists m, Events.E0.
+    split.
+    {
+      forward_star.
+      repeat forward_star.
+      unfold rBPFAST.well_chunk_Z.
+      rewrite Int_unsigned_repr_n with (n:=8%Z); [| try lia].
+      simpl.
+      forward_star.
+      repeat forward_star.
+      forward_star.
+      repeat forward_star.
+      apply Hload3.
+      simpl.
+      unfold Cop.sem_cast; simpl.
+      reflexivity.
+      repeat forward_star.
+      reflexivity.
+    }
+    split.
+    unfold State.load_mem.
+    unfold _to_vlong, Regs.val64_zero.
+    unfold match_res, val64_correct.
+    split; [| assumption].
+    rewrite Hst3.
+    split; [reflexivity |].
+    eexists; reflexivity.
+
+    split.
+    simpl.
+    constructor.
+    simpl.
+    split; reflexivity.
+  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
+    split.
+    {
+      eapply Smallstep.star_step; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor.
+      eapply Smallstep.star_step; eauto;
+      [econstructor;eauto |
+        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
+                                             econstructor; eauto|]].
+      eapply Smallstep.star_refl.
+      reflexivity.
+    }
+    split.
+    { (**r match_res *)
+      unfold match_res.
+      split.
+      unfold val64_correct.
+      unfold State.load_mem.
+      split; unfold val64_zero.
+      reflexivity.
+      eexists; reflexivity.
+      (**r match_state *)
+      assumption.
+    }
+    split.
+    constructor.
+    simpl; auto.
+  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
+    split.
+    {
+      eapply Smallstep.star_step; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor.
+      eapply Smallstep.star_step; eauto;
+      [econstructor;eauto |
+        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
+                                             econstructor; eauto|]].
+      eapply Smallstep.star_refl.
+      reflexivity.
+    }
+    split.
+    { (**r match_res *)
+      unfold match_res.
+      split.
+      unfold val64_correct.
+      unfold State.load_mem.
+      split; unfold val64_zero.
+      reflexivity.
+      eexists; reflexivity.
+      (**r match_state *)
+      assumption.
+    }
+    split.
+    constructor.
+    simpl; auto.
+  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
+    split.
+    {
+      eapply Smallstep.star_step; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor.
+      eapply Smallstep.star_step; eauto;
+      [econstructor;eauto |
+        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
+                                             econstructor; eauto|]].
+      eapply Smallstep.star_refl.
+      reflexivity.
+    }
+    split.
+    { (**r match_res *)
+      unfold match_res.
+      split.
+      unfold val64_correct.
+      unfold State.load_mem.
+      split; unfold val64_zero.
+      reflexivity.
+      eexists; reflexivity.
+      (**r match_state *)
+      assumption.
+    }
+    split.
+    constructor.
+    simpl; auto.
+  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
+    split.
+    {
+      eapply Smallstep.star_step; eauto.
+      econstructor; eauto.
+      econstructor; eauto.
+      econstructor.
+      eapply Smallstep.star_step; eauto;
+      [econstructor;eauto |
+        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
+                                             econstructor; eauto|]].
+      eapply Smallstep.star_refl.
+      reflexivity.
+    }
+    split.
+    { (**r match_res *)
+      unfold match_res.
+      split.
+      unfold val64_correct.
+      unfold State.load_mem.
+      split; unfold val64_zero.
+      reflexivity.
+      eexists; reflexivity.
+      (**r match_state *)
+      assumption.
+    }
+    split.
+    constructor.
+    simpl; auto.
+Qed.
 
 End Load_mem.
 

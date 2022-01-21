@@ -559,6 +559,15 @@ Proof.
   rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
 Qed.
 
+Lemma Int_unsigned_repr_n:
+  forall n,
+  0 <= n <= 4294967295 ->
+  Int.unsigned (Int.repr n) = n.
+Proof.
+  intros.
+  rewrite Int.unsigned_repr; [reflexivity | rewrite Int_max_unsigned_eq64; lia].
+Qed.
+
 (*
 Lemma Ptrofs_unsigned_repr_4:
   Ptrofs.unsigned (Ptrofs.repr 4) = 4.

@@ -221,12 +221,12 @@ Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (ch
       do ptr    <- get_block_ptr mr; (**r Vptr b 0 *)
       do start  <- get_start_addr mr;
       do size   <- get_block_size mr;
+      do mr_perm  <- get_block_perm mr;
       do lo_ofs <- get_sub addr start;
       do hi_ofs <- get_add lo_ofs (memory_chunk_to_valu32 chunk);
         if (andb (compu_le_32 Vzero lo_ofs) (compu_lt_32 hi_ofs size)) then
           if (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
                    (comp_eq_32 Vzero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))) then
-            do mr_perm  <- get_block_perm mr;
               if (perm_ge mr_perm perm) then
                 returnM (Val.add ptr lo_ofs) (**r Vptr b lo_ofs *)
               else

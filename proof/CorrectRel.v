@@ -68,6 +68,24 @@ Definition opcode_alu64_correct (opcode: opcode_alu64) (v: val) :=
   | op_BPF_ALU64_ILLEGAL_INS => exists vi, v = Vint vi
   end.
 
+Definition opcode_branch_correct (opcode: opcode_branch) (v: val) :=
+  match opcode with
+  | op_BPF_JA    => v = Vint (Int.repr 0x00)
+  | op_BPF_JEQ   => v = Vint (Int.repr 0x10)
+  | op_BPF_JGT   => v = Vint (Int.repr 0x20)
+  | op_BPF_JGE   => v = Vint (Int.repr 0x30)
+  | op_BPF_JLT   => v = Vint (Int.repr 0xa0)
+  | op_BPF_JLE   => v = Vint (Int.repr 0xb0)
+  | op_BPF_JSET  => v = Vint (Int.repr 0x40)
+  | op_BPF_JNE   => v = Vint (Int.repr 0x50)
+  | op_BPF_JSGT  => v = Vint (Int.repr 0x60)
+  | op_BPF_JSGE  => v = Vint (Int.repr 0x70)
+  | op_BPF_JSLT  => v = Vint (Int.repr 0xc0)
+  | op_BPF_JSLE  => v = Vint (Int.repr 0xd0)
+  | op_BPF_RET   => v = Vint (Int.repr 0x90)
+  | op_BPF_JMP_ILLEGAL_INS => exists vi, v = Vint vi
+  end.
+
 Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   match opcode with
   | op_BPF_LDDW => exists vi, v = Vint vi (**this one is too weak, but for current proof, it is enough *)

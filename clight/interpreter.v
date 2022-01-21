@@ -814,8 +814,8 @@ Definition f_check_mem_aux2 := {|
                 (_perm, tuint) :: (_addr, tuint) :: (_chunk, tuint) :: nil);
   fn_vars := nil;
   fn_temps := ((_well_chunk, tbool) :: (_ptr, (tptr tuchar)) ::
-               (_start, tuint) :: (_size, tuint) :: (_lo_ofs, tuint) ::
-               (_hi_ofs, tuint) :: (_mr_perm, tuint) :: (_t'9, tint) ::
+               (_start, tuint) :: (_size, tuint) :: (_mr_perm, tuint) ::
+               (_lo_ofs, tuint) :: (_hi_ofs, tuint) :: (_t'9, tint) ::
                (_t'8, tint) :: (_t'7, tuint) :: (_t'6, tuint) ::
                (_t'5, tuint) :: (_t'4, tuint) :: (_t'3, tuint) ::
                (_t'2, (tptr tuchar)) :: (_t'1, tbool) :: nil);
@@ -858,58 +858,59 @@ Definition f_check_mem_aux2 := {|
           (Ssequence
             (Ssequence
               (Scall (Some _t'5)
-                (Evar _get_sub (Tfunction (Tcons tuint (Tcons tuint Tnil))
-                                 tuint cc_default))
-                ((Etempvar _addr tuint) :: (Etempvar _start tuint) :: nil))
-              (Sset _lo_ofs (Etempvar _t'5 tuint)))
+                (Evar _get_block_perm (Tfunction
+                                        (Tcons
+                                          (tptr (Tstruct _memory_region noattr))
+                                          Tnil) tuint cc_default))
+                ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) ::
+                 nil))
+              (Sset _mr_perm (Etempvar _t'5 tuint)))
             (Ssequence
               (Ssequence
                 (Scall (Some _t'6)
-                  (Evar _get_add (Tfunction (Tcons tuint (Tcons tuint Tnil))
+                  (Evar _get_sub (Tfunction (Tcons tuint (Tcons tuint Tnil))
                                    tuint cc_default))
-                  ((Etempvar _lo_ofs tuint) :: (Etempvar _chunk tuint) ::
-                   nil))
-                (Sset _hi_ofs (Etempvar _t'6 tuint)))
+                  ((Etempvar _addr tuint) :: (Etempvar _start tuint) :: nil))
+                (Sset _lo_ofs (Etempvar _t'6 tuint)))
               (Ssequence
-                (Sifthenelse (Ebinop Ole (Econst_int (Int.repr 0) tuint)
-                               (Etempvar _lo_ofs tuint) tint)
-                  (Sset _t'9
-                    (Ecast
-                      (Ebinop Olt (Etempvar _hi_ofs tuint)
-                        (Etempvar _size tuint) tint) tbool))
-                  (Sset _t'9 (Econst_int (Int.repr 0) tint)))
-                (Sifthenelse (Etempvar _t'9 tint)
-                  (Ssequence
-                    (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tuint)
-                                   (Ebinop Osub
-                                     (Econst_int (Int.repr (-1)) tuint)
-                                     (Etempvar _chunk tuint) tuint) tint)
-                      (Sset _t'8
-                        (Ecast
-                          (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
-                            (Ebinop Omod (Etempvar _lo_ofs tuint)
-                              (Etempvar _chunk tuint) tuint) tint) tbool))
-                      (Sset _t'8 (Econst_int (Int.repr 0) tint)))
-                    (Sifthenelse (Etempvar _t'8 tint)
-                      (Ssequence
-                        (Ssequence
-                          (Scall (Some _t'7)
-                            (Evar _get_block_perm (Tfunction
-                                                    (Tcons
-                                                      (tptr (Tstruct _memory_region noattr))
-                                                      Tnil) tuint cc_default))
-                            ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) ::
-                             nil))
-                          (Sset _mr_perm (Etempvar _t'7 tuint)))
+                (Ssequence
+                  (Scall (Some _t'7)
+                    (Evar _get_add (Tfunction
+                                     (Tcons tuint (Tcons tuint Tnil)) tuint
+                                     cc_default))
+                    ((Etempvar _lo_ofs tuint) :: (Etempvar _chunk tuint) ::
+                     nil))
+                  (Sset _hi_ofs (Etempvar _t'7 tuint)))
+                (Ssequence
+                  (Sifthenelse (Ebinop Ole (Econst_int (Int.repr 0) tuint)
+                                 (Etempvar _lo_ofs tuint) tint)
+                    (Sset _t'9
+                      (Ecast
+                        (Ebinop Olt (Etempvar _hi_ofs tuint)
+                          (Etempvar _size tuint) tint) tbool))
+                    (Sset _t'9 (Econst_int (Int.repr 0) tint)))
+                  (Sifthenelse (Etempvar _t'9 tint)
+                    (Ssequence
+                      (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tuint)
+                                     (Ebinop Osub
+                                       (Econst_int (Int.repr (-1)) tuint)
+                                       (Etempvar _chunk tuint) tuint) tint)
+                        (Sset _t'8
+                          (Ecast
+                            (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
+                              (Ebinop Omod (Etempvar _lo_ofs tuint)
+                                (Etempvar _chunk tuint) tuint) tint) tbool))
+                        (Sset _t'8 (Econst_int (Int.repr 0) tint)))
+                      (Sifthenelse (Etempvar _t'8 tint)
                         (Sifthenelse (Ebinop Oge (Etempvar _mr_perm tuint)
                                        (Etempvar _perm tuint) tint)
                           (Sreturn (Some (Ebinop Oadd
                                            (Etempvar _ptr (tptr tuchar))
                                            (Etempvar _lo_ofs tuint)
                                            (tptr tuchar))))
-                          (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
-                      (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
-                  (Sreturn (Some (Econst_int (Int.repr 0) tint))))))))))
+                          (Sreturn (Some (Econst_int (Int.repr 0) tint))))
+                        (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
+                    (Sreturn (Some (Econst_int (Int.repr 0) tint)))))))))))
     (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
 |}.
 

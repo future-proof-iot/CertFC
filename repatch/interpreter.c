@@ -264,19 +264,19 @@ static __attribute__((always_inline)) inline unsigned char *check_mem_aux2(struc
   unsigned char *ptr;
   unsigned int start;
   unsigned int size;
+  unsigned int mr_perm;
   unsigned int lo_ofs;
   unsigned int hi_ofs;
-  unsigned int mr_perm;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
     ptr = get_block_ptr(mr);
     start = get_start_addr(mr);
     size = get_block_size(mr);
+    mr_perm = get_block_perm(mr);
     lo_ofs = get_sub(addr, start);
     hi_ofs = get_add(lo_ofs, chunk);
     if (0U <= lo_ofs && hi_ofs < size) {
       if (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk) {
-        mr_perm = get_block_perm(mr);
         if (mr_perm >= perm) {
           return ptr + lo_ofs;
         } else {

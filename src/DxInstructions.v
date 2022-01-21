@@ -87,12 +87,12 @@ Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: valu32_t
       do ptr    <-- get_block_ptr mr; (**r Vptr b 0 *)
       do start  <-- get_start_addr mr;
       do size   <-- get_block_size mr;
+      do mr_perm  <-- get_block_perm mr;
       do lo_ofs <-- get_sub addr start;
       do hi_ofs <-- get_add lo_ofs (memory_chunk_to_valu32 chunk);
         if (andb (compu_le_32 val32_zero lo_ofs) (compu_lt_32 hi_ofs size)) then
           if (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
                    (comp_eq_32 val32_zero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))) then
-            do mr_perm  <-- get_block_perm mr;
               if (perm_ge mr_perm perm) then
                 returnM (Val.add ptr lo_ofs) (**r Vptr b lo_ofs *)
               else
@@ -274,72 +274,72 @@ Definition step_opcode_branch (dst64: val64_t) (src64: val64_t) (pc: sint32_t) (
   match opcode_jmp with
   | op_BPF_JA       =>
     if Nat.eqb op nat8_0x05 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
-      upd_flag BPF_ILLEGAL_INSTRUCTION
+      do _ <-- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   | op_BPF_JEQ     =>
     if compl_eq dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JGT     =>
     if complu_gt dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JGE     =>
     if complu_ge dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JLT     =>
     if complu_lt dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JLE     =>
     if complu_le dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JSET     =>
     if complu_set dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JNE     =>
     if compl_ne dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JSGT     =>
     if compl_gt dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JSGE     =>
     if compl_ge dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JSLT     =>
     if compl_lt dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
   | op_BPF_JSLE     =>
     if compl_le dst64 src64 then
-      upd_pc (Int.add pc ofs)
+      do _ <-- upd_pc (Int.add pc ofs); returnM tt
     else
       returnM tt
 
   | op_BPF_RET => 
     if Nat.eqb op nat8_0x95 then
-      upd_flag BPF_SUCC_RETURN
+      do _ <-- upd_flag BPF_SUCC_RETURN; returnM tt
     else
-      upd_flag BPF_ILLEGAL_INSTRUCTION
+      do _ <-- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   | op_BPF_JMP_ILLEGAL_INS =>
-      upd_flag BPF_ILLEGAL_INSTRUCTION
+      do _ <-- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   end.
 (*
 Definition step_opcode_mem_ld_imm (imm: sint32_t) (pc: sint32_t) (dst: reg) (op: nat8): M unit :=

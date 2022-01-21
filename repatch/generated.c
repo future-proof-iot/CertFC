@@ -259,19 +259,19 @@ unsigned char *check_mem_aux2(struct memory_region *mr$162, unsigned int perm, u
   unsigned char *ptr;
   unsigned int start;
   unsigned int size;
+  unsigned int mr_perm;
   unsigned int lo_ofs;
   unsigned int hi_ofs;
-  unsigned int mr_perm;
   well_chunk = is_well_chunk_bool(chunk$168);
   if (well_chunk) {
     ptr = get_block_ptr(mr$162);
     start = get_start_addr(mr$162);
     size = get_block_size(mr$162);
+    mr_perm = get_block_perm(mr$162);
     lo_ofs = get_sub(addr, start);
     hi_ofs = get_add(lo_ofs, chunk$168);
     if (0U <= lo_ofs && hi_ofs < size) {
       if (lo_ofs <= 4294967295U - chunk$168 && 0U == lo_ofs % chunk$168) {
-        mr_perm = get_block_perm(mr$162);
         if (mr_perm >= perm) {
           return ptr + lo_ofs;
         } else {

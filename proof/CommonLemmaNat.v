@@ -74,6 +74,36 @@ Proof.
   repeat simpl_nat.
 Qed.
 
+Definition byte_to_opcode_branch_if (op: nat): opcode_branch :=
+  let opcode_alu := Nat.land op 0xf0 in (**r masking operation *)
+    if opcode_alu =? 0x00 then if Nat.eqb op 0x05 then op_BPF_JA else op_BPF_JMP_ILLEGAL_INS
+    else if opcode_alu =? 0x10 then op_BPF_JEQ
+    else if opcode_alu =? 0x20 then op_BPF_JGT
+    else if opcode_alu =? 0x30 then op_BPF_JGE
+    else if opcode_alu =? 0xa0 then op_BPF_JLT
+    else if opcode_alu =? 0xb0 then op_BPF_JLE
+    else if opcode_alu =? 0x40 then op_BPF_JSET
+    else if opcode_alu =? 0x50 then op_BPF_JNE
+    else if opcode_alu =? 0x60 then op_BPF_JSGT
+    else if opcode_alu =? 0x70 then op_BPF_JSGE
+    else if opcode_alu =? 0xc0 then op_BPF_JSLT
+    else if opcode_alu =? 0xd0 then op_BPF_JSLE
+    else if opcode_alu =? 0x90 then if Nat.eqb op 0x95 then op_BPF_RET else op_BPF_JMP_ILLEGAL_INS
+    else op_BPF_JMP_ILLEGAL_INS
+  .
+
+Lemma byte_to_opcode_branch_if_same:
+  forall (op: nat),
+    byte_to_opcode_branch op = byte_to_opcode_branch_if op.
+Proof.
+  intros.
+  unfold byte_to_opcode_branch, byte_to_opcode_branch_if.
+  generalize (Nat.land op 240); intro.
+  do 192 (destruct n; [reflexivity | idtac]).
+  do 16 (destruct n; [reflexivity | idtac]).
+  destruct n; [reflexivity | reflexivity].
+Qed.
+
 Lemma nat8_neq_135:
   forall n
     (Hrange : n <= 255)
@@ -90,6 +120,39 @@ Proof.
   (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | ]).
   exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
 Qed.
+
+Lemma nat8_neq_5:
+  forall n
+    (Hrange : n <= 255)
+    (Hc2_eq : n <> 5),
+      Int.repr (Z.of_nat n) <> Int.repr 5.
+Proof.
+  intros.
+  Transparent Int.repr.
+  do 5 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  apply Hc2_eq; reflexivity.
+  do 249 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | ]).
+  exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
+Qed.
+
+
+Lemma nat8_neq_149:
+  forall n
+    (Hrange : n <= 255)
+    (Hc2_eq : n <> 149),
+      Int.repr (Z.of_nat n) <> Int.repr 149.
+Proof.
+  intros.
+  Transparent Int.repr.
+  do 150 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  apply Hc2_eq; reflexivity.
+  do 105 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
+  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | ]).
+  exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
+Qed.
+
 
 Close Scope nat_scope.
 
