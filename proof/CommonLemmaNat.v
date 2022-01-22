@@ -1,5 +1,6 @@
 From compcert Require Import Integers.
 From bpf.src Require Import DxOpcode.
+From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import Lia ZArith.
 
 Open Scope Z_scope.

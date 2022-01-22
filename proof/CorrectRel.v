@@ -1,6 +1,9 @@
 From bpf.comm Require Import rBPFAST List64 MemRegion Regs State Monad Flag.
 
 From bpf.src Require Import DxIntegers DxValues DxOpcode DxNat.
+
+From bpf.monadicmodel Require Import Opcode.
+
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.

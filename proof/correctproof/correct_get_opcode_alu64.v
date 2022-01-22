@@ -1,5 +1,6 @@
 From bpf.comm Require Import Regs State Monad.
 From bpf.src Require Import DxNat DxOpcode DxIntegers DxInstructions.
+From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.

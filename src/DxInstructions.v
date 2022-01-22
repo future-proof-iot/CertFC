@@ -8,6 +8,8 @@ From dx.Type Require Import Bool Nat.
 From bpf.comm Require Import Int16 MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs.
 From bpf.src Require Import DxIntegers DxList64 DxRegs DxValues DxOpcode DxFlag DxMemRegion DxMemType DxMonad DxNat.
 
+From bpf.monadicmodel Require Import Opcode.
+
 Open Scope monad_scope.
 
 (*

@@ -29,12 +29,15 @@ all:
 	@echo $@
 	@$(MAKE) comm
 	@$(MAKE) model
+	@$(MAKE) monadicmodel
 	@$(MAKE) compile
 	@$(MAKE) extract
 	@$(MAKE) repatch
 	@$(MAKE) clight
 	@$(MAKE) clightproof
 	@$(MAKE) correctproof
+	@$(MAKE) isolation
+	@$(MAKE) equivalence
 
 
 BENCHSRC = $(wildcard benchmark/*.v)
@@ -72,8 +75,9 @@ bench_clight:
 	cd benchmark && $(CLIGHTGEN32) clightlogicexample.c
 
 COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
+COQEMONADIC =  $(addprefix monadicmodel/, Opcode.v rBPFInterpreter.v)
 COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxNat.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
-COQEQUIV =  $(addprefix equivalence/, switch.v equivalence.v)
+COQEQUIV =  $(addprefix equivalence/, switch.v equivalence1.v equivalence2.v)
 COQISOLATION = $(wildcard isolation/*.v)
 
 COQCOMM = $(wildcard comm/*.v)
@@ -90,6 +94,11 @@ model:
 	@echo $@
 #	rm -f model/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(COQMODEL) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+
+monadicmodel:
+	@echo $@
+	$(COQMAKEFILE) -f _CoqProject $(COQEMONADIC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 
 isolation:
@@ -177,7 +186,11 @@ gitpush:
 	cp src/*.v $(GITDIR)/src
 	cp src/*.c $(GITDIR)/src
 	cp comm/*.v $(GITDIR)/comm
+	cp comm/*.md $(GITDIR)/comm
 	cp model/*.v $(GITDIR)/model
+	cp model/*.md $(GITDIR)/model
+	cp monadicmodel/*.v $(GITDIR)/monadicmodel
+	cp monadicmodel/*.md $(GITDIR)/monadicmodel
 	cp equivalence/*.v $(GITDIR)/equivalence
 	cp equivalence/*.md $(GITDIR)/equivalence
 	cp isolation/*.v $(GITDIR)/isolation
@@ -206,7 +219,11 @@ gitpull:
 	cp $(GITDIR)/src/*.v ./src
 	cp $(GITDIR)/src/*.c ./src
 	cp $(GITDIR)/comm/*.v ./comm
+	cp $(GITDIR)/comm/*.md ./comm
 	cp $(GITDIR)/model/*.v ./model
+	cp $(GITDIR)/model/*.md ./model
+	cp $(GITDIR)/monadicmodel/*.v ./monadicmodel
+	cp $(GITDIR)/monadicmodel/*.md ./monadicmodel
 	cp $(GITDIR)/equivalence/*.v ./equivalence
 	cp $(GITDIR)/equivalence/*.md ./equivalence
 	cp $(GITDIR)/isolation/*.v ./isolation
@@ -242,4 +259,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all test bench bench_clight comm model equivalence compile extract repatch clight proof correctproof clean
+.PHONY: all test bench bench_clight comm model monadicmodel equivalence compile extract repatch clight proof correctproof clean
