@@ -45,19 +45,19 @@ Makefile command list:
 - **compile**:
 ```mermaid
 graph TD;
-    A[proof model] -->|refine| B(synthesis model);
-    B -->|refine| C(synthesis model:dx);
-    C -->|extract| D[C code];
-    D -->|repatch| E[Executable C code];
-    E -->|clightgen| F[Implementation model];
+    A[proof model: `model/Semantics.v`] -->|refine| B(synthesis model: `monadicmodel/rBPFInterpreter.v`);
+    B -->|refine| C(synthesis model4dx: `src/DxInstructions.v`);
+    C -->|extract| D[C code: `src/generated.c`];
+    D -->|repatch| E[Executable C code: `clight/interpreter.h/.c`];
+    E -->|clightgen| F[Implementation model: `clight/interpreter.v`];
 ```
 
 - **proof**:
 ```mermaid
 graph TD;
-    A[proof model] -->|equality| B(synthesis model);
-    B -->|equality| C(synthesis model:dx);
-    C -->|simulation| D[Implementation model];
+    A[proof model: `model/Semantics.v`] -->|equality| B(synthesis model: `monadicmodel/rBPFInterpreter.v`);
+    B -->|equality| C(synthesis model4dx: `src/DxInstructions.v`);
+    C -->|simulation| D[Implementation model: `clight/interpreter.v`];
     A -->|isolation| A;
 ```
 
