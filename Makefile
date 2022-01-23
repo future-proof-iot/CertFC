@@ -33,11 +33,11 @@ all:
 	@$(MAKE) compile
 	@$(MAKE) extract
 	@$(MAKE) repatch
-	@$(MAKE) clight
-	@$(MAKE) clightproof
-	@$(MAKE) correctproof
+	@$(MAKE) clightmodel
+	@$(MAKE) clightlogic
 	@$(MAKE) isolation
 	@$(MAKE) equivalence
+	@$(MAKE) simulation
 
 
 BENCHSRC = $(wildcard benchmark/*.v)
@@ -78,7 +78,7 @@ COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
 COQEMONADIC =  $(addprefix monadicmodel/, Opcode.v rBPFInterpreter.v)
 COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxNat.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
 COQEQUIV =  $(addprefix equivalence/, switch.v equivalence1.v equivalence2.v)
-COQISOLATION = $(wildcard isolation/*.v)
+COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v IsolationLemma.v Isolation.v)
 
 COQCOMM = $(wildcard comm/*.v)
 #COQMODEL = $(wildcard model/*.v)
@@ -151,31 +151,28 @@ repatch:
 	cd repatch && $(CC) -o repatch1 repatch1.c && ./repatch1 && $(CC) -o repatch2 repatch2.c && ./repatch2 && $(CC) -o repatch3 repatch3.c && ./repatch3 && $(CC) -o repatch4 repatch4.c && ./repatch4
 	$(CP) repatch/interpreter.c clight
 
-clight:
+clightmodel:
 	@echo $@
 	cd clight && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c # && ./$@
 	cd clight && $(CLIGHTGEN32) interpreter.c
 	$(COQMAKEFILE) -f _CoqProject clight/interpreter.v COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 
-PROOF = $(addprefix proof/correctproof/, correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v  correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_regions.v correct_get_addr_ofs.v correct_get_dst.v correct_get_immediate.v correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_add.v correct_get_sub.v correct_upd_reg.v correct_get_opcode_alu64.v)
+PROOF = $(addprefix simulation/, correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v  correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_regions.v correct_get_addr_ofs.v correct_get_dst.v correct_get_immediate.v correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_add.v correct_get_sub.v correct_upd_reg.v correct_reg64_to_reg32.v correct_get_opcode_alu64.v correct_get_opcode_branch.v correct_step_opcode_alu64.v correct_step_opcode_branch.v)
 
-# correct_check_mem_aux.v correct_step_opcode_alu64.v correct_load_mem.v
+# correct_check_mem_aux.v  correct_load_mem.v
 
 CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v CommonLib.v Clightlogic.v MatchState.v CorrectRel.v CommonLemma.v CommonLemmaNat.v)
 
 
-clightproof:
+clightlogic:
 	@echo $@
 #	rm -f proof/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 
-
-# PROOF = $(wildcard proof/correctproof/*.v)
-correctproof:
+simulation:
 	@echo $@
-#	rm -f proof/correctproof/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(PROOF) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 
@@ -195,6 +192,7 @@ gitpush:
 	cp equivalence/*.md $(GITDIR)/equivalence
 	cp isolation/*.v $(GITDIR)/isolation
 	cp isolation/*.md $(GITDIR)/isolation
+	cp simulation/*.v $(GITDIR)/simulation
 	cp benchmark/*.v $(GITDIR)/benchmark
 	cp benchmark/*.c $(GITDIR)/benchmark
 	cp benchmark/*.h $(GITDIR)/benchmark
@@ -205,7 +203,6 @@ gitpush:
 	cp clight/*.h $(GITDIR)/clight
 	cp proof/*.v $(GITDIR)/proof
 	cp proof/*.md $(GITDIR)/proof
-	cp proof/correctproof/*.v $(GITDIR)/proof/correctproof
 	cp repatch/*.c $(GITDIR)/repatch
 	cp Makefile $(GITDIR)
 	cp Makefile.config $(GITDIR)
@@ -228,6 +225,7 @@ gitpull:
 	cp $(GITDIR)/equivalence/*.md ./equivalence
 	cp $(GITDIR)/isolation/*.v ./isolation
 	cp $(GITDIR)/isolation/*.md ./isolation
+	cp $(GITDIR)/simulation/*.v ./simulation
 	cp $(GITDIR)/benchmark/*.v ./benchmark
 	cp $(GITDIR)/benchmark/*.c ./benchmark
 	cp $(GITDIR)/benchmark/*.h ./benchmark
@@ -238,7 +236,6 @@ gitpull:
 	cp $(GITDIR)/clight/*.h ./clight
 	cp $(GITDIR)/proof/*.v ./proof
 	cp $(GITDIR)/proof/*.md ./proof
-	cp $(GITDIR)/proof/correctproof/*.v ./proof/correctproof
 	cp $(GITDIR)/repatch/*.c ./repatch
 	cp $(GITDIR)/Makefile .
 	cp $(GITDIR)/Makefile.config .
@@ -254,9 +251,10 @@ clean :
 	find . -name "*\.vo" -exec rm {} \;
 	find . -name "*\.cmi" -exec rm {} \;
 	find . -name "*\.cmx" -exec rm {} \;
+	find . -name "*\.crashcoqide" -exec rm {} \;
 
 
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all test bench bench_clight comm model monadicmodel equivalence compile extract repatch clight proof correctproof clean
+.PHONY: all test bench bench_clight comm model monadicmodel isolation equivalence compile extract repatch clightmodel proof simulation clean

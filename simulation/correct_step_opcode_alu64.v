@@ -1,5 +1,5 @@
 From bpf.comm Require Import Regs State Monad.
-From bpf.src Require Import DxNat DxValues DxMonad DxInstructions.
+From bpf.monadicmodel Require Import rBPFInterpreter.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
@@ -9,7 +9,7 @@ From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma Comm
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof.correctproof Require Import correct_get_opcode_alu64 correct_upd_reg correct_upd_flag correct_reg64_to_reg32.
+From bpf.simulation Require Import correct_get_opcode_alu64 correct_upd_reg correct_upd_flag correct_reg64_to_reg32.
 (**
 Check step_opcode_alu64.
 step_opcode_alu64
@@ -25,7 +25,7 @@ Section Step_opcode_alu64.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(val64_t:Type); (val64_t:Type); (reg:Type); (nat8:Type)].
+  Definition args : list Type := [(val:Type); (val:Type); (reg:Type); (nat:Type)].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -49,7 +49,7 @@ Section Step_opcode_alu64.
       (DList.DCons (stateless val64_correct)
        (DList.DCons (stateless val64_correct)
           (DList.DCons (stateless reg_correct)
-            (DList.DCons (stateless opcode_alu64_nat8_correct)
+            (DList.DCons (stateless opcode_and_07_correct)
                     (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -503,7 +503,7 @@ Ltac correct_forward L :=
         intros.
         (**r correct_body p unit (if rBPFValues.compl_ne c0 val64_zero then ... *)
         eapply correct_statement_if_body_expr.
-        destruct (rBPFValues.compl_ne c0 val64_zero) eqn: Hdiv_zero.
+        destruct (rBPFValues.compl_ne c0 (Vlong Int64.zero)) eqn: Hdiv_zero.
 
 
         eapply correct_statement_seq_body_unit.
@@ -556,7 +556,7 @@ Ltac correct_forward L :=
         destruct c6 as (c6_1 & c6_2).
         destruct c6_1 as (EQ & (vl2 & VL)); subst.
         unfold rBPFValues.val64_divlu, Val.divlu. (**r star here *)
-        unfold rBPFValues.compl_ne, val64_zero in Hdiv_zero.
+        unfold rBPFValues.compl_ne in Hdiv_zero.
         rewrite Bool.negb_true_iff in Hdiv_zero.
         rewrite Hdiv_zero.
         exists (v ::v0 :: Vlong (Int64.divu vl1 vl2) :: nil). (**r star here *)
@@ -902,7 +902,7 @@ Ltac correct_forward L :=
         intros.
         (**r because upd_reg return unit, here we use *_unit? *)
         eapply correct_statement_if_body_expr.
-        destruct (c2 =? nat8_0x87)%nat eqn: Hneg_eq.
+        destruct (c2 =? 135)%nat eqn: Hneg_eq.
 
 
         eapply correct_statement_seq_body_unit.
@@ -1052,8 +1052,7 @@ Ltac correct_forward L :=
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
-        unfold stateless, opcode_alu64_nat8_correct in c3.
-        unfold nat8_0x87.
+        unfold stateless, opcode_and_07_correct in c3.
         destruct c3 as ((Hv_eq & Hland & Hrange) & Hc3).
         rewrite <- Hv_eq.
         destruct (c2 =? 135)%nat eqn: Hc2_eq.
@@ -1090,7 +1089,7 @@ Ltac correct_forward L :=
         intros.
         (**r correct_body p unit (if rBPFValues.compl_ne c0 val64_zero then ... *)
         eapply correct_statement_if_body_expr.
-        destruct (rBPFValues.compl_ne c0 val64_zero) eqn: Hmod_zero.
+        destruct (rBPFValues.compl_ne c0 (Vlong Int64.zero)) eqn: Hmod_zero.
 
 
         eapply correct_statement_seq_body_unit.

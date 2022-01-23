@@ -1,5 +1,5 @@
 From bpf.comm Require Import State Monad.
-From bpf.src Require Import DxValues DxInstructions.
+From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
@@ -25,8 +25,8 @@ Section Load_mem.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(memory_chunk:Type); valptr8_t].
-  Definition res : Type := (val64_t:Type).
+  Definition args : list Type := [(memory_chunk:Type); val].
+  Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.load_mem.
@@ -41,7 +41,7 @@ Section Load_mem.
   Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
     v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
-Definition val_ptr_correctM (blk: block) (x:valu32_t) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
+Definition val_ptr_correctM (blk: block) (x:val) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
     x = v /\
     (exists ofs, v = Vptr blk ofs) /\
     (exists res, Mem.loadv Mint8unsigned m v = Some (Vint res) /\
@@ -112,7 +112,7 @@ Proof.
       split.
       unfold val64_correct.
       unfold State.load_mem.
-      split; unfold val64_zero.
+      split.
       reflexivity.
       eexists; reflexivity.
       (**r match_state *)
@@ -175,7 +175,7 @@ Proof.
       split.
       unfold val64_correct.
       unfold State.load_mem.
-      split; unfold val64_zero.
+      split.
       reflexivity.
       eexists; reflexivity.
       (**r match_state *)
@@ -306,7 +306,7 @@ Proof.
       split.
       unfold val64_correct.
       unfold State.load_mem.
-      split; unfold val64_zero.
+      split.
       reflexivity.
       eexists; reflexivity.
       (**r match_state *)
@@ -335,7 +335,7 @@ Proof.
       split.
       unfold val64_correct.
       unfold State.load_mem.
-      split; unfold val64_zero.
+      split.
       reflexivity.
       eexists; reflexivity.
       (**r match_state *)
@@ -364,7 +364,7 @@ Proof.
       split.
       unfold val64_correct.
       unfold State.load_mem.
-      split; unfold val64_zero.
+      split.
       reflexivity.
       eexists; reflexivity.
       (**r match_state *)
@@ -393,7 +393,7 @@ Proof.
       split.
       unfold val64_correct.
       unfold State.load_mem.
-      split; unfold val64_zero.
+      split.
       reflexivity.
       eexists; reflexivity.
       (**r match_state *)

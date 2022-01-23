@@ -42,11 +42,23 @@ Makefile command list:
 
 ## Workflow
 
-- **compile**: _model: The proof model_ -(refine)-> _monadicmodel:the synthesis model (not renamed)_ -(refine)-> _src:the synthesis model (renamed)_ -(extract)-> _repatch:C code_ -(repatch)-> _clight:executable C implementation_ -(clightgen)-> _clight:Clight model_
+- **compile**:
+```mermaid
+graph TD;
+    A[proof model] -->|refine| B(synthesis model);
+    B -->|refine| C(synthesis model:dx);
+    C -->|extract| D[C code];
+    D -->|repatch| E[Executable C code];
+    E -->|clightgen| F[Implementation model];
+```
 
 - **proof**:
-  + `isolation`: _model: The proof model_ satisifies the isolation property
-  + `equivalence`: _model: The proof model_ = _monadicmodel:the synthesis model (not renamed)_ = _src:the synthesis model (renamed)_
-  + `proof/simulation`: _monadicmodel:the synthesis model (not renamed)_ -(**refinement relation**)-> _clight:the Clight model_
+```mermaid
+graph TD;
+    A[proof model] -->|equality| B(synthesis model);
+    B -->|equality| C(synthesis model:dx);
+    C -->|simulation| D[Implementation model];
+    A -->|isolation| A;
+```
 
 

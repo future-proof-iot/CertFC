@@ -1,22 +1,29 @@
-# Equivalence proof (rbpf = rbpf_dx)
+# Equivalence proof (rbpf = rbpf_dx = rbpf_norename)
 
-This folder is used to prove the equality between rbpf-coq interpreter and rbpf-coq-dx interpreter. 
+This folder is used to prove the equality among rbpf-coq interpreter (`model/`), rbpf-coq-dx interpreter(`src/`) and rbpf-coq-no-rename (`monadicmodel/`). 
 
 *using the make command: `make equivalence`*
 
 **NB: The coq proof checking are time-costing because we must traverse `opcode \in [0,255]` in order to prove the different decoding ways are exactly same.**
 
-The target thoerem is:
+The two target thoerem are:
 
 ```Coq
-(**r equivalence.v *)
+(**r equivalence1.v *)
 Theorem equivalence_between_formal_and_dx:
   forall f,
     Semantics.bpf_interpreter f = DxInstructions.bpf_interpreter f.
+    
+(**r equivalence2.v *)    
+Theorem equivalence_between_coq_and_dx_dx:
+  forall f,
+    rBPFInterpreter.bpf_interpreter f = DxInstructions.bpf_interpreter f.    
 ```
 where `f` is a fuel to ensure that the coq functions always terminate.
 
 ## Proof idea
+
+The equivalence proof between the later two models are simple: we only need to _unfold_ the renaming types/definitions of `DxInstructions.bpf_interpreter`, and simply _destruct_. So we mainly discuss the first equivalence proof idea:
 
 1. translating `model/Decode.get_instruction` (match-pattern version) to `switch.get_instruction_if` (if-then-else version), and proving that they are same
 

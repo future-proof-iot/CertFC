@@ -1,5 +1,5 @@
 From bpf.comm Require Import Regs State Monad.
-From bpf.src Require Import DxIntegers DxInstructions.
+From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -28,8 +28,8 @@ Section Get_immediate.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(int64_t:Type)].
-  Definition res : Type := (sint32_t:Type).
+  Definition args : list Type := [(int64:Type)].
+  Definition res : Type := (int:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := get_immediate.

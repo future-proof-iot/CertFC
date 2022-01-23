@@ -136,7 +136,7 @@ Definition step_opcode_alu64 (dst64: val) (src64: val) (dst: reg) (op: nat): M u
   | op_BPF_MUL64   =>
     do _ <- upd_reg dst (Val.mull    dst64 src64); returnM tt
   | op_BPF_DIV64   =>
-    if compl_ne src64 (Vlong (Int64.repr 0)) then
+    if compl_ne src64 (Vlong Int64.zero) then
       do _ <- upd_reg dst (val64_divlu dst64 src64); returnM tt
     else
       do _ <- upd_flag BPF_ILLEGAL_DIV; returnM tt (**r we do it for the clightproof , we could omit it later *)
@@ -162,7 +162,7 @@ Definition step_opcode_alu64 (dst64: val) (src64: val) (dst: reg) (op: nat): M u
     else
       do _ <- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   | op_BPF_MOD64   =>
-    if compl_ne src64 (Vlong (Int64.repr 0)) then
+    if compl_ne src64 (Vlong Int64.zero) then
       do _ <- upd_reg dst (val64_modlu dst64 src64); returnM tt
     else
       do _ <- upd_flag BPF_ILLEGAL_DIV; returnM tt

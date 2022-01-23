@@ -1,5 +1,5 @@
 From bpf.comm Require Import State Monad.
-From bpf.src Require Import DxValues DxInstructions.
+From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -24,8 +24,8 @@ Section Get_add.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(valu32_t:Type); (valu32_t:Type)].
-  Definition res : Type := (valu32_t:Type).
+  Definition args : list Type := [(val:Type); (val:Type)].
+  Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := get_add.

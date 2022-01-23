@@ -12,4 +12,4 @@ This folder is used to prove the translation validation theorem.
 - `CommonLib.v`: all common functions used by the proof
 - `CorrectRel.v`: the precondition/postcondition used by the proof
 - `MatchState.v`: the simulation relation and related lemmas (e.g. update functions preserve the simulation relation).
-- `correctproof/`: a folder store the current proof progress: we have proved most alu instructions (see `correct_get_opcode_alu64.v`) and all branch instructions (see `correct_get_opcode_branch.v`). We make some progress on the memory instructions (see `correct_check_mem_aux2.v`)
+- `//simulation/`: a folder store the current proof progress: we have proved most alu instructions (see `correct_get_opcode_alu64.v`) and all branch instructions (see `correct_get_opcode_branch.v`). We make some progress on the memory instructions (see `correct_check_mem_aux2.v`)

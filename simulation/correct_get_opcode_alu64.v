@@ -1,6 +1,5 @@
 From bpf.comm Require Import Regs State Monad.
-From bpf.src Require Import DxNat DxOpcode DxIntegers DxInstructions.
-From bpf.monadicmodel Require Import Opcode.
+From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -24,7 +23,7 @@ Section Get_opcode_alu64.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(nat8:Type)].
+  Definition args : list Type := [(nat:Type)].
   Definition res : Type := (opcode_alu64:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -39,7 +38,7 @@ Section Get_opcode_alu64.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless opcode_alu64_nat8_correct)
+    (DList.DCons (stateless opcode_and_07_correct)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -55,8 +54,8 @@ Section Get_opcode_alu64.
     repeat intro.
     get_invariant_more _op.
 
-    unfold stateless, opcode_alu64_nat8_correct in H0.
-    destruct H0 as (H0 & Hland & Hge).
+    unfold stateless, opcode_and_07_correct in H0.
+    destruct H0 as (H0 & _ & Hge).
     subst.
 
     eexists. exists m, Events.E0.
@@ -90,12 +89,12 @@ Ltac simpl_alu_opcode Hop := simpl_if Hop; [rewrite Hop; reflexivity | ].
       simpl_alu_opcode Hlsh.
       simpl_alu_opcode Hrsh.
       simpl_if Hneg.
-      destruct (c =? 135)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; reflexivity | eexists; reflexivity].
+      destruct (c =? 135)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; reflexivity | eexists; eauto].
       simpl_alu_opcode Hmod.
       simpl_alu_opcode Hxor.
       simpl_alu_opcode Hmov.
       simpl_alu_opcode Harsh.
-      eexists; reflexivity.
+      eexists; eauto.
     - simpl.
       constructor.
       rewrite Int.zero_ext_idem;[idtac | lia].

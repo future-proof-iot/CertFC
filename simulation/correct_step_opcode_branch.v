@@ -1,5 +1,5 @@
 From bpf.comm Require Import Regs State Monad.
-From bpf.src Require Import DxNat DxIntegers DxValues DxMonad DxInstructions.
+From bpf.monadicmodel Require Import rBPFInterpreter.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
@@ -9,7 +9,7 @@ From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma Comm
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof.correctproof Require Import correct_get_opcode_branch correct_upd_pc
+From bpf.simulation Require Import correct_get_opcode_branch correct_upd_pc
 correct_upd_flag.
 
 (**
@@ -28,7 +28,7 @@ Section Step_opcode_branch.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(val64_t:Type); (val64_t:Type); (sint32_t:Type); (sint32_t:Type); (nat8:Type)].
+  Definition args : list Type := [(val:Type); (val:Type); (int:Type); (int:Type); (nat:Type)].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -53,7 +53,7 @@ Section Step_opcode_branch.
        (DList.DCons (stateless val64_correct)
           (DList.DCons (stateless sint32_correct)
           (DList.DCons (stateless sint32_correct)
-            (DList.DCons (stateless opcode_alu64_nat8_correct)
+            (DList.DCons (stateless opcode_and_07_correct)
                     (DList.DNil _))))))).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -187,7 +187,6 @@ Ltac correct_forward L :=
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        unfold nat8_0x05.
         (**r because upd_reg return unit, here we use *_unit? *)
         eapply correct_statement_if_body_expr.
 
@@ -340,8 +339,8 @@ Ltac correct_forward L :=
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
-        unfold stateless, opcode_alu64_nat8_correct in c4.
-        destruct c4 as ((Hv_eq & Hland & Hrange) & Hc4).
+        unfold stateless, opcode_and_07_correct in c4.
+        destruct c4 as ((Hv_eq & Hrange) & Hc4).
         rewrite <- Hv_eq.
         destruct (c3 =? 5)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.
@@ -458,6 +457,7 @@ Ltac correct_forward L :=
         eapply correct_body_Sreturn_None.
         unfold match_res, correct_get_opcode_branch.match_res.
         intros.
+        (**r get_invariant stuck? *)
         get_invariant _st.
         destruct c4 as (c4 & _); unfold stateM_correct in c4.
         destruct c4 as (_ & c4); assumption.
@@ -1735,7 +1735,6 @@ Ltac correct_forward L :=
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        unfold nat8_0x95.
         (**r because upd_reg return unit, here we use *_unit? *)
 
         eapply correct_statement_if_body_expr.
@@ -1886,8 +1885,8 @@ Ltac correct_forward L :=
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
-        unfold stateless, opcode_alu64_nat8_correct in c4.
-        destruct c4 as ((Hv_eq & Hland & Hrange) & Hc4).
+        unfold stateless, opcode_and_07_correct in c4.
+        destruct c4 as ((Hv_eq & Hrange) & Hc4).
         rewrite <- Hv_eq.
         destruct (c3 =? 149)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.
@@ -1915,10 +1914,8 @@ Ltac correct_forward L :=
         destruct c4; assumption.
       + compute. intuition congruence.
 
-    - (**r op_BPF_JMP_ILLEGAL_INS *)
-      admit.
-(*
-      eapply correct_statement_switch with (n:= 1).
+    - (**r op_BPF_JMP_ILLEGAL_INS *) (**r e5 -> e0*)
+      eapply correct_statement_switch with (n:= 0xe5).
       + simpl.
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.

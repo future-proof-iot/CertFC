@@ -1,5 +1,4 @@
 From bpf.comm Require Import State Monad.
-From bpf.src Require Import DxIntegers.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -23,7 +22,7 @@ Section Eval_pc.
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
   Definition args : list Type := [].
-  Definition res : Type := (sint32_t:Type).
+  Definition res : Type := (int:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.eval_pc.

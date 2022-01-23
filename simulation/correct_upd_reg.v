@@ -1,5 +1,5 @@
 From bpf.comm Require Import Regs State Monad.
-From bpf.src Require Import DxValues DxInstructions.
+From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory Memdata.
 Import ListNotations.
@@ -23,7 +23,7 @@ Section Upd_reg.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(reg:Type);val64_t].
+  Definition args : list Type := [(reg:Type);val].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
