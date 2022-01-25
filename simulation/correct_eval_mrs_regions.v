@@ -58,10 +58,10 @@ Section Eval_mrs_regions.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _st.
+    get_invariant _st.
 
-    unfold stateM_correct in H0.
-    destruct H0 as (Hv_eq & Hst).
+    unfold stateM_correct in c.
+    destruct c as (Hv_eq & Hst).
     destruct Hst.
     clear munchange mpc mflags mregs mperm.
     destruct mmrs_num as (Hmrs_num_ld & Hmrs_num_gt).

@@ -6,8 +6,7 @@ From compcert Require Import Coqlib Values.
 From compcert Require Import SimplExpr.
 From compcert Require Import Clight.
 
-From bpf.comm Require Import State Monad. (*
-From bpf.src Require Import DxIntegers.*)
+From bpf.comm Require Import State Monad.
 From compcert Require Import Integers.
 From compcert Require Import Smallstep.
 From compcert Require Import Clightdefs.

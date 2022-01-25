@@ -54,10 +54,10 @@ Section Get_block_size.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _mr.
+    get_invariant _mr.
 
-    unfold my_match_region in H0.
-    destruct H0 as (o & Hptr & Hmatch).
+    unfold my_match_region in c0.
+    destruct c0 as (o & Hptr & Hmatch).
     unfold match_region_at_ofs in Hmatch.
     destruct Hmatch as (_ & (vsize & Hsize_load & Hinj) & _).
     subst.

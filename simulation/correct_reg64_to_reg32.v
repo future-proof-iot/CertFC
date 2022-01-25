@@ -48,10 +48,10 @@ Section Reg64_to_reg32.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _d.
+    get_invariant _d.
 
-    unfold stateless, val64_correct in H0.
-    completer.
+    unfold stateless, val64_correct in c0.
+    destruct c0 as (Hc_eq & (vl & Hvl_eq)).
     subst.
 
     (**according to the type of eval_pc:

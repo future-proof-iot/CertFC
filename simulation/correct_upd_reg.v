@@ -57,14 +57,14 @@ Section Upd_reg.
     correct_body.
     repeat intro.
     unfold INV in H.
-    get_invariant_more _st.
-    get_invariant_more _i.
-    get_invariant_more _v.
-    unfold stateM_correct in H0.
-    unfold stateless, reg_correct in H2.
-    unfold stateless, val64_correct in H4.
-    destruct H0 as (Hv_eq & Hst).
-    destruct H4 as (Hc_eq & (vl & Hvl_eq)).
+    get_invariant _st.
+    get_invariant _i.
+    get_invariant _v.
+    unfold stateM_correct in c1.
+    unfold stateless, reg_correct in c2.
+    unfold stateless, val64_correct in c3.
+    destruct c1 as (Hv_eq & Hst).
+    destruct c3 as (Hc_eq & (vl & Hvl_eq)).
     subst.
 
     simpl in c.

@@ -228,11 +228,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::v0 :: Vlong (Int64.add vl1 vl2) :: nil).
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -247,68 +245,11 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None. (*(** from `upd_flag DxFlag.BPF_OK` to `bindM (upd_flag DxFlag.BPF_OK) returnM` *)
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        my_reflex.
-        reflexivity.
-        typeclasses eauto.
-        
-        unfold correct_upd_flag.match_res. intuition.
-        { unfold modifies.
-          instantiate (1:= ins_block).
-          unfold var_inv_preserve.
-          unfold match_temp_env.
-          intros.
-          inversion H1; subst; clear H1.
-          inversion H5; subst; clear H5.
-          inversion H6; subst; clear H6.
-          inversion H7; subst; clear H7.
-          inversion H8; subst; clear H8.
-          inversion H9; subst; clear H9.
-          repeat constructor;auto.
-
-          revert H3. (**r moves the hypotheses  to the goal *)
-          unfold match_elt,fst.
-          destruct (Maps.PTree.get _st le2); try congruence.
-          unfold snd.
-          intro HH ; destruct HH ; split; auto.
-          unfold correct_upd_flag.match_res in H0.
-          unfold stateM_correct in *.
-          tauto.
-        }
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-
-        unfold INV; intro H.
-        correct_Forall.
-        get_invariant _st.
-        get_invariant _src64.
-        get_invariant _dst.
-        get_invariant _op.
-        (**r goal: ... [Etempvar _st ...; Econst_int (Int.repr 0) ... ] ... *)
-        exists (v :: Vint (Int.repr 0) :: nil).
-        unfold map_opt, exec_expr.
-        rewrite p0.
-        split.
-        reflexivity.
-        intros.
-        simpl.
-        intuition.
-        unfold stateless,flag_correct.
-        unfold int_of_flag, Z_of_flag; reflexivity.
-
-        intros. destruct x1.
-        eapply correct_body_Sreturn_None. *)
+        eapply correct_body_Sreturn_None. (** from `upd_flag DxFlag.BPF_OK` to `bindM (upd_flag DxFlag.BPF_OK) returnM` *)
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
       + reflexivity.
@@ -372,11 +313,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::v0 :: Vlong (Int64.sub vl1 vl2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -395,7 +334,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
       + reflexivity.
@@ -459,11 +398,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::v0 :: Vlong (Int64.mul vl1 vl2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -482,7 +419,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
       + reflexivity.
@@ -550,11 +487,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         unfold rBPFValues.val64_divlu, Val.divlu. (**r star here *)
         unfold rBPFValues.compl_ne in Hdiv_zero.
         rewrite Bool.negb_true_iff in Hdiv_zero.
@@ -583,7 +518,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
 
@@ -633,11 +568,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::Vint (Int.neg (Int.repr 9)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -656,7 +589,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
         reflexivity.
@@ -667,7 +600,7 @@ Ltac correct_forward L :=
         rewrite p0. unfold val64_zero, rBPFValues.compl_ne, Int64.zero.
         unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
         unfold stateless, val64_correct in c3.
-        destruct c3 as ((c3_0 & c3_vl & c3_1) & c3).
+        destruct c3 as (c3_0 & c3_vl & c3_1).
         subst.
         reflexivity.
 
@@ -732,11 +665,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::v0 :: Vlong (Int64.or vl1 vl2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -755,7 +686,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
       + reflexivity.
@@ -819,11 +750,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::v0 :: Vlong (Int64.and vl1 vl2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -842,7 +771,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
       + reflexivity.
@@ -949,11 +878,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v :: v0 :: Vlong (Int64.neg vl1) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -973,7 +900,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
         eapply correct_statement_seq_body_unit.
@@ -1020,11 +947,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::Vint (Int.neg (Int.repr 1)) :: nil). (**r star here: it should be -1 *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -1043,7 +968,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
         reflexivity.
@@ -1053,7 +978,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. simpl.
         unfold stateless, opcode_and_07_correct in c3.
-        destruct c3 as ((Hv_eq & Hland & Hrange) & Hc3).
+        destruct c3 as (Hv_eq & Hrange).
         rewrite <- Hv_eq.
         destruct (c2 =? 135)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.
@@ -1079,7 +1004,8 @@ Ltac correct_forward L :=
         unfold correct_get_opcode_alu64.match_res in c3.
         unfold opcode_alu64_correct in c3.
         (* opcode_alu64_correct should be a mapping between opcodes and int *)
-        destruct c3; assumption.
+        assert (Heq: Z.of_nat (Nat.land 135 240) = 128). { reflexivity. } rewrite Heq in c3; clear Heq.
+        assumption.
       + compute. intuition congruence.
     - (**r op_BPF_MOD64 *)
       eapply correct_statement_switch with (n:= 144).
@@ -1136,11 +1062,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         unfold rBPFValues.val64_modlu, Val.modlu. (**r star here *)
         unfold rBPFValues.compl_ne, val64_zero in Hmod_zero.
         rewrite Bool.negb_true_iff in Hmod_zero.
@@ -1169,7 +1093,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
 
@@ -1219,11 +1143,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::Vint (Int.neg (Int.repr 9)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -1242,7 +1164,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
         reflexivity.
@@ -1253,7 +1175,7 @@ Ltac correct_forward L :=
         rewrite p0. unfold val64_zero, rBPFValues.compl_ne, Int64.zero.
         unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
         unfold stateless, val64_correct in c3.
-        destruct c3 as ((c3_0 & c3_vl & c3_1) & c3).
+        destruct c3 as (c3_0 & c3_vl & c3_1).
         subst.
         reflexivity.
 
@@ -1318,11 +1240,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::v0 :: Vlong (Int64.xor vl1 vl2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -1341,7 +1261,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
       + reflexivity.
@@ -1405,11 +1325,9 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src64.
-        destruct c5 as (c5_1 & c5_2).
-        unfold val64_correct,stateless in c5_1.
-        destruct c5_1 as (EQ & (vl1 & VL)); subst.
-        destruct c6 as (c6_1 & c6_2).
-        destruct c6_1 as (EQ & (vl2 & VL)); subst.
+        unfold val64_correct,stateless in c5, c6.
+        destruct c5 as (Hv1_eq & (vl1 & Hvl1_eq)); subst.
+        destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         exists (v ::v0 :: Vlong (vl2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -1428,7 +1346,7 @@ Ltac correct_forward L :=
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         get_invariant _st.
-        destruct c3 as (c3 & _); unfold stateM_correct in c3.
+        unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
       + reflexivity.
@@ -1439,6 +1357,8 @@ Ltac correct_forward L :=
         unfold correct_get_opcode_alu64.match_res in c3.
         unfold opcode_alu64_correct in c3.
         (* opcode_alu64_correct should be a mapping between opcodes and int *)
+        assert (Heq: Z.of_nat (Nat.land 183 240) = 176). { reflexivity. } rewrite Heq in c3; clear Heq.
+        assert (Heq: Z.of_nat (Nat.land 191 240) = 176). { reflexivity. } rewrite Heq in c3; clear Heq.
         destruct c3; assumption.
       + compute. intuition congruence.
     - (**r op_BPF_ARSH64 *)

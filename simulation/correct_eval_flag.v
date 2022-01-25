@@ -52,9 +52,8 @@ Section Eval_flag.
     repeat intro.
     unfold INV in H.
     get_invariant _st.
-    destruct c as (H_st & Hst_casted).
-    unfold stateM_correct in H_st.
-    destruct H_st as (Hv_eq & Hst).
+    unfold stateM_correct in c.
+    destruct c as (Hv_eq & Hst).
     subst.
 
     (** we need to get the value of pc in the memory *)

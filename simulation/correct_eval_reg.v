@@ -53,11 +53,11 @@ Section Eval_reg.
     correct_body.
     unfold f, INV.
     repeat intro.
-    get_invariant_more _st.
-    get_invariant_more _i.
-    unfold stateM_correct in H0.
-    unfold stateless, reg_correct in H2.
-    destruct H0 as (Hptr & Hmatch).
+    get_invariant _st.
+    get_invariant _i.
+    unfold stateM_correct in c0.
+    unfold stateless, reg_correct in c1.
+    destruct c0 as (Hptr & Hmatch).
     subst.
     destruct Hmatch.
     clear munchange mpc mflags mperm.

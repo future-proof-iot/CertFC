@@ -52,10 +52,10 @@ Section Get_opcode_alu64.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _op.
+    get_invariant _op.
 
-    unfold stateless, opcode_and_07_correct in H0.
-    destruct H0 as (H0 & _ & Hge).
+    unfold stateless, opcode_and_07_correct in c0.
+    destruct c0 as (H0 & Hge).
     subst.
 
     eexists. exists m, Events.E0.
@@ -69,32 +69,31 @@ Section Get_opcode_alu64.
       unfold match_res, opcode_alu64_correct.
       rewrite byte_to_opcode_alu64_if_same.
       unfold byte_to_opcode_alu64_if.
-      rewrite Int.zero_ext_and; [simpl | lia].
+      rewrite Int.zero_ext_and; [| lia].
       rewrite nat8_land_240_255_eq; [| apply Hge].
 
-Ltac simpl_if Ht :=
-  match goal with
-  | |- context [if ?X then _ else _] =>
-    destruct X eqn: Ht; [rewrite Nat.eqb_eq in Ht | rewrite Nat.eqb_neq in Ht]
-  end.
-
-Ltac simpl_alu_opcode Hop := simpl_if Hop; [rewrite Hop; reflexivity | ].
-
-      simpl_alu_opcode Hadd.
-      simpl_alu_opcode Hsub.
-      simpl_alu_opcode Hmul.
-      simpl_alu_opcode Hdiv.
-      simpl_alu_opcode Hor.
-      simpl_alu_opcode Hand.
-      simpl_alu_opcode Hlsh.
-      simpl_alu_opcode Hrsh.
+      simpl_opcode Hadd.
+      simpl_opcode Hsub.
+      simpl_opcode Hmul.
+      simpl_opcode Hdiv.
+      simpl_opcode Hor.
+      simpl_opcode Hand.
+      simpl_opcode Hlsh.
+      simpl_opcode Hrsh.
       simpl_if Hneg.
-      destruct (c =? 135)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; reflexivity | eexists; eauto].
-      simpl_alu_opcode Hmod.
-      simpl_alu_opcode Hxor.
-      simpl_alu_opcode Hmov.
-      simpl_alu_opcode Harsh.
-      eexists; eauto.
+      destruct (c =? 135)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity |rewrite Nat.eqb_neq in Hc_eq].
+      exists c; split; [reflexivity| idtac].
+      unfold is_illegal_alu64_ins.
+      repeat simpl_land H0.
+      assumption.
+
+      simpl_opcode Hmod.
+      simpl_opcode Hxor.
+      simpl_opcode Hmov.
+      simpl_opcode Harsh.
+      exists c; split; [reflexivity| idtac].
+      unfold is_illegal_alu64_ins.
+      repeat simpl_land H0.
     - simpl.
       constructor.
       rewrite Int.zero_ext_idem;[idtac | lia].

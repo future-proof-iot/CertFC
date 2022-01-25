@@ -50,10 +50,10 @@ Section Get_dst.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _ins.
+    get_invariant _ins.
 
-    unfold stateless, reg_int64_correct in H0.
-    destruct H0 as (Hv_eq & (Hreg_range_0 & Hreg_range10)).
+    unfold stateless, reg_int64_correct in c0.
+    destruct c0 as (Hv_eq & (Hreg_range_0 & Hreg_range10)).
     subst.
 
     (**according to the type:

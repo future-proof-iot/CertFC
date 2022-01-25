@@ -26,7 +26,7 @@ Definition res : Type := bool.
 
 (* [f] is a Coq Monadic function with the right type *)
 Definition f := is_well_chunk_bool.
-Locate f_is_well_chunk_bool.
+
 (* [fn] is the Cligth function which has the same behaviour as [f] *)
 Definition fn: Clight.function := f_is_well_chunk_bool.
 
@@ -51,8 +51,8 @@ Proof.
   destruct (is_well_chunk_bool c st) eqn: Heq; [idtac | constructor].
   destruct p0 as (v',st'); intros.
 
-  get_invariant_more _chunk.
-  unfold stateless, match_chunk in H0.
+  get_invariant _chunk.
+  unfold stateless, match_chunk in c0.
   subst.
 
   exists (Vint (if v' then Integers.Int.one else Integers.Int.zero)).
@@ -64,10 +64,8 @@ Proof.
     unfold align_chunk in p0.
     destruct c; inv Heq; simpl.
     all: try
-    forward_star;
-    [ forward_star  |
-    rewrite Int.unsigned_repr; [idtac | rewrite Int_max_unsigned_eq64; lia];
-    simpl;
+    forward_star; forward_star;
+    [ rewrite Int.unsigned_repr; [idtac | rewrite Int_max_unsigned_eq64; lia]; simpl; forward_star |
     repeat forward_star | reflexivity].
   - simpl.
     constructor.

@@ -52,12 +52,12 @@ Section Get_sub.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _x.
-    get_invariant_more _y.
+    get_invariant _x.
+    get_invariant _y.
 
-    unfold stateless, valu32_correct in H0, H2.
-    destruct H0 as (Hc_eq & vi & Hvi_eq).
-    destruct H2 as (Hc0_eq & vj & Hvj_eq).
+    unfold stateless, valu32_correct in c1, c2.
+    destruct c1 as (Hc_eq & vi & Hvi_eq).
+    destruct c2 as (Hc0_eq & vj & Hvj_eq).
     subst.
 
     (**according to the type of eval_pc:

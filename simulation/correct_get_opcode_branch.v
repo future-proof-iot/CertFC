@@ -52,10 +52,10 @@ Section Get_opcode_branch.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _op.
+    get_invariant _op.
 
-    unfold stateless, opcode_and_07_correct in H0.
-    destruct H0 as (H0 & Hge).
+    unfold stateless, opcode_and_07_correct in c0.
+    destruct c0 as (H0 & Hge).
     subst.
 
     eexists. exists m, Events.E0.
@@ -69,19 +69,8 @@ Section Get_opcode_branch.
       unfold match_res, opcode_branch_correct.
       rewrite byte_to_opcode_branch_if_same.
       unfold byte_to_opcode_branch_if.
-      assert (H255_eq: (two_p 8 - 1 = 255)%Z). {
-        reflexivity.
-      }
       rewrite Int.zero_ext_and; [rewrite H255_eq | lia].
       rewrite nat8_land_240_255_eq; [| apply Hge].
-
-Ltac simpl_if Ht :=
-  match goal with
-  | |- context [if ?X then _ else _] =>
-    destruct X eqn: Ht; [rewrite Nat.eqb_eq in Ht | rewrite Nat.eqb_neq in Ht]
-  end.
-
-Ltac simpl_alu_opcode Hop := simpl_if Hop; [rewrite Hop; intuition | ].
 
       simpl_if Hja.
       destruct (c =? 5)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity |rewrite Nat.eqb_neq in Hc_eq].
@@ -90,29 +79,19 @@ Ltac simpl_alu_opcode Hop := simpl_if Hop; [rewrite Hop; intuition | ].
       split.
       intro.
       assumption.
-Ltac simpl_land HOP:=
-  match goal with
-  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y <> ?W) /\ _ =>
-      split; [intro HOP; rewrite H in HOP; inversion HOP |]
-  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y = ?W -> _) /\ _ =>
-      split; [intro HOP; rewrite H in HOP; inversion HOP |]
-  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y <> ?W) =>
-      intro HOP; rewrite H in HOP; inversion HOP
-  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y = ?W -> _) =>
-      intro HOP; rewrite H in HOP; inversion HOP
-  end.
+
       repeat simpl_land H0.
-      simpl_alu_opcode Hjeq.
-      simpl_alu_opcode Hjgt.
-      simpl_alu_opcode Hjge.
-      simpl_alu_opcode Hjlt.
-      simpl_alu_opcode Hjle.
-      simpl_alu_opcode Hjset.
-      simpl_alu_opcode Hjne.
-      simpl_alu_opcode Hjsgt.
-      simpl_alu_opcode Hjsge.
-      simpl_alu_opcode Hjsjt.
-      simpl_alu_opcode Hjsle.
+      simpl_opcode Hjeq.
+      simpl_opcode Hjgt.
+      simpl_opcode Hjge.
+      simpl_opcode Hjlt.
+      simpl_opcode Hjle.
+      simpl_opcode Hjset.
+      simpl_opcode Hjne.
+      simpl_opcode Hjsgt.
+      simpl_opcode Hjsge.
+      simpl_opcode Hjsjt.
+      simpl_opcode Hjsle.
       simpl_if Hret.
       destruct (c =? 149)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity | rewrite Nat.eqb_neq in Hc_eq].
       exists c; split; [reflexivity| ].
@@ -122,13 +101,7 @@ Ltac simpl_land HOP:=
       exists c.
       split; [reflexivity |].
       unfold is_illegal_jmp_ins.
-      repeat split; try assumption.
-      intro.
-      rewrite H0 in Hja.
-      exfalso; apply Hja; reflexivity.
-      intro.
-      rewrite H0 in Hret.
-      exfalso; apply Hret; reflexivity.
+      repeat simpl_land H0.
     - simpl.
       constructor.
       rewrite Int.zero_ext_idem;[idtac | lia].

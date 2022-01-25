@@ -75,14 +75,14 @@ Proof.
   correct_body.
   unfold f, INV.
   repeat intro.
-  get_invariant_more _st.
-  get_invariant_more _chunk.
-  get_invariant_more _addr.
-  unfold stateM_correct in H0.
-  unfold stateless, match_chunk in H2.
-  unfold val_ptr_correctM in H4.
-  destruct H0 as (Hptr & Hmatch).
-  destruct H4 as (Heq_c0 & (ofs & Heq_ptr) & (res0 & Hload0 & Hst0)  & (res1 & Hload1 & Hst1) & (res2 & Hload2 & Hst2) & (res3 & Hload3 & Hst3)).
+  get_invariant _st.
+  get_invariant _chunk.
+  get_invariant _addr.
+  unfold stateM_correct in c1.
+  unfold stateless, match_chunk in c2.
+  unfold val_ptr_correctM in c3.
+  destruct c1 as (Hptr & Hmatch).
+  destruct c3 as (Heq_c0 & (ofs & Heq_ptr) & (res0 & Hload0 & Hst0)  & (res1 & Hload1 & Hst1) & (res2 & Hload2 & Hst2) & (res3 & Hload3 & Hst3)).
   subst.
 
   (**according to:

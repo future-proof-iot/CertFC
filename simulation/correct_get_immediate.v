@@ -1,7 +1,7 @@
 From bpf.comm Require Import Regs State Monad.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia.
-From compcert Require Import Integers Values Clight Memory.
+From compcert Require Import Integers Values Memory Clight.
 Import ListNotations.
 Require Import ZArith.
 
@@ -53,16 +53,15 @@ Section Get_immediate.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _ins.
+    get_invariant _ins.
 
-    unfold stateless, int64_correct in H0.
+    unfold stateless, int64_correct in c0.
     subst v.
 
     eexists. exists m, Events.E0.
 
     repeat split; unfold step2.
-    -
-      repeat forward_star.
+    - repeat forward_star.
     - simpl.
       constructor.
       reflexivity.

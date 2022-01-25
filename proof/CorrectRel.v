@@ -1,7 +1,5 @@
 From bpf.comm Require Import rBPFAST List64 MemRegion Regs State Monad Flag.
 
-From bpf.src Require Import DxIntegers DxValues DxNat.
-
 From bpf.monadicmodel Require Import Opcode.
 
 From Coq Require Import List Lia ZArith.
@@ -12,25 +10,25 @@ From bpf.proof Require Import CommonLib.
 
 Open Scope Z_scope.
 
-Definition int64_correct (x:int64_t) (v: val) :=
+Definition int64_correct (x:int64) (v: val) :=
   Vlong x = v.
 
-Definition val64_correct (x:val64_t) (v: val) :=
+Definition val64_correct (x:val) (v: val) :=
   x = v /\ exists vl, x = Vlong vl.
 
-Definition valu32_correct (x:valu32_t) (v: val) :=
+Definition valu32_correct (x:val) (v: val) :=
   x = v /\ exists vi, x = Vint vi.
 
-Definition val_ptr_correct (x:valu32_t) (v: val) :=
+Definition val_ptr_correct (x:val) (v: val) :=
   x = v /\ exists b ofs, x = Vptr b ofs.
 
-Definition addr_valu32_correct (x:valu32_t) (v: val) :=
+Definition addr_valu32_correct (x:val) (v: val) :=
   x = v /\ exists b ofs, x = Vptr b ofs.
 
-Definition sint32_correct (x: sint32_t) (v: val) :=
+Definition sint32_correct (x: int) (v: val) :=
   Vint x = v.
 
-Definition nat8_correct (x: nat8) (v: val) :=
+Definition nat8_correct (x: nat) (v: val) :=
   Vint (Int.repr (Z.of_nat x)) = v.
 
 Definition nat_correct (x: nat) (v: val) :=
@@ -43,13 +41,13 @@ Definition reg_correct (r: reg) (v: val) :=
     v = Vint (Int.repr (id_of_reg r)).
 
 
-Definition reg_int64_correct (x:int64_t) (v: val) :=
+Definition reg_int64_correct (x:int64) (v: val) :=
   Vlong x = v /\
     0 <= (Int64.unsigned (Int64.shru (Int64.and x (Int64.repr 4095)) (Int64.repr 8))) <= 10.
 
 Open Scope nat_scope.
 
-Definition opcode_and_07_correct (x: nat8) (v: val) :=
+Definition opcode_and_07_correct (x: nat) (v: val) :=
    Vint (Int.repr (Z.of_nat x)) = v /\ (x <= 255). (**r it seems useless:  /\ Nat.land x 0x07%nat = 0x07%nat *)
 
 Definition is_illegal_alu64_ins (i:nat): Prop :=
@@ -118,7 +116,10 @@ Definition opcode_branch_correct (opcode: opcode_branch) (v: val) :=
   | op_BPF_JMP_ILLEGAL_INS => exists i, v = Vint (Int.repr (Z.of_nat (Nat.land i 240))) /\ is_illegal_jmp_ins i
   end.
 
+
 Close Scope nat_scope.
+
+
 
 Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   match opcode with
@@ -134,11 +135,11 @@ Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm
         Mem.loadv Mint64 m (Vptr b (Ptrofs.repr (8 * (Z.of_nat pc)))) = Some (Vlong vl)
 .
 
-Definition pc_correct (len: nat) (x: sint32_t) (v: val) :=
+Definition pc_correct (len: nat) (x: int) (v: val) :=
   Vint x = v /\  0 <= Int.signed x < Z.of_nat len /\ 0 <= 8 * Z.of_nat len <= Ptrofs.max_unsigned. (**r the number of input instructions should be less than Ptrofs.max_unsigned *)
 
 
-Definition len_correct (len: nat) (x: sint32_t) (v: val) :=
+Definition len_correct (len: nat) (x: int) (v: val) :=
   Vint x = v /\  Int.signed x = Z.of_nat len.
 
 Definition match_chunk (x : memory_chunk) (b: val) :=
@@ -149,18 +150,18 @@ Definition flag_correct (f: bpf_flag) (v: val) :=
 
 Definition perm_correct (p: permission) (n: val): Prop :=
   match p with
-  | Freeable => n = Vint int32_3
-  | Writable => n = Vint int32_2
-  | Readable => n = Vint int32_1
-  | Nonempty => n = Vint int32_0
+  | Freeable => n = Vint (Int.repr 3)
+  | Writable => n = Vint (Int.repr 2)
+  | Readable => n = Vint (Int.repr 1)
+  | Nonempty => n = Vint (Int.repr 0)
   end.
 
 Definition correct_perm (p: permission) (n: int): Prop :=
   match p with
-  | Freeable => n = int32_3
-  | Writable => n = int32_2
-  | Readable => n = int32_1
-  | Nonempty => n = int32_0
+  | Freeable => n = Int.repr 3
+  | Writable => n = Int.repr 2
+  | Readable => n = Int.repr 1
+  | Nonempty => n = Int.repr 0
   end.
 
 (**r just a copy from clightlogic *)

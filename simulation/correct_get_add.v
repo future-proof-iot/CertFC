@@ -50,11 +50,12 @@ Section Get_add.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _x.
-    get_invariant_more _y.
+    get_invariant _x.
+    get_invariant _y.
 
-    unfold stateless, valu32_correct in H0, H2.
-    completer.
+    unfold stateless, valu32_correct in c1, c2.
+    destruct c1 as (Hc_eq & (v1 & Hv1_eq)).
+    destruct c2 as (Hc0_eq & (v2 & Hv2_eq)).
     subst.
 
     (**according to the type of eval_pc:
@@ -62,7 +63,7 @@ Section Get_add.
        1. return value should be  x+y
        2. the memory is same
       *)
-    exists (Val.add (Vint x0) (Vint x)), m, Events.E0.
+    eexists; exists m, Events.E0.
 
     repeat split; unfold step2.
     -

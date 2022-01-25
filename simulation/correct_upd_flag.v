@@ -55,11 +55,11 @@ Section Upd_flag.
     correct_body.
     repeat intro.
     unfold INV in H.
-    get_invariant_more _st.
-    get_invariant_more _f.
-    unfold stateM_correct in H0.
-    unfold stateless, flag_correct in H2.
-    destruct H0 as (Hv_eq & Hst).
+    get_invariant _st.
+    get_invariant _f.
+    unfold stateM_correct in c0.
+    unfold stateless, flag_correct in c1.
+    destruct c0 as (Hv_eq & Hst).
     subst.
 
     simpl in c.

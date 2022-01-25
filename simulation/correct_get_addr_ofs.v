@@ -57,12 +57,12 @@ Section Get_addr_ofs.
     unfold INV.
     unfold f.
     repeat intro.
-    get_invariant_more _x.
-    get_invariant_more _ofs.
+    get_invariant _x.
+    get_invariant _ofs.
 
-    unfold stateless, val64_correct in H0.
-    unfold stateless, sint32_correct in H2.
-    destruct H0 as (Hc_eq & (vi & Hvi_eq)).
+    unfold stateless, val64_correct in c1.
+    unfold stateless, sint32_correct in c2.
+    destruct c1 as (Hc_eq & (vi & Hvi_eq)).
     subst c v v0.
 
     (**according to the type of eval_pc:

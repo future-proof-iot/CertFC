@@ -1,6 +1,5 @@
 (** Definition of matching relation between Coq and C representation *)
 From bpf.comm Require Import State MemRegion Regs Flag List64.
-From bpf.src Require Import DxIntegers DxValues DxAST DxMemRegion DxRegs DxFlag DxList64.
 From compcert Require Import Coqlib Integers Values AST Clight Memory Memtype.
 
 From bpf.proof Require Import CommonLemma CommonLib Clightlogic.
@@ -22,10 +21,10 @@ Definition mem_region_def: Ctypes.composite_definition :=
 
 Definition correct_perm (p: permission) (n: int): Prop :=
   match p with
-  | Freeable => n = int32_3
-  | Writable => n = int32_2
-  | Readable => n = int32_1
-  | Nonempty => n = int32_0
+  | Freeable => n = Int.repr 3
+  | Writable => n = Int.repr 2
+  | Readable => n = Int.repr 1
+  | Nonempty => n = Int.repr 0
   end.
 
 Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
@@ -236,13 +235,13 @@ Require Import DxMonad.
 
 (** TODO: *)
 
-Definition my_match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: State.state) (m:Memory.Mem.mem) :=
+Definition my_match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region o /\
               match_region_at_ofs mr bl_region o m.
 
 (* Useful matching relations *)
 
-Definition match_region (bl_region : block) (mr: memory_region) (v: val64_t) (st: State.state) (m:Memory.Mem.mem) :=
+Definition match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region (Ptrofs.repr (o * 16)) /\
               match_region_at_ofs mr bl_region (Ptrofs.repr o) m.
 

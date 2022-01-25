@@ -55,11 +55,11 @@ Section Upd_pc.
     correct_body.
     repeat intro.
     unfold INV in H.
-    get_invariant_more _st.
-    get_invariant_more _pc.
-    unfold stateM_correct in H0.
-    unfold stateless, sint32_correct in H2.
-    destruct H0 as (Hv_eq & Hst).
+    get_invariant _st.
+    get_invariant _pc.
+    unfold stateM_correct in c0.
+    unfold stateless, sint32_correct in c1.
+    destruct c0 as (Hv_eq & Hst).
     (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
     subst.
     

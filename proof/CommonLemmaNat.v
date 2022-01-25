@@ -153,7 +153,39 @@ Proof.
   exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
 Qed.
 
-
 Close Scope nat_scope.
+
+Lemma H255_eq: (two_p 8 - 1 = 255).
+Proof.
+  reflexivity.
+Qed.
+
+Ltac simpl_if Ht :=
+  match goal with
+  | |- context [if ?X then _ else _] =>
+    destruct X eqn: Ht; [rewrite Nat.eqb_eq in Ht | rewrite Nat.eqb_neq in Ht]
+  end.
+
+Ltac simpl_opcode Hop := simpl_if Hop; [rewrite Hop; intuition | ].
+
+Ltac simpl_land HOP:=
+  match goal with
+  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y <> ?W) /\ _ =>
+      split; [intro HOP; rewrite H in HOP; inversion HOP |]
+  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y = ?W -> _) /\ _ =>
+      split; [intro HOP; rewrite H in HOP; inversion HOP |]
+  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y <> ?W) =>
+      intro HOP; rewrite H in HOP; inversion HOP
+  | H: Nat.land ?X ?Y = ?Z |- (Nat.land ?X ?Y = ?W -> _) =>
+      intro HOP; rewrite H in HOP; inversion HOP
+  | H: Nat.land ?X ?Y <> ?Z |- (Nat.land ?X ?Y <> ?Z) /\ _ =>
+      split; [assumption |]
+  | H: Nat.land ?X ?Y <> ?Z |- (Nat.land ?X ?Y <> ?Z) =>
+      assumption
+  | H: Nat.land ?X ?Y <> ?Z |- (Nat.land ?X ?Y = ?Z -> _) /\ _ =>
+      split; [intro HOP; rewrite HOP in H; exfalso; apply H; reflexivity |]
+  | H: Nat.land ?X ?Y <> ?Z |- (Nat.land ?X ?Y = ?Z -> _) =>
+      intro HOP; rewrite HOP in H; exfalso; apply H; reflexivity
+  end.
 
 Close Scope Z_scope.

@@ -57,9 +57,8 @@ Section Upd_pc_incr.
     repeat intro.
     unfold INV in H.
     get_invariant _st.
-    destruct c as (H_st & Hst_casted).
-    unfold stateM_correct in H_st.
-    destruct H_st as (Hv_eq & Hst).
+    unfold stateM_correct in c.
+    destruct c as (Hv_eq & Hst).
     subst.
 
     (** we need to get the proof of `upd_pc_incr` load/store permission *)
