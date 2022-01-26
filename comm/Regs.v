@@ -18,6 +18,22 @@ Lemma reg_eq: forall (x y: reg), {x=y} + {x<>y}.
 Proof.
 decide equality. Defined.
 
+Definition reg_eqb (r0 r1: reg) : bool :=
+  match r0, r1 with
+  | R0, R0
+  | R1, R1
+  | R2, R2
+  | R3, R3
+  | R4, R4
+  | R5, R5
+  | R6, R6
+  | R7, R7
+  | R8, R8
+  | R9, R9
+  | R10, R10 => true
+  | _, _ => false
+  end.
+
 Record regmap: Type := make_regmap{
   r0_val  : Values.val;
   r1_val  : Values.val;

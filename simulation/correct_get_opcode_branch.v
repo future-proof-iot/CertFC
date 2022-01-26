@@ -69,7 +69,7 @@ Section Get_opcode_branch.
       unfold match_res, opcode_branch_correct.
       rewrite byte_to_opcode_branch_if_same.
       unfold byte_to_opcode_branch_if.
-      rewrite Int.zero_ext_and; [rewrite H255_eq | lia].
+      rewrite Int.zero_ext_and; [change (Int.repr (two_p 8 - 1)) with (Int.repr 255) | lia].
       rewrite nat8_land_240_255_eq; [| apply Hge].
 
       simpl_if Hja.

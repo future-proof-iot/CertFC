@@ -235,12 +235,18 @@ Require Import DxMonad.
 
 (** TODO: *)
 
-Definition my_match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+Definition match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region o /\
               match_region_at_ofs mr bl_region o m.
 
-(* Useful matching relations *)
+Definition match_region_list (bl_region : block) (mrl: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  v = Vptr bl_region Ptrofs.zero /\
+  mrl = (bpf_mrs st) /\
+  List.length mrl = (mrs_num st) /\ (**r those two are from the match_state relation *)
+  match_list_region m bl_region Ptrofs.zero mrl.
 
+(* Useful matching relations *)
+(*
 Definition match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region (Ptrofs.repr (o * 16)) /\
               match_region_at_ofs mr bl_region (Ptrofs.repr o) m.
@@ -263,15 +269,16 @@ Proof.
   repeat rewrite <- UMOD by (simpl ; tauto).
   intuition.
 Qed.
+*)
 
-Lemma same_my_memory_match_region :
+Lemma same_memory_match_region :
   forall bl_region st st' m m' mr v
          (UMOD : unmodifies_effect nil m m' st st'),
-    my_match_region bl_region mr v st m ->
-    my_match_region bl_region mr v st' m'.
+    match_region bl_region mr v st m ->
+    match_region bl_region mr v st' m'.
 Proof.
   intros.
-  unfold my_match_region in *.
+  unfold match_region in *.
   destruct H as (o & E & MR).
   exists o.
   split; auto.

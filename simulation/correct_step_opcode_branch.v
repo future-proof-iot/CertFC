@@ -363,8 +363,7 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 5 240) = 0). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 5 240))) with (Int.repr 0) in c4.
         assumption.
       + compute. intuition congruence.
 
@@ -486,9 +485,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 21 240) = 16). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 29 240) = 16). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 21 240))) with (Int.repr 0x10) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 29 240))) with (Int.repr 0x10) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JGT *)
@@ -608,9 +606,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 37 240) = 32). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 45 240) = 32). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 37 240))) with (Int.repr 0x20) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 45 240))) with (Int.repr 0x20) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JGE *)
@@ -731,9 +728,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 53 240) = 48). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 61 240) = 48). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 53 240))) with (Int.repr 0x30) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 61 240))) with (Int.repr 0x30) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JLT *)
@@ -853,9 +849,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 165 240) = 160). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 173 240) = 160). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 165 240))) with (Int.repr 0xa0) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 173 240))) with (Int.repr 0xa0) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JLE *)
@@ -976,9 +971,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 181 240) = 176). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 189 240) = 176). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 181 240))) with (Int.repr 0xb0) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 189 240))) with (Int.repr 0xb0) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JSET *)
@@ -1099,9 +1093,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 69 240) = 64). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 77 240) = 64). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 69 240))) with (Int.repr 0x40) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 77 240))) with (Int.repr 0x40) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JNE *)
@@ -1222,9 +1215,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 85 240) = 0x50). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 93 240) = 0x50). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 85 240))) with (Int.repr 0x50) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 93 240))) with (Int.repr 0x50) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JSGT *)
@@ -1344,9 +1336,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 101 240) = 0x60). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 109 240) = 0x60). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 101 240))) with (Int.repr 0x60) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 109 240))) with (Int.repr 0x60) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JSGE *)
@@ -1467,9 +1458,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 117 240) = 0x70). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 125 240) = 0x70). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 117 240))) with (Int.repr 0x70) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 125 240))) with (Int.repr 0x70) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JSLT *)
@@ -1589,9 +1579,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 197 240) = 0xc0). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 205 240) = 0xc0). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 197 240))) with (Int.repr 0xc0) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 205 240))) with (Int.repr 0xc0) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_JSLE *)
@@ -1712,9 +1701,8 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 213 240) = 0xd0). { reflexivity. } rewrite Heq in c4; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 221 240) = 0xd0). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 213 240))) with (Int.repr 0xd0) in c4.
+        change (Int.repr (Z.of_nat (Nat.land 221 240))) with (Int.repr 0xd0) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
     - (**r op_BPF_RET *)
@@ -1895,8 +1883,7 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_branch.match_res in c4.
         unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 149 240) = 0x90). { reflexivity. } rewrite Heq in c4; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 149 240))) with (Int.repr 0x90) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
 

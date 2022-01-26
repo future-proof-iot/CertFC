@@ -39,48 +39,14 @@ all:
 	@$(MAKE) isolation
 	@$(MAKE) equivalence
 
-
-BENCHSRC = $(wildcard benchmark/*.v)
-
-bench:
-	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(BENCHSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
-	make -f CoqMakefile
-	$(CP) BenchmarkTestMain.ml benchmark
-	$(CP) BenchmarkTestMain.mli benchmark
-	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
-	    $(AWK) '{ delete paths ;                                                                 \
-	              for(i = 1; i <= NF; i++) {                                                     \
-	                 x = $$i ;                                                                   \
-	                 sub("/[^/]*$$", "", x) ;                                                    \
-	                 paths[x] = 1 ;                                                              \
-	              }                                                                              \
-	              for(p in paths) {                                                              \
-	                 print "-I" ;                                                                \
-	                 print "$(COMPCERTSRCDIR)/" p ;                                              \
-	              }                                                                              \
-	            }' > compcertsrc-I	
-	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
-	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I benchmark benchmark/BenchmarkTestMain.mli	
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I benchmark -c benchmark/BenchmarkTestMain.ml
-	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
-	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
-	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx benchmark/BenchmarkTestMain.cmx -o benchmark/main
-	ln -sf $(COMPCERTSRCDIR)/compcert.ini benchmark/compcert.ini
-	cd benchmark && ./main
-
-bench_clight:
-	@echo $@
-	cd benchmark && $(CLIGHTGEN32) clightlogicexample.c
-
 COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
 COQEMONADIC =  $(addprefix monadicmodel/, Opcode.v rBPFInterpreter.v)
 COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxNat.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
 COQEQUIV =  $(addprefix equivalence/, switch.v equivalence1.v equivalence2.v)
 COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v IsolationLemma.v Isolation.v)
+COQCOMM = $(addprefix comm/, Flag.v Int16.v LemmaNat.v List64.v rBPFAST.v rBPFMemType.v rBPFValues.v MemRegion.v Regs.v State.v Monad.v)
 
-COQCOMM = $(wildcard comm/*.v)
+#COQCOMM = $(wildcard comm/*.v)
 #COQMODEL = $(wildcard model/*.v)
 #COQSRC = $(wildcard src/*.v)
 
@@ -158,7 +124,7 @@ clightmodel:
 	$(COQMAKEFILE) -f _CoqProject clight/interpreter.v COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 
-PROOF = $(addprefix simulation/, correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v  correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_regions.v correct_get_addr_ofs.v correct_get_dst.v correct_get_immediate.v correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_block_perm.v correct_get_add.v correct_get_sub.v correct_upd_reg.v correct_reg64_to_reg32.v correct_get_opcode_alu64.v correct_get_opcode_branch.v correct_step_opcode_alu64.v correct_step_opcode_branch.v)
+PROOF = $(addprefix simulation/, correct_upd_pc.v correct_eval_pc.v correct_upd_pc_incr.v correct_eval_reg.v  correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_regions.v correct_get_addr_ofs.v correct_get_dst.v correct_get_immediate.v correct_is_well_chunk_bool.v correct_get_block_ptr.v correct_get_block_size.v correct_get_start_addr.v correct_get_block_perm.v correct_get_add.v correct_get_sub.v correct_upd_reg.v correct_reg64_to_reg32.v correct_get_opcode_alu64.v correct_get_opcode_branch.v correct_step_opcode_alu64.v correct_step_opcode_branch.v correct_check_mem_aux2.v correct_get_mem_region.v)
 
 # correct_check_mem_aux.v  correct_load_mem.v
 
@@ -193,11 +159,6 @@ gitpush:
 	cp isolation/*.v $(GITDIR)/isolation
 	cp isolation/*.md $(GITDIR)/isolation
 	cp simulation/*.v $(GITDIR)/simulation
-	cp benchmark/*.v $(GITDIR)/benchmark
-	cp benchmark/*.c $(GITDIR)/benchmark
-	cp benchmark/*.h $(GITDIR)/benchmark
-	cp benchmark/*.md $(GITDIR)/benchmark
-	cp benchmark/proof/*.v $(GITDIR)/benchmark/proof
 	cp clight/*.v $(GITDIR)/clight
 	cp clight/*.c $(GITDIR)/clight
 	cp clight/*.h $(GITDIR)/clight
@@ -226,11 +187,6 @@ gitpull:
 	cp $(GITDIR)/isolation/*.v ./isolation
 	cp $(GITDIR)/isolation/*.md ./isolation
 	cp $(GITDIR)/simulation/*.v ./simulation
-	cp $(GITDIR)/benchmark/*.v ./benchmark
-	cp $(GITDIR)/benchmark/*.c ./benchmark
-	cp $(GITDIR)/benchmark/*.h ./benchmark
-	cp $(GITDIR)/benchmark/*.md ./benchmark
-	cp $(GITDIR)/benchmark/proof/*.v ./benchmark/proof
 	cp $(GITDIR)/clight/*.v ./clight
 	cp $(GITDIR)/clight/*.c ./clight
 	cp $(GITDIR)/clight/*.h ./clight
@@ -257,4 +213,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all test bench bench_clight comm model monadicmodel isolation equivalence compile extract repatch clightmodel proof simulation clean
+.PHONY: all test comm model monadicmodel isolation equivalence compile extract repatch clightmodel proof simulation clean

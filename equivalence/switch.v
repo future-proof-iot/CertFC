@@ -189,6 +189,19 @@ Definition get_instruction_if (opcode:nat) (rd rs:reg) (ofs: int) (i: int): inst
   else
     BPF_ERR
 .
+
+(*
+Lemma bpf_instruction_eqb_eq : forall a b,
+    bpf_instruction_eqb a b = true -> a = b.
+Proof.
+  unfold bpf_instruction_eqb.
+  destruct a.
+  - destruct b; simpl; try congruence.
+    destruct a, a0, r, r0; simpl; congruence.
+  - intro b0. destruct b0. all: try congruence.
+    unfold arch_eqb; destruct a, a0, s, s0; try congruence.
+Qed. *)
+
 Close Scope nat_scope.
 
 Lemma switch_if_same :
@@ -196,7 +209,28 @@ Lemma switch_if_same :
     get_instruction opcode rd rs ofs i = get_instruction_if opcode rd rs ofs i.
 Proof.
   intros.
-  unfold get_instruction, get_instruction_if.
+  unfold get_instruction, get_instruction_if. (*
+  Check Nat.eqb_eq.
+  match goal with
+  | |- ?A = ?B => apply Nat.eqb_eq with (n:= A) (m:=B)
+  end.
+  apply Nat.eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern (Nat.land op 240) in P.
+  match goal with
+  | P := ?F (Nat.land op 240) |- _=>
+      apply (Forall_exec_spec F 240)
+  end.
+  destruct (op =? 135).
+  vm_compute.
+  reflexivity.
+  vm_compute.
+  reflexivity.
+  rewrite Nat.land_comm.
+  apply land_bound.*)
+
   do 100 (destruct opcode; [reflexivity | idtac]).
   do 121 (destruct opcode; [reflexivity | idtac]).
   destruct opcode; [reflexivity | reflexivity].

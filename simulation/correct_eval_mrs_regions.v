@@ -48,7 +48,7 @@ Section Eval_mrs_regions.
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ _ _ _ => True.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => re = (bpf_mrs st) /\ match_state state_block mrs_block ins_block st m.
 
   Instance correct_function3_eval_mrs_regions : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
   Proof.
@@ -62,44 +62,42 @@ Section Eval_mrs_regions.
 
     unfold stateM_correct in c.
     destruct c as (Hv_eq & Hst).
-    destruct Hst.
-    clear munchange mpc mflags mregs mperm.
-    destruct mmrs_num as (Hmrs_num_ld & Hmrs_num_gt).
-    destruct mem_regs as (Hload & Hmem_regions_length & _ & mem_regs).
     subst v.
 
-    destruct (bpf_mrs st).
-    {
-      simpl in Hmem_regions_length.
-      rewrite <- Hmem_regions_length in Hmrs_num_gt.
-      simpl in Hmrs_num_gt.
-      lia.
-    }
-    destruct mem_regs as (Hmem_regs & _).
-    unfold match_region_at_ofs in Hmem_regs.
-    destruct Hmem_regs as ((vl & Hstart_addr & _) & _).
-    unfold Mem.loadv in Hstart_addr.
-    simpl in Hstart_addr.
+    assert (Hst' := Hst).
+    destruct Hst'. clear - Hst p0 mem_regs.
 
     eexists. exists m, Events.E0.
 
-    repeat split; unfold step2.
-    -
+    split.
+    {
       repeat forward_star.
 
       Transparent Archi.ptr64.
       rewrite Ptrofs.add_zero_l.
       unfold Coqlib.align, AST.Mptr; simpl.
 
-      destruct mins as (mins & _).
-      rewrite <- mins.
+      destruct mem_regs as (mem_regs & _).
+      rewrite <- mem_regs.
       unfold AST.Mptr.
       simpl.
       reflexivity.
-
       reflexivity.
-    - simpl.
-      constructor.
+    }
+    split.
+    {
+      unfold match_res.
+      split.
+      unfold State.eval_mem_regions.
+      reflexivity.
+      assumption.
+    }
+
+    split.
+    simpl.
+    constructor.
+    simpl.
+    split; reflexivity.
   Qed.
 
 End Eval_mrs_regions.

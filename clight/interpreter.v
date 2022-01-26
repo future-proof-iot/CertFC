@@ -510,7 +510,7 @@ Definition f_eval_ins := {|
 Definition f_get_mem_region := {|
   fn_return := (tptr (Tstruct _memory_region noattr));
   fn_callconv := cc_default;
-  fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_n, tuint) ::
+  fn_params := ((_n, tuint) ::
                 (_mrs, (tptr (Tstruct _memory_region noattr))) :: nil);
   fn_vars := nil;
   fn_temps := nil;
@@ -938,15 +938,13 @@ Definition f_check_mem_aux := {|
       (Ssequence
         (Scall (Some _t'1)
           (Evar _get_mem_region (Tfunction
-                                  (Tcons (tptr (Tstruct _bpf_state noattr))
-                                    (Tcons tuint
-                                      (Tcons
-                                        (tptr (Tstruct _memory_region noattr))
-                                        Tnil)))
+                                  (Tcons tuint
+                                    (Tcons
+                                      (tptr (Tstruct _memory_region noattr))
+                                      Tnil))
                                   (tptr (Tstruct _memory_region noattr))
                                   cc_default))
-          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-           (Etempvar _n tuint) ::
+          ((Etempvar _n tuint) ::
            (Etempvar _mrs (tptr (Tstruct _memory_region noattr))) :: nil))
         (Sset _cur_mr (Etempvar _t'1 (tptr (Tstruct _memory_region noattr)))))
       (Ssequence
@@ -3364,15 +3362,13 @@ Definition f_bpf_interpreter := {|
     (Ssequence
       (Scall (Some _t'2)
         (Evar _get_mem_region (Tfunction
-                                (Tcons (tptr (Tstruct _bpf_state noattr))
-                                  (Tcons tuint
-                                    (Tcons
-                                      (tptr (Tstruct _memory_region noattr))
-                                      Tnil)))
+                                (Tcons tuint
+                                  (Tcons
+                                    (tptr (Tstruct _memory_region noattr))
+                                    Tnil))
                                 (tptr (Tstruct _memory_region noattr))
                                 cc_default))
-        ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-         (Econst_int (Int.repr 0) tuint) ::
+        ((Econst_int (Int.repr 0) tuint) ::
          (Etempvar _mrs (tptr (Tstruct _memory_region noattr))) :: nil))
       (Sset _bpf_ctx (Etempvar _t'2 (tptr (Tstruct _memory_region noattr)))))
     (Ssequence
@@ -3423,9 +3419,9 @@ Definition composites : list composite_definition :=
    noattr ::
  Composite _bpf_state Struct
    ((_state_pc, tint) :: (_bpf_flag, tint) ::
-    (_regsmap, (tarray tulong 11)) :: (_mrs_num, tuint) ::
-    (_mrs, (tptr (Tstruct _memory_region noattr))) :: (_ins_len, tint) ::
-    (_ins, (tptr tulong)) :: nil)
+    (_regsmap, (tarray tulong 11)) :: (_ins_len, tint) ::
+    (_ins, (tptr tulong)) :: (_mrs_num, tuint) ::
+    (_mrs, (tptr (Tstruct _memory_region noattr))) :: nil)
    noattr :: nil).
 
 Definition global_definitions : list (ident * globdef fundef type) :=

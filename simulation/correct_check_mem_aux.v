@@ -4,126 +4,89 @@ From dx Require Import ResultMonad IR.
 From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
-From compcert Require Import Coqlib Values Clight Memory Integers.
+From compcert Require Import Coqlib Values AST Clight Memory Memtype Integers.
 
 From bpf.clight Require Import interpreter.
 
 From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
 
-From bpf.simulation Require Import correct_is_well_chunk_bool correct_get_sub correct_get_add correct_get_block_ptr correct_get_start_addr correct_get_block_size correct_get_block_perm.
+From bpf.simulation Require Import correct_check_mem_aux2 correct_get_mem_region.
 
 Open Scope Z_scope.
 
-Section Check_mem_aux2.
 
-(** The program contains our function of interest [fn] *)
-Definition p : Clight.program := prog.
+(**
+Check check_mem_aux.
+check_mem_aux
+     : nat ->
+       permission -> AST.memory_chunk -> val -> MyMemRegionsType -> M val
+*)
 
-(**r TODO: check_mem_aux2: memory_region -> perm -> addr -> chunk -> ptr *)
+Section Check_mem_aux.
 
-(* [Args,Res] provides the mapping between the Coq and the C types *)
-Definition args  := [(memory_region:Type) ; (permission:Type); val; (AST.memory_chunk: Type)].
-Definition res  := val.
+  (** The program contains our function of interest [fn] *)
+  Definition p : Clight.program := prog.
 
-(* [f] is a Coq Monadic function with the right type *)
-Definition f := check_mem_aux2.
+  (* [Args,Res] provides the mapping between the Coq and the C types *)
+  (* Definition Args : list CompilableType := [stateCompilableType].*)
+  Definition args : list Type := [(nat:Type); (permission:Type); (memory_chunk:Type); (val:Type); (list memory_region: Type)].
+  Definition res : Type := (val:Type).
 
-(* [fn] is the Cligth function which has the same behaviour as [f] *)
-Definition fn: Clight.function := f_check_mem_aux2.
+  (* [f] is a Coq Monadic function with the right type *)
+  Definition f : arrow_type args (M res) := check_mem_aux.
 
-Definition is_vlong (v: val) :=
-  match v with
-  | Vlong _ => True
-  | _       => False
-  end.
+  Variable state_block: block. (**r a block storing all rbpf state information? *)
+  Variable mrs_block: block.
+  Variable ins_block: block.
 
-Variable bl_region : block.
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Definition fn: Clight.function := f_check_mem_aux.
 
-Definition match_arg  :
-  DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-  DList.DCons
-    (match_region bl_region)
-    (DList.DCons
-        (stateless perm_correct)
-        (DList.DCons
-           (stateless valu32_correct)
-           (DList.DCons (stateless match_chunk)
-                        (DList.DNil _)))).
+  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
+    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
-Definition match_res (v1 :val) (v2:val) :=
-  v1 = v2 /\ ((exists b ofs, v1 = Vptr b ofs) \/ v1 = Vint (Int.zero)).
+  (* [match_arg] relates the Coq arguments and the C arguments *)
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
+    DList.DCons stateM_correct
+      (DList.DCons (stateless nat_correct)
+        (DList.DCons (stateless perm_correct)
+          (DList.DCons (stateless match_chunk)
+            (DList.DCons (stateless valu32_correct)
+              (DList.DCons (match_region_list mrs_block)
+                (DList.DNil _)))))).
+
+  (* [match_res] relates the Coq result and the C result *)
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => x = v /\ ((exists b ofs, x = Vptr b ofs) \/ v = Vint (Int.zero)) /\ match_state state_block mrs_block ins_block st m.
+
+  Instance correct_function3_check_mem_aux : forall a, correct_function3 p args res f fn [] false match_arg_list match_res a.
+  Proof.
+    correct_function_from_body args.
+    correct_body.
+    repeat intro.
+    unfold INV in H.
+    get_invariant _st.
+    get_invariant _num.
+    get_invariant _perm.
+    get_invariant _chunk.
+    get_invariant _addr.
+    get_invariant _mrs.
+    unfold stateM_correct in c4.
+    destruct c4 as (Hv_eq & Hst).
+    unfold stateless in c5, c6, c7, c8.
+    unfold nat_correct in c5.
+    destruct c5 as (Hv0_eq1 & Hv0_range).
+    unfold perm_correct in c6.
+    unfold match_chunk, memory_chunk_to_valu32, well_chunk_Z in c7.
+    unfold valu32_correct in c8.
+    destruct c8 as (Hv3_eq & (vi3 & Hc2_eq)).
+    unfold match_region_list in c9.
+    destruct c9 as (Hv4_eq & Hmrs_eq & Hmrs_num_eq & Hmatch).
+    subst.
 
 
-Ltac build_app_aux T :=
-  match T with
-  | ?F ?X => let ty := type of X in
-             let r := build_app_aux F in
-             constr:((mk ty X) :: r)
-  | ?X    => constr:(@nil dpair)
-  end.                                    
-
-Ltac get_function T :=
-  match T with
-  | ?F ?X => get_function F
-  | ?X    => X
-  end.
-
-Ltac build_app T :=
-  let a := build_app_aux T in
-  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
-  let f := get_function T in
-  match type of v with
-  | DList.t _ ?L =>
-      change T with (app (f: arrow_type L _) v)
-  end.
-
-Ltac change_app_for_body :=
-  match goal with
-  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac change_app_for_statement :=
-  match goal with
-  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac prove_incl :=
-  simpl; unfold incl; simpl; intuition congruence.
-
-Ltac prove_in_inv :=
-  simpl; intuition subst; discriminate.
-
-Ltac correct_forward :=
-  match goal with
-  | |- @correct_body _ _ (bindM ?F1 ?F2)  _
-                     (Ssequence
-                        (Ssequence
-                           (Scall _ _ _)
-                           (Sset ?V ?T))
-                        ?R)
-                     _ _ _ _ _ _  =>
-      eapply correct_statement_seq_body_pure;
-      [ change_app_for_statement ;
-        let b := match T with
-                 | Ecast _ _ => constr:(true)
-                 | _         => constr:(false)
-                 end in
-        eapply correct_statement_call with (has_cast := b)
-      |]
-  | |- @correct_body _ _ (match  ?x with true => _ | false => _ end) _
-                     (Sifthenelse _ _ _)
-                     _ _ _ _ _ _  =>
-      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
-  end.
-
-Lemma correct_function_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg (stateless match_res) a.
-Proof.
-  correct_function_from_body args.
-  correct_body.
-  unfold f. unfold check_mem_aux2.
-  simpl.
+    unfold f. unfold check_mem_aux.
+    simpl.
+    TBC...
   (** goal: correct_body _ _ (bindM (is_well_chunk_bool ... *)
   correct_forward.
 
@@ -889,8 +852,8 @@ Proof.
     reflexivity.
 Qed.
 
-End Check_mem_aux2.
+End Check_mem_aux.
 
 Close Scope Z_scope.
 
-Existing Instance correct_function_check_mem_aux2_correct.
+Existing Instance correct_function_check_mem_aux.

@@ -1,4 +1,5 @@
 From compcert Require Import Integers.
+From bpf.comm Require Import LemmaNat.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import Lia ZArith.
 
@@ -10,9 +11,17 @@ Lemma nat8_land_240_255_eq:
     (Int.and (Int.and (Int.repr (Z.of_nat n)) (Int.repr 240)) (Int.repr 255)) = Int.repr (Z.of_nat (Nat.land n 240)).
 Proof.
   intros.
-  do 255 (destruct n; [reflexivity | apply le_S_n in Hnat8]).
-  destruct n; [reflexivity | idtac].
-  exfalso; apply Nat.nle_succ_0 in Hnat8; assumption.
+  rewrite Int.and_assoc.
+  change (Int.and (Int.repr 240) (Int.repr 255)) with (Int.repr 240).
+  unfold Int.and.
+  f_equal.
+  rewrite! Int.unsigned_repr_eq.
+  change (240 mod Int.modulus) with 240.
+  rewrite Zmod_small.
+  change 240 with (Z.of_nat 240%nat).
+  rewrite land_land. reflexivity.
+  change Int.modulus with 4294967296.
+  lia.
 Qed.
 
 Open Scope nat_scope.
@@ -34,15 +43,44 @@ Definition byte_to_opcode_alu64_if (op: nat): opcode_alu64 :=
     else op_BPF_ALU64_ILLEGAL_INS
   .
 
+Lemma opcode_alu64_eqb_eq : forall a b,
+    opcode_alu64_eqb a b = true -> a = b.
+Proof.
+  destruct a,b ; simpl ;congruence.
+Qed.
+
+Lemma lift_opcode_alu64 :
+  forall (E: nat -> opcode_alu64)
+         (F: nat -> opcode_alu64) n,
+    ((fun n => opcode_alu64_eqb (E n) (F n) = true) n) <->
+      (((fun n => opcode_alu64_eqb (E n) (F n)) n) = true).
+Proof.
+  intros.
+  simpl. reflexivity.
+Qed.
+
 Lemma byte_to_opcode_alu64_if_same:
   forall (op: nat),
     byte_to_opcode_alu64 op = byte_to_opcode_alu64_if op.
 Proof.
   intros.
   unfold byte_to_opcode_alu64, byte_to_opcode_alu64_if.
-  generalize (Nat.land op 240); intro.
-  do 192 (destruct n; [reflexivity | idtac]).
-  destruct n; [reflexivity | reflexivity].
+  apply opcode_alu64_eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern (Nat.land op 240) in P.
+  match goal with
+  | P := ?F (Nat.land op 240) |- _=>
+      apply (Forall_exec_spec F 240)
+  end.
+  destruct (op =? 135).
+  vm_compute.
+  reflexivity.
+  vm_compute.
+  reflexivity.
+  rewrite Nat.land_comm.
+  apply land_bound.
 Qed.
 
 
@@ -92,16 +130,41 @@ Definition byte_to_opcode_branch_if (op: nat): opcode_branch :=
     else op_BPF_JMP_ILLEGAL_INS
   .
 
+Lemma opcode_branch_eqb_eq : forall a b,
+    opcode_branch_eqb a b = true -> a = b.
+Proof.
+  destruct a,b ; simpl ;congruence.
+Qed.
+
+Lemma lift_opcode_branch :
+  forall (E: nat -> opcode_branch)
+         (F: nat -> opcode_branch) n,
+    ((fun n => opcode_branch_eqb (E n) (F n) = true) n) <->
+      (((fun n => opcode_branch_eqb (E n) (F n)) n) = true).
+Proof.
+  intros.
+  simpl. reflexivity.
+Qed.
+
 Lemma byte_to_opcode_branch_if_same:
   forall (op: nat),
     byte_to_opcode_branch op = byte_to_opcode_branch_if op.
 Proof.
   intros.
   unfold byte_to_opcode_branch, byte_to_opcode_branch_if.
-  generalize (Nat.land op 240); intro.
-  do 192 (destruct n; [reflexivity | idtac]).
-  do 16 (destruct n; [reflexivity | idtac]).
-  destruct n; [reflexivity | reflexivity].
+  apply opcode_branch_eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern (Nat.land op 240) in P.
+  match goal with
+  | P := ?F (Nat.land op 240) |- _=>
+      apply (Forall_exec_spec F 240)
+  end.
+  destruct (op =? 5); destruct (op =? 149).
+  all: try (vm_compute; reflexivity).
+  rewrite Nat.land_comm.
+  apply land_bound.
 Qed.
 
 Lemma nat8_neq_135:
@@ -110,15 +173,15 @@ Lemma nat8_neq_135:
     (Hc2_eq : n <> 135),
       Int.repr (Z.of_nat n) <> Int.repr 135.
 Proof.
-  intros.
+  repeat intro.
   Transparent Int.repr.
-  do 100 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  do 35 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  apply Hc2_eq; reflexivity.
-  do 119 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | ]).
-  exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
+  unfold Int.repr in *.
+  inversion H.
+  rewrite Int.Z_mod_modulus_eq in H1.
+  rewrite Zmod_small in H1.
+  lia.
+  change Int.modulus with 4294967296%Z.
+  lia.
 Qed.
 
 Lemma nat8_neq_5:
@@ -127,14 +190,15 @@ Lemma nat8_neq_5:
     (Hc2_eq : n <> 5),
       Int.repr (Z.of_nat n) <> Int.repr 5.
 Proof.
-  intros.
+  repeat intro.
   Transparent Int.repr.
-  do 5 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  apply Hc2_eq; reflexivity.
-  do 249 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | ]).
-  exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
+  unfold Int.repr in *.
+  inversion H.
+  rewrite Int.Z_mod_modulus_eq in H1.
+  rewrite Zmod_small in H1.
+  lia.
+  change Int.modulus with 4294967296%Z.
+  lia.
 Qed.
 
 
@@ -144,21 +208,17 @@ Lemma nat8_neq_149:
     (Hc2_eq : n <> 149),
       Int.repr (Z.of_nat n) <> Int.repr 149.
 Proof.
-  intros.
+  repeat intro.
   Transparent Int.repr.
-  do 150 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  apply Hc2_eq; reflexivity.
-  do 105 (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | apply le_S_n in Hrange]).
-  (destruct n; [ simpl; unfold Int.repr; simpl; intro H; inversion H | ]).
-  exfalso; apply Nat.nle_succ_0 in Hrange; assumption.
+  unfold Int.repr in *.
+  inversion H.
+  rewrite Int.Z_mod_modulus_eq in H1.
+  rewrite Zmod_small in H1.
+  lia.
+  change Int.modulus with 4294967296%Z.
+  lia.
 Qed.
 
-Close Scope nat_scope.
-
-Lemma H255_eq: (two_p 8 - 1 = 255).
-Proof.
-  reflexivity.
-Qed.
 
 Ltac simpl_if Ht :=
   match goal with

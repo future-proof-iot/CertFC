@@ -40,7 +40,7 @@ Section Get_start_addr.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (my_match_region mrs_block)
+    (DList.DCons (match_region mrs_block)
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -56,7 +56,7 @@ Section Get_start_addr.
     repeat intro.
     get_invariant _mr.
 
-    unfold my_match_region in c0.
+    unfold match_region in c0.
     destruct c0 as (o & Hptr & Hmatch).
     unfold match_region_at_ofs in Hmatch.
     destruct Hmatch as ((vaddr & Haddr_load & Hinj) & _).

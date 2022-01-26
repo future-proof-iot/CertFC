@@ -1,5 +1,5 @@
 
-static __attribute__((always_inline)) inline struct memory_region *get_mem_region(struct bpf_state* st, unsigned int n, struct memory_region *mrs)
+static __attribute__((always_inline)) inline struct memory_region *get_mem_region(unsigned int n, struct memory_region *mrs)
 {
   return mrs + n;
 }
@@ -175,7 +175,7 @@ static __attribute__((always_inline)) inline unsigned char *check_mem_aux(struct
     return 0;
   } else {
     n = num - 1U;
-    cur_mr = get_mem_region(st, n, mrs);
+    cur_mr = get_mem_region(n, mrs);
     check_mem = check_mem_aux2(cur_mr, perm, addr, chunk);
     if (check_mem == 0) {
       return check_mem_aux(st, n, perm, chunk, addr, mrs);
@@ -850,7 +850,7 @@ unsigned long long bpf_interpreter(struct bpf_state* st, unsigned int fuel)
   struct memory_region *bpf_ctx;
   int f;
   mrs = eval_mrs_regions(st);
-  bpf_ctx = get_mem_region(st, 0U, mrs);
+  bpf_ctx = get_mem_region(0U, mrs);
   upd_reg(st, 1U, (*bpf_ctx).start_addr);
   bpf_interpreter_aux(st, fuel);
   f = eval_flag(st);

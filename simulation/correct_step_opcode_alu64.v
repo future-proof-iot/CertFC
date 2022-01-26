@@ -1003,8 +1003,7 @@ Ltac correct_forward L :=
         rewrite p0. f_equal.
         unfold correct_get_opcode_alu64.match_res in c3.
         unfold opcode_alu64_correct in c3.
-        (* opcode_alu64_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 135 240) = 128). { reflexivity. } rewrite Heq in c3; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 135 240))) with (Int.repr 128) in c3.
         assumption.
       + compute. intuition congruence.
     - (**r op_BPF_MOD64 *)
@@ -1357,8 +1356,8 @@ Ltac correct_forward L :=
         unfold correct_get_opcode_alu64.match_res in c3.
         unfold opcode_alu64_correct in c3.
         (* opcode_alu64_correct should be a mapping between opcodes and int *)
-        assert (Heq: Z.of_nat (Nat.land 183 240) = 176). { reflexivity. } rewrite Heq in c3; clear Heq.
-        assert (Heq: Z.of_nat (Nat.land 191 240) = 176). { reflexivity. } rewrite Heq in c3; clear Heq.
+        change (Int.repr (Z.of_nat (Nat.land 183 240))) with (Int.repr 176) in c3.
+        change (Int.repr (Z.of_nat (Nat.land 191 240))) with (Int.repr 176) in c3.
         destruct c3; assumption.
       + compute. intuition congruence.
     - (**r op_BPF_ARSH64 *)
