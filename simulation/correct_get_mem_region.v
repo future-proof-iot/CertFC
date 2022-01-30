@@ -45,13 +45,27 @@ Section Get_mem_region.
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => List.In r (bpf_mrs st).
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => match_region mrs_block r v st m.
+
+Lemma memory_region_in_nth_error:
+  forall n l
+    (Hrange : (0 <= Z.of_nat n < Z.of_nat (List.length l))%Z),
+      exists (m:memory_region), nth_error l n = Some m.
+Proof.
+  intros.
+  destruct Hrange as (Hlow & Hhigh).
+  rewrite <- Nat2Z.inj_lt in Hhigh.
+  rewrite <- List.nth_error_Some in Hhigh.
+  destruct (nth_error l n).
+  - exists m; reflexivity.
+  - exfalso; apply Hhigh; reflexivity.
+Qed.
+
 
   Instance correct_function3_get_mem_region : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
-    (** how to use correct_* *)
     unfold INV.
     unfold f.
     repeat intro.
@@ -72,16 +86,32 @@ Section Get_mem_region.
     split.
     {
       unfold match_res, match_res, MyMemRegionsIndexnat, Memory_regions.index_nat.
-      apply nth_error_In with (n:= c).
-      assert (Hlen: (c < List.length (bpf_mrs st))%nat). {
-        rewrite Hmrs_num_eq.
+      unfold match_region.
+      rewrite Ptrofs.add_zero_l.
+      eexists.
+      split; [reflexivity |].
+      simpl.
+      unfold Ctypes.align_attr; simpl.
+      unfold Z.max; simpl.
+      unfold align; simpl.
+      (**r because 0<=c < length mrs, so we know nth_error must return Some mr *)
+      rewrite <- Hmrs_num_eq in Hrange.
+      apply memory_region_in_nth_error with (n:=c) (l:= bpf_mrs st) in Hrange as Hnth_error.
+      destruct Hnth_error as (mr & Hnth_error).
+      rewrite Hnth_error.
+      unfold Ptrofs.of_intu, Ptrofs.of_int.
+      unfold Ptrofs.mul.
+      rewrite Ptrofs.unsigned_repr; [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
+      rewrite Ptrofs.unsigned_repr; [| rewrite Int.unsigned_repr; [lia | change Int.max_unsigned with Ptrofs.max_unsigned; lia]].
+      rewrite Int.unsigned_repr; [ | change Int.max_unsigned with Ptrofs.max_unsigned; lia].
+      unfold match_list_region in Hmatch.
+      assert (Hlen: (0 <= c < Datatypes.length (bpf_mrs st))%nat). {
         lia.
       }
-      apply nth_error_nth' with (d:= default_memory_region) in Hlen.
-      rewrite Hlen.
-      unfold res.
-      rewrite Hlen.
-      reflexivity.
+      specialize (Hmatch c Hlen).
+      apply nth_error_nth with (d:= default_memory_region) in Hnth_error.
+      rewrite Hnth_error in Hmatch.
+      assumption.
     }
     split.
     constructor.

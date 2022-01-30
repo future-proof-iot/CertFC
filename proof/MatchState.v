@@ -19,6 +19,8 @@ Definition mem_region_def: Ctypes.composite_definition :=
 
 *)
 
+Global Transparent Archi.ptr64.
+
 Definition correct_perm (p: permission) (n: int): Prop :=
   match p with
   | Freeable => n = Int.repr 3
@@ -35,18 +37,49 @@ Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : pt
 
 
 (*Definition size_of_region  :=  16. (* 4 * 32 bits *)*)
-
+(*
 Fixpoint match_list_region (m:mem) (bl_regions: block) (ofs:ptrofs) (l:list memory_region) :=
   match l with
   | nil => True
   | mr :: l' => match_region_at_ofs  mr bl_regions ofs m /\
                   match_list_region  m bl_regions (Ptrofs.add ofs (Ptrofs.repr 16)) l'
-  end.
+  end. *)
+
+(*
+Fixpoint match_list_region (m:mem) (b: block) (ofs: nat) (l:list memory_region) :=
+  match l with
+  | nil => True
+  | mr :: l' => match_region_at_ofs mr b (Ptrofs.repr (16 * Z.of_nat ofs)) m /\ match_list_region m b (ofs+1) l'
+  end. *)
+
+Definition match_list_region (m:mem) (b: block) (l:list memory_region) :=
+  forall i, (0 <= i < List.length l)%nat -> match_region_at_ofs (List.nth i l default_memory_region) b (Ptrofs.repr (16 * Z.of_nat i)) m.
 
 Definition match_regions (mrs_blk: block) (st: State.state) (m:mem) :=
   List.length (bpf_mrs st) = (mrs_num st) /\ (**r the number of bpf_mrs is exactly the mrs_num *)
   Z.of_nat (List.length (bpf_mrs st)) * 16 <= Ptrofs.max_unsigned /\ (**r there is not overflow *)
-  match_list_region m mrs_blk Ptrofs.zero (bpf_mrs st).
+  match_list_region m mrs_blk (bpf_mrs st).
+
+
+Lemma match_regions_in:
+  forall l mr m b
+    (Hnth_error : In mr l)
+    (Hmatch : match_list_region m b l),
+      exists n, match_region_at_ofs mr b (Ptrofs.repr (16 * Z.of_nat n)) m.
+Proof.
+  unfold match_list_region.
+  intros.
+  apply In_nth_error in Hnth_error.
+  destruct Hnth_error as (n & Hnth_error).
+  apply nth_error_some_length in Hnth_error as Hlen.
+  specialize (Hmatch n Hlen).
+  destruct Hlen as ( _ & Hlen).
+  apply nth_error_nth' with (d:= default_memory_region) in Hlen.
+  rewrite Hlen in Hnth_error.
+  inversion Hnth_error.
+  subst.
+  exists n; assumption.
+Qed.
 
 Fixpoint match_list_ins (m:mem) (b: block) (ofs:ptrofs) (l: MyListType) :=
   match l with
@@ -231,10 +264,6 @@ Qed.
 
 (** TODO: nothing to do because we never update memory_regions, it should be done before running the interpter *)
 
-Require Import DxMonad.
-
-(** TODO: *)
-
 Definition match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   exists o, v = Vptr bl_region o /\
               match_region_at_ofs mr bl_region o m.
@@ -243,7 +272,7 @@ Definition match_region_list (bl_region : block) (mrl: list memory_region) (v: v
   v = Vptr bl_region Ptrofs.zero /\
   mrl = (bpf_mrs st) /\
   List.length mrl = (mrs_num st) /\ (**r those two are from the match_state relation *)
-  match_list_region m bl_region Ptrofs.zero mrl.
+  match_list_region m bl_region mrl.
 
 (* Useful matching relations *)
 (*
@@ -918,22 +947,22 @@ Proof.
 Qed.
 
 Lemma upd_preserves_match_list_region:
-  forall l chunk m0 m1 st_blk mrs_blk ofs0 ofs1 vl
+  forall l chunk m0 m1 st_blk mrs_blk ofs0 vl
   (Hstore : Mem.store chunk m0 st_blk ofs0 vl = Some m1)
-  (mem_regs : match_list_region m0 mrs_blk ofs1 l)
+  (mem_regs : match_list_region m0 mrs_blk l)
   (Hneq_blk : st_blk <> mrs_blk),
-    match_list_region m1 mrs_blk ofs1 l.
+    match_list_region m1 mrs_blk l.
 Proof.
   intro l.
-  induction l.
+  induction l;
+  unfold match_list_region in *.
   intros; simpl in *.
-  constructor.
+  lia.
 
-  intros; simpl in *.
+  intros.
   unfold match_region_at_ofs in *.
-  destruct mem_regs0 as (Hload & mem_regs0).
-  split.
-  destruct Hload as ((vl0 & Hload0 & Heq0) & (vl1 & Hload1 & Heq1) & (vl2 & Hload2 & Heq2) & (blk3 & ofs3 & Hload3 & Heq_ptr)).
+  specialize (mem_regs0 i H).
+  destruct mem_regs0 as  ((vl0 & Hload0 & Heq0) & (vl1 & Hload1 & Heq1) & (vl2 & Hload2 & Heq2) & (blk3 & ofs3 & Hload3 & Heq_ptr)).
 
   split.
   exists vl0; rewrite <- Hload0; split; [
@@ -949,8 +978,6 @@ Proof.
 
   exists blk3, ofs3; rewrite <- Hload3; split; [
   eapply Mem.load_store_other; eauto | assumption].
-
-  eapply IHl; eauto.
 Qed.
 
 Lemma upd_reg_preserves_match_state:

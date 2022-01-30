@@ -128,7 +128,7 @@ Proof.
   correct_forward.
 
   my_reflex.
-  my_reflex.
+  reflexivity.
   reflexivity.
   typeclasses eauto.
 
@@ -191,7 +191,7 @@ Proof.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
-  my_reflex.
+  reflexivity.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -229,7 +229,7 @@ Proof.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
-  my_reflex.
+  reflexivity.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -264,7 +264,7 @@ Proof.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
-  my_reflex.
+  reflexivity.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -300,7 +300,7 @@ Proof.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
-  my_reflex.
+  reflexivity.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -338,7 +338,7 @@ Proof.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
-  my_reflex.
+  reflexivity.
   reflexivity.
   typeclasses eauto.
   { unfold INV.
@@ -376,7 +376,7 @@ Proof.
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
-  my_reflex.
+  reflexivity.
   reflexivity.
   typeclasses eauto.
   { unfold INV.

@@ -459,6 +459,73 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma nth_error_some_length:
+  forall A n l (m:A), nth_error l n = Some m -> (0 <= n < List.length l)%nat.
+Proof.
+  intros.
+  rewrite <- nth_error_Some.
+  split; intros.
+  - lia.
+  - destruct n.
+    + simpl in *.
+      destruct l.
+      inversion H.
+      intro.
+      inversion H0.
+    + simpl in *.
+      destruct l.
+      inversion H.
+      rewrite H.
+      intro H0; inversion H0.
+Qed.
+(*
+Section Test.
+  Variable A: Type.
+  Parameter testP: nat -> A -> Prop.
+  Fixpoint list_dualP (ofs: nat) (l:list A) :=
+  match l with
+  | nil => True
+  | hd :: l' => testP (16 * ofs) hd /\ list_dualP (ofs+1) l'
+  end.
+  Lemma list_dual_in :
+    forall l mr ofs
+    (Hin : In mr l)
+    (Hlist : list_dualP ofs l),
+      exists n, testP (16 * n) mr.
+  Proof.
+    intros.
+    induction l.
+    - simpl in Hin. inversion Hin.
+    - simpl in Hin. destruct Hlist as (Hlist0 & Hlist1).
+      destruct Hin.
+      + subst. exists ofs; assumption.
+      + apply IHl. assumption.
+        admit.
+  Admitted.
+  Variable default_A: A.
+  Definition list_dualP' (ofs: nat) (l:list A) :=
+    forall n, (0 <= n < List.length l)%nat -> testP (16 * ofs) (nth n l default_A).
+  Lemma list_dual_in' :
+    forall l mr ofs
+    (Hin : In mr l)
+    (Hlist : list_dualP' ofs l),
+      exists n, testP (16 * n) mr.
+  Proof.
+    intros.
+    apply In_nth_error in Hin.
+    destruct Hin as (n & Hin).
+    apply nth_error_some_length in Hin as Hlen.
+    unfold list_dualP' in Hlist.
+    specialize (Hlist n Hlen).
+    destruct Hlen as ( _ & Hlen).
+    apply nth_error_nth' with (d:= default_A) in Hlen.
+    rewrite Hlen in Hin.
+    inversion Hin.
+    subst.
+    exists ofs; assumption.
+  Qed.
+End Test. *)
+
 (*
 Lemma upd_reg_preserves_perm: forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
   (Hstate_inject: Mem.inject inject_id (bpf_m st) m) (**r (inject_bl_state b') *)

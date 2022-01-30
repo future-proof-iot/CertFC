@@ -143,7 +143,7 @@ Ltac correct_forward L :=
     correct_forward correct_statement_seq_body_nil.
 
     my_reflex.
-    my_reflex.
+    reflexivity.
     reflexivity.
     typeclasses eauto.
 

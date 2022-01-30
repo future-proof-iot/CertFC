@@ -26,7 +26,7 @@ Section Eval_flag.
   Definition res : Type := (bpf_flag:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := DxMonad.eval_flag.
+  Definition f : arrow_type args (M res) := Monad.eval_flag.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
   Variable mrs_block: block.

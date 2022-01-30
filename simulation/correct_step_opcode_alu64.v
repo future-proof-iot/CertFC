@@ -139,7 +139,7 @@ Ltac correct_forward L :=
     correct_forward correct_statement_seq_body_nil.
 
     my_reflex.
-    my_reflex.
+    reflexivity.
     reflexivity.
     typeclasses eauto.
 
@@ -189,7 +189,7 @@ Ltac correct_forward L :=
         (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
         eapply correct_statement_call_none.
         my_reflex.
-        my_reflex.
+        reflexivity.
         reflexivity.
         typeclasses eauto.
         unfold correct_upd_reg.match_res. intuition.
@@ -274,7 +274,7 @@ Ltac correct_forward L :=
         (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
         eapply correct_statement_call_none.
         my_reflex.
-        my_reflex.
+        reflexivity.
         reflexivity.
         typeclasses eauto.
         unfold correct_upd_reg.match_res. intuition.
@@ -359,7 +359,7 @@ Ltac correct_forward L :=
         (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
         eapply correct_statement_call_none.
         my_reflex.
-        my_reflex.
+        reflexivity.
         reflexivity.
         typeclasses eauto.
         unfold correct_upd_reg.match_res. intuition.
@@ -448,7 +448,7 @@ Ltac correct_forward L :=
         (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
         eapply correct_statement_call_none.
         my_reflex.
-        my_reflex.
+        reflexivity.
         reflexivity.
         typeclasses eauto.
         unfold correct_upd_reg.match_res. intuition.
