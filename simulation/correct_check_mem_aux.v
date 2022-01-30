@@ -172,6 +172,7 @@ Qed.
     rewrite check_mem_aux_eq.
     eapply correct_statement_if_body_expr.
     simpl.
+    (**r TODO: the lemma correct_statement_seq_set loses the info m = m0? *)
     apply correct_statement_seq_set with (match_res1 := fun _ => pc_correct c).
     +
       intros.
@@ -202,10 +203,7 @@ Qed.
         unfold Cop.sem_binary_operation, Cop.sem_sub; simpl.
         unfold Cop.sem_binarith; simpl.
         unfold Int.sub.
-        fold Int.one; rewrite Int.unsigned_one. (*
-        rewrite Int.unsigned_repr_eq in Hv0_range.
-        apply mod_eq in Hv0_range; [| lia | change Int.modulus with 4294967296; lia].
-        change Int.modulus with 4294967296 in Hv0_range. *)
+        fold Int.one; rewrite Int.unsigned_one.
         rewrite Zpos_P_of_succ_nat.
         rewrite <- Nat2Z.inj_succ.
         change Ptrofs.max_unsigned with 4294967295 in Hv0_max.
@@ -228,9 +226,10 @@ Qed.
   +
     unfold INV.
     simpl. intuition subst ; discriminate.
-  +
+  + (**r then here we lose m0 = m? *)
     intros.
-    eapply correct_statement_seq_body;eauto.
+    (**r correct_body _ _ (bindM (get_mem_region _ _) ... *)
+    eapply correct_statement_seq_body_pure;eauto.
     unfold typeof.
     change_app_for_statement.
     eapply correct_statement_call with (has_cast:=false).
@@ -272,7 +271,7 @@ Ltac prove_in_inv :=
 
     intros.
     (**r goal: correct_body p val (bindM (check_mem_aux2 ... *)
-    eapply correct_statement_seq_body;eauto.
+    eapply correct_statement_seq_body_pure;eauto.
     unfold typeof.
     change_app_for_statement.
     eapply correct_statement_call with (has_cast:=false).
@@ -311,7 +310,8 @@ Ltac prove_in_inv :=
     rewrite p0, p1, p2, p3; reflexivity.
     simpl;intros.
     intuition eauto.
-    
+
+    (**TODO: here we find that we lose the info: m = m0? *)
     repeat intro.
     unfold INV in H.
     get_invariant _st.
@@ -337,7 +337,33 @@ Ltac prove_in_inv :=
     subst.
 
 
-    unfold comp_eq_ptr8_zero. admit. unfold check_mem_aux.
+    unfold comp_eq_ptr8_zero.
+    destruct Hc10_eq.
+    {
+      (**r case1: v5 = Vptr b ofs *)
+      destruct H0 as (b & ofs & Hv5_eq).
+      rewrite Hv5_eq.
+      unfold returnM.
+      intros.
+      eexists; exists m, Events.E0.
+      split.
+      {
+        forward_star.
+        rewrite Hv5_eq.
+        unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.cmp_ptr, option_map; simpl.
+        fold Int.zero; rewrite Int.eq_true; simpl.
+        reflexivity.
+      forward_star.
+      forward_star.
+      forward_star.
+      }
+    }
+    {
+      (**r case2: v5 = Int.zero*)
+      rewrite H0.
+      rewrite Int.eq_true.
+    }
+    unfold check_mem_aux.
     simpl.
     TBC...
   (** goal: correct_body _ _ (bindM (is_well_chunk_bool ... *)

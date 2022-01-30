@@ -490,7 +490,6 @@ Proof.
 
     repeat forward_star.
     right.
-    Transparent Archi.ptr64.
     unfold Vnullptr.
     reflexivity.
 
@@ -597,7 +596,6 @@ Proof.
     forward_star.
 
 
-    Transparent Archi.ptr64.
     simpl.
     unfold Cop.sem_mod, Cop.sem_binarith, Cop.sem_cast; simpl.
 
@@ -683,7 +681,6 @@ Proof.
 
     eexists; exists m, Events.E0.
     repeat split.
-    Transparent Archi.ptr64.
     forward_star. forward_star.
     simpl.
     rewrite andb_true_iff in Hcond1.
@@ -881,7 +878,6 @@ Proof.
 
     forward_star. forward_star.
     right.
-    Transparent Archi.ptr64.
     unfold Vnullptr.
     reflexivity.
     constructor.
