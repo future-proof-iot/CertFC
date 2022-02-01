@@ -43,7 +43,7 @@ Section Load_mem.
 
 Definition val_ptr_correctM (blk: block) (x:val) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
     x = v /\
-    (exists ofs, v = Vptr blk ofs) /\
+    (exists ofs, v = Vptr blk ofs) (*/\
     (exists res, Mem.loadv Mint8unsigned m v = Some (Vint res) /\
      Mem.loadv Mint8unsigned (bpf_m stm) v = Some (Vint res)) /\
     (exists res, Mem.loadv Mint16unsigned m v = Some (Vint res) /\
@@ -51,7 +51,7 @@ Definition val_ptr_correctM (blk: block) (x:val) (v: val) (stm:State.state) (m: 
     (exists res, Mem.loadv Mint32 m v = Some (Vint res) /\
      Mem.loadv Mint32 (bpf_m stm) v = Some (Vint res)) /\
     (exists res, Mem.loadv Mint64 m v = Some (Vlong res) /\
-     Mem.loadv Mint64 (bpf_m stm) v = Some (Vlong res)).
+     Mem.loadv Mint64 (bpf_m stm) v = Some (Vlong res)) *).
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
@@ -82,7 +82,9 @@ Proof.
   unfold stateless, match_chunk in c2.
   unfold val_ptr_correctM in c3.
   destruct c1 as (Hptr & Hmatch).
-  destruct c3 as (Heq_c0 & (ofs & Heq_ptr) & (res0 & Hload0 & Hst0)  & (res1 & Hload1 & Hst1) & (res2 & Hload2 & Hst2) & (res3 & Hload3 & Hst3)).
+  destruct c3 as (Hc0_eq & (ofs & Hv1_eq)).
+(*
+  destruct c3 as (Heq_c0 & (ofs & Heq_ptr) & (res0 & Hload0 & Hst0)  & (res1 & Hload1 & Hst1) & (res2 & Hload2 & Hst2) & (res3 & Hload3 & Hst3)). *)
   subst.
 
   (**according to:
@@ -126,14 +128,14 @@ Proof.
     split.
     {
       forward_star.
-      repeat forward_star.
       unfold rBPFAST.well_chunk_Z.
       fold Int.one; rewrite Int.unsigned_one.
       simpl.
+      unfold step2.
       forward_star.
-      repeat forward_star.
       forward_star.
-      repeat forward_star.
+      admit.
+      (**r match_state should say the load/store permission of mrs_block? *)
       apply Hload0.
       simpl.
       unfold Cop.sem_cast; simpl.
