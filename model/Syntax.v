@@ -1,6 +1,6 @@
 From compcert Require Import Ctypes AST Integers.
 
-From bpf.comm Require Import Int16 Regs rBPFAST.
+From bpf.comm Require Import Regs rBPFAST.
 
 (** For use to distinguish ALU32 and ALU64 *)
 Inductive arch := A32 | A64.

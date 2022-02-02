@@ -299,6 +299,7 @@ Definition opcode_alu32_eqb  (o o' : opcode_alu32) : bool :=
   | op_BPF_MOD32, op_BPF_MOD32
   | op_BPF_XOR32, op_BPF_XOR32
   | op_BPF_MOV32, op_BPF_MOV32
+  | op_BPF_ARSH32,op_BPF_ARSH32
   | op_BPF_ALU32_ILLEGAL_INS, op_BPF_ALU32_ILLEGAL_INS => true
   | _, _ => false
   end.

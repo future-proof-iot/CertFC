@@ -1,7 +1,7 @@
 From compcert Require Import Integers AST Ctypes.
 From Coq Require Import Arith ZArith Lia.
 
-From bpf.comm Require Import Int16 Flag Regs rBPFValues.
+From bpf.comm Require Import Flag Regs rBPFValues.
 From bpf.model Require Import Syntax Decode.
 
 Open Scope nat_scope.

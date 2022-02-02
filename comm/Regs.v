@@ -274,6 +274,6 @@ Definition int64_to_src_reg (ins: int64): reg :=
 
 Definition get_opcode (ins:int64): nat := Z.to_nat (Int64.unsigned (Int64.and ins (Int64.repr 0xff))).
 
-Definition get_offset (i:int64) := sint16_to_sint32 (int64_to_sint16 (Int64.shru (Int64.shl i (Int64.repr 32)) (Int64.repr 48))).
+Definition get_offset (i:int64) := Int.sign_ext 16 (Int.repr (Int64.unsigned (Int64.shru (Int64.shl i (Int64.repr 32)) (Int64.repr 48)))).
 
 Definition get_immediate (i1:int64) := int64_to_sint32 (Int64.shru i1 (Int64.repr 32)).

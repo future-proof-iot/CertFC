@@ -83,6 +83,39 @@ Definition opcode_alu64_correct (opcode: opcode_alu64) (v: val) :=
   | op_BPF_ALU64_ILLEGAL_INS => exists i, v = Vint (Int.repr (Z.of_nat (Nat.land i 240))) /\ is_illegal_alu64_ins i
   end.
 
+Definition is_illegal_alu32_ins (i:nat): Prop :=
+  ((Nat.land i 240) <> 0x00) /\
+  ((Nat.land i 240) <> 0x10) /\
+  ((Nat.land i 240) <> 0x20) /\
+  ((Nat.land i 240) <> 0x30) /\
+  ((Nat.land i 240) <> 0x40) /\
+  ((Nat.land i 240) <> 0x50) /\
+  ((Nat.land i 240) <> 0x60) /\
+  ((Nat.land i 240) <> 0x70) /\
+  (((Nat.land i 240) = 0x80) -> (i <> 0x84)) /\
+  ((Nat.land i 240) <> 0x90) /\
+  ((Nat.land i 240) <> 0xa0) /\
+  ((Nat.land i 240) <> 0xb0) /\
+  ((Nat.land i 240) <> 0xc0).
+
+Definition opcode_alu32_correct (opcode: opcode_alu32) (v: val) :=
+  match opcode with
+  | op_BPF_ADD32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x04 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x0c 240)))
+  | op_BPF_SUB32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x14 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x1c 240)))
+  | op_BPF_MUL32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x24 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x2c 240)))
+  | op_BPF_DIV32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x34 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x3c 240)))
+  | op_BPF_OR32  => v = Vint (Int.repr (Z.of_nat (Nat.land 0x44 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x4c 240)))
+  | op_BPF_AND32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x54 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x5c 240)))
+  | op_BPF_LSH32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x64 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x6c 240)))
+  | op_BPF_RSH32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x74 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x7c 240)))
+  | op_BPF_NEG32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x84 240)))
+  | op_BPF_MOD32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0x94 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0x9c 240)))
+  | op_BPF_XOR32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0xa4 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0xac 240)))
+  | op_BPF_MOV32 => v = Vint (Int.repr (Z.of_nat (Nat.land 0xb4 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0xbc 240)))
+  | op_BPF_ARSH32=> v = Vint (Int.repr (Z.of_nat (Nat.land 0xc4 240))) \/ v = Vint (Int.repr (Z.of_nat (Nat.land 0xcc 240)))
+  | op_BPF_ALU32_ILLEGAL_INS => exists i, v = Vint (Int.repr (Z.of_nat (Nat.land i 240))) /\ is_illegal_alu32_ins i
+  end.
+
 Definition is_illegal_jmp_ins (i:nat): Prop :=
   (((Nat.land i 240) = 0x00) -> (i <> 0x05)) /\
   ((Nat.land i 240) <> 0x10) /\

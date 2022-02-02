@@ -5,7 +5,7 @@ From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
-From bpf.comm Require Import Int16 MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs State Monad.
+From bpf.comm Require Import MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs State Monad.
 From bpf.monadicmodel Require Import Opcode.
 
 Open Scope monad_scope.
@@ -21,9 +21,9 @@ Definition reg64_to_reg32 (d: val): M val := returnM (val_intuoflongu d).
 Definition get_src (ins: int64): M reg :=
   returnM (int64_to_src_reg ins).
 
-Definition get_offset (ins:int64):M int := returnM (sint16_to_sint32 (int64_to_sint16 (Int64.shru (Int64.shl ins (Int64.repr 32)) (Int64.repr 48)))).
+Definition get_offset (ins:int64):M int := returnM (get_offset ins).
 
-Definition get_immediate (ins:int64):M int := returnM (int64_to_sint32 (Int64.shru ins (Int64.repr 32))).
+Definition get_immediate (ins:int64):M int := returnM (get_immediate ins).
 
 Definition eval_immediate (ins: int): M val := returnM ((Val.longofint (sint32_to_vint ins))).
 

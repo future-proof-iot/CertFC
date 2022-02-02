@@ -112,6 +112,86 @@ Proof.
   repeat simpl_nat.
 Qed.
 
+Definition byte_to_opcode_alu32_if (op: nat): opcode_alu32 :=
+  let opcode_alu := Nat.land op 0xf0 in (**r masking operation *)
+    if opcode_alu =? 0x00 then op_BPF_ADD32
+    else if opcode_alu =? 0x10 then op_BPF_SUB32
+    else if opcode_alu =? 0x20 then op_BPF_MUL32
+    else if opcode_alu =? 0x30 then op_BPF_DIV32
+    else if opcode_alu =? 0x40 then op_BPF_OR32
+    else if opcode_alu =? 0x50 then op_BPF_AND32
+    else if opcode_alu =? 0x60 then op_BPF_LSH32
+    else if opcode_alu =? 0x70 then op_BPF_RSH32
+    else if opcode_alu =? 0x80 then if Nat.eqb op 0x84 then op_BPF_NEG32 else op_BPF_ALU32_ILLEGAL_INS
+    else if opcode_alu =? 0x90 then op_BPF_MOD32
+    else if opcode_alu =? 0xa0 then op_BPF_XOR32
+    else if opcode_alu =? 0xb0 then op_BPF_MOV32
+    else if opcode_alu =? 0xc0 then op_BPF_ARSH32
+    else op_BPF_ALU32_ILLEGAL_INS
+  .
+
+Lemma opcode_alu32_eqb_eq : forall a b,
+    opcode_alu32_eqb a b = true -> a = b.
+Proof.
+  destruct a,b ; simpl ;congruence.
+Qed.
+
+Lemma lift_opcode_alu32 :
+  forall (E: nat -> opcode_alu32)
+         (F: nat -> opcode_alu32) n,
+    ((fun n => opcode_alu32_eqb (E n) (F n) = true) n) <->
+      (((fun n => opcode_alu32_eqb (E n) (F n)) n) = true).
+Proof.
+  intros.
+  simpl. reflexivity.
+Qed.
+
+Lemma byte_to_opcode_alu32_if_same:
+  forall (op: nat),
+    byte_to_opcode_alu32 op = byte_to_opcode_alu32_if op.
+Proof.
+  intros.
+  unfold byte_to_opcode_alu32, byte_to_opcode_alu32_if.
+  apply opcode_alu32_eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern (Nat.land op 240) in P.
+  match goal with
+  | P := ?F (Nat.land op 240) |- _=>
+      apply (Forall_exec_spec F 240)
+  end.
+  destruct (op =? 132).
+  vm_compute.
+  reflexivity.
+  vm_compute.
+  reflexivity.
+  rewrite Nat.land_comm.
+  apply land_bound.
+Qed.
+
+Lemma byte_to_opcode_alu32_if_default:
+  forall op
+    (Hadd: Nat.land op 240 <> 0x00)
+    (Hsub: Nat.land op 240 <> 0x10)
+    (Hmul: Nat.land op 240 <> 0x20)
+    (Hdiv: Nat.land op 240 <> 0x30)
+    (Hor:  Nat.land op 240 <> 0x40)
+    (Hand: Nat.land op 240 <> 0x50)
+    (Hlsh: Nat.land op 240 <> 0x60)
+    (Hrsh: Nat.land op 240 <> 0x70)
+    (Hneg: Nat.land op 240 <> 0x80)
+    (Hmod: Nat.land op 240 <> 0x90)
+    (Hxor: Nat.land op 240 <> 0xa0)
+    (Hmov: Nat.land op 240 <> 0xb0)
+    (Harsh: Nat.land op 240 <> 0xc0),
+      byte_to_opcode_alu32_if op = op_BPF_ALU32_ILLEGAL_INS.
+Proof.
+  intros.
+  unfold byte_to_opcode_alu32_if.
+  repeat simpl_nat.
+Qed.
+
 Definition byte_to_opcode_branch_if (op: nat): opcode_branch :=
   let opcode_alu := Nat.land op 0xf0 in (**r masking operation *)
     if opcode_alu =? 0x00 then if Nat.eqb op 0x05 then op_BPF_JA else op_BPF_JMP_ILLEGAL_INS

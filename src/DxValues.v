@@ -8,7 +8,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool Nat.
 
-From bpf.comm Require Import Int16 rBPFValues.
+From bpf.comm Require Import rBPFValues.
 From bpf.src Require Import CoqIntegers DxIntegers InfComp.
 
 (** Coq2C: Values.val -> unsigned long long or unsigned int
@@ -440,7 +440,7 @@ Definition Const_complu_set :=
                            end).
 
 (******************** Val Type Casting *******************)
-
+(*
 Definition sint16Toval64SymbolType :=
   MkCompilableSymbolType [sint16CompilableType] (Some val64CompilableType).
 
@@ -450,7 +450,7 @@ Definition Const_sint16_to_vlong :=
                 (fun es => match es with
                            | [e1] => Ok (Csyntax.Ecast e1 C_U64)
                            | _       => Err PrimitiveEncodingFailed
-                           end).
+                           end).*)
 
 Definition val64TovalU32SymbolType :=
   MkCompilableSymbolType [val64CompilableType] (Some valU32CompilableType).
@@ -587,8 +587,8 @@ Module Exports.
 
   Definition valS64CompilableType   := valS64CompilableType.
   Definition Const_valS32TovalS64   := Const_valS32TovalS64.
-
-  Definition Const_sint16_to_vlong  := Const_sint16_to_vlong.
+(*
+  Definition Const_sint16_to_vlong  := Const_sint16_to_vlong.*)
   Definition Const_val64TovalU32    := Const_val64TovalU32.
   Definition Const_val64TovalS32    := Const_val64TovalS32.
   Definition Const_sint32_to_vint   := Const_sint32_to_vint.

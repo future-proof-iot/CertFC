@@ -5,8 +5,6 @@ From compcert.cfrontend Require Csyntax Ctypes Cop.
 From compcert.common Require Import Values.
 From compcert.lib Require Import Integers.
 
-From bpf.comm Require Import Int16.
-
 (** Coq2C: Values.val -> unsigned long long or unsigned int
   *)
 
@@ -143,18 +141,10 @@ Definition complu_set (x y: val): bool :=
 
 (******************** Val Type Casting *******************)
 
-(** ptr2valu32: ptr -> u32
-
-*)
-(*
-Definition ptr2valu32 (ptr: valptr32_t): valu32_t :=
-  match ptr with
-  | Vptr _ _ => here we need memory_region information...*)
-
 (** sint16_to_vlong: sint16_t -> Val
-    *)
+    *) (*
 Definition sint16_to_vlong (i:int16): val :=
-  Vlong (Int64.repr (Int16.signed i)).
+  Vlong (Int64.repr (Int16.signed i)). *)
 
 (** _to_u32 : vlong_to_vint <==> val_intoflongu
   *)
@@ -183,16 +173,10 @@ Definition int64_to_vlong (v: int64): val := Vlong v.
 Definition int64_to_int8 (x: int64): byte := Byte.repr (Int64.unsigned x).
 
 (** sint16_to_uint64: sint16_t -> uint64_t
-  *)
-Definition sint16_to_int64 (x: int16): int64 := Int64.repr (Int16.signed x).
+  *) (*
+Definition sint16_to_int64 (x: int16): int64 := Int64.repr (Int16.signed x). *)
 
-(** sint16_to_sint32: sint16_t -> sint32_t
-  *)
-Definition sint16_to_sint32 (x: int16): int := Int.repr (Int16.signed x).
-
-(** int64_to_sint16: int64_t -> sint16_t
-  *)
-Definition int64_to_sint16 (x: int64): int16 := Int16.repr (Int64.unsigned x).
+Definition int64_to_offset16 (i: int64) := Int.sign_ext 16 (Int.repr (Int64.unsigned i)).
 
 (** int64_to_sint32: int64_t -> sint32_t
   *)

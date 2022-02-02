@@ -5,7 +5,7 @@ From compcert Require Import Integers Values AST Memory.
 
 From dx.Type Require Import Bool Nat.
 
-From bpf.comm Require Import Int16 MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs.
+From bpf.comm Require Import MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs.
 From bpf.src Require Import DxIntegers DxList64 DxRegs DxValues DxOpcode DxFlag DxMemRegion DxMemType DxMonad DxNat.
 
 From bpf.monadicmodel Require Import Opcode.
@@ -27,12 +27,12 @@ Definition reg64_to_reg32 (d: val64_t): M valu32_t := returnM (val_intuoflongu d
 Definition get_src (ins: int64_t): M reg :=
   returnM (int64_to_src_reg ins).
 
-Definition get_offset (ins:int64_t ):M sint32_t := returnM (sint16_to_sint32 (int64_to_sint16 (Int64.shru (Int64.shl ins int64_32) int64_48))).
+Definition get_offset (ins:int64_t ):M sint32_t := returnM (get_offset ins).
 (** get_immediate: int64_t -> vals32_t. Tthe return type is vals32_t instead of sint32_t because `imm` is always used to be calculted with other `val` type.
   *)
 (*Definition eval_offset (ins: sint32_t ):M val64_t := returnM (int64_to_vlong ins).*)
 
-Definition get_immediate (ins:int64_t):M sint32_t := returnM (int64_to_sint32 (Int64.shru ins int64_32)).
+Definition get_immediate (ins:int64_t):M sint32_t := returnM (get_immediate ins).
 
 Definition eval_immediate (ins: sint32_t): M vals64_t := returnM ((Val_slongofint (sint32_to_vint ins))).
 

@@ -1,7 +1,7 @@
 From compcert Require Import Integers Values AST Ctypes.
 From Coq Require Import ZArith.
 
-From bpf.comm Require Import Int16 Flag Regs rBPFValues.
+From bpf.comm Require Import Flag Regs rBPFValues.
 From bpf.model Require Import Syntax.
 
 (** Overview:
