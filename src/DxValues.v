@@ -35,7 +35,7 @@ Definition valptr8SymbolType :=
   MkCompilableSymbolType nil (Some valptr8CompilableType).
 
 Definition Const_valptr_null := constant valptr8SymbolType valptr_null C_U8ptr_zero.
-
+(*
 Definition valptr8ToboolSymbolType :=
   MkCompilableSymbolType [valptr8CompilableType] (Some boolCompilableType).
 
@@ -48,7 +48,7 @@ Definition Const_comp_eq_ptr8_zero :=
                 (fun es => match es with
                            | [e1] => Ok (C_U8ptr_eq e1 C_U8ptr_zero)
                            | _       => Err PrimitiveEncodingFailed
-                           end).
+                           end). *)
 
 (******************** Val2U32 *******************)
 
@@ -524,8 +524,8 @@ Definition Const_valU32Toval64 :=
 
 Module Exports.
   Definition valptr8CompilableType := valptr8CompilableType.
-  Definition Const_valptr_null      := Const_valptr_null.
-  Definition Const_comp_eq_ptr8_zero:= Const_comp_eq_ptr8_zero.
+  Definition Const_valptr_null      := Const_valptr_null. (*
+  Definition Const_comp_eq_ptr8_zero:= Const_comp_eq_ptr8_zero. *)
 
   Definition valU32CompilableType   := valU32CompilableType.
   Definition Const_val32_zero       := Const_val32_zero.

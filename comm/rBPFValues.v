@@ -2,7 +2,7 @@ From Coq Require Import List ZArith.
 Import ListNotations.
 
 From compcert.cfrontend Require Csyntax Ctypes Cop.
-From compcert.common Require Import Values.
+From compcert.common Require Import Values Memory.
 From compcert.lib Require Import Integers.
 
 (** Coq2C: Values.val -> unsigned long long or unsigned int
@@ -10,12 +10,8 @@ From compcert.lib Require Import Integers.
 
 (******************** Val2PTR *******************)
 
+Definition cmp_ptr32_null (m: Mem.mem) (v: val): option bool := Val.cmpu_bool (Mem.valid_pointer m) Ceq Vnullptr v.
 
-Definition comp_eq_ptr8_zero (x: val): bool :=
-  match x with
-  | Vint n1 => Int.eq n1 Int.zero
-  | _ => false
-  end.
 
 (** Type signature: val -> val -> option val
     we use `val32_divu` to replace `Val.divu`

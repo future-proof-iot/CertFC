@@ -33,7 +33,7 @@ Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : pt
   (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions ofs) = Some (Vint vl) /\ (start_addr mr) = Vint vl)    /\ (**r start_addr mr = Vint vl*)
     (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 4))) = Some (Vint vl) /\ (block_size mr) = Vint vl) /\ (**r block_size mr = Vint vl*)
     (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vint vl) /\ correct_perm (block_perm mr)  vl) /\ (**r block_perm mr = Vint vl*)
-    (exists b o,  Mem.loadv AST.Mptr  m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 12))) = Some (Vptr b o) /\ (block_ptr mr) = Vptr b o).
+    (exists b,  Mem.loadv AST.Mptr  m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 12))) = Some (Vptr b Ptrofs.zero) /\ (block_ptr mr) = Vptr b Ptrofs.zero).
 
 
 (*Definition size_of_region  :=  16. (* 4 * 32 bits *)*)
@@ -639,7 +639,7 @@ Proof.
   intros.
   unfold match_region_at_ofs in *.
   specialize (mem_regs0 i H).
-  destruct mem_regs0 as  ((vl0 & Hload0 & Heq0) & (vl1 & Hload1 & Heq1) & (vl2 & Hload2 & Heq2) & (blk3 & ofs3 & Hload3 & Heq_ptr)).
+  destruct mem_regs0 as  ((vl0 & Hload0 & Heq0) & (vl1 & Hload1 & Heq1) & (vl2 & Hload2 & Heq2) & (blk3 & Hload3 & Heq_ptr)).
 
   split.
   exists vl0; rewrite <- Hload0; split; [
@@ -653,7 +653,7 @@ Proof.
   exists vl2; rewrite <- Hload2; split; [
   eapply Mem.load_store_other; eauto | assumption].
 
-  exists blk3, ofs3; rewrite <- Hload3; split; [
+  exists blk3; rewrite <- Hload3; split; [
   eapply Mem.load_store_other; eauto | assumption].
 Qed.
 
@@ -1089,6 +1089,24 @@ Proof.
     destruct Hst' as (_ , _, _, _, _, _, _, _, _, Hvalid).
     rewrite <- upd_flag_same_mem.
     assumption.
+Qed.
+
+Lemma match_state_implies_valid_pointer:
+  forall state_block mrs_block ins_block st m b ofs
+    (Hmatch : match_state state_block mrs_block ins_block st m)
+    (Hvalid : Mem.valid_pointer (bpf_m st) b ofs = true),
+      Mem.valid_pointer m b ofs = true.
+Proof.
+  intros.
+  rewrite Mem.valid_pointer_nonempty_perm in *.
+  destruct Hmatch.
+  eapply Mem.perm_unchanged_on; eauto.
+  simpl.
+  apply Mem.perm_valid_block in Hvalid.
+  clear - minvalid0 Hvalid.
+  destruct minvalid0 as (Hv0 & Hv1 & Hv2 & H).
+  repeat split.
+  all: eapply Mem.valid_not_valid_diff; eauto.
 Qed.
 
 Close Scope Z_scope.

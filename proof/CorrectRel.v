@@ -22,6 +22,9 @@ Definition valu32_correct (x:val) (v: val) :=
 Definition val_ptr_correct (x:val) (v: val) :=
   x = v /\ exists b ofs, x = Vptr b ofs.
 
+Definition val_ptr_null_correct (x:val) (v: val) (st: State.state) (m: Mem.mem) :=
+  x = v /\ ((exists b ofs, x = Vptr b ofs) \/ x = Vnullptr).
+
 Definition addr_valu32_correct (x:val) (v: val) :=
   x = v /\ exists b ofs, x = Vptr b ofs.
 

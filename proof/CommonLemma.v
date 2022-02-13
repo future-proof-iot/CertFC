@@ -1,4 +1,4 @@
-From compcert Require Import Coqlib Clight Integers Values Ctypes Memory.
+From compcert Require Import Coqlib Clight Integers Values Ctypes Memory AST.
 From bpf.comm Require Import Regs State.
 From bpf.proof Require Import Clightlogic CommonLib.
 From Coq Require Import List Lia ZArith.
@@ -526,21 +526,15 @@ Section Test.
   Qed.
 End Test. *)
 
-(*
-Lemma upd_reg_preserves_perm: forall r vl vl' chunk st m1 m m2 b b' ofs ofs' k p
-  (Hstate_inject: Mem.inject inject_id (bpf_m st) m) (**r (inject_bl_state b') *)
-  (Hstore: Mem.store chunk m b' ofs' vl' = Some m2)
-  (Hrbpf_m: bpf_m (upd_reg r vl st) = m1)
-  (Hrbpf_perm: Mem.perm m1 b ofs k p),
-    Mem.perm m2 b ofs k p.
+Lemma valid_access_chunk_implies:
+  forall m chunk b ofs p,
+    Mem.valid_access m chunk b ofs p -> Mem.valid_access m Mint8unsigned b ofs p.
 Proof.
-    unfold upd_reg; simpl; intros; subst.
-    apply Mem.perm_inject with (f:= inject_id) (m2:=m) (b2:= b) (delta:=0%Z)in Hrbpf_perm.
-    rewrite Z.add_0_r in Hrbpf_perm.
-    apply (Mem.perm_store_1 _ _ _ _ _ _ Hstore _ _ _ _ Hrbpf_perm).
-
-    reflexivity.
-    assumption.
-Qed. *)
+  intros.
+  destruct chunk.
+  all: unfold Mem.valid_access in *;
+    destruct H as (Hrange & Halign);
+    split; [unfold size_chunk, Mem.range_perm in *; intros; apply Hrange; lia | unfold align_chunk; apply Z.divide_1_l].
+Qed.
 
 Close Scope Z_scope.

@@ -33,7 +33,7 @@ Lemma align_chunk_int_range:
   forall chunk, 0 <= align_chunk chunk <= Int.max_unsigned.
 Proof.
   unfold align_chunk; intros.
-  rewrite Int_max_unsigned_eq.
+  change Int.max_unsigned with 4294967295.
   destruct chunk; try lia.
 Qed.
 

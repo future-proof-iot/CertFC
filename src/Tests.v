@@ -45,6 +45,7 @@ GenerateIntermediateRepresentation SymbolIRs
   store_mem_reg
   eval_ins_len
   eval_ins
+  cmp_ptr32_nullM
   __
   get_mem_region
   get_dst
@@ -53,6 +54,8 @@ GenerateIntermediateRepresentation SymbolIRs
   get_offset
   get_immediate
   eval_immediate
+  get_src64
+  get_src32
   get_opcode_ins
   get_opcode_alu64
   get_opcode_alu32
@@ -64,16 +67,16 @@ GenerateIntermediateRepresentation SymbolIRs
   get_opcode
   get_add
   get_sub
-  get_addr_ofs
-  get_block_ptr (**r adding the four functions *)
+  get_addr_ofs (*
+  get_block_ptr (**r adding the four functions *)*)
   get_start_addr
   get_block_size
   get_block_perm
   is_well_chunk_bool
   check_mem_aux2
   check_mem_aux
-  check_mem
-  comp_and_0x08_byte
+  check_mem (*
+  comp_and_0x08_byte *)
   step_opcode_alu64
   step_opcode_alu32
   step_opcode_branch

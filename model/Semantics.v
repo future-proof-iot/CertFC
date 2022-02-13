@@ -1,7 +1,7 @@
 From compcert Require Import Memory Memtype Integers Values Ctypes AST.
 From Coq Require Import ZArith Lia.
 
-From bpf.comm Require Import Flag Regs State Monad MemRegion rBPFAST rBPFMemType rBPFValues.
+From bpf.comm Require Import Flag rBPFValues Regs State Monad MemRegion rBPFAST rBPFMemType.
 From bpf.model Require Import Syntax Decode.
 
 Open Scope Z_scope.
@@ -201,8 +201,6 @@ Definition get_sub (x y: val): M val := returnM (Val.sub x y).
 
 Definition get_addr_ofs (x: val) (ofs: int): M val := returnM (val_intuoflongu (Val.addl x (Val.longofint (sint32_to_vint ofs)))).
 
-Definition get_block_ptr (mr: memory_region) : M val := returnM (block_ptr mr).
-
 Definition get_start_addr (mr: memory_region): M val := returnM (start_addr mr).
 
 Definition get_block_size (mr: memory_region): M val := returnM (block_size mr).
@@ -218,21 +216,17 @@ Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
 Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (chunk: memory_chunk): M val :=
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then
-      do ptr    <- get_block_ptr mr; (**r Vptr b 0 *)
       do start  <- get_start_addr mr;
       do size   <- get_block_size mr;
       do mr_perm  <- get_block_perm mr;
       do lo_ofs <- get_sub addr start;
       do hi_ofs <- get_add lo_ofs (memory_chunk_to_valu32 chunk);
-        if (andb (compu_le_32 Vzero lo_ofs) (compu_lt_32 hi_ofs size)) then
-          if (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
-                   (comp_eq_32 Vzero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))) then
-              if (perm_ge mr_perm perm) then
-                returnM (Val.add ptr lo_ofs) (**r Vptr b lo_ofs *)
-              else
-                returnM Vnullptr
-          else
-            returnM Vnullptr (**r = 0 *)
+        if andb (andb
+                  (compu_lt_32 hi_ofs size)
+                  (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
+                        (comp_eq_32 Vzero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))))
+                (perm_ge mr_perm perm) then
+                returnM (Val.add (block_ptr mr) lo_ofs) (**r Vptr b lo_ofs *)
         else
           returnM Vnullptr
     else
@@ -244,7 +238,8 @@ Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr
   | S n =>
     do cur_mr   <- get_mem_region n mrs;
     do check_mem <- check_mem_aux2 cur_mr perm addr chunk;
-      if comp_eq_ptr8_zero check_mem then
+    do is_null   <- cmp_ptr32_nullM check_mem;
+      if is_null then
         check_mem_aux n perm chunk addr mrs
       else
         returnM check_mem
@@ -256,7 +251,8 @@ Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: val): M val
       do mem_reg_num <- eval_mrs_num;
       do mrs      <- eval_mrs_regions;
       do check_mem <- check_mem_aux mem_reg_num perm chunk addr mrs;
-        if comp_eq_ptr8_zero check_mem then
+      do is_null   <- cmp_ptr32_nullM check_mem;
+        if is_null then
           returnM Vnullptr
         else
           returnM check_mem
@@ -269,7 +265,8 @@ Definition step_load_x_operation (chunk: memory_chunk) (d:reg) (s:reg) (ofs:off)
   do sv   <- eval_reg s;
   do addr <- get_addr_ofs sv ofs;
   do ptr  <- check_mem Readable chunk addr;
-    if comp_eq_ptr8_zero ptr then
+  do is_null   <- cmp_ptr32_nullM ptr;
+    if is_null then
       upd_flag BPF_ILLEGAL_MEM
     else
       do v <- load_mem chunk ptr;
@@ -286,13 +283,15 @@ Definition step_store_operation (chunk: memory_chunk) (d: reg) (s: reg+imm) (ofs
     | inl r =>
       do src <- eval_reg r;
       do ptr  <- check_mem Writable chunk addr;
-        if comp_eq_ptr8_zero ptr then
+      do is_null   <- cmp_ptr32_nullM ptr;
+        if is_null then
           upd_flag BPF_ILLEGAL_MEM
         else
           do _ <- store_mem_reg chunk ptr src; returnM tt
     | inr i =>
       do ptr  <- check_mem Writable chunk addr;
-        if comp_eq_ptr8_zero ptr then
+      do is_null   <- cmp_ptr32_nullM ptr;
+        if is_null then
           upd_flag BPF_ILLEGAL_MEM
         else
           do _ <- store_mem_imm chunk ptr (sint32_to_vint i); returnM tt

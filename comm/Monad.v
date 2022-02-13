@@ -1,6 +1,6 @@
 From compcert Require Import AST Integers Values Memory.
 
-From bpf.comm Require Import Regs Flag MemRegion State.
+From bpf.comm Require Import Regs Flag rBPFValues MemRegion State.
 
 Definition M (A: Type) := state -> option (A * state).
 
@@ -53,6 +53,12 @@ Definition store_mem_reg (chunk: memory_chunk) (ptr: val) (v: val) : M unit := f
 
 Definition eval_ins_len : M int := fun st => Some (eval_ins_len st, st).
 Definition eval_ins (idx: int) : M int64 := fun st => Some (eval_ins idx st, st).
+
+Definition cmp_ptr32_nullM (v: val): M bool := fun st =>
+  match cmp_ptr32_null (State.eval_mem st) v with
+  | Some res => Some (res, st)
+  | None     => None
+  end.
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

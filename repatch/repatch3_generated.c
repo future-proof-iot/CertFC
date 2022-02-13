@@ -34,6 +34,40 @@ static __attribute__((always_inline)) inline long long eval_immediate(int ins)
   return (long long) ins;
 }
 
+static __attribute__((always_inline)) inline unsigned long long get_src64(struct bpf_state* st, unsigned char x, unsigned long long ins)
+{
+  int imm;
+  long long imm64;
+  unsigned int src;
+  unsigned long long src64;
+  if (0 == (x & 8)) {
+    imm = get_immediate(ins);
+    imm64 = eval_immediate(imm);
+    return imm64;
+  } else {
+    src = get_src(ins);
+    src64 = eval_reg(st, src);
+    return src64;
+  }
+}
+
+static __attribute__((always_inline)) inline unsigned int get_src32(struct bpf_state* st, unsigned char x, unsigned long long ins)
+{
+  int imm;
+  unsigned int src;
+  unsigned long long src64;
+  unsigned int src32;
+  if (0 == (x & 8)) {
+    imm = get_immediate(ins);
+    return imm;
+  } else {
+    src = get_src(ins);
+    src64 = eval_reg(st, src);
+    src32 = reg64_to_reg32(src64);
+    return src32;
+  }
+}
+
 static __attribute__((always_inline)) inline unsigned char get_opcode_ins(unsigned long long ins)
 {
   return (unsigned char) (ins & 255LLU);
@@ -94,11 +128,6 @@ static __attribute__((always_inline)) inline unsigned int get_addr_ofs(unsigned 
   return (unsigned int) (x + (unsigned long long) ofs);
 }
 
-static __attribute__((always_inline)) inline unsigned char *get_block_ptr(struct memory_region *mr)
-{
-  return (*mr).block_ptr;
-}
-
 static __attribute__((always_inline)) inline unsigned int get_start_addr(struct memory_region *mr)
 {
   return (*mr).start_addr;
@@ -134,7 +163,6 @@ static __attribute__((always_inline)) inline _Bool is_well_chunk_bool(unsigned i
 static __attribute__((always_inline)) inline unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int perm, unsigned int addr, unsigned int chunk)
 {
   _Bool well_chunk;
-  unsigned char *ptr;
   unsigned int start;
   unsigned int size;
   unsigned int mr_perm;
@@ -142,22 +170,15 @@ static __attribute__((always_inline)) inline unsigned char *check_mem_aux2(struc
   unsigned int hi_ofs;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
-    ptr = get_block_ptr(mr);
     start = get_start_addr(mr);
     size = get_block_size(mr);
     mr_perm = get_block_perm(mr);
     lo_ofs = get_sub(addr, start);
     hi_ofs = get_add(lo_ofs, chunk);
-    if (0U <= lo_ofs && hi_ofs < size) {
-      if (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk) {
-        if (mr_perm >= perm) {
-          return ptr + lo_ofs;
-        } else {
-          return 0;
-        }
-      } else {
-        return 0;
-      }
+    if (hi_ofs < size
+          && (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk)
+          && mr_perm >= perm) {
+      return (*mr).block_ptr + lo_ofs;
     } else {
       return 0;
     }
@@ -171,13 +192,15 @@ static __attribute__((always_inline)) inline unsigned char *check_mem_aux(struct
   unsigned int n;
   struct memory_region *cur_mr;
   unsigned char *check_mem;
+  _Bool is_null;
   if (num == 0U) {
     return 0;
   } else {
     n = num - 1U;
     cur_mr = get_mem_region(n, mrs);
     check_mem = check_mem_aux2(cur_mr, perm, addr, chunk);
-    if (check_mem == 0) {
+    is_null = cmp_ptr32_nullM(st, check_mem);
+    if (is_null) {
       return check_mem_aux(st, n, perm, chunk, addr, mrs);
     } else {
       return check_mem;
@@ -191,13 +214,15 @@ static __attribute__((always_inline)) inline unsigned char *check_mem(struct bpf
   unsigned int mem_reg_num;
   struct memory_region *mrs;
   unsigned char *check_mem;
+  _Bool is_null;
   well_chunk = is_well_chunk_bool(chunk);
   if (well_chunk) {
     mem_reg_num = eval_mrs_num(st);
     mrs = eval_mrs_regions(st);
     check_mem =
       check_mem_aux(st, mem_reg_num, perm, chunk, addr, mrs);
-    if (check_mem == 0) {
+    is_null = cmp_ptr32_nullM(st, check_mem);
+    if (is_null) {
       return 0;
     } else {
       return check_mem;
@@ -205,11 +230,6 @@ static __attribute__((always_inline)) inline unsigned char *check_mem(struct bpf
   } else {
     return 0;
   }
-}
-
-static __attribute__((always_inline)) inline _Bool comp_and_0x08_byte(unsigned char x)
-{
-  return 0 == (x & 8);
 }
 
 static __attribute__((always_inline)) inline void step_opcode_alu64(struct bpf_state* st, unsigned long long dst64, unsigned long long src64, unsigned int dst, unsigned char op)
@@ -516,12 +536,14 @@ static __attribute__((always_inline)) inline void step_opcode_mem_ld_reg(struct 
 {
   unsigned char opcode_ld;
   unsigned char *addr_ptr;
+  _Bool is_null;
   unsigned long long v;
   opcode_ld = get_opcode_mem_ld_reg(op);
   switch (opcode_ld) {
     case 97:
       addr_ptr = check_mem(st, 1U, 4U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -531,7 +553,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_ld_reg(struct 
       }
     case 105:
       addr_ptr = check_mem(st, 1U, 2U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -541,7 +564,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_ld_reg(struct 
       }
     case 113:
       addr_ptr = check_mem(st, 1U, 1U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -551,7 +575,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_ld_reg(struct 
       }
     case 121:
       addr_ptr = check_mem(st, 1U, 8U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -570,11 +595,13 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct 
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
+  _Bool is_null;
   opcode_st = get_opcode_mem_st_imm(op);
   switch (opcode_st) {
     case 98:
       addr_ptr = check_mem(st, 2U, 4U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -583,7 +610,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct 
       }
     case 106:
       addr_ptr = check_mem(st, 2U, 2U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -592,7 +620,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct 
       }
     case 114:
       addr_ptr = check_mem(st, 2U, 1U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -601,7 +630,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct 
       }
     case 122:
       addr_ptr = check_mem(st, 2U, 8U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -619,11 +649,13 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_reg(struct 
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
+  _Bool is_null;
   opcode_st = get_opcode_mem_st_reg(op);
   switch (opcode_st) {
     case 99:
       addr_ptr = check_mem(st, 2U, 4U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -632,7 +664,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_reg(struct 
       }
     case 107:
       addr_ptr = check_mem(st, 2U, 2U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -641,7 +674,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_reg(struct 
       }
     case 115:
       addr_ptr = check_mem(st, 2U, 1U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -650,7 +684,8 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_reg(struct 
       }
     case 123:
       addr_ptr = check_mem(st, 2U, 8U, addr);
-      if (addr_ptr == 0) {
+      is_null = cmp_ptr32_nullM(st, addr_ptr);
+      if (is_null) {
         upd_flag(st, -2);
         return;
       } else {
@@ -672,74 +707,41 @@ static __attribute__((always_inline)) inline void step(struct bpf_state* st)
   unsigned char opc;
   unsigned int dst;
   unsigned long long dst64;
-  _Bool is_imm;
-  int imm;
-  long long imm64;
-  unsigned int src;
   unsigned long long src64;
   unsigned int dst32;
   unsigned int src32;
   int ofs;
+  int imm;
+  unsigned int src;
   unsigned int addr;
   pc = eval_pc(st);
   ins = eval_ins(st, pc);
   op = get_opcode_ins(ins);
   opc = get_opcode(op);
+  dst = get_dst(ins);
   switch (opc) {
     case 7:
-      dst = get_dst(ins);
       dst64 = eval_reg(st, dst);
-      is_imm = comp_and_0x08_byte(op);
-      if (is_imm) {
-        imm = get_immediate(ins);
-        imm64 = eval_immediate(imm);
-        step_opcode_alu64(st, dst64, imm64, dst, op);
-        return;
-      } else {
-        src = get_src(ins);
-        src64 = eval_reg(st, src);
-        step_opcode_alu64(st, dst64, src64, dst, op);
-        return;
-      }
+      src64 = get_src64(st, op, ins);
+      step_opcode_alu64(st, dst64, src64, dst, op);
+      return;
     case 4:
-      dst = get_dst(ins);
       dst64 = eval_reg(st, dst);
       dst32 = reg64_to_reg32(dst64);
-      is_imm = comp_and_0x08_byte(op);
-      if (is_imm) {
-        imm = get_immediate(ins);
-        step_opcode_alu32(st, dst32, imm, dst, op);
-        return;
-      } else {
-        src = get_src(ins);
-        src64 = eval_reg(st, src);
-        src32 = reg64_to_reg32(src64);
-        step_opcode_alu32(st, dst32, src32, dst, op);
-        return;
-      }
+      src32 = get_src32(st, op, ins);
+      step_opcode_alu32(st, dst32, src32, dst, op);
+      return;
     case 5:
-      dst = get_dst(ins);
       dst64 = eval_reg(st, dst);
       ofs = get_offset(ins);
-      is_imm = comp_and_0x08_byte(op);
-      if (is_imm) {
-        imm = get_immediate(ins);
-        imm64 = eval_immediate(imm);
-        step_opcode_branch(st, dst64, imm64, pc, ofs, op);
-        return;
-      } else {
-        src = get_src(ins);
-        src64 = eval_reg(st, src);
-        step_opcode_branch(st, dst64, src64, pc, ofs, op);
-        return;
-      }
+      src64 = get_src64(st, op, ins);
+      step_opcode_branch(st, dst64, src64, pc, ofs, op);
+      return;
     case 0:
-      dst = get_dst(ins);
       imm = get_immediate(ins);
       step_opcode_mem_ld_imm(st, imm, pc, dst, op);
       return;
     case 1:
-      dst = get_dst(ins);
       src = get_src(ins);
       src64 = eval_reg(st, src);
       ofs = get_offset(ins);
@@ -747,7 +749,6 @@ static __attribute__((always_inline)) inline void step(struct bpf_state* st)
       step_opcode_mem_ld_reg(st, addr, pc, dst, op);
       return;
     case 2:
-      dst = get_dst(ins);
       dst64 = eval_reg(st, dst);
       ofs = get_offset(ins);
       imm = get_immediate(ins);
@@ -755,7 +756,6 @@ static __attribute__((always_inline)) inline void step(struct bpf_state* st)
       step_opcode_mem_st_imm(st, imm, addr, pc, dst, op);
       return;
     case 3:
-      dst = get_dst(ins);
       dst64 = eval_reg(st, dst);
       src = get_src(ins);
       src64 = eval_reg(st, src);

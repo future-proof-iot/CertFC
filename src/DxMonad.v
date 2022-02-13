@@ -44,6 +44,7 @@ Definition store_mem_reg (chunk: memory_chunk) (ptr: valu32_t) (v: val64_t) : M 
 Definition eval_ins_len : M sint32_t := Monad.eval_ins_len.
 Definition eval_ins (idx: sint32_t) : M int64_t := Monad.eval_ins idx.
 
+Definition cmp_ptr32_nullM (v: valptr8_t): M bool := Monad.cmp_ptr32_nullM v.
 
 Declare Scope monad_scope.
 Notation "'do' x <-- a ; b" :=

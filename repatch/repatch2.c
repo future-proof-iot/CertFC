@@ -88,6 +88,10 @@ const char old_words[][200] = {
 	"int get_offset(",
 	"int get_immediate(",
 	"long long eval_immediate(",
+	"unsigned long long get_src64(",
+	"unsigned int get_src32(",
+	"= get_src64(",
+	"= get_src32(",
 	"unsigned char get_opcode_ins(",
 	"unsigned char get_opcode_alu64(",
 	"unsigned char get_opcode_alu32(",
@@ -102,7 +106,6 @@ const char old_words[][200] = {
 	"unsigned int get_addr_ofs(",
 	"_Bool is_well_chunk_bool(",
 	"unsigned char *check_mem_aux2(",
-	"_Bool comp_and_0x08_byte(",
 	"unsigned char *get_block_ptr",
 	"unsigned int get_start_addr",
 	"unsigned int get_block_size",
@@ -110,7 +113,8 @@ const char old_words[][200] = {
 	
 	"unsigned long long *l",
 	"eval_ins_len()",
-	"eval_ins("
+	"eval_ins(",
+	"= cmp_ptr32_nullM("
 	
 	};
 
@@ -183,6 +187,10 @@ const char new_words[][200] = {
 	"static __attribute__((always_inline)) inline int get_offset(",
 	"static __attribute__((always_inline)) inline int get_immediate(",
 	"static __attribute__((always_inline)) inline long long eval_immediate(",
+	"static __attribute__((always_inline)) inline unsigned long long get_src64(struct bpf_state* st, ",
+	"static __attribute__((always_inline)) inline unsigned int get_src32(struct bpf_state* st, ",
+	"= get_src64(st, ",
+	"= get_src32(st, ",
 	"static __attribute__((always_inline)) inline unsigned char get_opcode_ins(",
 	"static __attribute__((always_inline)) inline unsigned char get_opcode_alu64(",
 	"static __attribute__((always_inline)) inline unsigned char get_opcode_alu32(",
@@ -197,7 +205,6 @@ const char new_words[][200] = {
 	"static __attribute__((always_inline)) inline unsigned int get_addr_ofs(",
 	"static __attribute__((always_inline)) inline _Bool is_well_chunk_bool(",
 	"static __attribute__((always_inline)) inline unsigned char *check_mem_aux2(",
-	"static __attribute__((always_inline)) inline _Bool comp_and_0x08_byte(",
 	"static __attribute__((always_inline)) inline unsigned char *get_block_ptr",
 	"static __attribute__((always_inline)) inline unsigned int get_start_addr",
 	"static __attribute__((always_inline)) inline unsigned int get_block_size",
@@ -205,7 +212,8 @@ const char new_words[][200] = {
 	
 	"const unsigned long long *l",
 	"eval_ins_len(st)",
-	"eval_ins(st, "
+	"eval_ins(st, ",
+	"= cmp_ptr32_nullM(st, "
 	
 	};
 	

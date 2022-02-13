@@ -43,10 +43,10 @@ Proof.
     eapply step_preserving_inv_branch; eauto.
   - (* BPF_LDDW *)
     destruct Int.lt; simpl in Hsem.
-    unfold Int64.iwordsize', Int64.zwordsize, Int64.wordsize, Wordsize_64.wordsize in Hsem; simpl in Hsem.
+    change Int64.iwordsize' with (Int.repr 64) in Hsem.
     unfold Int.ltu in Hsem.
-    rewrite Int.unsigned_repr in Hsem; [idtac| rewrite Int_max_unsigned_eq; lia].
-    rewrite Int.unsigned_repr in Hsem; [idtac| rewrite Int_max_unsigned_eq; lia].
+    change (Int.unsigned (Int.repr 32)) with 32 in Hsem.
+    change (Int.unsigned (Int.repr 64)) with 64 in Hsem.
     simpl in Hsem.
 
     inversion Hsem; clear Hsem.
@@ -149,53 +149,80 @@ Proof.
     rewrite Heval_reg; clear Heval_reg.
     unfold rBPFValues.sint32_to_vint.
 
-    assert (Hcheck_mem: exists ret, check_mem Memtype.Readable m
-    (rBPFValues.val_intuoflongu
-       match Val.longofint (Vint o) with
-       | Vlong n2 => Vlong (Int64.add vl n2)
-       | Vptr b2 ofs2 =>
-           if Archi.ptr64
-           then Vptr b2 (Ptrofs.add ofs2 (Ptrofs.of_int64 vl))
-           else Vundef
-       | _ => Vundef
-       end)
-    st = Some (ret, st)). {
-      eapply check_mem_same_state.
+    unfold rBPFValues.val_intuoflongu, Val.longofint.
+    remember (Int.repr (Int64.unsigned (Int64.add vl (Int64.repr (Int.signed o))))) as addr.
+    assert (Hcheck_mem: exists ret, check_mem Memtype.Readable m (Vint addr) st = Some (ret, st)). {
+      rewrite check_memM_P; auto.
+      eexists; reflexivity.
+      constructor.
     }
     destruct Hcheck_mem as (ret & Hcheck_mem);
     rewrite Hcheck_mem.
-    destruct rBPFValues.comp_eq_ptr8_zero eqn: Hptr; [intro H; inversion H|].
+    unfold cmp_ptr32_nullM.
+    assert (Hcheck_mem' := Hcheck_mem).
+    rewrite check_memM_P in Hcheck_mem; auto.
+    2:{ constructor. }
+    inversion Hcheck_mem.
+    rewrite H0.
+    unfold check_memP in H0.
+    unfold State.eval_mem.
 
-    unfold load_mem, State.load_mem.
+    destruct is_well_chunk_boolP eqn: Hwell_chunk_bool.
+    2:{
+      subst.
+      unfold rBPFValues.cmp_ptr32_null; simpl.
+      rewrite Int.eq_true.
+      intro H; inversion H.
+    }
+    remember (check_mem_auxP st (eval_mem_num st) Memtype.Readable m 
+            (Vint addr) (State.eval_mem_regions st)) as res.
+    symmetry in Heqres.
+    eapply mem_inv_check_mem_auxP_valid_pointer in Heqres; eauto.
+    2:{ constructor. }
+    destruct Heqres as [ (b & ofs & Hptr & Hvalid) | Hnull]; subst.
+    2:{ unfold rBPFValues.cmp_ptr32_null; simpl.
+        rewrite Int.eq_true.
+        change Vnullptr with (Vint Int.zero); simpl.
+        rewrite Int.eq_true.
+        intro H; inversion H.
+    }
+    unfold rBPFValues.cmp_ptr32_null; simpl.
+    rewrite Int.eq_true, Hvalid; simpl.
+    rewrite Hvalid.
+    unfold State.load_mem.
     (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
     assert (Hwell_chunk: is_well_chunk m). {
-      unfold rBPFValues.comp_eq_ptr8_zero in Hptr.
-      unfold check_mem, bindM, returnM in Hcheck_mem.
-      Transparent Archi.ptr64.
-      destruct m; simpl in Hcheck_mem; inversion Hcheck_mem; unfold Vnullptr in *; subst; simpl in Hptr;
-      try (rewrite Int.eq_true in Hptr; inversion Hptr).
-      all: unfold is_well_chunk; constructor.
+      unfold is_well_chunk_boolP in Hwell_chunk_bool.
+      unfold is_well_chunk.
+      destruct m; try inversion Hwell_chunk_bool.
+      all: constructor.
     }
     unfold State._to_vlong, Regs.val64_zero.
-    assert (Hneq: ret <> Vnullptr). {
-      unfold rBPFValues.comp_eq_ptr8_zero in Hptr.
-      unfold Vnullptr; simpl.
-      intro.
-      rewrite H in Hptr.
-      rewrite Int.eq_true in Hptr.
-      inversion Hptr.
+    unfold rBPFValues.cmp_ptr32_null in *; simpl in Hcheck_mem.
+    rewrite Int.eq_true, Hvalid in Hcheck_mem; simpl in Hcheck_mem.
+    inversion Hcheck_mem.
+
+    assert (Hneq: match
+  Val.cmpu_bool (Memory.Mem.valid_pointer (bpf_m st)) Ceq Vnullptr (Vptr b ofs)
+with
+| Some false => Vptr b ofs
+| _ => Vnullptr
+end <> Vnullptr). {
+      change Vnullptr with (Vint Int.zero); simpl.
+      rewrite Int.eq_true, Hvalid; simpl.
+      intro H; inversion H.
     }
 
-    unfold rBPFValues.val_intuoflongu, Val.longofint in Hcheck_mem.
+    rewrite H0.
     destruct m.
     all: try (intro H; inversion H).
-    all: eapply check_mem_load' in Hmem; eauto.
-    all: destruct Hmem as (res & Hmem & Hvlong_vint); clear H; rewrite Hmem in H1.
+    all: eapply check_mem_load in Hmem; eauto.
+    all: destruct Hmem as (res & Hmem & Hvlong_vint); clear H.
+    all: simpl in Hmem; rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem; rewrite Hmem in H2.
     all: unfold is_vlong_or_vint in Hvlong_vint.
-    all: destruct res; try inversion Hvlong_vint; inversion H1.
+    all: destruct res; try inversion Hvlong_vint; inversion H2.
     unfold Memory.Mem.loadv in Hmem.
-    destruct ret; inversion Hmem.
-    eapply Memory.Mem.load_type in H0; eauto.
+    eapply Memory.Mem.load_type in Hmem; eauto.
   - (* BPF_ST *)
     unfold step_store_operation.
     unfold_monad.
@@ -212,78 +239,77 @@ Proof.
       rewrite Heval_reg; clear Heval_reg.
       unfold rBPFValues.sint32_to_vint.
 
-      assert (Hcheck_mem: exists ret, check_mem Memtype.Writable m
-      (rBPFValues.val_intuoflongu
-       match Val.longofint (Vint o) with
-       | Vlong n2 => Vlong (Int64.add vl n2)
-       | Vptr b2 ofs2 =>
-           if Archi.ptr64
-           then Vptr b2 (Ptrofs.add ofs2 (Ptrofs.of_int64 vl))
-           else Vundef
-       | _ => Vundef
-       end)
-      st = Some (ret, st)). {
-        eapply check_mem_same_state.
+
+
+      unfold rBPFValues.val_intuoflongu, Val.longofint.
+      remember (Int.repr (Int64.unsigned (Int64.add vl (Int64.repr (Int.signed o))))) as addr.
+      assert (Hcheck_mem: exists ret, check_mem Memtype.Writable m (Vint addr) st = Some (ret, st)). {
+        rewrite check_memM_P; auto.
+        eexists; reflexivity.
+        constructor.
       }
       destruct Hcheck_mem as (ret & Hcheck_mem);
       rewrite Hcheck_mem.
-      destruct rBPFValues.comp_eq_ptr8_zero eqn: Hptr; [intro H; inversion H|].
+      unfold cmp_ptr32_nullM.
+      assert (Hcheck_mem' := Hcheck_mem).
+      rewrite check_memM_P in Hcheck_mem; auto.
+      2:{ constructor. }
+      inversion Hcheck_mem.
+      rewrite H0.
+      unfold check_memP in H0.
+      unfold State.eval_mem.
 
-      unfold load_mem, State.load_mem.
+      destruct is_well_chunk_boolP eqn: Hwell_chunk_bool.
+      2:{
+        subst.
+        unfold rBPFValues.cmp_ptr32_null; simpl.
+        rewrite Int.eq_true.
+        intro H; inversion H.
+      }
+      remember (check_mem_auxP st (eval_mem_num st) Memtype.Writable m 
+              (Vint addr) (State.eval_mem_regions st)) as res.
+      symmetry in Heqres.
+      eapply mem_inv_check_mem_auxP_valid_pointer in Heqres; eauto.
+      2:{ constructor. }
+      destruct Heqres as [ (b & ofs & Hptr & Hvalid) | Hnull]; subst.
+      2:{ unfold rBPFValues.cmp_ptr32_null; simpl.
+          rewrite Int.eq_true.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro H; inversion H.
+      }
+      unfold rBPFValues.cmp_ptr32_null; simpl.
+      rewrite Int.eq_true, Hvalid; simpl.
+      rewrite Hvalid.
+      unfold store_mem_reg, State.store_mem_reg.
       (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
       assert (Hwell_chunk: is_well_chunk m). {
-        unfold rBPFValues.comp_eq_ptr8_zero in Hptr.
-        unfold check_mem, bindM, returnM in Hcheck_mem.
-        Transparent Archi.ptr64.
-        destruct m; simpl in Hcheck_mem; inversion Hcheck_mem; unfold Vnullptr in *; subst; simpl in Hptr;
-        try (rewrite Int.eq_true in Hptr; inversion Hptr).
-        all: unfold is_well_chunk; constructor.
+        unfold is_well_chunk_boolP in Hwell_chunk_bool.
+        unfold is_well_chunk.
+        destruct m; try inversion Hwell_chunk_bool.
+        all: constructor.
       }
-      unfold State._to_vlong, Regs.val64_zero.
-      assert (Hneq: ret <> Vnullptr). {
-        unfold rBPFValues.comp_eq_ptr8_zero in Hptr.
-        unfold Vnullptr; simpl.
-        intro.
-        rewrite H in Hptr.
-        rewrite Int.eq_true in Hptr.
-        inversion Hptr.
-      }
+      unfold store_mem_reg, State.store_mem_reg, State.vlong_to_vint_or_vlong, State._to_vlong, Regs.val64_zero.
+      unfold rBPFValues.cmp_ptr32_null in *; simpl in Hcheck_mem.
+      rewrite Int.eq_true, Hvalid in Hcheck_mem; simpl in Hcheck_mem.
+      inversion Hcheck_mem.
+      rewrite H0.
+      assert (Hneq: match
+  Val.cmpu_bool (Memory.Mem.valid_pointer (bpf_m st)) Ceq Vnullptr (Vptr b ofs)
+with
+| Some false => Vptr b ofs
+| _ => Vnullptr
+end <> Vnullptr). {
+      change Vnullptr with (Vint Int.zero); simpl.
+      rewrite Int.eq_true, Hvalid; simpl.
+      intro H; inversion H.
+    }
 
-      unfold rBPFValues.val_intuoflongu, Val.longofint in Hcheck_mem.
-      unfold store_mem_reg, State.store_mem_reg, State.vlong_to_vint_or_vlong.
-      assert (Heq: match m with
-    | AST.Mint8unsigned | AST.Mint16unsigned | AST.Mint32 | AST.Mint64 =>
-        match
-          Memory.Mem.storev m (bpf_m st) ret
-            match m with
-            | AST.Mint8unsigned | AST.Mint16unsigned | AST.Mint32 =>
-                Vint (Int.repr (Int64.unsigned vl0))
-            | AST.Mint64 => Vlong vl0
-            | _ => Vundef
-            end
-        with
-        | Some m0 => Some (upd_mem m0 st)
-        | None => None
-        end
-    | _ => Some (State.upd_flag Flag.BPF_ILLEGAL_MEM st)
-    end = match
-          Memory.Mem.storev m (bpf_m st) ret
-            match m with
-            | AST.Mint8unsigned | AST.Mint16unsigned | AST.Mint32 =>
-                Vint (Int.repr (Int64.unsigned vl0))
-            | AST.Mint64 => Vlong vl0
-            | _ => Vundef
-            end
-        with
-        | Some m0 => Some (upd_mem m0 st)
-        | None => None
-        end). {
-        destruct m; try inversion Hwell_chunk; try reflexivity.
-      }
-      rewrite Heq; clear Heq.
       destruct m; try inversion Hwell_chunk.
-      all: eapply check_mem_store' with (v := Vlong vl0) in Hmem; eauto.
-      all: destruct Hmem as (m & Hstore & Hinv); unfold vlong_or_vint_to_vint_or_vlong, vlong_to_vint_or_vlong in Hstore; rewrite Hstore.
+      all: eapply check_mem_store with (v := Vlong vl0) in Hmem; eauto.
+      all: unfold Val.cmpu_bool in Hmem; change Vnullptr with (Vint Int.zero) in Hmem; simpl in Hmem.
+      all: rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem.
+      all: simpl; destruct Hmem as (m & Hstore & Hinv); unfold vlong_or_vint_to_vint_or_vlong, vlong_to_vint_or_vlong in Hstore; rewrite Hstore.
       all: intro H; inversion H.
     +
       apply reg_inv_eval_reg with (r:= r) in Hreg as Heval_reg.
@@ -291,76 +317,75 @@ Proof.
       rewrite Heval_reg; clear Heval_reg.
       unfold rBPFValues.sint32_to_vint.
 
-      assert (Hcheck_mem: exists ret, check_mem Memtype.Writable m
-      (rBPFValues.val_intuoflongu
-       match Val.longofint (Vint o) with
-       | Vlong n2 => Vlong (Int64.add vl n2)
-       | Vptr b2 ofs2 =>
-           if Archi.ptr64
-           then Vptr b2 (Ptrofs.add ofs2 (Ptrofs.of_int64 vl))
-           else Vundef
-       | _ => Vundef
-       end)
-      st = Some (ret, st)). {
-        eapply check_mem_same_state.
+      unfold rBPFValues.val_intuoflongu, Val.longofint.
+      remember (Int.repr (Int64.unsigned (Int64.add vl (Int64.repr (Int.signed o))))) as addr.
+      assert (Hcheck_mem: exists ret, check_mem Memtype.Writable m (Vint addr) st = Some (ret, st)). {
+        rewrite check_memM_P; auto.
+        eexists; reflexivity.
+        constructor.
       }
       destruct Hcheck_mem as (ret & Hcheck_mem);
       rewrite Hcheck_mem.
-      destruct rBPFValues.comp_eq_ptr8_zero eqn: Hptr; [intro H; inversion H|].
+      unfold cmp_ptr32_nullM.
+      assert (Hcheck_mem' := Hcheck_mem).
+      rewrite check_memM_P in Hcheck_mem; auto.
+      2:{ constructor. }
+      inversion Hcheck_mem.
+      rewrite H0.
+      unfold check_memP in H0.
+      unfold State.eval_mem.
 
-      unfold load_mem, State.load_mem.
+      destruct is_well_chunk_boolP eqn: Hwell_chunk_bool.
+      2:{
+        subst.
+        unfold rBPFValues.cmp_ptr32_null; simpl.
+        rewrite Int.eq_true.
+        intro H; inversion H.
+      }
+      remember (check_mem_auxP st (eval_mem_num st) Memtype.Writable m 
+              (Vint addr) (State.eval_mem_regions st)) as res.
+      symmetry in Heqres.
+      eapply mem_inv_check_mem_auxP_valid_pointer in Heqres; eauto.
+      2:{ constructor. }
+      destruct Heqres as [ (b & ofs & Hptr & Hvalid) | Hnull]; subst.
+      2:{ unfold rBPFValues.cmp_ptr32_null; simpl.
+          rewrite Int.eq_true.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro H; inversion H.
+      }
+      unfold rBPFValues.cmp_ptr32_null; simpl.
+      rewrite Int.eq_true, Hvalid; simpl.
+      rewrite Hvalid.
+      unfold store_mem_reg, State.store_mem_reg.
       (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
       assert (Hwell_chunk: is_well_chunk m). {
-        unfold rBPFValues.comp_eq_ptr8_zero in Hptr.
-        unfold check_mem, bindM, returnM in Hcheck_mem.
-        Transparent Archi.ptr64.
-        destruct m; simpl in Hcheck_mem; inversion Hcheck_mem; unfold Vnullptr in *; subst; simpl in Hptr;
-        try (rewrite Int.eq_true in Hptr; inversion Hptr).
-        all: unfold is_well_chunk; constructor.
+        unfold is_well_chunk_boolP in Hwell_chunk_bool.
+        unfold is_well_chunk.
+        destruct m; try inversion Hwell_chunk_bool.
+        all: constructor.
       }
-      unfold State._to_vlong, Regs.val64_zero.
-      assert (Hneq: ret <> Vnullptr). {
-        unfold rBPFValues.comp_eq_ptr8_zero in Hptr.
-        unfold Vnullptr; simpl.
-        intro.
-        rewrite H in Hptr.
-        rewrite Int.eq_true in Hptr.
-        inversion Hptr.
-      }
+      unfold store_mem_imm, State.store_mem_imm, vint_to_vint_or_vlong, State._to_vlong, Regs.val64_zero.
+      unfold rBPFValues.cmp_ptr32_null in *; simpl in Hcheck_mem.
+      rewrite Int.eq_true, Hvalid in Hcheck_mem; simpl in Hcheck_mem.
+      inversion Hcheck_mem.
+      rewrite H0.
+      assert (Hneq: match
+  Val.cmpu_bool (Memory.Mem.valid_pointer (bpf_m st)) Ceq Vnullptr (Vptr b ofs)
+with
+| Some false => Vptr b ofs
+| _ => Vnullptr
+end <> Vnullptr). {
+      change Vnullptr with (Vint Int.zero); simpl.
+      rewrite Int.eq_true, Hvalid; simpl.
+      intro H; inversion H.
+    }
 
-      unfold rBPFValues.val_intuoflongu, Val.longofint in Hcheck_mem.
-      unfold store_mem_imm, State.store_mem_imm, State.vint_to_vint_or_vlong.
-      assert (Heq: match m with
-    | AST.Mint8unsigned | AST.Mint16unsigned | AST.Mint32 | AST.Mint64 =>
-        match
-          Memory.Mem.storev m (bpf_m st) ret
-            match m with
-            | AST.Mint8unsigned | AST.Mint16unsigned | AST.Mint32 => Vint i
-            | AST.Mint64 => Vlong (Int64.repr (Int.unsigned i))
-            | _ => Vundef
-            end
-        with
-        | Some m0 => Some (upd_mem m0 st)
-        | None => None
-        end
-    | _ => Some (State.upd_flag Flag.BPF_ILLEGAL_MEM st)
-    end = match
-          Memory.Mem.storev m (bpf_m st) ret
-            match m with
-            | AST.Mint8unsigned | AST.Mint16unsigned | AST.Mint32 => Vint i
-            | AST.Mint64 => Vlong (Int64.repr (Int.unsigned i))
-            | _ => Vundef
-            end
-        with
-        | Some m0 => Some (upd_mem m0 st)
-        | None => None
-        end). {
-        destruct m; try inversion Hwell_chunk; try reflexivity.
-      }
-      rewrite Heq; clear Heq.
       destruct m; try inversion Hwell_chunk.
-      all: eapply check_mem_store' with (v := Vint i) in Hmem; eauto.
-      all: destruct Hmem as (m & Hstore & Hinv); unfold vlong_or_vint_to_vint_or_vlong, vint_to_vint_or_vlong in Hstore; rewrite Hstore.
+      all: eapply check_mem_store with (v := Vint i) in Hmem; eauto.
+      all: unfold Val.cmpu_bool in Hmem; change Vnullptr with (Vint Int.zero) in Hmem; simpl in Hmem.
+      all: rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem.
+      all: simpl; destruct Hmem as (m & Hstore & Hinv); unfold vlong_or_vint_to_vint_or_vlong, vint_to_vint_or_vlong in Hstore; rewrite Hstore.
       all: intro H; inversion H.
   - (* BPF_RET *)
     intro H; inversion H.

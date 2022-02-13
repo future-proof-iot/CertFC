@@ -45,7 +45,7 @@ Proof.
   intros.
   unfold DxInstructions.get_opcode_ins, DxInstructions.get_opcode, eval_pc, eval_ins.
   unfold_dx.
-  unfold DxInstructions.get_dst, DxInstructions.comp_and_0x08_byte, DxInstructions.get_immediate, DxInstructions.eval_immediate, DxInstructions.step_opcode_alu64, DxInstructions.get_src; unfold_dx.
+  unfold DxInstructions.get_dst, DxInstructions.get_src64, DxInstructions.get_src32, DxInstructions.get_immediate, DxInstructions.eval_immediate, DxInstructions.step_opcode_alu64, DxInstructions.get_src; unfold_dx.
   unfold get_dst, DxInstructions.step_opcode_mem_ld_imm; unfold_dx.
   unfold DxInstructions.get_opcode_mem_ld_imm, DxInstructions.get_immediate; unfold_dx.
   destruct (match
@@ -63,7 +63,7 @@ Proof.
   | 5%nat => op_BPF_Branch
   | 7%nat => op_BPF_ALU64
   | _ => op_BPF_ILLEGAL_INS
-  end) eqn: Hopcode; unfold eval_reg, comp_and_0x08_byte; unfold_dx.
+  end) eqn: Hopcode; unfold eval_reg, get_src64, get_src32; unfold_dx.
   - unfold DxInstructions.get_opcode_alu64; unfold_dx.
     unfold get_immediate, eval_immediate, step_opcode_alu64; unfold_dx.
     unfold get_opcode_alu64, DxValues.Val_slongofint, get_src, upd_reg; unfold_dx.
@@ -83,7 +83,7 @@ Proof.
        (Int64.unsigned
           (Int64.and (State.eval_ins (State.eval_pc x) x) (Int64.repr 255))))).
       all: simpl; try reflexivity.
-  - unfold eval_reg, comp_and_0x08_byte; unfold_dx.
+  - unfold eval_reg, get_src64, get_src32; unfold_dx.
     unfold DxInstructions.reg64_to_reg32, reg64_to_reg32; unfold_dx.
     destruct ((0 =?
    Nat.land

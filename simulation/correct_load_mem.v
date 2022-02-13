@@ -43,15 +43,7 @@ Section Load_mem.
 
 Definition val_ptr_correctM (blk: block) (x:val) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
     x = v /\
-    (exists ofs, v = Vptr blk ofs) (*/\
-    (exists res, Mem.loadv Mint8unsigned m v = Some (Vint res) /\
-     Mem.loadv Mint8unsigned (bpf_m stm) v = Some (Vint res)) /\
-    (exists res, Mem.loadv Mint16unsigned m v = Some (Vint res) /\
-     Mem.loadv Mint16unsigned (bpf_m stm) v = Some (Vint res)) /\
-    (exists res, Mem.loadv Mint32 m v = Some (Vint res) /\
-     Mem.loadv Mint32 (bpf_m stm) v = Some (Vint res)) /\
-    (exists res, Mem.loadv Mint64 m v = Some (Vlong res) /\
-     Mem.loadv Mint64 (bpf_m stm) v = Some (Vlong res)) *).
+    (exists ofs, v = Vptr blk ofs). (**r we should say the relation between memory_chunk and Vptr blk ofs: `valid_access_dec m chunk b ofs Readable` *)
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=

@@ -98,8 +98,9 @@ Lemma check_mem_aux_eq: forall n p c v l,
     if Nat.eqb n 0 then returnM Vnullptr
     else bindM (get_mem_region (Nat.pred n) l) (fun cur_mr => 
           (bindM (check_mem_aux2 cur_mr p v c) (fun check_mem =>
-              if comp_eq_ptr8_zero check_mem then check_mem_aux (Nat.pred n) p c v l
-              else returnM check_mem))).
+            (bindM (cmp_ptr32_nullM check_mem) (fun is_null =>
+              if is_null then check_mem_aux (Nat.pred n) p c v l
+              else returnM check_mem))))).
 Proof.
   destruct n.
   - simpl. intros; reflexivity.
@@ -229,7 +230,7 @@ Qed.
   + (**r then here we lose m0 = m? *)
     intros.
     (**r correct_body _ _ (bindM (get_mem_region _ _) ... *)
-    eapply correct_statement_seq_body_pure;eauto.
+    eapply correct_statement_seq_body with (modifies1:=nil);eauto.
     unfold typeof.
     change_app_for_statement.
     eapply correct_statement_call with (has_cast:=false).
@@ -271,7 +272,7 @@ Ltac prove_in_inv :=
 
     intros.
     (**r goal: correct_body p val (bindM (check_mem_aux2 ... *)
-    eapply correct_statement_seq_body_pure;eauto.
+    eapply correct_statement_seq_body with (modifies1:=nil);eauto.
     unfold typeof.
     change_app_for_statement.
     eapply correct_statement_call with (has_cast:=false).
@@ -338,7 +339,22 @@ Ltac prove_in_inv :=
 
 
     unfold comp_eq_ptr8_zero.
-    destruct Hc10_eq.
+    destruct Hc10_eq.(* we should use IH here.
+    2:{
+      rewrite H0.
+      rewrite Int.eq_true.
+      destruct IHc.
+      specialize (fn_eval_ok3 st2).
+      unfold f, fn, app, f_check_mem_aux in fn_eval_ok3.
+      unfold all_args in fn_eval_ok3.
+      destruct check_mem_aux eqn: Hcheck_mem_aux; [| constructor].
+      destruct p7.
+      intro k.
+      instantiate (1 := nil).
+      unfold fn_params in fn_eval_ok3.
+      unfold Ctypes.Internal in fn_eval_ok3.
+      eapply fn_eval_ok3.
+    } *)
     {
       (**r case1: v5 = Vptr b ofs *)
       destruct H0 as (b & ofs & Hv5_eq).
@@ -352,10 +368,11 @@ Ltac prove_in_inv :=
         rewrite Hv5_eq.
         unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.cmp_ptr, option_map; simpl.
         fold Int.zero; rewrite Int.eq_true; simpl.
+        unfold Mem.valid_pointer.
         reflexivity.
-      forward_star.
-      forward_star.
-      forward_star.
+        forward_star.
+        forward_star.
+        forward_star.
       }
     }
     {
@@ -429,7 +446,7 @@ Ltac prove_in_inv :=
   (**r if-then branch *)
 
   (** goal: correct_body p val (bindM (get_block_ptr c) *)
-  eapply correct_statement_seq_body_pure.
+  eapply correct_statement_seq_body with (modifies1:=nil).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
@@ -467,7 +484,7 @@ Ltac prove_in_inv :=
   }
   intros.
   (** goal: correct_body _ _ (bindM (get_start_addr c) ... *)
-  eapply correct_statement_seq_body_pure.
+  eapply correct_statement_seq_body with (modifies1:=nil).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
@@ -502,7 +519,7 @@ Ltac prove_in_inv :=
   intuition eauto.
   intros.
   (** goal: correct_body _ _ (bindM (get_block_size c) ... *)
-  eapply correct_statement_seq_body_pure.
+  eapply correct_statement_seq_body with (modifies1:=nil).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
@@ -538,7 +555,7 @@ Ltac prove_in_inv :=
   intuition eauto.
   intros.
   (**r goal: correct_body p val (bindM (get_block_perm c) ... *)
-  eapply correct_statement_seq_body_pure.
+  eapply correct_statement_seq_body with (modifies1:=nil).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
@@ -576,7 +593,7 @@ Ltac prove_in_inv :=
 
 
   (** goal:  correct_body _ _ (bindM (get_sub c0 x0) ... *)
-  eapply correct_statement_seq_body_pure.
+  eapply correct_statement_seq_body with (modifies1:=nil).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
@@ -614,7 +631,7 @@ Ltac prove_in_inv :=
   eauto. (**r we lost one very imporant information: the input/output constraints *)
   intros.
   (** goal:  correct_body _ _ (bindM (get_add x2 (memory_chunk_to_valu32 c1)) ... *)
-  eapply correct_statement_seq_body_pure.
+  eapply correct_statement_seq_body with (modifies1:=nil).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.

@@ -27,6 +27,26 @@ Definition get_immediate (ins:int64):M int := returnM (get_immediate ins).
 
 Definition eval_immediate (ins: int): M val := returnM ((Val.longofint (sint32_to_vint ins))).
 
+Definition get_src64 (x: nat) (ins: int64): M val := 
+  if Nat.eqb 0 (Nat.land x 0x08) then
+    do imm    <- get_immediate ins;
+    do imm64  <- eval_immediate imm;
+      returnM imm64
+  else
+    do src    <- get_src ins;
+    do src64  <- eval_reg src;
+      returnM src64.
+
+Definition get_src32 (x: nat) (ins: int64): M val := 
+  if Nat.eqb 0 (Nat.land x 0x08) then
+    do imm    <- get_immediate ins;
+      returnM (sint32_to_vint imm)
+  else
+    do src    <- get_src ins;
+    do src64  <- eval_reg src;
+    do src32  <- reg64_to_reg32 src64;
+      returnM src32.
+
 Definition get_opcode_ins (ins: int64): M nat :=
   returnM (int64_to_opcode ins).
 
@@ -60,7 +80,8 @@ Definition get_sub (x y: val): M val := returnM (Val.sub x y).
 
 Definition get_addr_ofs (x: val) (ofs: int): M val := returnM (val_intuoflongu (Val.addl x (Val.longofint (sint32_to_vint ofs)))).
 
-Definition get_block_ptr (mr: memory_region) : M val := returnM (block_ptr mr).
+(*
+Definition get_block_ptr (mr: memory_region) : M val := returnM (block_ptr mr).*)
 
 Definition get_start_addr (mr: memory_region): M val := returnM (start_addr mr).
 
@@ -76,26 +97,25 @@ Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
 
 Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (chunk: memory_chunk): M val :=
   do well_chunk <- is_well_chunk_bool chunk;
-    if well_chunk then
-      do ptr    <- get_block_ptr mr; (**r Vptr b 0 *)
+    if well_chunk then (*
+      do ptr    <- get_block_ptr mr; (**r Vptr b 0 *) *)
       do start  <- get_start_addr mr;
       do size   <- get_block_size mr;
       do mr_perm  <- get_block_perm mr;
       do lo_ofs <- get_sub addr start;
       do hi_ofs <- get_add lo_ofs (memory_chunk_to_valu32 chunk);
-        if (andb (compu_le_32 Vzero lo_ofs) (compu_lt_32 hi_ofs size)) then
-          if (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
-                   (comp_eq_32 Vzero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))) then
-              if (perm_ge mr_perm perm) then
-                returnM (Val.add ptr lo_ofs) (**r Vptr b lo_ofs *)
-              else
-                returnM Vnullptr
-          else
-            returnM Vnullptr (**r = 0 *)
+        if andb (andb
+                  (compu_lt_32 hi_ofs size)
+                  (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
+                        (comp_eq_32 Vzero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))))
+                (perm_ge mr_perm perm) then
+          returnM (Val.add (block_ptr mr) lo_ofs) (**r Vptr b lo_ofs *)
         else
           returnM Vnullptr
     else
       returnM Vnullptr.
+
+
 
 Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: val) (mrs: MyMemRegionsType) {struct num}: M val :=
   match num with
@@ -103,7 +123,8 @@ Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr
   | S n =>
     do cur_mr    <- get_mem_region n mrs;
     do check_mem <- check_mem_aux2 cur_mr perm addr chunk;
-      if comp_eq_ptr8_zero check_mem then
+    do is_null   <- cmp_ptr32_nullM check_mem;
+      if is_null then
         check_mem_aux n perm chunk addr mrs
       else
         returnM check_mem
@@ -115,15 +136,14 @@ Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: val): M val
       do mem_reg_num <- eval_mrs_num;
       do mrs       <- eval_mrs_regions;
       do check_mem <- check_mem_aux mem_reg_num perm chunk addr mrs;
-        if comp_eq_ptr8_zero check_mem then
+      do is_null   <- cmp_ptr32_nullM check_mem;
+        if is_null then
           returnM Vnullptr
         else
           returnM check_mem
     else
       returnM Vnullptr.
 
-
-Definition comp_and_0x08_byte (x: nat): M bool :=  returnM (Nat.eqb 0 (Nat.land x 0x08)).
 
 (**r pc should be u32_t *)
 Definition step_opcode_alu64 (dst64: val) (src64: val) (dst: reg) (op: nat): M unit :=
@@ -325,28 +345,32 @@ Definition step_opcode_mem_ld_reg (addr: val) (pc: int) (dst: reg) (op: nat): M 
   match opcode_ld with
   | op_BPF_LDXW      =>
     do addr_ptr <- check_mem Readable Mint32 addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint32 addr_ptr;
         do _ <- upd_reg dst v; returnM tt
   | op_BPF_LDXH      =>
     do addr_ptr <- check_mem Readable Mint16unsigned addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint16unsigned addr_ptr;
         do _ <- upd_reg dst v; returnM tt
   | op_BPF_LDXB      =>
     do addr_ptr <- check_mem Readable Mint8unsigned addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint8unsigned addr_ptr;
         do _ <- upd_reg dst v; returnM tt
   | op_BPF_LDXDW     =>
     do addr_ptr <- check_mem Readable Mint64 addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do v <- load_mem Mint64 addr_ptr;
@@ -359,25 +383,29 @@ Definition step_opcode_mem_st_imm (imm: val) (addr: val) (pc: int) (dst: reg) (o
   match opcode_st with
   | op_BPF_STW       =>
     do addr_ptr <- check_mem Writable Mint32 addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint32 addr_ptr imm; returnM tt
   | op_BPF_STH       =>
     do addr_ptr <- check_mem Writable Mint16unsigned addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint16unsigned addr_ptr imm; returnM tt
   | op_BPF_STB       =>
     do addr_ptr <- check_mem Writable Mint8unsigned addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint8unsigned addr_ptr imm; returnM tt
   | op_BPF_STDW      =>
     do addr_ptr <- check_mem Writable Mint64 addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_imm Mint64 addr_ptr imm; returnM tt
@@ -389,25 +417,29 @@ Definition step_opcode_mem_st_reg (src64: val) (addr: val) (pc: int) (dst: reg) 
   match opcode_st with
   | op_BPF_STXW      =>
     do addr_ptr <- check_mem Writable Mint32 addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint32 addr_ptr src64; returnM tt
   | op_BPF_STXH      =>
     do addr_ptr <- check_mem Writable Mint16unsigned addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint16unsigned addr_ptr src64; returnM tt
   | op_BPF_STXB      =>
     do addr_ptr <- check_mem Writable Mint8unsigned addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint8unsigned addr_ptr src64; returnM tt
   | op_BPF_STXDW     =>
     do addr_ptr <- check_mem Writable Mint64 addr;
-      if comp_eq_ptr8_zero addr_ptr then
+    do is_null   <- cmp_ptr32_nullM addr_ptr;
+      if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
         do _ <- store_mem_reg Mint64 addr_ptr src64; returnM tt
@@ -420,50 +452,26 @@ Definition step: M unit :=
   do ins  <- eval_ins pc;
   do op   <- get_opcode_ins ins;
   do opc  <- get_opcode op;
+  do dst  <- get_dst ins;
   match opc with
   | op_BPF_ALU64   =>
-    do dst    <- get_dst ins;
     do dst64  <- eval_reg dst;
       (**r #define BPF_INSTRUCTION_ALU_S_MASK      0x08 *)
-    do is_imm <- comp_and_0x08_byte op;
-      if is_imm then
-        do imm    <- get_immediate ins;
-        do imm64  <- eval_immediate imm;
-        step_opcode_alu64 dst64 imm64 dst op
-      else
-        do src    <- get_src ins;
-        do src64  <- eval_reg src;
-        step_opcode_alu64 dst64 src64 dst op                     (**r 0xX7 / 0xXf *)
+    do src64  <- get_src64 op ins;
+      step_opcode_alu64 dst64 src64 dst op                     (**r 0xX7 / 0xXf *)
   | op_BPF_ALU32   =>
-    do dst    <- get_dst ins;
     do dst64  <- eval_reg dst;
     do dst32  <- reg64_to_reg32 dst64;
       (**r #define BPF_INSTRUCTION_ALU_S_MASK      0x08 *)
-    do is_imm <- comp_and_0x08_byte op;
-      if is_imm then
-        do imm    <- get_immediate ins;
-        step_opcode_alu32 dst32 (sint32_to_vint imm) dst op
-      else
-        do src    <- get_src ins;
-        do src64  <- eval_reg src;
-        do src32  <- reg64_to_reg32 src64;
-        step_opcode_alu32 dst32 src32 dst op                     (**r 0xX4 / 0xXc *)
+    do src32  <- get_src32 op ins;
+      step_opcode_alu32 dst32 src32 dst op                     (**r 0xX4 / 0xXc *)
   | op_BPF_Branch  =>
-    do dst    <- get_dst ins;
     do dst64  <- eval_reg dst;
     do ofs    <- get_offset ins;
       (**r #define BPF_INSTRUCTION_ALU_S_MASK      0x08 *)
-    do is_imm <- comp_and_0x08_byte op;
-      if is_imm then
-        do imm    <- get_immediate ins;
-        do imm64  <- eval_immediate imm;
-        step_opcode_branch dst64 imm64 pc ofs op
-      else
-        do src    <- get_src ins;
-        do src64  <- eval_reg src;
-        step_opcode_branch dst64 src64 pc ofs op                    (**r 0xX5 / 0xXd *)
+    do src64  <- get_src64 op ins;
+      step_opcode_branch dst64 src64 pc ofs op                    (**r 0xX5 / 0xXd *)
   | op_BPF_Mem_ld_imm  =>
-    do dst    <- get_dst ins;
     do imm    <- get_immediate ins;
     step_opcode_mem_ld_imm imm pc dst op              (**r 0xX8 *)
   | op_BPF_Mem_ld_reg  =>
@@ -474,14 +482,12 @@ Definition step: M unit :=
     do addr   <- get_addr_ofs src64 ofs;
     step_opcode_mem_ld_reg addr pc dst op       (**r 0xX1/0xX9 *)
   | op_BPF_Mem_st_imm  =>
-    do dst    <- get_dst ins;
     do dst64  <- eval_reg dst;
     do ofs    <- get_offset ins;
     do imm    <- get_immediate ins;
     do addr   <- get_addr_ofs dst64 ofs;
     step_opcode_mem_st_imm (sint32_to_vint imm) addr pc dst op       (**r 0xX2/0xXa *)
   | op_BPF_Mem_st_reg  =>
-    do dst    <- get_dst ins;
     do dst64  <- eval_reg dst;
     do src    <- get_src ins;
     do src64  <- eval_reg src;

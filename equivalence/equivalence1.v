@@ -13,72 +13,6 @@ From bpf.equivalence Require Import switch.
 
 Open Scope Z_scope.
 
-(*
-Lemma Byte_max_unsigned_255:
-  Byte.max_unsigned = 255.
-Proof.
-  unfold Byte.max_unsigned, Byte.modulus, Byte.wordsize, Wordsize_8.wordsize.
-  reflexivity.
-Qed.
-
-Lemma Byte_unsigned_repr_0:
-  Byte.unsigned (Byte.repr 0) = 0.
-Proof.
-  fold Byte.zero.
-  rewrite Byte.unsigned_zero.
-  reflexivity.
-Qed.
-
-Lemma Byte_unsigned_repr_n:
-  forall n,
-  0 <= n <= 255 ->
-  Byte.unsigned (Byte.repr n) = n.
-Proof.
-  intros.
-  rewrite Byte.unsigned_repr; [reflexivity | rewrite Byte_max_unsigned_255; lia].
-Qed.
-
-Lemma Byte_eq_repr_eq:
-  forall a b,
-    a = b ->
-    Byte.eq (Byte.repr a) (Byte.repr b) = true.
-Proof.
-  intros; subst.
-  rewrite Byte.eq_true; reflexivity.
-Qed.*)
-(*
-Lemma Int64_unsigned_repr_Int_unsigned:
-  forall j, Int64.unsigned (Int64.repr (Int.unsigned j)) = Int.unsigned j.
-Proof.
-  intro; apply Int64.unsigned_repr.
-  assert (Hrange: 0 <= Int.unsigned j <= Int.max_unsigned). { apply Int.unsigned_range_2. }
-  assert (Hmax: Int.max_unsigned <= Int64.max_unsigned).
-  + unfold Int.max_unsigned, Int64.max_unsigned.
-  unfold Int.modulus, Int64.modulus.
-  unfold Int.wordsize, Int64.wordsize.
-  unfold Wordsize_32.wordsize, Wordsize_64.wordsize.
-  simpl.
-  lia.
-  + lia.
-Qed. *)
-
-(*
-Ltac byte_unsigned_and :=
-match goal with
-| |- context[Byte.unsigned (Byte.and (Byte.repr ?X) (Byte.repr ?Y))] =>
-  unfold Byte.and;
-  rewrite Byte_unsigned_repr_n with (n:= X); [| try simpl; lia];
-  rewrite Byte_unsigned_repr_n with (n:= Y); [| try simpl; lia];
-  simpl;
-  rewrite Byte_unsigned_repr_n; [| try simpl; lia];
-  simpl
-| |- context[(Byte.and (Byte.repr ?X) (Byte.repr ?Y))] =>
-  unfold Byte.and;
-  rewrite Byte_unsigned_repr_n with (n:= X); [| try simpl; lia];
-  rewrite Byte_unsigned_repr_n with (n:= Y); [| try simpl; lia];
-  simpl
-end.*)
-
 Ltac unfold_monad :=
   match goal with
   | |- _ =>
@@ -252,7 +186,7 @@ Proof.
   remember (Z.to_nat
       (Int64.unsigned
          (Int64.and (State.eval_ins (State.eval_pc x) x) (Int64.repr 255)))) as Hopcode.
-  unfold DxInstructions.get_immediate, Regs.get_immediate, eval_immediate, step_alu_binary_operation, eval_src, eval_reg, get_dst, comp_and_0x08_byte, step_opcode_alu64, step_opcode_alu32, get_opcode_alu64, get_opcode_alu32, byte_to_opcode_alu64, byte_to_opcode_alu32, rBPFValues.val64_divlu, rBPFValues.val64_modlu, rBPFValues.val32_divu, rBPFValues.val32_modu, step_opcode_mem_ld_reg, step_load_x_operation, get_opcode_mem_ld_reg, byte_to_opcode_mem_ld_reg, step_opcode_mem_ld_imm, get_opcode_mem_ld_imm, byte_to_opcode_mem_ld_imm, Regs.get_offset, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, Regs.get_offset, State.upd_reg, upd_reg; unfold_dx.
+  unfold DxInstructions.get_immediate, Regs.get_immediate, eval_immediate, step_alu_binary_operation, eval_src, eval_reg, get_dst, get_src64, get_src32, step_opcode_alu64, step_opcode_alu32, get_opcode_alu64, get_opcode_alu32, byte_to_opcode_alu64, byte_to_opcode_alu32, rBPFValues.val64_divlu, rBPFValues.val64_modlu, rBPFValues.val32_divu, rBPFValues.val32_modu, step_opcode_mem_ld_reg, step_load_x_operation, get_opcode_mem_ld_reg, byte_to_opcode_mem_ld_reg, step_opcode_mem_ld_imm, get_opcode_mem_ld_imm, byte_to_opcode_mem_ld_imm, Regs.get_offset, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, Regs.get_offset, State.upd_reg, upd_reg; unfold_dx.
 
 
   assert (Hopcode_range: Hopcode <= 255). {
