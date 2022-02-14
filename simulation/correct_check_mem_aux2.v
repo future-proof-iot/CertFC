@@ -19,8 +19,6 @@ Section Check_mem_aux2.
 (** The program contains our function of interest [fn] *)
 Definition p : Clight.program := prog.
 
-(**r TODO: check_mem_aux2: memory_region -> perm -> addr -> chunk -> ptr *)
-
 (* [Args,Res] provides the mapping between the Coq and the C types *)
 Definition args  := [(memory_region:Type) ; (permission:Type); val; (AST.memory_chunk: Type)].
 Definition res  := val.
@@ -53,10 +51,7 @@ Definition match_arg  :
                         (DList.DNil _)))).
 
 Definition match_res (v1 :val) (v2:val) (st: State.state) (m: Mem.mem) :=
-  v1 = v2 /\
-  ((exists b ofs,
-    v1 = Vptr b ofs)
-    \/ v1 = Vint (Int.zero)).
+  v1 = v2 /\ ((exists b ofs, v1 = Vptr b ofs) \/ v1 = Vint (Int.zero)).
 
 
 Ltac build_app_aux T :=
@@ -100,30 +95,6 @@ Ltac prove_incl :=
 Ltac prove_in_inv :=
   simpl; intuition subst; discriminate.
 
-(*
-Ltac correct_forward :=
-  match goal with
-  | |- @correct_body _ _ (bindM ?F1 ?F2)  _
-                     (Ssequence
-                        (Ssequence
-                           (Scall _ _ _)
-                           (Sset ?V ?T))
-                        ?R)
-                     _ _ _ _ _ _  =>
-      eapply correct_statement_seq_body_pure;
-      [ change_app_for_statement ;
-        let b := match T with
-                 | Ecast _ _ => constr:(true)
-                 | _         => constr:(false)
-                 end in
-        eapply correct_statement_call with (has_cast := b)
-      |]
-  | |- @correct_body _ _ (match  ?x with true => _ | false => _ end) _
-                     (Sifthenelse _ _ _)
-                     _ _ _ _ _ _  =>
-      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
-  end. *)
-
 Lemma correct_function_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg match_res a.
 Proof.
   correct_function_from_body args.
@@ -132,9 +103,6 @@ Proof.
   simpl.
   (** goal: correct_body _ _ (bindM (is_well_chunk_bool ... *)
   eapply correct_statement_seq_body with (modifies1:=nil).
-  (**r TODO: here the 2nd goal has an `arbitrary` m0:mem & st0:State.state while because
-        is_well_chunk_bool is a pure function, so m0 should be m and st0 should be st1, but correct_statement_seq_body loses this information.
-   *)
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := true).
 
@@ -185,12 +153,11 @@ Proof.
   intros.
   unfold returnM.
   intros.
-  exists (Vint (Int.repr 0)), m0, Events.E0. (**r TODO: we could say here is m0, but in fact, it should be `m` because check_mem_aux2 is a pure function, or more specificly, `if (well_chunk) A else B`, the case B doesn't change the memory  *)
+  exists (Vint (Int.repr 0)), m0, Events.E0. 
   repeat split.
 
   forward_star.
   forward_star.
-  (**r we can not prove here because we lose the information between m and m0 *)
   intuition.
   constructor.
   reflexivity.
@@ -343,8 +310,8 @@ Proof.
   unfold map_opt, exec_expr.
   rewrite p0, p1; reflexivity.
   simpl;intros.
-  intuition; eauto. (**r we lost the evident that `correct_get_start_addr.match_res x0 v0 st3 m3` *)
-  eauto. (**r we lost one very imporant information: the input/output constraints *)
+  intuition; eauto.
+  eauto.
   intros.
   (** goal:  correct_body _ _ (bindM (get_add x2 (memory_chunk_to_valu32 c1)) ... *)
   eapply correct_statement_seq_body with (modifies1:=nil).
@@ -418,8 +385,7 @@ Ltac destruct_if Hname :=
     get_invariant _hi_ofs.
     get_invariant _lo_ofs.
     get_invariant _size.
-    get_invariant _chunk. (*
-    get_invariant _ptr. *)
+    get_invariant _chunk.
     get_invariant _mr_perm.
     get_invariant _perm.
     unfold correct_get_add.match_res, valu32_correct in c3.
@@ -428,9 +394,7 @@ Ltac destruct_if Hname :=
     destruct c4 as (H2_eq & (vi2 & Hvi2_eq)).
     unfold correct_get_block_size.match_res, valu32_correct in c5.
     destruct c5 as (H4_eq & (vi4 & Hvi4_eq)).
-    unfold stateless, match_chunk, memory_chunk_to_valu32 in c6. (*
-    unfold correct_get_block_ptr.match_res, val_ptr_correct in c7.
-    destruct c7 as (H9_eq & (b & Hvi9_eq)). *)
+    unfold stateless, match_chunk, memory_chunk_to_valu32 in c6.
     unfold correct_get_block_perm.match_res, perm_correct in c7.
     unfold stateless, perm_correct in c8.
     subst.
@@ -445,10 +409,6 @@ Ltac destruct_if Hname :=
       unfold _chunk, _t'8.
       intro Hneq; inversion Hneq.
     }
-    (*
-    assert (He: Int.modulus - 1 = 4294967295). {
-      change (Int.modulus - 1) with 4294967295;reflexivity.
-    } *)
     assert (Hwell_chunk_unsigned: Int.unsigned (Int.repr (well_chunk_Z c2)) = well_chunk_Z c2). {
       destruct c2; simpl; try (fold Int.zero; apply Int.unsigned_zero); try rewrite Int.unsigned_repr; try reflexivity; try rewrite Int_max_unsigned_eq64; try lia.
     }
@@ -459,7 +419,7 @@ Ltac destruct_if Hname :=
       repeat rewrite Int.unsigned_repr; try rewrite Int_max_unsigned_eq64; try apply zeq_false; try lia.
     }
 
-    exists (Vint Int.zero), m5, Events.E0. (**r TODO: here m' should be m instead of m5 *)
+    exists (Vint Int.zero), m5, Events.E0.
     repeat split.
 
     unfold compu_lt_32, compu_le_32, compu_le_32, val32_modu, memory_chunk_to_valu32, memory_chunk_to_valu32_upbound in Hcond.
@@ -632,8 +592,7 @@ Ltac destruct_if Hname :=
   get_invariant _hi_ofs.
   get_invariant _lo_ofs.
   get_invariant _size.
-  get_invariant _chunk. (*
-  get_invariant _ptr. *)
+  get_invariant _chunk.
   get_invariant _perm.
   get_invariant _mr_perm.
   get_invariant _mr.
@@ -644,9 +603,7 @@ Ltac destruct_if Hname :=
   destruct c4 as (H2_eq & (vi2 & Hvi2_eq)).
   unfold correct_get_block_size.match_res, valu32_correct in c5.
   destruct c5 as (H4_eq & (vi4 & Hvi4_eq)).
-  unfold stateless, match_chunk, memory_chunk_to_valu32 in c6.  (*
-  unfold correct_get_block_ptr.match_res, val_ptr_correct in c7.
-  destruct c7 as (H9_eq & (b & Hvi9_eq)). *)
+  unfold stateless, match_chunk, memory_chunk_to_valu32 in c6.
   unfold stateless, perm_correct in c7.
   unfold correct_get_block_perm.match_res, perm_correct in c8.
   unfold match_region, match_region_at_ofs in c9.
@@ -680,7 +637,7 @@ Ltac destruct_if Hname :=
   unfold Val.modu in Hmod.
   rewrite Hchunk_ne_zero in Hmod.
 
-  eexists; exists m5, Events.E0. (**r TODO: here m' should be m instead of m5 *)
+  eexists; exists m5, Events.E0.
   repeat split.
   do 4 forward_star.
   simpl.
