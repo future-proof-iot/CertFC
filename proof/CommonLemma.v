@@ -54,29 +54,47 @@ Ltac get_inv_from_list VAR L :=
       end
   end.
 
-Ltac get_invariant VAR :=
+
+  Ltac IN T :=
+    lazymatch T with
+    | In ?X nil => fail -1 "Fail to get a membership proof"
+    | In ?X (cons ?X ?L') => constr:(@in_eq _ X L')
+    | In ?X (cons ?Y ?L') =>
+        let inr := constr:(In X L') in
+        let prf := IN inr in
+        constr:(@in_cons _ Y X _ prf)
+    |  ?T        => fail -1 "list is not of the form  a1::....::an:nil" T
+    end.
+
+    Ltac get_invariant VAR :=
   let E := fresh "ME" in
   let I := fresh "I" in
   let v := fresh "v" in
   let p := fresh "p" in
   let c := fresh "c" in
+  let v1 := fresh "v1" in
   match goal with
-  | H : match_temp_env ?L ?LE ?ST ?M |- _ =>
-      let tp := get_inv_from_list VAR L in
-      match tp with
-      | (?T,?P) =>
-          assert (I : exists v, Maps.PTree.get VAR LE = Some v /\
-                              P v ST M /\ Cop.val_casted v T);
-          [
-            unfold match_temp_env in H;
-            rewrite Forall_forall in H; (**r using `intuition` directly *)
-            assert (E : match_elt ST M LE (VAR,T,P)) by (apply H ; unfold In; intuition);
-            unfold match_elt,fst in E;
-            destruct (Maps.PTree.get VAR LE);[|tauto];
-            eexists ; split ; auto
-          | destruct I as (v &p & (c & _))] (**r omit `Cop.val_casted` *)
-      end
+  | H:match_temp_env ?L ?LE ?ST ?M
+    |- _ =>
+        let tp := get_inv_from_list VAR L in
+        match tp with
+        | (?T, ?P) =>
+            assert (I : exists v, Maps.PTree.get VAR LE = Some v /\ P v ST M /\ Cop.val_casted v T);
+             [ unfold match_temp_env in H; rewrite Forall_forall in H;
+               assert (E : match_elt ST M LE (VAR, T, P));
+                [ (apply H; unfold AST.ident;
+                   match goal with
+                         |- ?G => let prf := IN G in exact prf
+                   end)  |
+               unfold match_elt, fst,snd in E; destruct (Maps.PTree.get VAR LE) as [v1|]
+               ; [
+                 exists v1 ; split ;[reflexivity | exact E]
+               | (exfalso ; assumption) ]]
+             | destruct I as (v, (p, (c, _))) ]
+        end
   end.
+
+
 
 Ltac correct_body :=
   intros st le m;
