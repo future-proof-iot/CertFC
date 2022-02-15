@@ -6,6 +6,18 @@ Import ListNotations.
 
 Open Scope Z_scope.
 
+Ltac Hdisj_false :=
+  let H := fresh "H" in
+  let K := fresh "K" in
+    match goal with
+    | |- ~(?X \/ ?Y) =>
+      intro H; Hdisj_false
+    | H0: ?X \/ ?Y |- False =>
+      destruct H0 as [K | H0]; [ inversion K | Hdisj_false]
+    | H1: False |- False =>
+      assumption
+    end.
+
 Ltac correct_Forall :=
 match goal with
 | H: Forall (match_elt ?st ?m ?le) ?L |- _ =>
@@ -54,19 +66,18 @@ Ltac get_inv_from_list VAR L :=
       end
   end.
 
+Ltac IN T :=
+  lazymatch T with
+  | In ?X nil => fail -1 "Fail to get a membership proof"
+  | In ?X (cons ?X ?L') => constr:(@in_eq _ X L')
+  | In ?X (cons ?Y ?L') =>
+      let inr := constr:(In X L') in
+      let prf := IN inr in
+      constr:(@in_cons _ Y X _ prf)
+  |  ?T        => fail -1 "list is not of the form  a1::....::an:nil" T
+  end.
 
-  Ltac IN T :=
-    lazymatch T with
-    | In ?X nil => fail -1 "Fail to get a membership proof"
-    | In ?X (cons ?X ?L') => constr:(@in_eq _ X L')
-    | In ?X (cons ?Y ?L') =>
-        let inr := constr:(In X L') in
-        let prf := IN inr in
-        constr:(@in_cons _ Y X _ prf)
-    |  ?T        => fail -1 "list is not of the form  a1::....::an:nil" T
-    end.
-
-    Ltac get_invariant VAR :=
+Ltac get_invariant VAR :=
   let E := fresh "ME" in
   let I := fresh "I" in
   let v := fresh "v" in
@@ -93,7 +104,6 @@ Ltac get_inv_from_list VAR L :=
              | destruct I as (v, (p, (c, _))) ]
         end
   end.
-
 
 
 Ltac correct_body :=
@@ -553,6 +563,17 @@ Proof.
   all: unfold Mem.valid_access in *;
     destruct H as (Hrange & Halign);
     split; [unfold size_chunk, Mem.range_perm in *; intros; apply Hrange; lia | unfold align_chunk; apply Z.divide_1_l].
+Qed.
+
+Lemma Hint_unsigned_int64:
+    forall i, (Int64.unsigned (Int64.repr (Int.unsigned i))) = (Int.unsigned i).
+Proof.
+    intro.
+    rewrite Int64.unsigned_repr; [reflexivity |].
+    assert (Hrange: 0 <= Int.unsigned i <= Int.max_unsigned). { apply Int.unsigned_range_2. }
+    change Int.max_unsigned with 4294967295 in Hrange.
+    change Int64.max_unsigned with 18446744073709551615.
+    lia.
 Qed.
 
 Close Scope Z_scope.

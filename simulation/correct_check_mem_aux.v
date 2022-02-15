@@ -124,7 +124,7 @@ Qed.
     intros.
     unfold args in a.
     car_cdr.
-    revert c.
+    revert c c0 c1 c2 c3.
     induction c.
     {
       intros.
@@ -158,7 +158,6 @@ Qed.
       }
       split.
       unfold match_res.
-      Transparent Archi.ptr64.
       unfold Vnullptr, Int.zero; simpl.
       split; [reflexivity |].
       split; [ right; reflexivity |].
@@ -349,120 +348,130 @@ Ltac prove_in_inv :=
     simpl;intros.
     intuition eauto.
 
-    repeat intro.
-    unfold INV in H.
+    intros.
+    eapply correct_statement_if_body; [prove_in_inv | destruct x2 ]. 2:{
+      unfold correct_body, returnM.
+      intros.
+      unfold INV in H.
+      get_invariant _st.
+      get_invariant _check_mem.
+      unfold stateM_correct in c4.
+      destruct c4 as (Hv_eq & Hst).
+      unfold correct_check_mem_aux2.match_res in c5.
+      destruct c5 as (Hv0_eq & Hc5_eq); subst.
+      instantiate (1 := nil).
+      destruct Hc5_eq as [ (b & ofs & Hptr) | Hnull].
+      - rewrite Hptr.
+        eexists; exists m3, Events.E0.
+        split.
+        forward_star.
+        unfold Cop.sem_cast; simpl.
+        rewrite Hptr.
+        reflexivity.
+        forward_star.
+        split.
+        unfold match_res.
+        rewrite Hptr.
+        split; [reflexivity | ].
+        split; [left; eexists; eexists; reflexivity | assumption].
+        split; [rewrite Hptr; constructor; reflexivity | split; reflexivity].
+      - rewrite Hnull.
+        eexists; exists m3, Events.E0.
+        split.
+        forward_star.
+        rewrite Hnull.
+        reflexivity.
+        rewrite Hnull.
+        forward_star.
+        rewrite Hnull.
+        split.
+        unfold match_res.
+        split; [reflexivity | ].
+        split; [right; reflexivity | assumption].
+        split; [constructor; reflexivity | split; reflexivity].
+    }
+
+    change_app_for_body.
+    eapply correct_body_call_ret with (has_cast:=false).
+    my_reflex.
+    reflexivity.
+    reflexivity.
+    intros.
+    typeclasses eauto.
+    { unfold INV.
+      unfold var_inv_preserve.
+      intros.
+      unfold match_temp_env in *.
+      rewrite Forall_fold_right in *.
+      simpl in *.
+      destruct H; subst.
+      intuition.
+    }
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    prove_in_inv.
+    prove_in_inv.
+    reflexivity.
+
+    unfold INV; intro H.
+    correct_Forall.
     get_invariant _st.
-    get_invariant _num.
+    get_invariant _n.
     get_invariant _perm.
     get_invariant _chunk.
     get_invariant _addr.
     get_invariant _mrs.
-    get_invariant _check_mem.
-    get_invariant _is_null.
     unfold stateM_correct in c4.
     destruct c4 as (Hv_eq & Hst).
-    unfold stateless in c5, c6, c7, c8.
-    unfold nat_correct in c5.
-    destruct c5 as (Hv0_eq1 & Hv0_range).
-    unfold perm_correct in c6.
-    unfold match_chunk, memory_chunk_to_valu32, well_chunk_Z in c7.
-    unfold valu32_correct in c8.
-    destruct c8 as (Hv3_eq & (vi3 & Hc2_eq)).
-    unfold match_region_list in c9.
-    destruct c9 as (Hv4_eq & Hmrs_eq & Hmrs_num_eq & Hmatch).
-    unfold stateless, correct_check_mem_aux2.match_res in c10.
-    destruct c10 as (Hv5_eq & Hc10_eq).
-    unfold correct_cmp_ptr32_nullM.match_res, match_bool in c11.
+    unfold pc_correct in c5.
+    destruct c5 as (Hv0_eq & Hc_range & Hc_max).
+    unfold stateless, perm_correct in c6.
+    unfold stateless, match_chunk in c7.
+    unfold stateless, valu32_correct in c8.
+    destruct c8 as (Hv3_eq & vi & Hvi_eq).
     subst.
-
-    destruct Hc10_eq as [ (b & ofs & Hptr) | Hnull].
-    {
-      (**r case1: v5 = Vptr b ofs *)
-      rewrite Hptr.
-      unfold cmp_ptr32_null, Val.cmpu_bool, returnM; simpl.
-
-      destruct x2.
-      - instantiate (1 := nil).
-        destruct IHc.
-        specialize (fn_eval_ok3 st3).
-        unfold f, app, f_check_mem_aux in fn_eval_ok3.
-        destruct check_mem_aux eqn: Hcheck_mem_aux; [| constructor].
-        destruct p8.
-        unfold step2.
-        (**r How to reuse IH... *)
-        admit.
-      - intro.
-        unfold step2.
-        eexists; exists m3, Events.E0.
-        split.
-        {
-          forward_star.
-          forward_star.
-          rewrite Hptr.
-          simpl.
-          unfold Cop.sem_cast; simpl.
-          reflexivity.
-          forward_star.
-        }
-        split.
-        {
-          unfold match_res.
-          rewrite Hptr.
-          split; [reflexivity |].
-          split; [ | assumption].
-          left; eexists; eexists; reflexivity.
-        }
-        split; [ rewrite Hptr; constructor | split; reflexivity].
-      }
-
-      (**r case2: v5 = Vnullptr *)
-      subst.
-      destruct x2.
-      - admit.
-      - unfold returnM.
-        intro.
-        eexists; exists m3, Events.E0.
-        split.
-        {
-          forward_star.
-          forward_star.
-          forward_star.
-        }
-        split.
-        {
-          unfold match_res.
-          split; [reflexivity | ].
-          split; [right; reflexivity | assumption].
-        }
-        split; [constructor; reflexivity | split; reflexivity].
-      - reflexivity.
-    + reflexivity.
-    + intro.
-      unfold INV in H.
-      get_invariant _num.
-      unfold pc_correct in c4.
-      destruct c4 as (Hv_eq & Hrange & Hmax).
-      unfold exec_expr.
-      rewrite p0.
-      simpl.
-      rewrite <- Hv_eq.
-      unfold Cop.sem_cmp, Cop.sem_binarith, Val.of_bool, Vfalse; simpl.
-      unfold Int.eq.
-      change (Int.unsigned (Int.repr 0)) with 0.
-      change Ptrofs.max_unsigned with Int.max_unsigned in Hmax.
-      rewrite Nat2Z.inj_succ in Hrange.
-      rewrite Zpos_P_of_succ_nat.
-      rewrite Int.unsigned_repr;[ | lia].
-      assert (Hneq: (Z.succ (Z.of_nat c)) <> 0). {
-        lia.
-      }
-      eapply zeq_false in Hneq.
-      rewrite Hneq.
-      reflexivity.
-Admitted.
+    exists ((Vptr state_block Ptrofs.zero) ::
+            (Vint (Int.repr (Z.of_nat c))) ::
+            v1 ::
+            (memory_chunk_to_valu32 c1) ::
+            (Vint vi) ::
+            v4::nil).
+    split.
+    unfold map_opt, exec_expr.
+    rewrite p0, p1, p2, p3, p4, p5; reflexivity.
+    simpl;intros.
+    unfold stateM_correct, pc_correct, stateless, perm_correct, match_chunk, valu32_correct.
+    intuition eauto.
+    reflexivity.
+  +
+    reflexivity.
+  + intro.
+    unfold INV in H.
+    get_invariant _num.
+    unfold pc_correct in c4.
+    destruct c4 as (Hv_eq & Hrange & Hmax).
+    unfold exec_expr.
+    rewrite p0.
+    simpl.
+    rewrite <- Hv_eq.
+    unfold Cop.sem_cmp, Cop.sem_binarith, Val.of_bool, Vfalse; simpl.
+    unfold Int.eq.
+    change (Int.unsigned (Int.repr 0)) with 0.
+    change Ptrofs.max_unsigned with Int.max_unsigned in Hmax.
+    rewrite Nat2Z.inj_succ in Hrange.
+    rewrite Zpos_P_of_succ_nat.
+    rewrite Int.unsigned_repr;[ | lia].
+    assert (Hneq: (Z.succ (Z.of_nat c)) <> 0). {
+      lia.
+    }
+    eapply zeq_false in Hneq.
+    rewrite Hneq.
+    reflexivity.
+Qed.
 
 End Check_mem_aux.
 
 Close Scope Z_scope.
 
-Existing Instance correct_function_check_mem_aux.
+Existing Instance correct_function3_check_mem_aux.

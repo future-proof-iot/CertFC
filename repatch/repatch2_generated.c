@@ -306,7 +306,7 @@ static __attribute__((always_inline)) inline void step_opcode_alu64(struct bpf_s
     case 192:
       src32 = reg64_to_reg32(src64);
       if (src32 < 64U) {
-        upd_reg(st, dst, (long long) dst64 >> src32);
+        upd_reg(st, dst, (unsigned long long) ((long long) dst64 >> src32));
         return;
       } else {
         upd_flag(st, -10);

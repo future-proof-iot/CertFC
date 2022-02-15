@@ -95,7 +95,7 @@ Ltac prove_incl :=
 Ltac prove_in_inv :=
   simpl; intuition subst; discriminate.
 
-Lemma correct_function_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg match_res a.
+Lemma correct_function3_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg match_res a.
 Proof.
   correct_function_from_body args.
   correct_body.
@@ -721,5 +721,5 @@ End Check_mem_aux2.
 
 Close Scope Z_scope.
 
-Existing Instance correct_function_check_mem_aux2_correct.
+Existing Instance correct_function3_check_mem_aux2_correct.
 (*  *)

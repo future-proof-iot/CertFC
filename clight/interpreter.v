@@ -1408,10 +1408,11 @@ Definition f_step_opcode_alu64 := {|
                                                        cc_default))
                                       ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                                        (Etempvar _dst tuint) ::
-                                       (Ebinop Oshr
-                                         (Ecast (Etempvar _dst64 tulong)
-                                           tlong) (Etempvar _src32 tuint)
-                                         tlong) :: nil))
+                                       (Ecast
+                                         (Ebinop Oshr
+                                           (Ecast (Etempvar _dst64 tulong)
+                                             tlong) (Etempvar _src32 tuint)
+                                           tlong) tulong) :: nil))
                                     (Sreturn None))
                                   (Ssequence
                                     (Scall None

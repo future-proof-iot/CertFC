@@ -326,7 +326,7 @@ Definition binop_expr (op: Cop.binary_operation) (ti : Ctypes.type) :=
 
 Definition binop_expr_cast1 (op: Cop.binary_operation) (t ti : Ctypes.type) :=
   fun es => match es with
-            | [e1;e2] => Ok (Csyntax.Ebinop op (Csyntax.Ecast e1 t) e2 ti)
+            | [e1;e2] => Ok (Csyntax.Ecast (Csyntax.Ebinop op (Csyntax.Ecast e1 t) e2 ti) ti)
             |  _      => Err PrimitiveEncodingFailed
             end.
 

@@ -785,14 +785,11 @@ Ltac correct_forward L :=
         destruct c3; assumption.
       + compute. intuition congruence.
     - (**r op_BPF_LSH64 *)
-      admit. (*
       eapply correct_statement_switch with (n:= 96).
       + simpl.
-        (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        admit. (**r seq_unit *)
-        eapply correct_statement_seq_body.
+        eapply correct_statement_seq_body with (modifies1:=nil).
         change_app_for_statement.
         eapply correct_statement_call with (has_cast := false).
         my_reflex.
@@ -818,11 +815,433 @@ Ltac correct_forward L :=
           intro HH ; destruct HH ; split; auto.
           unfold correct_upd_reg.match_res in H0.
           unfold stateM_correct in *.
+          unfold unmodifies_effect in H.
+          destruct H as (Hm & Hst); subst.
           tauto.
-          
-        } *)
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        simpl.
+        Hdisj_false.
+        simpl.
+        Hdisj_false.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _src64.
+        unfold val64_correct,stateless in c3.
+        destruct c3 as (Hv_eq & (vl & Hvl_eq)); subst.
+        exists (Vlong vl :: nil).
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        split; [reflexivity |].
+        intros.
+        simpl.
+        unfold stateless,val64_correct.
+        intuition.
+        eexists ; reflexivity.
+        intros.
+        (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
+        eapply correct_statement_if_body_expr.
+        destruct (rBPFValues.compu_lt_32 _ _) eqn: Hlt_64.
+
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_reg.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= state_block).
+          instantiate (1:= ins_block).
+          instantiate (1:= mrs_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          repeat constructor;auto.
+
+          revert H5. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); [| congruence].
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_reg.match_res in H0.
+          unfold stateM_correct in *.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        get_invariant _dst.
+        get_invariant _dst64.
+        get_invariant _src32.
+        unfold stateless, stateM_correct in c3.
+        destruct c3 as (Hv_eq & Hst); subst.
+        unfold stateless, reg_correct in c4.
+        unfold stateless, val64_correct in c5.
+        destruct c5 as (Hv1_eq & (vl & Hvl_eq)); subst.
+        unfold correct_reg64_to_reg32.match_res, valu32_correct in c6.
+        destruct c6 as (Hv2_eq & (vi & Hvi_eq)); subst.
+        exists ((Vptr state_block Ptrofs.zero) :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shll (Vlong vl) (Vint vi)) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0, p1, p2, p3.
+        simpl.
+        unfold Cop.sem_shl, Cop.sem_shift; simpl.
+        change Int64.iwordsize' with (Int.repr 64).
+        unfold rBPFValues.compu_lt_32 in Hlt_64.
+        rewrite Hlt_64.
+        split.
+        unfold Int64.shl', Int64.shl.
+        rewrite Hint_unsigned_int64; reflexivity.
+        intros.
+        unfold correct_upd_reg.stateM_correct, stateless, reg_correct, val64_correct.
+        simpl.
+        intuition.
+        eexists ; reflexivity.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_alu64.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (_ & c3); assumption.
+        reflexivity.
+
+        (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_flag.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= ins_block).
+          instantiate (1:= mrs_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          repeat constructor;auto.
+
+          revert H5. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_flag.match_res in H0.
+          unfold stateM_correct in *.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (Hv_eq & Hst); subst.
+        exists ((Vptr state_block Ptrofs.zero) :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        unfold Cop.sem_unary_operation; simpl.
+        split; [reflexivity |].
+        intros.
+        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag.
+        simpl.
+        intuition.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_alu64.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (_ & c3); assumption.
+        reflexivity.
+        reflexivity.
+
+        intros.
+        get_invariant _src32.
+        unfold correct_reg64_to_reg32.match_res, valu32_correct in c3.
+        destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
+        unfold exec_expr.
+        rewrite p0.
+        unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
+        reflexivity.
+        reflexivity.
+
+      + reflexivity.
+      + intros.
+        get_invariant _opcode_alu64.
+        unfold correct_get_opcode_alu64.match_res, opcode_alu64_correct in c3.
+        unfold exec_expr.
+        rewrite p0. f_equal.
+        (* opcode_alu64_correct should be a mapping between opcodes and int *)
+        destruct c3; assumption.
+      + compute. intuition congruence.
     - (**r op_BPF_RSH64 *)
-      admit.
+      eapply correct_statement_switch with (n:= 112).
+      + simpl.
+        eapply correct_statement_seq_body_drop.
+        intros.
+        eapply correct_statement_seq_body with (modifies1:=nil).
+        change_app_for_statement.
+        eapply correct_statement_call with (has_cast := false).
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        { unfold modifies.
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          repeat constructor;auto.
+
+          revert H3. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_reg.match_res in H0.
+          unfold stateM_correct in *.
+          unfold unmodifies_effect in H.
+          destruct H as (Hm & Hst); subst.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        simpl.
+        Hdisj_false.
+        simpl.
+        Hdisj_false.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _src64.
+        unfold val64_correct,stateless in c3.
+        destruct c3 as (Hv_eq & (vl & Hvl_eq)); subst.
+        exists (Vlong vl :: nil).
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        split; [reflexivity |].
+        intros.
+        simpl.
+        unfold stateless,val64_correct.
+        intuition.
+        eexists ; reflexivity.
+        intros.
+        (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
+        eapply correct_statement_if_body_expr.
+        destruct (rBPFValues.compu_lt_32 _ _) eqn: Hlt_64.
+
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_reg.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= state_block).
+          instantiate (1:= ins_block).
+          instantiate (1:= mrs_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          repeat constructor;auto.
+
+          revert H5. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); [| congruence].
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_reg.match_res in H0.
+          unfold stateM_correct in *.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        get_invariant _dst.
+        get_invariant _dst64.
+        get_invariant _src32.
+        unfold stateless, stateM_correct in c3.
+        destruct c3 as (Hv_eq & Hst); subst.
+        unfold stateless, reg_correct in c4.
+        unfold stateless, val64_correct in c5.
+        destruct c5 as (Hv1_eq & (vl & Hvl_eq)); subst.
+        unfold correct_reg64_to_reg32.match_res, valu32_correct in c6.
+        destruct c6 as (Hv2_eq & (vi & Hvi_eq)); subst.
+        exists ((Vptr state_block Ptrofs.zero) :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shrlu (Vlong vl) (Vint vi)) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0, p1, p2, p3.
+        simpl.
+        unfold Cop.sem_shr, Cop.sem_shift; simpl.
+        change Int64.iwordsize' with (Int.repr 64).
+        unfold rBPFValues.compu_lt_32 in Hlt_64.
+        rewrite Hlt_64.
+        split.
+        unfold Int64.shru', Int64.shru.
+        rewrite Hint_unsigned_int64; reflexivity.
+        intros.
+        unfold correct_upd_reg.stateM_correct, stateless, reg_correct, val64_correct.
+        simpl.
+        intuition.
+        eexists ; reflexivity.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_alu64.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (_ & c3); assumption.
+        reflexivity.
+
+        (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_flag.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= ins_block).
+          instantiate (1:= mrs_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          repeat constructor;auto.
+
+          revert H5. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_flag.match_res in H0.
+          unfold stateM_correct in *.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (Hv_eq & Hst); subst.
+        exists ((Vptr state_block Ptrofs.zero) :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        unfold Cop.sem_unary_operation; simpl.
+        split; [reflexivity |].
+        intros.
+        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag.
+        simpl.
+        intuition.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_alu64.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (_ & c3); assumption.
+        reflexivity.
+        reflexivity.
+
+        intros.
+        get_invariant _src32.
+        unfold correct_reg64_to_reg32.match_res, valu32_correct in c3.
+        destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
+        unfold exec_expr.
+        rewrite p0.
+        unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
+        reflexivity.
+        reflexivity.
+
+      + reflexivity.
+      + intros.
+        get_invariant _opcode_alu64.
+        unfold correct_get_opcode_alu64.match_res, opcode_alu64_correct in c3.
+        unfold exec_expr.
+        rewrite p0. f_equal.
+        (* opcode_alu64_correct should be a mapping between opcodes and int *)
+        destruct c3; assumption.
+      + compute. intuition congruence.
     - (**r op_BPF_NEG64 *)
       eapply correct_statement_switch with (n:= 128).
       + simpl.
@@ -1361,7 +1780,235 @@ Ltac correct_forward L :=
         destruct c3; assumption.
       + compute. intuition congruence.
     - (**r op_BPF_ARSH64 *)
-      admit.
+      eapply correct_statement_switch with (n:= 192).
+      + simpl.
+        eapply correct_statement_seq_body_drop.
+        intros.
+        eapply correct_statement_seq_body with (modifies1:=nil).
+        change_app_for_statement.
+        eapply correct_statement_call with (has_cast := false).
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        { unfold modifies.
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          repeat constructor;auto.
+
+          revert H3. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_reg.match_res in H0.
+          unfold stateM_correct in *.
+          unfold unmodifies_effect in H.
+          destruct H as (Hm & Hst); subst.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        simpl.
+        Hdisj_false.
+        simpl.
+        Hdisj_false.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _src64.
+        unfold val64_correct,stateless in c3.
+        destruct c3 as (Hv_eq & (vl & Hvl_eq)); subst.
+        exists (Vlong vl :: nil).
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        split; [reflexivity |].
+        intros.
+        simpl.
+        unfold stateless,val64_correct.
+        intuition.
+        eexists ; reflexivity.
+        intros.
+        (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
+        eapply correct_statement_if_body_expr.
+        destruct (rBPFValues.compu_lt_32 _ _) eqn: Hlt_64.
+
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_reg.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= state_block).
+          instantiate (1:= ins_block).
+          instantiate (1:= mrs_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          repeat constructor;auto.
+
+          revert H5. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); [| congruence].
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_reg.match_res in H0.
+          unfold stateM_correct in *.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        get_invariant _dst.
+        get_invariant _dst64.
+        get_invariant _src32.
+        unfold stateless, stateM_correct in c3.
+        destruct c3 as (Hv_eq & Hst); subst.
+        unfold stateless, reg_correct in c4.
+        unfold stateless, val64_correct in c5.
+        destruct c5 as (Hv1_eq & (vl & Hvl_eq)); subst.
+        unfold correct_reg64_to_reg32.match_res, valu32_correct in c6.
+        destruct c6 as (Hv2_eq & (vi & Hvi_eq)); subst.
+        exists ((Vptr state_block Ptrofs.zero) :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shrl (Vlong vl) (Vint vi)) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0, p1, p2, p3.
+        simpl.
+        unfold Cop.sem_shr, Cop.sem_shift; simpl.
+        change Int64.iwordsize' with (Int.repr 64).
+        unfold rBPFValues.compu_lt_32 in Hlt_64.
+        rewrite Hlt_64.
+        unfold Cop.sem_cast; simpl.
+        split.
+        unfold Int64.shr', Int64.shr.
+        rewrite Hint_unsigned_int64; reflexivity.
+        intros.
+        unfold correct_upd_reg.stateM_correct, stateless, reg_correct, val64_correct.
+        simpl.
+        intuition.
+        eexists ; reflexivity.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_alu64.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (_ & c3); assumption.
+        reflexivity.
+
+        (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_flag.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= ins_block).
+          instantiate (1:= mrs_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          repeat constructor;auto.
+
+          revert H5. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _ _); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_flag.match_res in H0.
+          unfold stateM_correct in *.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (Hv_eq & Hst); subst.
+        exists ((Vptr state_block Ptrofs.zero) :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        unfold Cop.sem_unary_operation; simpl.
+        split; [reflexivity |].
+        intros.
+        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag.
+        simpl.
+        intuition.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_alu64.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (_ & c3); assumption.
+        reflexivity.
+        reflexivity.
+
+        intros.
+        get_invariant _src32.
+        unfold correct_reg64_to_reg32.match_res, valu32_correct in c3.
+        destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
+        unfold exec_expr.
+        rewrite p0.
+        unfold Cop.sem_binary_operation, Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
+        reflexivity.
+        reflexivity.
+
+      + reflexivity.
+      + intros.
+        get_invariant _opcode_alu64.
+        unfold correct_get_opcode_alu64.match_res, opcode_alu64_correct in c3.
+        unfold exec_expr.
+        rewrite p0. f_equal.
+        (* opcode_alu64_correct should be a mapping between opcodes and int *)
+        destruct c3; assumption.
+      + compute. intuition congruence.
     - (**r op_BPF_ALU64_ILLEGAL_INS *)
       admit.
 Admitted.
