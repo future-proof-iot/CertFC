@@ -1759,6 +1759,7 @@ Definition vc_cast_casted (o:Ctypes.type) (d:Ctypes.type) :=
   match classify_cast o d with
   | cast_case_pointer => is_Vptr d
   | cast_case_i2l si  => true
+  | cast_case_l2l     => true
   | _                 => false
   end.
 
@@ -1787,6 +1788,57 @@ Proof.
     constructor. constructor;auto.
     inv H0.
     eapply is_Vptr_casted; eauto.
+  - destruct v; try congruence.
+    inv H0.
+    unfold classify_cast in CC.
+    destruct t1; try discriminate.
+    + destruct t; try discriminate.
+      destruct i0; discriminate.
+      destruct f; discriminate.
+    + destruct t; try congruence.
+      destruct i1;try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct f; discriminate.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+    + destruct t ;
+        try discriminate CC.
+      destruct i0;
+        try discriminate CC.
+      constructor.
+      destruct f ; discriminate.
+    + destruct t ;
+        try discriminate CC.
+      destruct i0;
+        try discriminate CC.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f0; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+    + destruct t ; try discriminate.
+      destruct i0; try discriminate.
+      destruct f ; try discriminate.
+    + destruct t ; try discriminate.
+      destruct i0; try discriminate.
+      destruct f ; try discriminate.
+    + destruct t ; try discriminate.
+      destruct i0; try discriminate.
+      destruct f ; try discriminate.
+    + destruct t ; try discriminate.
+      destruct i1; try discriminate.
+      destruct f ; try discriminate.
+    + destruct t ; try discriminate.
+      destruct i1; try discriminate.
+      destruct f ; try discriminate.
   - destruct v; try congruence.
     inv H0.
     unfold classify_cast in CC.
