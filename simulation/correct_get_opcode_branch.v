@@ -71,7 +71,7 @@ Section Get_opcode_branch.
       unfold byte_to_opcode_branch_if.
       rewrite Int.zero_ext_and; [change (Int.repr (two_p 8 - 1)) with (Int.repr 255) | lia].
       rewrite nat8_land_240_255_eq; [| apply Hge].
-
+(*
       simpl_if Hja.
       destruct (c =? 5)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity |rewrite Nat.eqb_neq in Hc_eq].
       exists c; split; [reflexivity| idtac].
@@ -80,7 +80,8 @@ Section Get_opcode_branch.
       intro.
       assumption.
 
-      repeat simpl_land H0.
+      repeat simpl_land H0. *)
+      simpl_opcode Hja.
       simpl_opcode Hjeq.
       simpl_opcode Hjgt.
       simpl_opcode Hjge.
@@ -92,12 +93,20 @@ Section Get_opcode_branch.
       simpl_opcode Hjsge.
       simpl_opcode Hjsjt.
       simpl_opcode Hjsle.
+      simpl_opcode Hcall.
+      simpl_opcode Hret. (*
+      simpl_if Hcall.
+      destruct (c =? 133)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity | rewrite Nat.eqb_neq in Hc_eq].
+      exists c; split; [reflexivity| ].
+      unfold is_illegal_jmp_ins.
+      repeat simpl_land H0.
+      assumption.
       simpl_if Hret.
       destruct (c =? 149)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity | rewrite Nat.eqb_neq in Hc_eq].
       exists c; split; [reflexivity| ].
       unfold is_illegal_jmp_ins.
       repeat simpl_land H0.
-      assumption.
+      assumption. *)
       exists c.
       split; [reflexivity |].
       unfold is_illegal_jmp_ins.

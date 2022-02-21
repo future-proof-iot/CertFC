@@ -186,7 +186,7 @@ Proof.
   remember (Z.to_nat
       (Int64.unsigned
          (Int64.and (State.eval_ins (State.eval_pc x) x) (Int64.repr 255)))) as Hopcode.
-  unfold DxInstructions.get_immediate, Regs.get_immediate, eval_immediate, step_alu_binary_operation, eval_src, eval_reg, get_dst, get_src64, get_src32, step_opcode_alu64, step_opcode_alu32, get_opcode_alu64, get_opcode_alu32, byte_to_opcode_alu64, byte_to_opcode_alu32, rBPFValues.val64_divlu, rBPFValues.val64_modlu, rBPFValues.val32_divu, rBPFValues.val32_modu, step_opcode_mem_ld_reg, step_load_x_operation, get_opcode_mem_ld_reg, byte_to_opcode_mem_ld_reg, step_opcode_mem_ld_imm, get_opcode_mem_ld_imm, byte_to_opcode_mem_ld_imm, Regs.get_offset, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, Regs.get_offset, State.upd_reg, upd_reg; unfold_dx.
+  unfold DxInstructions.get_immediate, Regs.get_immediate, eval_immediate, step_alu_binary_operation, eval_src, eval_reg, get_dst, get_src64, get_src32, step_opcode_alu64, step_opcode_alu32, get_opcode_alu64, get_opcode_alu32, byte_to_opcode_alu64, byte_to_opcode_alu32, rBPFValues.val64_divlu, rBPFValues.val64_modlu, rBPFValues.val32_divu, rBPFValues.val32_modu, step_opcode_mem_ld_reg, step_load_x_operation, get_opcode_mem_ld_reg, byte_to_opcode_mem_ld_reg, step_opcode_mem_ld_imm, get_opcode_mem_ld_imm, byte_to_opcode_mem_ld_imm, Regs.get_offset, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, Regs.get_offset, State.upd_reg, upd_reg, DxMonad.exec_function; unfold_dx.
 
 
   assert (Hopcode_range: Hopcode <= 255). {
@@ -605,6 +605,12 @@ Proof.
 
   (**r Hsler *)
   Hopcode_solve_jump Hopcode 0xdd Hsler.
+
+  (**r Hcall *)
+  unfold rBPFValues.int64_to_sint32, rBPFValues.val_intsoflongu.
+  Hopcode_solve Hopcode 0x85 Hcall.
+  unfold Regs.get_immediate, rBPFValues.int64_to_sint32.
+  reflexivity.
 
   (**r Hret *)
   Hopcode_solve_jump Hopcode 0x95 Hret.

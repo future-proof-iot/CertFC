@@ -80,12 +80,13 @@ Section Get_opcode_alu32.
       simpl_opcode Hand.
       simpl_opcode Hlsh.
       simpl_opcode Hrsh.
+      simpl_opcode Hneg. (*
       simpl_if Hneg.
       destruct (c =? 132)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity |rewrite Nat.eqb_neq in Hc_eq].
       exists c; split; [reflexivity| idtac].
       unfold is_illegal_alu32_ins.
       repeat simpl_land H0.
-      assumption.
+      assumption.*)
 
       simpl_opcode Hmod.
       simpl_opcode Hxor.

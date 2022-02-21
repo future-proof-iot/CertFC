@@ -339,8 +339,16 @@ Definition step : M unit :=
     | BPF_ST chunk d s ofs =>
       step_store_operation chunk d s ofs
 
-    | BPF_RET => upd_flag BPF_SUCC_RETURN
-    | BPF_ERR => upd_flag BPF_ILLEGAL_INSTRUCTION
+    | BPF_CALL i => (**r TODO: is this type-casting correct? this style is because of DxInstructions... *)
+      do f_ptr    <- _bpf_get_call (Vint ((Int.repr (Int64.unsigned (Int64.repr (Int.signed i))))));
+      do is_null  <- cmp_ptr32_nullM f_ptr;
+        if is_null then
+          upd_flag BPF_ILLEGAL_CALL
+        else
+          do res  <- exec_function f_ptr;
+            upd_reg R0 (Val.longofintu res)
+    | BPF_RET    => upd_flag BPF_SUCC_RETURN
+    | BPF_ERR    => upd_flag BPF_ILLEGAL_INSTRUCTION
     end.
 
 Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=

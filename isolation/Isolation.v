@@ -7,6 +7,12 @@ From Coq Require Import ZArith Lia.
 
 Open Scope Z_scope.
 
+Axiom call_inv: forall st1 st2 b ofs res
+  (Hreg : register_inv st1)
+  (Hmem : memory_inv st1)
+  (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
+    register_inv st2 /\ memory_inv st2.
+
 Theorem step_preserving_inv:
   forall st1 st2
     (Hreg: register_inv st1)
@@ -77,6 +83,34 @@ Proof.
     eapply step_preserving_inv_ld; eauto.
   - (* BPF_ST *)
     eapply step_preserving_inv_st; eauto.
+  - (* BPF_CALL *)
+    assert (Hget_call: forall i, exists ptr,
+      _bpf_get_call (Vint i) st1 = Some (ptr, st1) /\
+      (ptr = Vnullptr \/ (exists b ofs, ptr = Vptr b ofs))). {
+      intro.
+      apply lemma_bpf_get_call.
+    }
+    specialize (Hget_call (Int.repr (Int64.unsigned (Int64.repr (Int.signed i))))).
+    destruct Hget_call as (ptr & Hget_call & Hres).
+    rewrite Hget_call in Hsem.
+    destruct Hres as [Hnull | (b & ofs & Hptr)]; unfold cmp_ptr32_nullM, rBPFValues.cmp_ptr32_null in Hsem; subst.
+    + simpl in Hsem.
+      rewrite Int.eq_true in Hsem.
+      inversion Hsem; split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+    + destruct Val.cmpu_bool eqn:cmp; [| inversion Hsem].
+      destruct b0.
+      * inversion Hsem; split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+      * assert (Hexec: forall b ofs st1,
+      exists v st2, exec_function (Vptr b ofs) st1 = Some (Vint v, st2) /\ rBPFValues.cmp_ptr32_null (State.eval_mem st1) (Vptr b ofs) = Some false). {
+          apply lemma_exec_function0.
+        }
+        specialize (Hexec b ofs st1).
+        destruct Hexec as (res & st & Hexec & _).
+        rewrite Hexec in Hsem.
+        apply call_inv in Hexec; auto.
+        destruct res; inversion Hsem.
+        destruct Hexec as (Hreg_st & Hmem_st).
+        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto].
   - (* BPF_RET *)
     inversion Hsem.
     split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
@@ -387,6 +421,30 @@ end <> Vnullptr). {
       all: rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem.
       all: simpl; destruct Hmem as (m & Hstore & Hinv); unfold vlong_or_vint_to_vint_or_vlong, vint_to_vint_or_vlong in Hstore; rewrite Hstore.
       all: intro H; inversion H.
+  - (* BPF_CALL *)
+    assert (Hget_call: forall i, exists ptr,
+      _bpf_get_call (Vint i) st = Some (ptr, st) /\
+      (ptr = Vnullptr \/ (exists b ofs, ptr = Vptr b ofs))). {
+      intro.
+      apply lemma_bpf_get_call.
+    }
+    specialize (Hget_call (Int.repr (Int64.unsigned (Int64.repr (Int.signed i))))).
+    destruct Hget_call as (ptr & Hget_call & Hres).
+    rewrite Hget_call.
+    unfold cmp_ptr32_nullM.
+    destruct Hres as [Hnull | (b & ofs & Hptr)]; subst.
+    + simpl.
+      rewrite Int.eq_true.
+      intro H; inversion H.
+    + assert (Hexec: forall b ofs st1,
+      exists v st2, exec_function (Vptr b ofs) st1 = Some (Vint v, st2) /\ rBPFValues.cmp_ptr32_null (State.eval_mem st1) (Vptr b ofs) = Some false). {
+          apply lemma_exec_function0.
+        }
+        specialize (Hexec b ofs st).
+        destruct Hexec as (res & st1 & Hexec & Hvalid).
+        rewrite Hvalid, Hexec.
+        simpl.
+        intro H; inversion H.
   - (* BPF_RET *)
     intro H; inversion H.
   - (* BPF_ERR *)

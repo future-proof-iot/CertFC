@@ -403,6 +403,9 @@ static __attribute__((always_inline)) inline void step_opcode_alu32(struct bpf_s
 static __attribute__((always_inline)) inline void step_opcode_branch(struct bpf_state* st, unsigned long long dst64, unsigned long long src64, int pc, int ofs, unsigned char op)
 {
   unsigned char opcode_jmp;
+  unsigned char *f_ptr;
+  _Bool is_null;
+  unsigned int res;
   opcode_jmp = get_opcode_branch(op);
   switch (opcode_jmp) {
     case 0:
@@ -488,6 +491,22 @@ static __attribute__((always_inline)) inline void step_opcode_branch(struct bpf_
         upd_pc(st, pc + ofs);
         return;
       } else {
+        return;
+      }
+    case 128:
+      if (op == 133) {
+        f_ptr = _bpf_get_call((int) src64);
+        is_null = cmp_ptr32_nullM(st, f_ptr);
+        if (is_null) {
+          upd_flag(st, -4);
+          return;
+        } else {
+          res = exec_function(st, f_ptr);
+          upd_reg(st, 0U, (unsigned long long) res);
+          return;
+        }
+      } else {
+        upd_flag(st, -1);
         return;
       }
     case 144:

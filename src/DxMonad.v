@@ -50,4 +50,7 @@ Declare Scope monad_scope.
 Notation "'do' x <-- a ; b" :=
   (bindM a (fun x => b))
     (at level 200, x name, a at level 100, b at level 200)
-  : monad_scope. 
+  : monad_scope.
+
+Definition _bpf_get_call (i: vals32_t) : M valptr8_t := _bpf_get_call i.
+Definition exec_function (f: valptr8_t) : M valu32_t := exec_function f.

@@ -62,7 +62,7 @@ Ltac build_app_aux T :=
              let r := build_app_aux F in
              constr:((mk ty X) :: r)
   | ?X    => constr:(@nil dpair)
-  end.                                    
+  end.
 
 Ltac get_function T :=
   match T with
@@ -1410,6 +1410,7 @@ Ltac correct_forward L :=
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
         assert (Hneq: Int.eq (Int.repr (Z.of_nat c2)) (Int.repr 135) = false). {
           apply Int.eq_false.
+          destruct Hrange as (Hrange & _).
           apply nat8_neq_135; auto.
         }
         rewrite Hneq; clear Hneq.
@@ -2010,8 +2011,117 @@ Ltac correct_forward L :=
         destruct c3; assumption.
       + compute. intuition congruence.
     - (**r op_BPF_ALU64_ILLEGAL_INS *)
-      admit.
-Admitted.
+      eapply correct_statement_switch_ex.
+      + reflexivity.
+      + intros.
+        assert (Hillegal_ins: exists n i,
+          correct_get_opcode_alu64.match_res op_BPF_ALU64_ILLEGAL_INS n st0 m0 /\
+          n = Vint (Int.repr (Z.of_nat (Nat.land i 240))) /\
+          is_illegal_alu64_ins i /\
+          exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le0 m0
+            (Etempvar _opcode_alu64 Clightdefs.tuchar) =
+              Some (Vint (Int.repr (Z.of_nat (Nat.land i 240))))).
+        {
+          get_invariant _opcode_alu64.
+          unfold correct_get_opcode_alu64.match_res in c3.
+          exists v.
+          assert (c3':=c3).
+          unfold opcode_alu64_correct in c3'.
+          destruct c3' as (i & V & ILL).
+          exists i.
+          split ; auto.
+          split ; auto.
+          split ; auto.
+          unfold exec_expr. congruence.
+        }
+        destruct Hillegal_ins as (n & i & Hprop & Hn_eq & Hill & EX).
+        exists (Z.of_nat (Nat.land i 240)).
+        split; auto.
+        split.
+
+        change Int.modulus with 4294967296.
+        assert (Hand_le: (Nat.land 240 i <= 240)%nat). {
+          apply LemmaNat.land_bound.
+        }
+        rewrite Nat.land_comm.
+        lia.
+
+        unfold select_switch.
+        unfold select_switch_case.
+        unfold is_illegal_alu64_ins in Hill.
+        repeat match goal with
+        | |- context[Coqlib.zeq ?x (Z.of_nat (Nat.land i 240))] =>
+            destruct (Coqlib.zeq x (Z.of_nat (Nat.land i 240))) ; try lia
+        end.
+        (* default *)
+        simpl.
+        (**r s1 -> (Ssequence s1 s2) *)
+        eapply correct_statement_seq_body_drop.
+        intros.
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_flag.match_res. tauto.
+        { unfold modifies.
+          instantiate (1:= ins_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          instantiate (1 := mrs_block) in H1.
+          inversion H2; subst; clear H2.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          repeat constructor;auto.
+
+          revert H4. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _st le1); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_flag.match_res in H1.
+          unfold stateM_correct in *.
+          tauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro HH.
+        correct_Forall.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (Hv_eq & Hst); subst.
+        exists ((Vptr state_block Ptrofs.zero) ::
+                (Vint (Int.neg (Int.repr 1))) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        unfold Cop.sem_unary_operation; simpl.
+        split.
+        reflexivity.
+        intros.
+        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag; simpl.
+        split; auto.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_alu64.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c3.
+        destruct c3 as (_ & c3); assumption.
+        reflexivity.
+Qed.
 
 End Step_opcode_alu64.
 

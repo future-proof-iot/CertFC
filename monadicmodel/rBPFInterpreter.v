@@ -116,7 +116,6 @@ Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (ch
       returnM Vnullptr.
 
 
-
 Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: val) (mrs: MyMemRegionsType) {struct num}: M val :=
   match num with
   | O => returnM Vnullptr
@@ -315,7 +314,19 @@ Definition step_opcode_branch (dst64: val) (src64: val) (pc: int) (ofs: int) (op
     else
       returnM tt
 
-  | op_BPF_RET => 
+  | op_BPF_CALL =>
+    if Nat.eqb op 0x85 then
+      do f_ptr    <- _bpf_get_call (val_intsoflongu src64);
+      do is_null  <- cmp_ptr32_nullM f_ptr;
+        if is_null then
+          upd_flag BPF_ILLEGAL_CALL
+        else
+          do res  <- exec_function f_ptr;
+            upd_reg R0 (Val.longofintu res)
+    else
+      do _ <- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
+
+  | op_BPF_RET =>
     if Nat.eqb op 0x95 then
       do _ <- upd_flag BPF_SUCC_RETURN; returnM tt
     else

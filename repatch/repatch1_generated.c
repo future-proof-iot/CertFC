@@ -123,6 +123,10 @@ extern unsigned long long eval_ins(int);
 
 extern _Bool cmp_ptr32_nullM(unsigned char *);
 
+extern unsigned char *_bpf_get_call(int);
+
+extern unsigned int exec_function(unsigned char *);
+
 struct memory_region *get_mem_region(unsigned int n, struct memory_region *mrs)
 {
   return mrs + n;
@@ -527,6 +531,9 @@ void step_opcode_alu32(unsigned int dst32, unsigned int src32, unsigned int dst,
 void step_opcode_branch(unsigned long long dst64, unsigned long long src64, int pc, int ofs, unsigned char op)
 {
   unsigned char opcode_jmp;
+  unsigned char *f_ptr;
+  _Bool is_null;
+  unsigned int res;
   opcode_jmp = get_opcode_branch(op);
   switch (opcode_jmp) {
     case 0:
@@ -612,6 +619,22 @@ void step_opcode_branch(unsigned long long dst64, unsigned long long src64, int 
         upd_pc(pc + ofs);
         return;
       } else {
+        return;
+      }
+    case 128:
+      if (op == 133) {
+        f_ptr = _bpf_get_call((int) src64);
+        is_null = cmp_ptr32_nullM(f_ptr);
+        if (is_null) {
+          upd_flag(-4);
+          return;
+        } else {
+          res = exec_function(f_ptr);
+          upd_reg(0U, (unsigned long long) res);
+          return;
+        }
+      } else {
+        upd_flag(-1);
         return;
       }
     case 144:

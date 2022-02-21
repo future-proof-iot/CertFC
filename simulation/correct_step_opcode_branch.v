@@ -339,7 +339,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. simpl.
         unfold stateless, opcode_and_07_correct in c4.
-        destruct c4 as (Hv_eq & Hrange).
+        destruct c4 as (Hv_eq & Hrange & Hland).
         rewrite <- Hv_eq.
         destruct (c3 =? 5)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.
@@ -1705,6 +1705,188 @@ Ltac correct_forward L :=
         change (Int.repr (Z.of_nat (Nat.land 221 240))) with (Int.repr 0xd0) in c4.
         destruct c4; intuition.
       + compute. intuition congruence.
+    - (**r op_BPF_CALL *)
+      eapply correct_statement_switch with (n:= 0x80).
+      + simpl.
+        (**r s1 -> (Ssequence s1 s2) *)
+        eapply correct_statement_seq_body_drop.
+        intros.
+        (**r because upd_reg return unit, here we use *_unit? *)
+
+        eapply correct_statement_if_body_expr.
+
+        destruct (c3 =? 133)%nat eqn: Hneg_eq.
+        admit.
+        (*
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_flag.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= ins_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          instantiate (1 := mrs_block) in H0.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          repeat constructor;auto.
+
+          revert H3. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _st le1); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_flag.match_res in H0.
+          unfold stateM_correct in *.
+          destruct H1, H0.
+          split; assumption.
+          rewrite Forall_forall in H10.
+          apply H10.
+          unfold In. eauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        get_invariant _pc.
+        get_invariant _ofs.
+        unfold sint32_correct,stateless in c5, c6; subst.
+        exists (v :: Vint (Int.repr 1) :: nil). (**r star here *)
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        split. reflexivity.
+        subst.
+        intros.
+        simpl.
+        intuition.
+        unfold stateless,flag_correct, int_of_flag.
+        split; auto.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c4.
+        destruct c4 as (_ & c4); assumption.
+        reflexivity.
+        *)
+
+        eapply correct_statement_seq_body_unit.
+        change_app_for_statement.
+        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
+        eapply correct_statement_call_none.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+        unfold correct_upd_flag.match_res. intuition.
+        { unfold modifies.
+          instantiate (1:= ins_block).
+          unfold var_inv_preserve.
+          unfold match_temp_env.
+          intros.
+          instantiate (1 := mrs_block) in H0.
+          inversion H1; subst; clear H1.
+          inversion H5; subst; clear H5.
+          inversion H6; subst; clear H6.
+          inversion H7; subst; clear H7.
+          inversion H8; subst; clear H8.
+          inversion H9; subst; clear H9.
+          repeat constructor;auto.
+
+          revert H3. (**r moves the hypotheses  to the goal *)
+          unfold match_elt,fst.
+          destruct (Maps.PTree.get _st le1); try congruence.
+          unfold snd.
+          intro HH ; destruct HH ; split; auto.
+          unfold correct_upd_flag.match_res in H0.
+          unfold stateM_correct in *.
+          tauto.
+          rewrite Forall_forall in H10.
+          apply H10.
+          unfold In. eauto.
+        }
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        destruct c4 as (c4_1 & c4_2).
+        exists (v ::Vint (Int.repr (-1)) :: nil). (**r star here: it should be -1 *)
+        unfold map_opt, exec_expr.
+        rewrite p0.
+        split.
+        simpl.
+        reflexivity.
+        intros.
+        simpl.
+        unfold correct_upd_flag.stateM_correct, stateless,flag_correct.
+        intuition.
+        intros.
+
+        (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
+        eapply correct_body_Sreturn_None.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        intros.
+        get_invariant _st.
+        unfold stateM_correct in c4.
+        destruct c4 as (_ & c4); assumption.
+        reflexivity.
+        reflexivity.
+
+        intros.
+        get_invariant _op.
+        unfold exec_expr.
+        rewrite p0. simpl.
+        unfold stateless, opcode_and_07_correct in c4.
+        destruct c4 as (Hv_eq & Hrange & Hland).
+        rewrite <- Hv_eq.
+        destruct (c3 =? 133)%nat eqn: Hc2_eq.
+        rewrite Nat.eqb_eq in Hc2_eq.
+        subst.
+        simpl.
+        reflexivity.
+
+        rewrite Nat.eqb_neq in Hc2_eq.
+        simpl.
+        unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+        assert (Hneq: Int.eq (Int.repr (Z.of_nat c3)) (Int.repr 133) = false). {
+          apply Int.eq_false.
+          apply nat8_neq_133; auto.
+        }
+        rewrite Hneq; clear Hneq.
+        reflexivity.
+      + reflexivity.
+      + intros.
+        get_invariant _opcode_jmp.
+        unfold exec_expr.
+        rewrite p0. f_equal.
+        unfold correct_get_opcode_branch.match_res in c4.
+        unfold opcode_branch_correct in c4.
+        change (Int.repr (Z.of_nat (Nat.land 133 240))) with (Int.repr 0x80) in c4.
+        destruct c4; intuition.
+      + compute. intuition congruence.
     - (**r op_BPF_RET *)
 
       eapply correct_statement_switch with (n:= 0x90).
@@ -1859,7 +2041,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. simpl.
         unfold stateless, opcode_and_07_correct in c4.
-        destruct c4 as (Hv_eq & Hrange).
+        destruct c4 as (Hv_eq & Hrange & Hland).
         rewrite <- Hv_eq.
         destruct (c3 =? 149)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.
@@ -1887,9 +2069,51 @@ Ltac correct_forward L :=
         destruct c4; intuition.
       + compute. intuition congruence.
 
-    - (**r op_BPF_JMP_ILLEGAL_INS *) (**r e5 -> e0*)
-      eapply correct_statement_switch with (n:= 0xe5).
-      + simpl.
+    - (**r op_BPF_JMP_ILLEGAL_INS *)
+      eapply correct_statement_switch_ex.
+      + reflexivity.
+      + intros.
+        assert (Hillegal_ins: exists n i,
+          correct_get_opcode_branch.match_res op_BPF_JMP_ILLEGAL_INS n st0 m0 /\
+          n = Vint (Int.repr (Z.of_nat (Nat.land i 240))) /\
+          is_illegal_jmp_ins i /\
+          exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le0 m0
+            (Etempvar _opcode_jmp Clightdefs.tuchar) =
+              Some (Vint (Int.repr (Z.of_nat (Nat.land i 240))))).
+        {
+          get_invariant _opcode_jmp.
+          unfold correct_get_opcode_branch.match_res in c4.
+          exists v.
+          assert (c4':=c4).
+          unfold opcode_branch_correct in c4'.
+          destruct c4' as (i & V & ILL).
+          exists i.
+          split ; auto.
+          split ; auto.
+          split ; auto.
+          unfold exec_expr. congruence.
+        }
+        destruct Hillegal_ins as (n & i & Hprop & Hn_eq & Hill & EX).
+        exists (Z.of_nat (Nat.land i 240)).
+        split; auto.
+        split.
+
+        change Int.modulus with 4294967296.
+        assert (Hand_le: (Nat.land 240 i <= 240)%nat). {
+          apply LemmaNat.land_bound.
+        }
+        rewrite Nat.land_comm.
+        lia.
+
+        unfold select_switch.
+        unfold select_switch_case.
+        unfold is_illegal_jmp_ins in Hill.
+        repeat match goal with
+        | |- context[Coqlib.zeq ?x (Z.of_nat (Nat.land i 240))] =>
+            destruct (Coqlib.zeq x (Z.of_nat (Nat.land i 240))) ; try lia
+        end.
+        (* default *)
+        simpl.
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
@@ -1905,30 +2129,27 @@ Ltac correct_forward L :=
         unfold correct_upd_flag.match_res. intuition.
         { unfold modifies.
           instantiate (1:= ins_block).
+          instantiate (1 := mrs_block).
           unfold var_inv_preserve.
           unfold match_temp_env.
           intros.
-          instantiate (1 := mrs_block) in H0.
-          inversion H1; subst; clear H1.
-          inversion H5; subst; clear H5.
+          inversion H2; subst; clear H2.
           inversion H6; subst; clear H6.
           inversion H7; subst; clear H7.
           inversion H8; subst; clear H8.
           inversion H9; subst; clear H9.
+          inversion H10; subst; clear H10.
+          inversion H11; subst; clear H11.
           repeat constructor;auto.
 
-          revert H3. (**r moves the hypotheses  to the goal *)
+          revert H4. (**r moves the hypotheses  to the goal *)
           unfold match_elt,fst.
-          destruct (Maps.PTree.get _st le1); try congruence.
+          destruct (Maps.PTree.get _ _); try congruence.
           unfold snd.
           intro HH ; destruct HH ; split; auto.
-          unfold correct_upd_flag.match_res in H0.
+          unfold correct_upd_flag.match_res in H1.
           unfold stateM_correct in *.
-          destruct H1, H0.
-          split; assumption.
-          rewrite Forall_forall in H10.
-          apply H10.
-          unfold In. eauto.
+          tauto.
         }
         reflexivity.
         reflexivity.
@@ -1936,7 +2157,7 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
 
-        unfold INV; intro H.
+        unfold INV; intro H1.
         correct_Forall.
         get_invariant _st.
         get_invariant _pc.
@@ -1949,8 +2170,7 @@ Ltac correct_forward L :=
         subst.
         intros.
         simpl.
-        intuition.
-        unfold stateless,flag_correct, int_of_flag.
+        unfold correct_upd_flag.stateM_correct, stateless,flag_correct, int_of_flag; simpl.
         split; auto.
         intros.
 
@@ -1962,17 +2182,6 @@ Ltac correct_forward L :=
         unfold stateM_correct in c4.
         destruct c4 as (_ & c4); assumption.
         reflexivity.
-      + reflexivity.
-      + intros.
-        get_invariant _opcode_jmp.
-        unfold exec_expr.
-        rewrite p0. f_equal.
-        unfold correct_get_opcode_branch.match_res in c4.
-        unfold opcode_branch_correct in c4.
-        (* opcode_branch_correct should be a mapping between opcodes and int *)
-        destruct c4. admit.
-      + compute. intuition congruence.
-
 Admitted.
 
 End Step_opcode_branch.

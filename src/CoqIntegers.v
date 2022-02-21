@@ -32,6 +32,10 @@ Definition C_S16_pointer := Ctypes.Tpointer C_S16 Ctypes.noattr.
 Definition C_S32_pointer := Ctypes.Tpointer C_S32 Ctypes.noattr.
 
 Definition C_S64_pointer := Ctypes.Tpointer C_S64 Ctypes.noattr.
+(*
+Definition C_Func_pointer := Ctypes.Tpointer (Tfunction
+                            (Tcons (tptr (Tstruct _bpf_state noattr))
+                              (Tcons tuint Tnil)) tulong cc_default) Ctypes.noattr. *)
 
 (******************** C_U32 operations *******************)
 

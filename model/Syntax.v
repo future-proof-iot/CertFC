@@ -93,16 +93,17 @@ Inductive instruction: Type :=
   | BPF_NEG    : arch -> reg -> instruction
   | BPF_BINARY : arch -> binOp -> reg -> reg+imm -> instruction
   (**r Branch *)
-  | BPF_JA  : off -> instruction
-  | BPF_JUMP: cond -> reg -> reg+imm -> off -> instruction
+  | BPF_JA   : off -> instruction
+  | BPF_JUMP : cond -> reg -> reg+imm -> off -> instruction
 
   (**r Load *)
-  | BPF_LDDW   : reg -> imm -> instruction
+  | BPF_LDDW : reg -> imm -> instruction
   (**r Load_x *)
-  | BPF_LDX : memory_chunk -> reg -> reg -> off -> instruction
+  | BPF_LDX  : memory_chunk -> reg -> reg -> off -> instruction
   (**r Store/ Store_x *)
-  | BPF_ST  : memory_chunk -> reg -> reg+imm -> off -> instruction
+  | BPF_ST   : memory_chunk -> reg -> reg+imm -> off -> instruction
   (**r exit *)
+  | BPF_CALL : imm -> instruction
   | BPF_RET  : instruction
   | BPF_ERR  : instruction
 .
@@ -129,6 +130,7 @@ Definition bpf_instruction_eqb (a b: instruction) : bool :=
       | inr i0', inr i1' => Int.eq  i0' i1'
       | _, _ => false
       end) && Int.eq ofs0 ofs1
+  | BPF_CALL i0 , BPF_CALL i1 => Int.eq i0 i1
   | BPF_RET, BPF_RET
   | BPF_ERR, BPF_ERR => true
   | _, _ => false

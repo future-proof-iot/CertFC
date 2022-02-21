@@ -576,4 +576,51 @@ Proof.
     lia.
 Qed.
 
+Lemma Hzeq_neq_intro:
+    forall (A:Type) a n (b c: A),
+      (a <> n)%nat -> (if Coqlib.zeq (Z.of_nat n) (Z.of_nat a) then b else c) = c.
+Proof.
+  intros.
+  apply zeq_false.
+  intro.
+  apply Nat2Z.inj in H0.
+  lia.
+Qed.
+
+Lemma Int_repr_eq:
+  forall a b
+    (Ha_range: 0 <= a <= Int.max_unsigned)
+    (Hb_range: 0 <= b <= Int.max_unsigned)
+    (Heq: Int.repr a = Int.repr b),
+      a = b.
+Proof.
+  intros.
+  Transparent Int.repr.
+  unfold Int.repr in Heq.
+  inversion Heq.
+  do 2 rewrite Int.Z_mod_modulus_eq in H0.
+  change Int.modulus with 4294967296 in H0.
+  change Int.max_unsigned with 4294967295 in *.
+  rewrite Z.mod_small in H0; [ | lia].
+  rewrite Z.mod_small in H0; [ | lia].
+  assumption.
+Qed.
+(*
+Lemma Zeq_dec_eqb_intro:
+  forall a b,
+    (if Z.eq_dec a b then true else false) = true -> Z.eqb a b = true.
+Proof.
+  intros.
+  Print Z.eq_dec.
+Qed.
+
+Lemma Hzeq_neq_elim:
+    forall (A:Type) a n (b c: A),
+      (if Coqlib.zeq (Z.of_nat n) (Z.of_nat a) then b else c) = c -> (a <> n)%nat.
+Proof.
+  intros.
+  unfold zeq in H.
+  Locate Z.eq_dec.
+Qed. *)
+
 Close Scope Z_scope.

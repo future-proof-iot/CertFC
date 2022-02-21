@@ -186,7 +186,7 @@ Definition opcode_branchCompilableTypeMatchableType : MatchableType:=
        :: (op_BPF_JSGE, 0x70)
        :: (op_BPF_JSLT, 0xc0)
        :: (op_BPF_JSLE, 0xd0)
-
+       :: (op_BPF_CALL, 0x80)
        :: (op_BPF_RET,  0x90) :: nil)
     op_BPF_JMP_ILLEGAL_INS
     (fun m A => opcode_branch_rect (fun _ => m A))).

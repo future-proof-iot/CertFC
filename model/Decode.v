@@ -102,6 +102,7 @@ Definition get_instruction (opcode:nat) (rd rs:reg) (ofs: int) (i: int): instruc
   | 0xd5 => BPF_JUMP (Le Signed)   rd (inr i)  ofs
   | 0xdd => BPF_JUMP (Le Signed)   rd (inl rs) ofs
 
+  | 0x85 => BPF_CALL i
   | 0x95 => BPF_RET
 
   | _    => BPF_ERR

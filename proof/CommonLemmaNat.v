@@ -1,7 +1,8 @@
-From compcert Require Import Integers.
+From compcert Require Import Integers Values.
 From bpf.comm Require Import LemmaNat.
 From bpf.monadicmodel Require Import Opcode.
-From Coq Require Import Lia ZArith.
+From Coq Require Import Lia ZArith List.
+Import ListNotations.
 
 Open Scope Z_scope.
 
@@ -35,7 +36,8 @@ Definition byte_to_opcode_alu64_if (op: nat): opcode_alu64 :=
     else if opcode_alu =? 0x50 then op_BPF_AND64
     else if opcode_alu =? 0x60 then op_BPF_LSH64
     else if opcode_alu =? 0x70 then op_BPF_RSH64
-    else if opcode_alu =? 0x80 then if Nat.eqb op 0x87 then op_BPF_NEG64 else op_BPF_ALU64_ILLEGAL_INS
+    else if opcode_alu =? 0x80 then op_BPF_NEG64 (*
+    else if opcode_alu =? 0x80 then if Nat.eqb op 0x87 then op_BPF_NEG64 else op_BPF_ALU64_ILLEGAL_INS *)
     else if opcode_alu =? 0x90 then op_BPF_MOD64
     else if opcode_alu =? 0xa0 then op_BPF_XOR64
     else if opcode_alu =? 0xb0 then op_BPF_MOV64
@@ -122,7 +124,8 @@ Definition byte_to_opcode_alu32_if (op: nat): opcode_alu32 :=
     else if opcode_alu =? 0x50 then op_BPF_AND32
     else if opcode_alu =? 0x60 then op_BPF_LSH32
     else if opcode_alu =? 0x70 then op_BPF_RSH32
-    else if opcode_alu =? 0x80 then if Nat.eqb op 0x84 then op_BPF_NEG32 else op_BPF_ALU32_ILLEGAL_INS
+    else if opcode_alu =? 0x80 then op_BPF_NEG32 (*
+    else if opcode_alu =? 0x80 then if Nat.eqb op 0x84 then op_BPF_NEG32 else op_BPF_ALU32_ILLEGAL_INS *)
     else if opcode_alu =? 0x90 then op_BPF_MOD32
     else if opcode_alu =? 0xa0 then op_BPF_XOR32
     else if opcode_alu =? 0xb0 then op_BPF_MOV32
@@ -194,7 +197,8 @@ Qed.
 
 Definition byte_to_opcode_branch_if (op: nat): opcode_branch :=
   let opcode_alu := Nat.land op 0xf0 in (**r masking operation *)
-    if opcode_alu =? 0x00 then if Nat.eqb op 0x05 then op_BPF_JA else op_BPF_JMP_ILLEGAL_INS
+    if opcode_alu =? 0x00 then op_BPF_JA (*
+    if opcode_alu =? 0x00 then if Nat.eqb op 0x05 then op_BPF_JA else op_BPF_JMP_ILLEGAL_INS *)
     else if opcode_alu =? 0x10 then op_BPF_JEQ
     else if opcode_alu =? 0x20 then op_BPF_JGT
     else if opcode_alu =? 0x30 then op_BPF_JGE
@@ -206,7 +210,10 @@ Definition byte_to_opcode_branch_if (op: nat): opcode_branch :=
     else if opcode_alu =? 0x70 then op_BPF_JSGE
     else if opcode_alu =? 0xc0 then op_BPF_JSLT
     else if opcode_alu =? 0xd0 then op_BPF_JSLE
-    else if opcode_alu =? 0x90 then if Nat.eqb op 0x95 then op_BPF_RET else op_BPF_JMP_ILLEGAL_INS
+    else if opcode_alu =? 0x80 then op_BPF_CALL
+    else if opcode_alu =? 0x90 then op_BPF_RET (*
+    else if opcode_alu =? 0x80 then if Nat.eqb op 0x85 then op_BPF_CALL else op_BPF_JMP_ILLEGAL_INS
+    else if opcode_alu =? 0x90 then if Nat.eqb op 0x95 then op_BPF_RET else op_BPF_JMP_ILLEGAL_INS *)
     else op_BPF_JMP_ILLEGAL_INS
   .
 
@@ -241,11 +248,399 @@ Proof.
   | P := ?F (Nat.land op 240) |- _=>
       apply (Forall_exec_spec F 240)
   end.
-  destruct (op =? 5); destruct (op =? 149).
+  destruct (op =? 5); destruct (op =? 133); destruct (op =? 149).
   all: try (vm_compute; reflexivity).
   rewrite Nat.land_comm.
   apply land_bound.
 Qed.
+
+Lemma List_in_tl:
+  forall (A:Type) (a b: Type) tl
+    (Hneq : a <> b)
+    (Hin : List.In a (b :: tl)),
+      List.In a tl.
+Proof.
+  intros.
+  simpl in Hin.
+  destruct Hin as [Heq | Hin].
+  - intuition.
+  - assumption.
+Qed.
+
+Lemma mod2_odd:
+  forall a, a mod 2 = if Nat.odd a then 1 else 0.
+Proof.
+  intros.
+  destruct (Nat.odd a) eqn:O.
+  apply Nat.odd_spec in O.
+  unfold Nat.Odd in O.
+  destruct O as (m & E).
+  subst.
+  replace (2 * m + 1) with (1 + m * 2) by lia.
+  rewrite Nat.mod_add. reflexivity.
+  lia.
+  assert (negb (Nat.odd a) = true).
+  { rewrite O; reflexivity. }
+  rewrite Nat.negb_odd in H.
+  rewrite Nat.even_spec in H.
+  destruct H as (x & EQ).
+  subst.
+  rewrite mult_comm.
+  rewrite Nat.mod_mul. reflexivity. lia.
+Qed.
+
+(*
+Lemma nat_land_0xf0_eq_0x00:
+  forall n,
+    Nat.land n 240 = 0 ->
+      n = 0x07 \/ n = 0x0f.
+Proof.
+  intros.
+  Search (Nat.land _ _ = _).
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H. Search Nat.bitwise.
+Qed. *)
+
+Lemma Heven_spec:
+  forall n, Nat.even n = true -> exists m, n = 2*m.
+Proof.
+  intros.
+  rewrite Nat.even_spec in H.
+  rewrite <- Even.even_equiv in H.
+  apply Div2.even_2n in H.
+  destruct H as (p & Hdouble).
+  rewrite Nat.double_twice in Hdouble.
+  exists p; assumption.
+Qed.
+
+Lemma Hodd_spec :
+  forall n, Nat.odd n = true -> exists m, n = 2*m+1.
+Proof.
+  intros.
+  rewrite Nat.odd_spec in H.
+  rewrite <- Even.odd_equiv in H.
+  apply Div2.odd_S2n in H.
+  destruct H as (p & Hdouble).
+  rewrite Nat.double_twice in Hdouble.
+  rewrite <- Nat.add_1_r in Hdouble.
+  exists p; assumption.
+Qed.
+
+Lemma nat_land_7_eq_intro:
+  forall n,
+  Nat.land n 7 = 7 -> exists m, n = 7 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - apply Hodd_spec in Hodd as Hn_eq.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    repeat rewrite Nat.add_0_r in H.
+    rewrite Nat.add_1_r in H.
+    repeat rewrite Div2.div2_double_plus_one in H.
+    destruct (Nat.odd m) eqn: Hoddm.
+    + apply Hodd_spec in Hoddm as Hm_eq.
+      destruct Hm_eq as (m0 & Hm_eq).
+      subst.
+      rewrite Nat.add_1_r in H.
+      repeat rewrite Div2.div2_double_plus_one in H.
+      destruct (Nat.odd m0) eqn: Hoddm0.
+      * apply Hodd_spec in Hoddm0 as Hm0_eq.
+        destruct Hm0_eq as (m & Hm_eq).
+        subst.
+        exists m.
+        lia.
+      * inversion H.
+    + rewrite Nat.add_0_l in H.
+      destruct (Nat.odd (Nat.div2 _)); inversion H.
+  - rewrite Nat.add_0_l in H.
+    repeat rewrite Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    repeat rewrite Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hoddm.
+    + apply Hodd_spec in Hoddm as Hm_eq.
+      destruct Hm_eq as (m0 & Hm_eq).
+      subst.
+      rewrite Nat.add_1_r in H.
+      repeat rewrite Div2.div2_double_plus_one in H.
+      destruct (Nat.odd m0) eqn: Hoddm0.
+      * apply Hodd_spec in Hoddm0 as Hm0_eq.
+        destruct Hm0_eq as (m & Hm_eq).
+        subst.
+        exists m.
+        lia.
+      * inversion H.
+    + rewrite Nat.add_0_l in H.
+      destruct (Nat.odd (Nat.div2 _)); inversion H.
+Qed.
+
+Lemma nat_land_7_eq_elim:
+  forall n,
+  (exists m, n = 7 + 8 * m) -> Nat.land n 7 = 7.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 7) with true.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold xorb, andb.
+  assert (Heq: (7 + 8 * m) = (S (2 *(3+4*m)))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double_plus_one.
+  rewrite Nat.odd_add.
+  change (Nat.odd 3) with true.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 4) with false.
+  unfold xorb, andb.
+  assert (Heq: (3 + 4 * m) = (S (2 *(1+2*m)))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double_plus_one.
+  rewrite Nat.odd_add.
+  change (Nat.odd 1) with true.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold xorb, andb.
+  lia.
+Qed.
+
+Lemma nat_land_7_eq:
+  forall n,
+    Nat.land n 7 = 7 <-> exists m, n = 7 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_intro.
+  apply nat_land_7_eq_elim.
+Qed.
+
+Lemma nat_land_240_eq_128:
+  forall n
+    (Hrange : n <= 255)
+    (Hland7: Nat.land n 7 = 7),
+      Nat.land n 240 = 128 <-> n = 0x87 \/ n =0x8f.
+Proof.
+  intros.
+  split; intro.
+  - (*rewrite Nat.land_comm in H.*)
+    unfold Nat.land in H.
+    rewrite nat_land_7_eq in Hland7.
+    destruct Hland7 as (m & Hland7).
+    assert (Heq: 7 + 8 * m = S (2 *(S (2 *(S (2*m)))))) by lia.
+    rewrite Heq in Hland7; clear Heq.
+    remember (2 * S (2 * S (2 * m))) as m'.
+    rewrite Hland7 in H.
+    simpl in H.
+    rewrite Heqm' in H.
+    change (Nat.odd 240) with false in H;
+    rewrite Bool.andb_false_r in H.
+    assert (Heq: 2 * S (2 * S (2 * m)) = S (S (2* (2 *(S (2 * m)))))) by lia.
+    rewrite Heq in H; clear Heq.
+    rewrite Nat.div2_succ_double in H.
+    rewrite Nat.add_0_r, Nat.add_0_l in H.
+    assert (Heq_64: Nat.bitwise andb (S (S (2 * (2 * S (2 * m))))) (S (2 * S (2 * m))) 120 = 64) by lia.
+    clear H. rename Heq_64 into H.
+    remember (2 * S (2 * m)) as m1.
+    simpl in H.
+    repeat rewrite Bool.andb_false_r in H.
+    repeat rewrite Nat.add_0_r, Nat.add_0_l in H.
+    remember (Nat.bitwise andb (m1 + m1)
+        (Nat.div2 match m1 with
+                  | 0 => 0
+                  | S n' => S (Nat.div2 n')
+                  end) 30) as nat_and.
+    assert (Heq: nat_and = 16) by lia.
+    clear H. rename Heq into H.
+    subst.
+    assert (Heq0: 2 * S (2 * m) = S (S (2 * (2 *m)))) by lia.
+    rewrite Heq0 in H; clear Heq0.
+    repeat rewrite Nat.div2_succ_double in H.
+    assert (Heq0: (S (S (2 * (2 * m))) + S (S (2 * (2 * m)))) = S ( S( 2 *(S (2 * (2 * m)))))) by lia.
+    rewrite Heq0 in H; clear Heq0.
+    remember (2 * S (2 * (2 * m))) as m1.
+    simpl in H.
+
+    rewrite Bool.andb_false_r in H;
+    rewrite Nat.add_0_l in H;
+    repeat rewrite Nat.add_0_r in H.
+    remember (Nat.bitwise andb m1 (Nat.div2 (Nat.div2 m)) 7) as nat_land4.
+    rewrite Bool.andb_true_r in H.
+    destruct (Nat.even m) eqn: Heven.
+    + apply Heven_spec in Heven as Hn_eq.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst m.
+      destruct (Nat.even m0) eqn: Heven0.
+      * apply Heven_spec in Heven0 as Hn_eq.
+        destruct Hn_eq as (m2 & Hn_eq).
+        subst m0.
+        rewrite Nat.div2_double in H.
+        rewrite Nat.odd_mul in H.
+        rewrite Bool.andb_false_l in H.
+        assert (Heq: nat_land4 = 4) by lia.
+        clear H; rename Heq into H; subst.
+        repeat rewrite Nat.div2_double in H.
+        assert (Heq: (2 * S (2 * (2 * (2 * (2 * m2))))) = S (S (2 * (2 * (2 * (2 * (2 * m2))))))) by lia.
+        rewrite Heq in H; clear Heq.
+        remember (2 * (2 * (2 * (2 * (2 * m2))))) as m1.
+        simpl in H.
+        remember (Nat.bitwise andb m1 (Nat.div2 (Nat.div2 m2)) 1) as nat_land.
+        repeat rewrite Bool.andb_true_r in H.
+        destruct (Nat.even m2) eqn: Heven2.
+        {
+          apply Heven_spec in Heven2 as Hn_eq.
+          destruct Hn_eq as (m3 & Hn_eq).
+          subst m2.
+          destruct (Nat.even m3) eqn: Heven3.
+          {
+            apply Heven_spec in Heven3 as Hn_eq.
+            destruct Hn_eq as (m4 & Hn_eq).
+            subst m3.
+            repeat rewrite Nat.div2_double in H.
+            repeat rewrite Nat.odd_mul in H.
+            repeat rewrite Bool.andb_false_l in H.
+            assert (Heq: nat_land = 1) by lia.
+            rewrite Heqnat_land in Heq; clear Heqnat_land.
+            repeat rewrite Nat.div2_double in Heq.
+            clear H; rename Heq into H; subst.
+            left.
+            destruct m4.
+            inversion H.
+            destruct m4.
+            reflexivity.
+            lia.
+          }
+          {
+            rewrite <- Nat.negb_odd in Heven3.
+            rewrite Bool.negb_false_iff in Heven3.
+            apply Hodd_spec in Heven3 as Hn_eq.
+            destruct Hn_eq as (m4 & Hn_eq).
+            rewrite Nat.add_1_r in Hn_eq.
+            subst m3.
+            rewrite Nat.div2_double in *.
+            rewrite Nat.odd_succ in H.
+            rewrite Nat.odd_mul in H.
+            rewrite Nat.even_mul in H.
+            simpl in H.
+            lia.
+          }
+        }
+        {
+          rewrite <- Nat.negb_odd in Heven2.
+          rewrite Bool.negb_false_iff in Heven2.
+          apply Hodd_spec in Heven2 as Hn_eq.
+          destruct Hn_eq as (m3 & Hn_eq).
+          rewrite Nat.add_1_r in Hn_eq.
+          subst m2.
+          rewrite Nat.div2_succ_double in *.
+          rewrite Nat.odd_succ in H.
+          rewrite Nat.even_mul in H.
+          simpl in H.
+          lia.
+        }
+      * rewrite <- Nat.negb_odd in Heven0.
+        rewrite Bool.negb_false_iff in Heven0.
+        apply Hodd_spec in Heven0 as Hn_eq.
+        destruct Hn_eq as (m2 & Hn_eq).
+        rewrite Nat.add_1_r in Hn_eq.
+        subst m0.
+        rewrite Nat.div2_double in *.
+        rewrite Nat.odd_succ in H.
+        rewrite Nat.even_mul in H.
+        simpl in H.
+        lia.
+    + rewrite <- Nat.negb_odd in Heven.
+      rewrite Bool.negb_false_iff in Heven.
+      apply Hodd_spec in Heven as Hn_eq.
+      destruct Hn_eq as (m0 & Hn_eq).
+      rewrite Nat.add_1_r in Hn_eq.
+      subst m.
+      rewrite Nat.div2_succ_double in *.
+      destruct (Nat.odd m0) eqn: Hodd.
+      * apply Hodd_spec in Hodd as Hn_eq.
+        destruct Hn_eq as (m2 & Hn_eq).
+        subst m0.
+        lia.
+      * rewrite <- Nat.negb_even in Hodd.
+        rewrite Bool.negb_false_iff in Hodd.
+        apply Heven_spec in Hodd as Hn_eq.
+        destruct Hn_eq as (m2 & Hn_eq).
+        subst m0.
+        assert (Heq: nat_land4 = 4) by lia.
+        clear H; rename Heq into H; subst.
+
+        repeat rewrite Nat.div2_double in H.
+        assert (Heq: (2 * S (2 * (2 * S (2 * (2 * m2))))) = S (S (2 * (2 * (2 * S (2 * (2 * m2))))))) by lia.
+        rewrite Heq in H; clear Heq.
+        remember (2 * (2 * (2 * S (2 * (2 * m2))))) as m1.
+        simpl in H.
+        remember (Nat.bitwise andb m1 (Nat.div2 (Nat.div2 m2)) 1) as nat_land.
+        repeat rewrite Bool.andb_true_r in H.
+        destruct (Nat.even m2) eqn: Heven2.
+        {
+          apply Heven_spec in Heven2 as Hn_eq.
+          destruct Hn_eq as (m3 & Hn_eq).
+          subst m2.
+          destruct (Nat.even m3) eqn: Heven3.
+          {
+            apply Heven_spec in Heven3 as Hn_eq.
+            destruct Hn_eq as (m4 & Hn_eq).
+            subst m3.
+            repeat rewrite Nat.div2_double in H.
+            repeat rewrite Nat.odd_mul in H.
+            repeat rewrite Bool.andb_false_l in H.
+            assert (Heq: nat_land = 1) by lia.
+            rewrite Heqnat_land in Heq; clear Heqnat_land.
+            repeat rewrite Nat.div2_double in Heq.
+            clear H; rename Heq into H; subst.
+            right.
+            destruct m4.
+            inversion H.
+            destruct m4.
+            reflexivity.
+            lia.
+          }
+          {
+            rewrite <- Nat.negb_odd in Heven3.
+            rewrite Bool.negb_false_iff in Heven3.
+            apply Hodd_spec in Heven3 as Hn_eq.
+            destruct Hn_eq as (m4 & Hn_eq).
+            rewrite Nat.add_1_r in Hn_eq.
+            subst m3.
+            rewrite Nat.div2_double in *.
+            rewrite Nat.odd_succ in H.
+            rewrite Nat.odd_mul in H.
+            rewrite Nat.even_mul in H.
+            simpl in H.
+            lia.
+          }
+        }
+        {
+          rewrite <- Nat.negb_odd in Heven2.
+          rewrite Bool.negb_false_iff in Heven2.
+          apply Hodd_spec in Heven2 as Hn_eq.
+          destruct Hn_eq as (m3 & Hn_eq).
+          rewrite Nat.add_1_r in Hn_eq.
+          subst m2.
+          rewrite Nat.div2_succ_double in *.
+          rewrite Nat.odd_succ in H.
+          rewrite Nat.even_mul in H.
+          simpl in H.
+          lia.
+        }
+  - destruct H; subst; reflexivity.
+Qed.
+
 
 Lemma nat8_neq_135:
   forall n
@@ -282,6 +677,23 @@ Proof.
 Qed.
 
 
+Lemma nat8_neq_133:
+  forall n
+    (Hrange : n <= 255)
+    (Hc2_eq : n <> 133),
+      Int.repr (Z.of_nat n) <> Int.repr 133.
+Proof.
+  repeat intro.
+  Transparent Int.repr.
+  unfold Int.repr in *.
+  inversion H.
+  rewrite Int.Z_mod_modulus_eq in H1.
+  rewrite Zmod_small in H1.
+  lia.
+  change Int.modulus with 4294967296%Z.
+  lia.
+Qed.
+
 Lemma nat8_neq_149:
   forall n
     (Hrange : n <= 255)
@@ -306,7 +718,24 @@ Ltac simpl_if Ht :=
     destruct X eqn: Ht; [rewrite Nat.eqb_eq in Ht | rewrite Nat.eqb_neq in Ht]
   end.
 
-Ltac simpl_opcode Hop := simpl_if Hop; [rewrite Hop; intuition | ].
+
+Ltac disj_true :=
+  match goal with
+  | |- Vint (Int.repr (Z.of_nat ?X)) = Vint (Int.repr (Z.of_nat ?Y)) =>
+    let t := (eval compute in (Nat.eqb X Y)) in
+      match t with
+      | true => replace Y with X; reflexivity
+      | false => fail "disjoint false"
+      end
+  | |- Vint (Int.repr (Z.of_nat ?X)) = Vint (Int.repr (Z.of_nat ?Y)) \/ _ =>
+    let t := (eval compute in (Nat.eqb X Y)) in
+      match t with
+      | true => left; replace Y with X; reflexivity
+      | false => right; disj_true
+      end
+  end.
+
+Ltac simpl_opcode Hop := simpl_if Hop; [rewrite Hop; disj_true | ].
 
 Ltac simpl_land HOP:=
   match goal with

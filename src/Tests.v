@@ -46,6 +46,8 @@ GenerateIntermediateRepresentation SymbolIRs
   eval_ins_len
   eval_ins
   cmp_ptr32_nullM
+  _bpf_get_call
+  exec_function
   __
   get_mem_region
   get_dst

@@ -24,6 +24,7 @@ const char old_words[][200] = {
 	"upd_pc(pc",
 	"upd_pc_incr()",
 	"upd_reg(dst",
+	"upd_reg(0U",
 	"eval_reg(dst",
 	"eval_reg(src",
 	"upd_flag(0)", 
@@ -114,7 +115,8 @@ const char old_words[][200] = {
 	"unsigned long long *l",
 	"eval_ins_len()",
 	"eval_ins(",
-	"= cmp_ptr32_nullM("
+	"= cmp_ptr32_nullM(",
+	"exec_function("
 	
 	};
 
@@ -122,7 +124,8 @@ const char new_words[][200] = {
 	"eval_pc(st)",
 	"upd_pc(st, pc",
 	"upd_pc_incr(st)",
-	"upd_reg(st, dst", 
+	"upd_reg(st, dst",
+	"upd_reg(st, 0U",
 	"eval_reg(st, dst",
 	"eval_reg(st, src",
 	"upd_flag(st, 0)", 
@@ -213,7 +216,8 @@ const char new_words[][200] = {
 	"const unsigned long long *l",
 	"eval_ins_len(st)",
 	"eval_ins(st, ",
-	"= cmp_ptr32_nullM(st, "
+	"= cmp_ptr32_nullM(st, ",
+	"exec_function(st, "
 	
 	};
 	

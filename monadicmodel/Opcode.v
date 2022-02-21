@@ -51,7 +51,7 @@ Definition byte_to_opcode_alu64 (op: nat): opcode_alu64 :=
     | 0x50 => op_BPF_AND64
     | 0x60 => op_BPF_LSH64
     | 0x70 => op_BPF_RSH64
-    | 0x80 => if Nat.eqb op 0x87 then op_BPF_NEG64 else op_BPF_ALU64_ILLEGAL_INS
+    | 0x80 => op_BPF_NEG64 (*if Nat.eqb op 0x87 then op_BPF_NEG64 else op_BPF_ALU64_ILLEGAL_INS*)
     | 0x90 => op_BPF_MOD64
     | 0xa0 => op_BPF_XOR64
     | 0xb0 => op_BPF_MOV64
@@ -88,7 +88,8 @@ Definition byte_to_opcode_alu32 (op: nat): opcode_alu32 :=
     | 0x50 => op_BPF_AND32
     | 0x60 => op_BPF_LSH32
     | 0x70 => op_BPF_RSH32
-    | 0x80 => if Nat.eqb op 0x84 then op_BPF_NEG32 else op_BPF_ALU32_ILLEGAL_INS
+    | 0x80 => op_BPF_NEG32 (*
+    | 0x80 => if Nat.eqb op 0x84 then op_BPF_NEG32 else op_BPF_ALU32_ILLEGAL_INS *)
     | 0x90 => op_BPF_MOD32
     | 0xa0 => op_BPF_XOR32
     | 0xb0 => op_BPF_MOV32
@@ -110,6 +111,7 @@ Inductive opcode_branch: Type := (**r 0xX5 *)
   | op_BPF_JSGE
   | op_BPF_JSLT
   | op_BPF_JSLE
+  | op_BPF_CALL
   | op_BPF_RET
   | op_BPF_JMP_ILLEGAL_INS.
 
@@ -145,7 +147,8 @@ opcode = 0x0d -> ja
 Definition byte_to_opcode_branch (op: nat): opcode_branch :=
   let opcode_jmp := Nat.land op 0xf0 in (**r masking operation *)
     match opcode_jmp with
-    | 0x00 => if Nat.eqb op 0x05 then op_BPF_JA else op_BPF_JMP_ILLEGAL_INS
+    | 0x00 => op_BPF_JA (*
+    | 0x00 => if Nat.eqb op 0x05 then op_BPF_JA else op_BPF_JMP_ILLEGAL_INS *)
     | 0x10 => op_BPF_JEQ
     | 0x20 => op_BPF_JGT
     | 0x30 => op_BPF_JGE
@@ -157,9 +160,10 @@ Definition byte_to_opcode_branch (op: nat): opcode_branch :=
     | 0x70 => op_BPF_JSGE
     | 0xc0 => op_BPF_JSLT
     | 0xd0 => op_BPF_JSLE
-  (*
-    | 0x85 => op_BPF_CALL*)
-    | 0x90 => if Nat.eqb op 0x95 then op_BPF_RET else op_BPF_JMP_ILLEGAL_INS
+    | 0x80 => op_BPF_CALL
+    | 0x90 => op_BPF_RET (*
+    | 0x80 => if Nat.eqb op 0x85 then op_BPF_CALL else op_BPF_JMP_ILLEGAL_INS
+    | 0x90 => if Nat.eqb op 0x95 then op_BPF_RET else op_BPF_JMP_ILLEGAL_INS *)
     | _    => op_BPF_JMP_ILLEGAL_INS
     end.
 
@@ -318,6 +322,7 @@ Definition opcode_branch_eqb (o o' : opcode_branch): bool :=
   | op_BPF_JSGE,  op_BPF_JSGE
   | op_BPF_JSLT,  op_BPF_JSLT
   | op_BPF_JSLE,  op_BPF_JSLE
+  | op_BPF_CALL,  op_BPF_CALL
   | op_BPF_RET,   op_BPF_RET
   | op_BPF_JMP_ILLEGAL_INS, op_BPF_JMP_ILLEGAL_INS => true
   | _, _ => false
