@@ -1780,12 +1780,14 @@ Proof.
       intros. discriminate.
 Qed.
 
+
 Definition vc_cast_casted (o:Ctypes.type) (d:Ctypes.type) :=
   match classify_cast o d with
   | cast_case_pointer => is_Vptr d
   | cast_case_i2l si  => true
   | cast_case_l2l     => true
   | cast_case_i2i sz s    => true
+  | cast_case_l2i i s     => true
   |  _                 => false
   end.
 
@@ -1965,6 +1967,118 @@ Proof.
     +        destruct t ; try congruence.
              destruct i1 ; try congruence.
              destruct f ; try congruence.
+  - destruct v; try congruence.
+    inv H0.
+    unfold classify_cast in CC.
+    destruct t1; try discriminate.
+    + destruct t; try discriminate.
+      destruct i0; discriminate.
+      destruct f; discriminate.
+    + destruct t; try congruence.
+      destruct i1;try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+      destruct f ; try discriminate.
+      destruct Archi.ptr64 eqn:A;
+        try discriminate CC.
+    + destruct t ;
+        try discriminate CC.
+      destruct i0;
+        try discriminate CC.
+      inv CC.
+      constructor. apply cast_int_int_idem.
+      inv CC.
+      constructor. apply cast_int_int_idem.
+      inv CC.
+      constructor. apply cast_int_int_idem.
+      destruct f; discriminate.
+      destruct Archi.ptr64 eqn:ARCH; try discriminate.
+      inv CC.
+      constructor; auto.
+    + destruct t ;
+        try discriminate CC.
+      destruct i0;
+        try discriminate CC.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+      destruct f0; try discriminate.
+      destruct f; try discriminate.
+      destruct f; try discriminate.
+    + destruct t ;
+        try congruence.
+      destruct i0;
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      inv CC.
+      constructor. apply cast_int_int_idem.
+      destruct (Ctypes.intsize_eq
+                  Ctypes.I8 Ctypes.I32);
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      inv CC.
+      constructor. apply cast_int_int_idem.
+      destruct (Ctypes.intsize_eq
+           Ctypes.I16
+           Ctypes.I32)
+      ;
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      inv CC.
+      constructor. apply cast_int_int_idem.
+      destruct (Ctypes.intsize_eq
+           Ctypes.I32
+           Ctypes.I32); try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      destruct Archi.ptr64 eqn:A;
+        try congruence.
+      destruct f; discriminate.
+    +  destruct t ; try congruence.
+       destruct i0 ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       inv CC.
+       constructor. apply cast_int_int_idem.
+       destruct (Ctypes.intsize_eq
+           Ctypes.I8 Ctypes.I32); try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       inv CC.  constructor. apply cast_int_int_idem.
+       destruct (Ctypes.intsize_eq Ctypes.I16 Ctypes.I32) ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+       inv CC.  constructor. apply cast_int_int_idem.
+       destruct (Ctypes.intsize_eq Ctypes.I32 Ctypes.I32); try congruence.
+       destruct Archi.ptr64 ;congruence.
+       destruct Archi.ptr64 ;congruence.
+       destruct f; congruence.
+    + destruct t ; try congruence.
+       destruct i0 ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+      inv CC.  constructor. apply cast_int_int_idem.
+      destruct (Ctypes.intsize_eq Ctypes.I8 Ctypes.I32); try congruence.
+       destruct Archi.ptr64 ; try congruence.
+      inv CC.  constructor. apply cast_int_int_idem.
+      destruct (Ctypes.intsize_eq Ctypes.I16 Ctypes.I32) ; try congruence.
+       destruct Archi.ptr64 ; try congruence.
+      inv CC.  constructor. apply cast_int_int_idem.
+      destruct (Ctypes.intsize_eq Ctypes.I32 Ctypes.I32); try congruence.
+      destruct Archi.ptr64 ;congruence.
+      destruct Archi.ptr64 ;congruence.
+       destruct f; congruence.
+    + destruct t ; try congruence.
+       destruct i1 ; try congruence.
+      destruct f; try congruence.
+    +        destruct t ; try congruence.
+             destruct i1 ; try congruence.
+             destruct f ; try congruence.
 Qed.
 
 (**r this one should be another version of `Cop.val_casted` *)
@@ -2017,12 +2131,6 @@ Proof.
     repeat rewrite andb_true_iff in H.
     destruct H as (H1, H3).
     eapply vc_casted_unary_operation_correct in H0; eauto.
-  (*- (**r Ederef *)
-    intros. (**r ysh: `old` -> `new` *)
-    destruct (exec_expr ge empty_env le m a) eqn:E1; try discriminate.
-    destruct v0 eqn: Hv0; try discriminate.
-    specialize IHa with (Vptr b i).
-    apply IHa in INV;[ idtac | assumption | reflexivity]. admit. *)
   - (**r Ebinop *)
     intros.
     destruct (exec_expr ge empty_env le m a1) eqn:E1; try discriminate.
