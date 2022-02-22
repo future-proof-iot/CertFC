@@ -209,7 +209,18 @@ Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm
 .
 
 Definition pc_correct (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x < Z.of_nat (mrs_num st) /\ 0 <= 8 * Z.of_nat (mrs_num st) <= Ptrofs.max_unsigned. (**r the number of input instructions should be less than Ptrofs.max_unsigned *)
+  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x <= Z.of_nat (ins_len st). (**r the number of input instructions should be less than Ptrofs.max_unsigned *)
+(*
+Definition pc_correct1 (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x < Z.of_nat (ins_len st) /\
+  8 * (Z.of_nat(ins_len st)) <= Ptrofs.max_unsigned. *)
+
+Definition mrs_correct (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x <= Z.of_nat (mrs_num st).
+
+Definition mrs_correct1 (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x < Z.of_nat (mrs_num st) /\
+  16 * (Z.of_nat(mrs_num st)) <= Ptrofs.max_unsigned.
 
 Definition ins_idx_correct (x: int) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   Vint x = v /\

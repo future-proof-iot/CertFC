@@ -139,7 +139,7 @@ Definition is_byte_memval (mv: memval): Prop :=
       mpc      : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
       mflags   : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
       mregs    : match_registers (regs_st st) state_blk (Ptrofs.repr 8) m;
-      mins_len : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ (Z.of_nat(ins_len st)) >= 0;
+      mins_len : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ 0 <= 8 * Z.of_nat (ins_len st) <= Ptrofs.max_unsigned;
       mins     : Mem.loadv AST.Mptr m (Vptr state_blk (Ptrofs.repr 100)) = Some (Vptr ins_blk (Ptrofs.repr 0)) /\ match_ins ins_blk st m;
       mmrs_num : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 104)) = Some (Vint  (Int.repr (Z.of_nat (mrs_num st)))) /\
                  (Z.of_nat(mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)

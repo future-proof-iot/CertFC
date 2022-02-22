@@ -918,96 +918,82 @@ Definition f_check_mem_aux2 := {|
   fn_params := ((_mr, (tptr (Tstruct _memory_region noattr))) ::
                 (_perm, tuint) :: (_addr, tuint) :: (_chunk, tuint) :: nil);
   fn_vars := nil;
-  fn_temps := ((_well_chunk, tbool) :: (_start, tuint) :: (_size, tuint) ::
-               (_mr_perm, tuint) :: (_lo_ofs, tuint) :: (_hi_ofs, tuint) ::
-               (_t'8, tint) :: (_t'7, tint) :: (_t'6, tuint) ::
-               (_t'5, tuint) :: (_t'4, tuint) :: (_t'3, tuint) ::
-               (_t'2, tuint) :: (_t'1, tbool) :: nil);
+  fn_temps := ((_start, tuint) :: (_size, tuint) :: (_mr_perm, tuint) ::
+               (_lo_ofs, tuint) :: (_hi_ofs, tuint) :: (_t'7, tint) ::
+               (_t'6, tint) :: (_t'5, tuint) :: (_t'4, tuint) ::
+               (_t'3, tuint) :: (_t'2, tuint) :: (_t'1, tuint) :: nil);
   fn_body :=
 (Ssequence
   (Ssequence
     (Scall (Some _t'1)
-      (Evar _is_well_chunk_bool (Tfunction (Tcons tuint Tnil) tbool
-                                  cc_default))
-      ((Etempvar _chunk tuint) :: nil))
-    (Sset _well_chunk (Ecast (Etempvar _t'1 tbool) tbool)))
-  (Sifthenelse (Etempvar _well_chunk tbool)
+      (Evar _get_start_addr (Tfunction
+                              (Tcons (tptr (Tstruct _memory_region noattr))
+                                Tnil) tuint cc_default))
+      ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
+    (Sset _start (Etempvar _t'1 tuint)))
+  (Ssequence
+    (Ssequence
+      (Scall (Some _t'2)
+        (Evar _get_block_size (Tfunction
+                                (Tcons (tptr (Tstruct _memory_region noattr))
+                                  Tnil) tuint cc_default))
+        ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
+      (Sset _size (Etempvar _t'2 tuint)))
     (Ssequence
       (Ssequence
-        (Scall (Some _t'2)
-          (Evar _get_start_addr (Tfunction
+        (Scall (Some _t'3)
+          (Evar _get_block_perm (Tfunction
                                   (Tcons
                                     (tptr (Tstruct _memory_region noattr))
                                     Tnil) tuint cc_default))
           ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
-        (Sset _start (Etempvar _t'2 tuint)))
+        (Sset _mr_perm (Etempvar _t'3 tuint)))
       (Ssequence
         (Ssequence
-          (Scall (Some _t'3)
-            (Evar _get_block_size (Tfunction
-                                    (Tcons
-                                      (tptr (Tstruct _memory_region noattr))
-                                      Tnil) tuint cc_default))
-            ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
-          (Sset _size (Etempvar _t'3 tuint)))
+          (Scall (Some _t'4)
+            (Evar _get_sub (Tfunction (Tcons tuint (Tcons tuint Tnil)) tuint
+                             cc_default))
+            ((Etempvar _addr tuint) :: (Etempvar _start tuint) :: nil))
+          (Sset _lo_ofs (Etempvar _t'4 tuint)))
         (Ssequence
           (Ssequence
-            (Scall (Some _t'4)
-              (Evar _get_block_perm (Tfunction
-                                      (Tcons
-                                        (tptr (Tstruct _memory_region noattr))
-                                        Tnil) tuint cc_default))
-              ((Etempvar _mr (tptr (Tstruct _memory_region noattr))) :: nil))
-            (Sset _mr_perm (Etempvar _t'4 tuint)))
+            (Scall (Some _t'5)
+              (Evar _get_add (Tfunction (Tcons tuint (Tcons tuint Tnil))
+                               tuint cc_default))
+              ((Etempvar _lo_ofs tuint) :: (Etempvar _chunk tuint) :: nil))
+            (Sset _hi_ofs (Etempvar _t'5 tuint)))
           (Ssequence
             (Ssequence
-              (Scall (Some _t'5)
-                (Evar _get_sub (Tfunction (Tcons tuint (Tcons tuint Tnil))
-                                 tuint cc_default))
-                ((Etempvar _addr tuint) :: (Etempvar _start tuint) :: nil))
-              (Sset _lo_ofs (Etempvar _t'5 tuint)))
-            (Ssequence
-              (Ssequence
-                (Scall (Some _t'6)
-                  (Evar _get_add (Tfunction (Tcons tuint (Tcons tuint Tnil))
-                                   tuint cc_default))
-                  ((Etempvar _lo_ofs tuint) :: (Etempvar _chunk tuint) ::
-                   nil))
-                (Sset _hi_ofs (Etempvar _t'6 tuint)))
-              (Ssequence
-                (Ssequence
-                  (Sifthenelse (Ebinop Olt (Etempvar _hi_ofs tuint)
-                                 (Etempvar _size tuint) tint)
-                    (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tuint)
-                                   (Ebinop Osub
-                                     (Econst_int (Int.repr (-1)) tuint)
-                                     (Etempvar _chunk tuint) tuint) tint)
-                      (Ssequence
-                        (Sset _t'7
-                          (Ecast
-                            (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
-                              (Ebinop Omod (Etempvar _lo_ofs tuint)
-                                (Etempvar _chunk tuint) tuint) tint) tbool))
-                        (Sset _t'7 (Ecast (Etempvar _t'7 tint) tbool)))
-                      (Sset _t'7
-                        (Ecast (Econst_int (Int.repr 0) tint) tbool)))
-                    (Sset _t'7 (Econst_int (Int.repr 0) tint)))
-                  (Sifthenelse (Etempvar _t'7 tint)
-                    (Sset _t'8
+              (Sifthenelse (Ebinop Olt (Etempvar _hi_ofs tuint)
+                             (Etempvar _size tuint) tint)
+                (Sifthenelse (Ebinop Ole (Etempvar _lo_ofs tuint)
+                               (Ebinop Osub
+                                 (Econst_int (Int.repr (-1)) tuint)
+                                 (Etempvar _chunk tuint) tuint) tint)
+                  (Ssequence
+                    (Sset _t'6
                       (Ecast
-                        (Ebinop Oge (Etempvar _mr_perm tuint)
-                          (Etempvar _perm tuint) tint) tbool))
-                    (Sset _t'8 (Econst_int (Int.repr 0) tint))))
-                (Sifthenelse (Etempvar _t'8 tint)
-                  (Sreturn (Some (Ebinop Oadd
-                                   (Efield
-                                     (Ederef
-                                       (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
-                                       (Tstruct _memory_region noattr))
-                                     _block_ptr (tptr tuchar))
-                                   (Etempvar _lo_ofs tuint) (tptr tuchar))))
-                  (Sreturn (Some (Econst_int (Int.repr 0) tint))))))))))
-    (Sreturn (Some (Econst_int (Int.repr 0) tint)))))
+                        (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
+                          (Ebinop Omod (Etempvar _lo_ofs tuint)
+                            (Etempvar _chunk tuint) tuint) tint) tbool))
+                    (Sset _t'6 (Ecast (Etempvar _t'6 tint) tbool)))
+                  (Sset _t'6 (Ecast (Econst_int (Int.repr 0) tint) tbool)))
+                (Sset _t'6 (Econst_int (Int.repr 0) tint)))
+              (Sifthenelse (Etempvar _t'6 tint)
+                (Sset _t'7
+                  (Ecast
+                    (Ebinop Oge (Etempvar _mr_perm tuint)
+                      (Etempvar _perm tuint) tint) tbool))
+                (Sset _t'7 (Econst_int (Int.repr 0) tint))))
+            (Sifthenelse (Etempvar _t'7 tint)
+              (Sreturn (Some (Ebinop Oadd
+                               (Efield
+                                 (Ederef
+                                   (Etempvar _mr (tptr (Tstruct _memory_region noattr)))
+                                   (Tstruct _memory_region noattr))
+                                 _block_ptr (tptr tuchar))
+                               (Etempvar _lo_ofs tuint) (tptr tuchar))))
+              (Sreturn (Some (Econst_int (Int.repr 0) tint))))))))))
 |}.
 
 Definition f_check_mem_aux := {|

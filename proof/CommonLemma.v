@@ -6,6 +6,47 @@ Import ListNotations.
 
 Open Scope Z_scope.
 
+Ltac build_app_aux T :=
+  match T with
+  | ?F ?X => let ty := type of X in
+             let r := build_app_aux F in
+             constr:((mk ty X) :: r)
+  | ?X    => constr:(@nil dpair)
+  end.
+
+Ltac get_function T :=
+  match T with
+  | ?F ?X => get_function F
+  | ?X    => X
+  end.
+
+Ltac build_app T :=
+  let a := build_app_aux T in
+  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
+  let f := get_function T in
+  match type of v with
+  | @DList.t _ _ ?L =>
+      change T with (Clightlogic.app (f: @arrow_type L _) v)
+  end.
+
+Ltac change_app_for_body :=
+  match goal with
+  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
+    => build_app F
+  end.
+
+Ltac change_app_for_statement :=
+  match goal with
+  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
+    => build_app F
+  end.
+
+Ltac prove_incl :=
+  simpl; unfold incl; simpl; intuition congruence.
+
+Ltac prove_in_inv :=
+  simpl; intuition subst; discriminate.
+
 Ltac Hdisj_false :=
   let H := fresh "H" in
   let K := fresh "K" in

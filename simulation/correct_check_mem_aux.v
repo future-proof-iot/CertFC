@@ -48,7 +48,7 @@ Section Check_mem_aux.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
-      (DList.DCons pc_correct
+      (DList.DCons mrs_correct
         (DList.DCons (stateless perm_correct)
           (DList.DCons (stateless match_chunk)
             (DList.DCons (stateless valu32_correct)
@@ -57,41 +57,6 @@ Section Check_mem_aux.
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => x = v /\ ((exists b ofs, x = Vptr b ofs) \/ v = Vint (Int.zero)) /\ match_state state_block mrs_block ins_block st m.
-
-Ltac build_app_aux T :=
-  match T with
-  | ?F ?X => let ty := type of X in
-             let r := build_app_aux F in
-             constr:((mk ty X) :: r)
-  | ?X    => constr:(@nil dpair)
-  end.
-
-Ltac get_function T :=
-  match T with
-  | ?F ?X => get_function F
-  | ?X    => X
-  end.
-
-Ltac build_app T :=
-  let a := build_app_aux T in
-  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
-  let f := get_function T in
-  match type of v with
-  | DList.t _ ?L =>
-      change T with (app (f: arrow_type L _) v)
-  end.
-
-Ltac change_app_for_body :=
-  match goal with
-  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac change_app_for_statement :=
-  match goal with
-  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
 
 Lemma check_mem_aux_eq: forall n p c v l,
   check_mem_aux n p c v l =
@@ -141,7 +106,7 @@ Qed.
       unfold stateM_correct in c.
       destruct c as (Hv_eq & Hst).
       unfold stateless in c4, c5, c6, c7.
-      unfold pc_correct in c4.
+      unfold mrs_correct in c4.
       destruct c4 as (Hv0_eq1 & Hv0_range & Hv0_max).
       unfold perm_correct in c5.
       unfold match_chunk, memory_chunk_to_valu32, well_chunk_Z in c6.
@@ -172,7 +137,7 @@ Qed.
     rewrite check_mem_aux_eq.
     eapply correct_statement_if_body_expr.
     simpl.
-    apply correct_statement_seq_set with (match_res1 := fun _ => pc_correct c).
+    apply correct_statement_seq_set with (match_res1 := fun _ => mrs_correct c).
     +
       intros.
       unfold INV in H.
@@ -185,7 +150,7 @@ Qed.
       unfold stateM_correct in c4.
       destruct c4 as (Hv_eq & Hst).
       unfold stateless in c5, c6, c7, c8.
-      unfold pc_correct in c5.
+      unfold mrs_correct in c5.
       destruct c5 as (Hv0_eq1 & Hv0_range & Hv0_max).
       unfold perm_correct in c6.
       unfold match_chunk, memory_chunk_to_valu32, well_chunk_Z in c7.
@@ -205,7 +170,9 @@ Qed.
         fold Int.one; rewrite Int.unsigned_one.
         rewrite Zpos_P_of_succ_nat.
         rewrite <- Nat2Z.inj_succ.
-        change Ptrofs.max_unsigned with 4294967295 in Hv0_max.
+        destruct Hst.
+        unfold match_regions in mem_regs.
+        change Ptrofs.max_unsigned with 4294967295 in *.
         rewrite Int.unsigned_repr; [ | change Int.max_unsigned with 4294967295; lia].
         rewrite Nat2Z.inj_succ.
         rewrite <- Z.add_1_r.
@@ -214,9 +181,8 @@ Qed.
       }
       split.
       {
-        unfold pc_correct.
+        unfold mrs_correct.
         split; [reflexivity| ].
-        split; [| assumption].
         lia.
       }
     constructor.
@@ -261,12 +227,28 @@ Ltac prove_in_inv :=
     correct_Forall.
     get_invariant _n.
     get_invariant _mrs.
+    get_invariant _st.
     exists (v::v0::nil).
     split.
     unfold map_opt, exec_expr.
     rewrite p0, p1; reflexivity.
     simpl;intros.
     intuition eauto.
+    get_invariant _num.
+    unfold mrs_correct1.
+    unfold mrs_correct in c7.
+    destruct c4 as (Hv_eq & Hrange).
+    destruct c7 as (Hv2_eq & Hrange_v2).
+    subst.
+    split; [reflexivity | ].
+    split; [lia | ].
+    unfold stateM_correct in c6.
+    destruct c6 as (_ & Hst).
+    destruct Hst.
+    clear - mem_regs.
+    destruct mem_regs as ( _ & Hmrs).
+    unfold match_regions in Hmrs.
+    lia.
 
     intros.
     (**r goal: correct_body p val (bindM (check_mem_aux2 ... *)
@@ -424,7 +406,7 @@ Ltac prove_in_inv :=
     get_invariant _mrs.
     unfold stateM_correct in c4.
     destruct c4 as (Hv_eq & Hst).
-    unfold pc_correct in c5.
+    unfold mrs_correct in c5.
     destruct c5 as (Hv0_eq & Hc_range & Hc_max).
     unfold stateless, perm_correct in c6.
     unfold stateless, match_chunk in c7.
@@ -441,7 +423,7 @@ Ltac prove_in_inv :=
     unfold map_opt, exec_expr.
     rewrite p0, p1, p2, p3, p4, p5; reflexivity.
     simpl;intros.
-    unfold stateM_correct, pc_correct, stateless, perm_correct, match_chunk, valu32_correct.
+    unfold stateM_correct, mrs_correct, stateless, perm_correct, match_chunk, valu32_correct.
     intuition eauto.
     reflexivity.
   +
@@ -449,7 +431,7 @@ Ltac prove_in_inv :=
   + intro.
     unfold INV in H.
     get_invariant _num.
-    unfold pc_correct in c4.
+    unfold mrs_correct in c4.
     destruct c4 as (Hv_eq & Hrange & Hmax).
     unfold exec_expr.
     rewrite p0.
@@ -461,6 +443,15 @@ Ltac prove_in_inv :=
     change Ptrofs.max_unsigned with Int.max_unsigned in Hmax.
     rewrite Nat2Z.inj_succ in Hrange.
     rewrite Zpos_P_of_succ_nat.
+    rewrite Nat2Z.inj_succ in *.
+    get_invariant _st.
+    unfold stateM_correct in c4.
+    destruct c4 as (_ & Hst).
+    destruct Hst.
+    clear - Hrange Hmax mem_regs.
+    destruct mem_regs as (_ & Hmrs).
+    unfold match_regions in Hmrs.
+    change Ptrofs.max_unsigned with Int.max_unsigned in *.
     rewrite Int.unsigned_repr;[ | lia].
     assert (Hneq: (Z.succ (Z.of_nat c)) <> 0). {
       lia.

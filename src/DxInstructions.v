@@ -103,25 +103,25 @@ Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
   | _ => returnM false
   end.
 
-Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: valu32_t) (chunk: memory_chunk): M valptr8_t :=
+Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: valu32_t) (chunk: memory_chunk): M valptr8_t := (*
   do well_chunk <-- is_well_chunk_bool chunk;
-    if well_chunk then(*
+    if well_chunk then *) (*
       do ptr    <-- get_block_ptr mr; (**r Vptr b 0 *)*)
-      do start  <-- get_start_addr mr;
-      do size   <-- get_block_size mr;
-      do mr_perm  <-- get_block_perm mr;
-      do lo_ofs <-- get_sub addr start;
-      do hi_ofs <-- get_add lo_ofs (memory_chunk_to_valu32 chunk);
-        if andb (andb
-                  (compu_lt_32 hi_ofs size)
-                  (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
-                        (comp_eq_32 val32_zero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))))
-                (perm_ge mr_perm perm) then
-          returnM (Val.add (block_ptr mr) lo_ofs) (**r Vptr b lo_ofs *)
-        else
-          returnM valptr_null (**r = 0 *)
+  do start  <-- get_start_addr mr;
+  do size   <-- get_block_size mr;
+  do mr_perm  <-- get_block_perm mr;
+  do lo_ofs <-- get_sub addr start;
+  do hi_ofs <-- get_add lo_ofs (memory_chunk_to_valu32 chunk);
+    if andb (andb
+              (compu_lt_32 hi_ofs size)
+              (andb (compu_le_32 lo_ofs (memory_chunk_to_valu32_upbound chunk))
+                    (comp_eq_32 val32_zero (val32_modu lo_ofs (memory_chunk_to_valu32 chunk)))))
+            (perm_ge mr_perm perm) then
+      returnM (Val.add (block_ptr mr) lo_ofs) (**r Vptr b lo_ofs *)
     else
-      returnM valptr_null.
+      returnM valptr_null (**r = 0 *). (*
+    else
+      returnM valptr_null.*)
 
 Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: valu32_t) (mrs: MyMemRegionsType) {struct num}: M valptr8_t :=
   match num with

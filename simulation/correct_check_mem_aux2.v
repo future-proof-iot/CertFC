@@ -10,7 +10,7 @@ From bpf.clight Require Import interpreter.
 
 From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
 
-From bpf.simulation Require Import correct_is_well_chunk_bool correct_get_sub correct_get_add correct_get_start_addr correct_get_block_size correct_get_block_perm. (**r correct_get_block_ptr *)
+From bpf.simulation Require Import correct_get_sub correct_get_add correct_get_start_addr correct_get_block_size correct_get_block_perm. (**r correct_get_block_ptr *)
 
 Open Scope Z_scope.
 
@@ -53,54 +53,12 @@ Definition match_arg  :
 Definition match_res (v1 :val) (v2:val) (st: State.state) (m: Mem.mem) :=
   v1 = v2 /\ ((exists b ofs, v1 = Vptr b ofs) \/ v1 = Vint (Int.zero)).
 
-
-Ltac build_app_aux T :=
-  match T with
-  | ?F ?X => let ty := type of X in
-             let r := build_app_aux F in
-             constr:((mk ty X) :: r)
-  | ?X    => constr:(@nil dpair)
-  end.
-
-Ltac get_function T :=
-  match T with
-  | ?F ?X => get_function F
-  | ?X    => X
-  end.
-
-Ltac build_app T :=
-  let a := build_app_aux T in
-  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
-  let f := get_function T in
-  match type of v with
-  | DList.t _ ?L =>
-      change T with (app (f: arrow_type L _) v)
-  end.
-
-Ltac change_app_for_body :=
-  match goal with
-  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac change_app_for_statement :=
-  match goal with
-  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac prove_incl :=
-  simpl; unfold incl; simpl; intuition congruence.
-
-Ltac prove_in_inv :=
-  simpl; intuition subst; discriminate.
-
 Lemma correct_function3_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg match_res a.
 Proof.
   correct_function_from_body args.
   correct_body.
   unfold f. unfold check_mem_aux2.
-  simpl.
+  simpl. (*
   (** goal: correct_body _ _ (bindM (is_well_chunk_bool ... *)
   eapply correct_statement_seq_body with (modifies1:=nil).
   change_app_for_statement.
@@ -164,7 +122,7 @@ Proof.
   instantiate (1 := nil).
   split; reflexivity.
   }
-  (**r if-then branch *)
+  (**r if-then branch *) *)
 
   (** goal: correct_body _ _ (bindM (get_start_addr c) ... *)
   eapply correct_statement_seq_body with (modifies1:=nil).
@@ -419,7 +377,7 @@ Ltac destruct_if Hname :=
       repeat rewrite Int.unsigned_repr; try rewrite Int_max_unsigned_eq64; try apply zeq_false; try lia.
     }
 
-    exists (Vint Int.zero), m5, Events.E0.
+    exists (Vint Int.zero), m4, Events.E0.
     repeat split.
 
     unfold compu_lt_32, compu_le_32, compu_le_32, val32_modu, memory_chunk_to_valu32, memory_chunk_to_valu32_upbound in Hcond.
@@ -637,7 +595,7 @@ Ltac destruct_if Hname :=
   unfold Val.modu in Hmod.
   rewrite Hchunk_ne_zero in Hmod.
 
-  eexists; exists m5, Events.E0.
+  eexists; exists m4, Events.E0.
   repeat split.
   do 4 forward_star.
   simpl.
@@ -714,7 +672,6 @@ Ltac destruct_if Hname :=
   simpl.
   constructor.
   all: try reflexivity.
-
 Qed.
 
 End Check_mem_aux2.

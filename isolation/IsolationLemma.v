@@ -48,8 +48,8 @@ Proof.
   destruct chunk; reflexivity.
 Qed.
 
-Definition check_mem_aux2P (mr: memory_region) (perm: permission) (addr: val) (chunk: memory_chunk): val :=
-  if is_well_chunk_boolP chunk then
+Definition check_mem_aux2P (mr: memory_region) (perm: permission) (addr: val) (chunk: memory_chunk): val := (*
+  if is_well_chunk_boolP chunk then *)
     let start  := start_addr mr in
     let size   := block_size mr in
     let mr_perm:= block_perm mr in
@@ -62,9 +62,9 @@ Definition check_mem_aux2P (mr: memory_region) (perm: permission) (addr: val) (c
                 (perm_ge mr_perm perm) then
         Val.add (block_ptr mr) lo_ofs (**r Vptr b lo_ofs *)
       else
-        Vnullptr
+        Vnullptr. (*
     else
-      Vnullptr.
+      Vnullptr.*)
 
 Lemma check_mem_aux2M_P:
   forall mr perm addr chunk st,
@@ -74,7 +74,6 @@ Proof.
   unfold get_start_addr, get_block_size, get_sub, get_add, get_block_perm.
   unfold_monad.
   intros.
-  rewrite is_well_chunk_boolM_P.
   destruct_if; reflexivity.
 Qed.
 
@@ -300,8 +299,8 @@ Proof.
       unfold MyMemRegionsIndexnat, Memory_regions.index_nat in Hcheck_mem_auxP, Hcheck_mem_auxP'.
       unfold check_mem_aux2P in Hcheck_mem_auxP.
       destruct v; try inversion Hcmp;
-      change Vnullptr with (Vint Int.zero) in *.
-      all: destruct is_well_chunk_boolP; [| inversion Hcheck_mem_auxP].
+      change Vnullptr with (Vint Int.zero) in *. (*
+      all: destruct is_well_chunk_boolP; [| inversion Hcheck_mem_auxP]. *)
       all: match goal with
            | H: (if ?X then _ else _) = _ |- _ =>
               destruct X; [| inversion H]
@@ -367,6 +366,7 @@ Qed.
 
 Lemma check_mem_aux2P_spec:
   forall mr chunk st1 p base len b vi ptr
+    (Hwell_chunk: is_well_chunk chunk)
     (H0 : check_mem_aux2P mr p (Vint vi) chunk = ptr)
     (Hneq : ptr <> Vnullptr)
     (Hptr : block_ptr mr = Vptr b Ptrofs.zero)
@@ -384,14 +384,13 @@ Lemma check_mem_aux2P_spec:
         Mem.valid_access (bpf_m st1) chunk b (Ptrofs.unsigned ofs) (block_perm mr).
 Proof.
   unfold check_mem_aux2P.
-  intros.
-  destruct is_well_chunk_boolP eqn: Hwell_chunk; [| rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity].
+  intros. (*
+  destruct is_well_chunk_boolP eqn: Hwell_chunk; [| rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity]. *)
   rewrite Hptr, Hstar, Hsize in *.
   unfold Val.add, Val.sub in H0.
   rewrite Ptrofs.add_zero_l in H0.
   exists (Ptrofs.of_int (Int.sub vi base)).
   split.
-  apply well_chunk_iff.
   assumption.
 
   unfold compu_lt_32, compu_le_32, memory_chunk_to_valu32, memory_chunk_to_valu32_upbound, comp_eq_32,
@@ -438,8 +437,6 @@ Proof.
   apply Int_unsigned_ofs_size_chunk_ge_0.
   intuition.
 
-
-  rewrite <- well_chunk_iff in Hwell_chunk.
   destruct Val.modu eqn: Hmod1; [| inversion Hmod].
   destruct v; try inversion Hmod.
   unfold Val.modu in Hmod1.
@@ -706,14 +703,14 @@ Proof.
     change Vnullptr with (Vint Int.zero) in H0.
     match goal with
     | H: (if ?X then _ else _) = _ |- _ =>
-      destruct X; [ | rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity]
+      destruct X eqn: Heq; [ | rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity]
     end.
     assert (Hperm_ge: perm_ge Nonempty Readable = false). {
       unfold perm_ge; constructor.
     }
-    rewrite Hperm_ge in H0; clear Hperm_ge.
-    rewrite Bool.andb_false_r in H0.
-    rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity.
+    rewrite Hperm_ge in Heq; clear Hperm_ge.
+    rewrite Bool.andb_false_r in Heq.
+    inversion Heq.
   }
 
   apply nth_error_In in Hnth.
@@ -742,6 +739,7 @@ Proof.
     }
 
   eapply load_some_well_chunk_vlong_or_vint; eauto.
+  apply well_chunk_iff; assumption.
 Qed.
 
 Definition vlong_or_vint_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
@@ -802,14 +800,14 @@ Proof.
     change Vnullptr with (Vint Int.zero) in H0.
     match goal with
     | H: (if ?X then _ else _) = _ |- _ =>
-      destruct X; [ | rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity]
+      destruct X eqn: Heq; [ | rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity]
     end.
     assert (Hperm_ge: perm_ge Nonempty Writable = false). {
       unfold perm_ge; constructor.
     }
-    rewrite Hperm_ge in H0; clear Hperm_ge.
-    rewrite Bool.andb_false_r in H0.
-    rewrite H0 in Hneq; exfalso; apply Hneq; reflexivity.
+    rewrite Hperm_ge in Heq; clear Hperm_ge.
+    rewrite Bool.andb_false_r in Heq.
+    inversion Heq.
   }
 
   apply nth_error_In in Hnth.
@@ -823,7 +821,6 @@ Proof.
 
   assert (Hperm_w: perm_order (block_perm m) Writable). {
     unfold check_mem_aux2P in H0.
-    rewrite Hwell_chunk in H0.
     rewrite Hptr, Hstart, Hsize in H0.
     unfold compu_lt_32, compu_le_32, memory_chunk_to_valu32, memory_chunk_to_valu32_upbound, comp_eq_32,
     val32_modu, Val.add, Val.sub, Vzero in H0.
@@ -895,4 +892,5 @@ end = match
   unfold State.store_mem_reg, vlong_to_vint_or_vlong.
     destruct chunk; try inversion Hwell_chunk'; simpl.
     all: try (rewrite Hstore; reflexivity).
+  - apply well_chunk_iff; assumption.
 Qed.

@@ -40,7 +40,7 @@ Section Get_mem_region.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-      (DList.DCons pc_correct
+      (DList.DCons mrs_correct1
         (DList.DCons (match_region_list mrs_block)
                 (DList.DNil _))).
 
@@ -72,7 +72,7 @@ Qed.
     get_invariant _n.
     get_invariant _mrs.
 
-    unfold pc_correct in c1.
+    unfold mrs_correct1 in c1.
     destruct c1 as (Hv_eq & Hrange & Hmax).
     unfold match_region_list in c2.
     destruct c2 as (Hv0_eq & Hmrs_eq & Hmrs_num_eq & Hmatch).

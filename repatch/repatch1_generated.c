@@ -290,26 +290,20 @@ _Bool is_well_chunk_bool(unsigned int chunk)
 
 unsigned char *check_mem_aux2(struct memory_region *mr, unsigned int perm, unsigned int addr, unsigned int chunk)
 {
-  _Bool well_chunk;
   unsigned int start;
   unsigned int size;
   unsigned int mr_perm;
   unsigned int lo_ofs;
   unsigned int hi_ofs;
-  well_chunk = is_well_chunk_bool(chunk);
-  if (well_chunk) {
-    start = get_start_addr(mr);
-    size = get_block_size(mr);
-    mr_perm = get_block_perm(mr);
-    lo_ofs = get_sub(addr, start);
-    hi_ofs = get_add(lo_ofs, chunk);
-    if (hi_ofs < size
-          && (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk)
-          && mr_perm >= perm) {
-      return (*mr).block_ptr + lo_ofs;
-    } else {
-      return 0;
-    }
+  start = get_start_addr(mr);
+  size = get_block_size(mr);
+  mr_perm = get_block_perm(mr);
+  lo_ofs = get_sub(addr, start);
+  hi_ofs = get_add(lo_ofs, chunk);
+  if (hi_ofs < size
+        && (lo_ofs <= 4294967295U - chunk && 0U == lo_ofs % chunk)
+        && mr_perm >= perm) {
+    return (*mr).block_ptr + lo_ofs;
   } else {
     return 0;
   }
