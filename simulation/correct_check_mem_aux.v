@@ -215,9 +215,6 @@ Qed.
     reflexivity.
     reflexivity.
     reflexivity.
-
-Ltac prove_in_inv :=
-  simpl; intuition subst; discriminate.
     prove_in_inv.
     prove_in_inv.
     reflexivity.
@@ -404,26 +401,11 @@ Ltac prove_in_inv :=
     get_invariant _chunk.
     get_invariant _addr.
     get_invariant _mrs.
-    unfold stateM_correct in c4.
-    destruct c4 as (Hv_eq & Hst).
-    unfold mrs_correct in c5.
-    destruct c5 as (Hv0_eq & Hc_range & Hc_max).
-    unfold stateless, perm_correct in c6.
-    unfold stateless, match_chunk in c7.
-    unfold stateless, valu32_correct in c8.
-    destruct c8 as (Hv3_eq & vi & Hvi_eq).
-    subst.
-    exists ((Vptr state_block Ptrofs.zero) ::
-            (Vint (Int.repr (Z.of_nat c))) ::
-            v1 ::
-            (memory_chunk_to_valu32 c1) ::
-            (Vint vi) ::
-            v4::nil).
+    exists (v :: v0 :: v1 :: v2 :: v3 :: v4 :: nil).
     split.
     unfold map_opt, exec_expr.
     rewrite p0, p1, p2, p3, p4, p5; reflexivity.
     simpl;intros.
-    unfold stateM_correct, mrs_correct, stateless, perm_correct, match_chunk, valu32_correct.
     intuition eauto.
     reflexivity.
   +

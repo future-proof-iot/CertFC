@@ -52,42 +52,7 @@ Section Check_mem.
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => x = v /\ ((exists b ofs, x = Vptr b ofs) \/ v = Vint (Int.zero)) /\ match_state state_block mrs_block ins_block st m.
-(*
-Ltac build_app_aux T :=
-  match T with
-  | ?F ?X => let ty := type of X in
-             let r := build_app_aux F in
-             constr:((mk ty X) :: r)
-  | ?X    => constr:(@nil dpair)
-  end.
 
-Ltac get_function T :=
-  match T with
-  | ?F ?X => get_function F
-  | ?X    => X
-  end.
-
-Ltac build_app T :=
-  let a := build_app_aux T in
-  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
-  let f := get_function T in
-  match type of v with
-  | DList.t _ ?L =>
-      change T with (app (f: arrow_type L _) v)
-  end.
-
-Ltac change_app_for_body :=
-  match goal with
-  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac change_app_for_statement :=
-  match goal with
-  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-*)
   Instance correct_function3_check_mem : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
@@ -125,42 +90,39 @@ Ltac change_app_for_statement :=
     change (match_temp_env INV le st m) in H.
     unfold INV in H.
     get_invariant _chunk.
-    unfold stateless, match_chunk in c2.
-    subst v.
-    exists (rBPFAST.memory_chunk_to_valu32 c0::nil).
+    exists (v::nil).
     split.
     unfold map_opt, exec_expr. rewrite p0.
     reflexivity.
-    intros. simpl.
-    unfold stateless, match_chunk.
-    tauto.
+    intros; simpl.
+    intuition eauto.
 
     intros.
     eapply correct_statement_if_body; [prove_in_inv | destruct x ]. 2:{ (**r if-else branch *)
-    unfold correct_body.
-    intros.
-    unfold returnM.
-    intros.
-    exists (Vint (Int.repr 0)), m0, Events.E0.
-    split.
-    {
-      forward_star.
-      forward_star.
-    }
-    split.
-    {
-      unfold match_res, Vnullptr, Int.zero; simpl.
-      split; [reflexivity | ].
+      unfold correct_body.
+      instantiate (1 := nil).
+      intros.
+      unfold returnM.
+      intros.
+      exists (Vint (Int.repr 0)), m0, Events.E0.
       split.
-      right.
-      reflexivity.
-      get_invariant _st.
-      unfold stateM_correct in c2.
-      destruct c2 as (_ & c2); assumption.
-    }
-    split;[ constructor; reflexivity | ].
-    instantiate (1 := nil).
-    split; reflexivity.
+      {
+        forward_star.
+        forward_star.
+      }
+      split.
+      {
+        unfold match_res, Vnullptr, Int.zero; simpl.
+        split; [reflexivity | ].
+        split.
+        right.
+        reflexivity.
+        get_invariant _st.
+        unfold stateM_correct in c2.
+        destruct c2 as (_ & c2); assumption.
+      }
+      split;[ constructor; reflexivity | ].
+      split; reflexivity.
     }
     (**r if-then branch *)
 
@@ -191,18 +153,17 @@ Ltac change_app_for_statement :=
     unfold INV; intro H.
     correct_Forall.
     get_invariant _st.
-    unfold stateM_correct in c2.
-    destruct c2 as (Hc2_eq & Hst); subst.
-    exists (Vptr state_block Ptrofs.zero::nil).
+    exists (v::nil).
     split.
     unfold map_opt,exec_expr.
-    rewrite p0.
-    reflexivity.
-    simpl. intros.
+    rewrite p0; reflexivity.
+    simpl; intros.
     instantiate (1 := ins_block).
     instantiate (1 := mrs_block).
     instantiate (1 := state_block).
     unfold correct_eval_mrs_num.stateM_correct.
+    unfold stateM_correct in c2.
+    destruct c2 as (Hc2_eq & Hst); subst.
     split; [| constructor].
     split; [ reflexivity | assumption ].
 
@@ -281,22 +242,7 @@ Ltac change_app_for_statement :=
     get_invariant _chunk.
     get_invariant _addr.
     get_invariant _mrs.
-    unfold stateM_correct in c2.
-    destruct c2 as (Hv_eq & Hst).
-    unfold correct_eval_mrs_num.match_res in c3.
-    destruct c3 as (Hc_eq & _).
-    unfold stateless, perm_correct in c4.
-    unfold stateless, match_chunk in c5.
-    unfold stateless, valu32_correct in c6.
-    destruct c6 as (Hc1_eq & vi & Hvi_eq).
-    unfold correct_eval_mrs_regions.match_res in c7.
-    destruct c7 as (Hx0_eq & Hmrs & _).
-    subst.
-    exists ((Vptr state_block Ptrofs.zero) ::
-            v0 :: v1 :: 
-            (rBPFAST.memory_chunk_to_valu32 c0) ::
-            (Vint vi) :: v4 ::
-            nil).
+    exists (v :: v0 :: v1 :: v2 :: v3 :: v4 :: nil).
     split.
     unfold map_opt, exec_expr.
     rewrite p0, p1, p2, p3, p4, p5; reflexivity.
@@ -305,14 +251,13 @@ Ltac change_app_for_statement :=
     instantiate (1 := ins_block).
     instantiate (1 := state_block).
     unfold correct_check_mem_aux.stateM_correct.
-    split; [| constructor].
-    split; [ reflexivity | assumption ].
-    assumption.
-    unfold stateless, perm_correct, match_chunk, valu32_correct.
-    split; [assumption |].
-    split; [reflexivity |].
-    split; [split; [reflexivity | eexists; reflexivity] |].
-    split; [ assumption |constructor].
+    unfold stateM_correct in c2.
+    destruct c2 as (Hv_eq & Hst).
+    unfold correct_eval_mrs_num.match_res in c3.
+    destruct c3 as (Hc_eq & _).
+    unfold correct_eval_mrs_regions.match_res in c7.
+    destruct c7 as (Hx0_eq & Hmrs & _).
+    intuition eauto.
 
     intros.
     eapply correct_statement_seq_body with (modifies1:=nil);eauto.
@@ -350,13 +295,11 @@ Ltac change_app_for_statement :=
     unfold map_opt, exec_expr.
     rewrite p0, p1; reflexivity.
     simpl;intros.
-    intuition eauto.
     unfold val_ptr_null_correct.
     unfold correct_check_mem_aux.match_res in c3.
     change Vnullptr with (Vint Int.zero).
     destruct c3 as (Hv0_eq & Hptr & Hst).
     subst.
-    split; [reflexivity | ].
     intuition eauto.
 
     intros.

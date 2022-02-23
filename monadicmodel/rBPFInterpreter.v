@@ -27,8 +27,10 @@ Definition get_immediate (ins:int64):M int := returnM (get_immediate ins).
 
 Definition eval_immediate (ins: int): M val := returnM ((Val.longofint (sint32_to_vint ins))).
 
-Definition get_src64 (x: nat) (ins: int64): M val := 
-  if Nat.eqb 0 (Nat.land x 0x08) then
+Definition get_src64 (x: nat) (ins: int64): M val :=
+  if Int.eq Int.zero (Int.and (Int.repr (Z.of_nat x)) (Int.repr 8)) then
+(*
+  if Nat.eqb 0 (Nat.land x 0x08) then *)
     do imm    <- get_immediate ins;
     do imm64  <- eval_immediate imm;
       returnM imm64
@@ -38,7 +40,8 @@ Definition get_src64 (x: nat) (ins: int64): M val :=
       returnM src64.
 
 Definition get_src32 (x: nat) (ins: int64): M val := 
-  if Nat.eqb 0 (Nat.land x 0x08) then
+  if Int.eq Int.zero (Int.and (Int.repr (Z.of_nat x)) (Int.repr 8)) then (*
+  if Nat.eqb 0 (Nat.land x 0x08) then *)
     do imm    <- get_immediate ins;
       returnM (sint32_to_vint imm)
   else

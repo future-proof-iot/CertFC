@@ -1,0 +1,119 @@
+From bpf.comm Require Import Regs State Monad.
+From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
+From Coq Require Import List Lia ZArith.
+From compcert Require Import Integers Values Clight Memory.
+Import ListNotations.
+
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLemmaNat.
+
+From bpf.clight Require Import interpreter.
+
+(**
+
+Check get_opcode_mem_ld_reg.
+get_opcode_mem_ld_reg
+     : nat -> M opcode_mem_ld_reg
+
+*)
+
+Section Get_opcode_mem_ld_reg.
+
+  (** The program contains our function of interest [fn] *)
+  Definition p : Clight.program := prog.
+
+  (* [Args,Res] provides the mapping between the Coq and the C types *)
+  (* Definition Args : list CompilableType := [stateCompilableType].*)
+  Definition args : list Type := [(nat:Type)].
+  Definition res : Type := (opcode_mem_ld_reg:Type).
+
+  (* [f] is a Coq Monadic function with the right type *)
+  Definition f : arrow_type args (M res) := get_opcode_mem_ld_reg.
+
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Definition fn: Clight.function := f_get_opcode_mem_ld_reg.
+
+  (* [match_arg] relates the Coq arguments and the C arguments *)
+  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
+    (DList.DCons (stateless opcode_correct)
+                (DList.DNil _)).
+
+  (* [match_res] relates the Coq result and the C result *)
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => opcode_mem_ld_reg_correct x v.
+
+  Instance correct_function3_get_opcode_mem_ld_reg : forall a, correct_function3 p args res f fn nil true match_arg_list match_res a.
+  Proof.
+    correct_function_from_body args.
+    correct_body.
+    (** how to use correct_* *)
+    unfold INV.
+    unfold f.
+    repeat intro.
+    get_invariant _op.
+
+    unfold stateless, opcode_correct in c0.
+    destruct c0 as (Hc_eq & Hc_range).
+    subst.
+
+    eexists. exists m, Events.E0.
+    unfold byte_to_opcode_mem_ld_reg.
+    repeat split; unfold step2.
+    -
+      forward_star.
+      simpl.
+      rewrite Int.zero_ext_idem; [| lia].
+      rewrite Int.zero_ext_and; [| lia].
+      change (two_p 8 - 1)%Z with 255%Z.
+      rewrite Int.and_assoc.
+      rewrite Int.and_idem.
+      forward_star.
+    -
+      unfold match_res, opcode_mem_ld_reg_correct.
+      rewrite Zland_0xff; auto.
+      destruct (c =? 97) eqn: Hldxw;
+      [rewrite Nat.eqb_eq in Hldxw; subst; reflexivity | rewrite Nat.eqb_neq in Hldxw].
+      destruct (c =? 105) eqn: Hldxh;
+      [rewrite Nat.eqb_eq in Hldxh; subst; reflexivity | rewrite Nat.eqb_neq in Hldxh].
+      destruct (c =? 113) eqn: Hldxb;
+      [rewrite Nat.eqb_eq in Hldxb; subst; reflexivity | rewrite Nat.eqb_neq in Hldxb].
+      destruct (c =? 121) eqn: Hldxdw;
+      [rewrite Nat.eqb_eq in Hldxdw; subst; reflexivity | rewrite Nat.eqb_neq in Hldxdw].
+
+      assert (Hswitch:
+          match c with
+          | 97 => op_BPF_LDXW
+          | 105 => op_BPF_LDXH
+          | 113 => op_BPF_LDXB
+          | 121 => op_BPF_LDXDW
+          | _ => op_BPF_LDX_REG_ILLEGAL_INS
+          end = op_BPF_LDX_REG_ILLEGAL_INS). {
+          do 97 (destruct c; [reflexivity |]).
+          destruct c; [exfalso; apply Hldxw; reflexivity | ].
+          do 7 (destruct c; [reflexivity |]).
+          destruct c; [exfalso; apply Hldxh; reflexivity | ].
+          do 7 (destruct c; [reflexivity |]).
+          destruct c; [exfalso; apply Hldxb; reflexivity | ].
+          do 7 (destruct c; [reflexivity |]).
+          destruct c; [exfalso; apply Hldxdw; reflexivity | reflexivity].
+        }
+        rewrite Hswitch; clear Hswitch.
+        exists c.
+        split; [ | intuition ].
+        unfold Int.and.
+        change (Int.unsigned (Int.repr 255)) with (Z.of_nat (Z.to_nat 255%Z)).
+        rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
+        rewrite LemmaNat.land_land.
+        change (Z.to_nat 255) with 255.
+        rewrite Zland_0xff; auto.
+    - constructor.
+      simpl.
+      rewrite Int.zero_ext_and.
+      change (two_p 8 - 1)%Z with 255%Z.
+      rewrite Int.and_assoc.
+      rewrite Int.and_idem.
+      reflexivity.
+      lia.
+Qed.
+
+End Get_opcode_mem_ld_reg.
+
+Existing Instance correct_function3_get_opcode_mem_ld_reg.

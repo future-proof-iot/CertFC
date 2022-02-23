@@ -53,53 +53,11 @@ Section Step_opcode_branch.
        (DList.DCons (stateless val64_correct)
           (DList.DCons (stateless sint32_correct)
           (DList.DCons (stateless sint32_correct)
-            (DList.DCons (stateless opcode_and_07_correct)
+            (DList.DCons (stateless opcode_correct)
                     (DList.DNil _))))))).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block mrs_block ins_block st m.
-
-
-Ltac build_app_aux T :=
-  match T with
-  | ?F ?X => let ty := type of X in
-             let r := build_app_aux F in
-             constr:((mk ty X) :: r)
-  | ?X    => constr:(@nil dpair)
-  end.                                    
-
-Ltac get_function T :=
-  match T with
-  | ?F ?X => get_function F
-  | ?X    => X
-  end.
-
-Ltac build_app T :=
-  let a := build_app_aux T in
-  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
-  let f := get_function T in
-  match type of v with
-  | DList.t _ ?L =>
-      change T with (app (f: arrow_type L _) v)
-  end.
-
-Ltac change_app_for_body :=
-  match goal with
-  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac change_app_for_statement :=
-  match goal with
-  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac prove_incl :=
-  simpl; unfold incl; simpl; intuition congruence.
-
-Ltac prove_in_inv :=
-  simpl; intuition subst; discriminate.
 
 Ltac correct_forward L :=
   match goal with
@@ -246,7 +204,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -338,8 +295,8 @@ Ltac correct_forward L :=
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
-        unfold stateless, opcode_and_07_correct in c4.
-        destruct c4 as (Hv_eq & Hrange & Hland).
+        unfold stateless, opcode_correct in c4.
+        destruct c4 as (Hv_eq & Hrange).
         rewrite <- Hv_eq.
         destruct (c3 =? 5)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.
@@ -439,7 +396,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -561,7 +517,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -683,7 +638,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -804,7 +758,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -926,7 +879,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -1048,7 +1000,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -1170,7 +1121,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -1291,7 +1241,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -1413,7 +1362,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -1534,7 +1482,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -1656,7 +1603,6 @@ Ltac correct_forward L :=
         rewrite p1. rewrite p2.
         split.
         subst.
-        Transparent Archi.ptr64.
         unfold Cop.sem_unary_operation, Cop.sem_binary_operation, Cop.sem_add, Cop.classify_add, Cop.sem_binarith, Cop.sem_cast; simpl.
         reflexivity.
         intros.
@@ -1859,8 +1805,8 @@ Ltac correct_forward L :=
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
-        unfold stateless, opcode_and_07_correct in c4.
-        destruct c4 as (Hv_eq & Hrange & Hland).
+        unfold stateless, opcode_correct in c4.
+        destruct c4 as (Hv_eq & Hrange).
         rewrite <- Hv_eq.
         destruct (c3 =? 133)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.
@@ -2040,8 +1986,8 @@ Ltac correct_forward L :=
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
-        unfold stateless, opcode_and_07_correct in c4.
-        destruct c4 as (Hv_eq & Hrange & Hland).
+        unfold stateless, opcode_correct in c4.
+        destruct c4 as (Hv_eq & Hrange).
         rewrite <- Hv_eq.
         destruct (c3 =? 149)%nat eqn: Hc2_eq.
         rewrite Nat.eqb_eq in Hc2_eq.

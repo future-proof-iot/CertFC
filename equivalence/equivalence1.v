@@ -82,6 +82,13 @@ Ltac Hopcode_solve HOP OP NAME :=
   rename Hins into NAME
   end.
 
+Ltac change_int_zero :=
+  match goal with
+  | |- context [if Int.eq Int.zero ?X then _ else _] =>
+    change X with Int.zero;
+    rewrite Int.eq_true
+  end.
+
 Ltac Hopcode_solve_imm HOP OP VALOP NAME :=
   let Hins := fresh "Hins" in
   match goal with
@@ -90,8 +97,17 @@ Ltac Hopcode_solve_imm HOP OP VALOP NAME :=
     try(
         repeat compute_land; simpl;
         unfold State.upd_reg, upd_reg;
+        change_int_zero;
         destruct (VALOP _ _); try reflexivity) | apply Nat.eqb_neq in Hins];
   rename Hins into NAME
+  end.
+
+Ltac change_int_8 :=
+  match goal with
+  | |- context [if Int.eq Int.zero ?X then _ else _] =>
+    change X with (Int.repr 8);
+    change (Int.eq Int.zero (Int.repr 8)) with false;
+    simpl
   end.
 
 Ltac Hopcode_solve_reg HOP OP VALOP NAME :=
@@ -102,6 +118,7 @@ Ltac Hopcode_solve_reg HOP OP VALOP NAME :=
     try(
         repeat compute_land; simpl;
         unfold State.upd_reg, upd_reg;
+        change_int_8;
         destruct (VALOP _ _); try reflexivity) | apply Nat.eqb_neq in Hins];
   rename Hins into NAME
   end.
@@ -114,12 +131,22 @@ Ltac Hopcode_solve_jump HOP OP NAME :=
   reflexivity | idtac]
   end.
 
+Ltac Hopcode_solve_alu32_imm HOP OP NAME :=
+  match goal with
+  | |- _ =>
+    Hopcode_solve HOP OP NAME; 
+    [ change_int_zero;
+      try unfold rBPFValues.sint32_to_vint;
+      unfold upd_reg;
+      destruct Val.longofintu; try reflexivity | idtac]
+  end.
 
-Ltac Hopcode_solve_alu32 HOP OP NAME :=
+Ltac Hopcode_solve_alu32_reg HOP OP NAME :=
   match goal with
   | |- _ =>
     Hopcode_solve HOP OP NAME;
-    [ try unfold rBPFValues.sint32_to_vint;
+    [ change_int_8;
+      try unfold rBPFValues.sint32_to_vint;
       unfold upd_reg;
       destruct Val.longofintu; try reflexivity | idtac]
   end.
@@ -199,9 +226,7 @@ Proof.
   Hopcode_solve_imm Hopcode 0x07 Val.addl Hadd64i.
 
   (**r Add64r *)
-
   Hopcode_solve_reg Hopcode 0x0f Val.addl Hadd64r.
-
 
   (**r SUB64i *)
   Hopcode_solve_imm Hopcode 0x17 Val.subl Hsub64i.
@@ -221,6 +246,8 @@ Proof.
   (**r Hdiv64i *)
   Hopcode_solve Hopcode 0x37 Hdiv64i.
 
+  change_int_zero.
+  unfold rBPFValues.compl_ne, DxValues.Val_ulongofslong.
   destruct (negb _); [| reflexivity].
 
   unfold upd_reg.
@@ -229,7 +256,7 @@ Proof.
 
   (**r Hdiv64r *)
   Hopcode_solve Hopcode 0x3f Hdiv64r.
-
+  change_int_8.
   destruct (rBPFValues.compl_ne); [| reflexivity].
   unfold upd_reg.
   destruct (Val.divlu _ _); try reflexivity.
@@ -250,6 +277,8 @@ Proof.
   (**r Hlsh64i *)
   Hopcode_solve Hopcode 0x67 Hlsh64i.
 
+  change_int_zero.
+  unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu, DxValues.Val_ulongofslong.
   destruct (Int.ltu _ _); [ |reflexivity].
 
   unfold upd_reg.
@@ -257,7 +286,7 @@ Proof.
 
   (**r Hlsh64r *)
   Hopcode_solve Hopcode 0x6f Hlsh64r.
-
+  change_int_8.
   destruct (rBPFValues.compu_lt_32 _ _); [ |reflexivity].
 
   unfold upd_reg.
@@ -265,7 +294,8 @@ Proof.
 
   (**r Hrsh64i *)
   Hopcode_solve Hopcode 0x77 Hrsh64i.
-
+  change_int_zero.
+  unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu, DxValues.Val_ulongofslong.
   destruct (Int.ltu _ _); [ |reflexivity].
 
   unfold upd_reg.
@@ -273,7 +303,7 @@ Proof.
 
   (**r Hrsh64r *)
   Hopcode_solve Hopcode 0x7f Hrsh64r.
-
+  change_int_8.
   destruct (rBPFValues.compu_lt_32 _ _); [ |reflexivity].
 
   unfold upd_reg.
@@ -289,7 +319,8 @@ Proof.
   (**r Hmod64i *)
 
   Hopcode_solve Hopcode 0x97 Hmod64i.
-
+  change_int_zero.
+  unfold rBPFValues.compl_ne, DxValues.Val_ulongofslong.
   destruct (negb _); [| reflexivity].
 
   unfold upd_reg.
@@ -298,7 +329,7 @@ Proof.
 
   (**r Hmod64r *)
   Hopcode_solve Hopcode 0x9f Hmod64r.
-
+  change_int_8.
   destruct (rBPFValues.compl_ne _ _); [| reflexivity].
   unfold upd_reg.
   destruct (Val.modlu _ _); try reflexivity.
@@ -312,18 +343,20 @@ Proof.
 
   (**r Hmov64i *)
   Hopcode_solve Hopcode 0xb7 Hmov64i.
+  change_int_zero.
   reflexivity.
 
 
   (**r Hmov64r *)
   Hopcode_solve Hopcode 0xbf Hmov64r.
-
+  change_int_8.
   unfold upd_reg.
   destruct (State.eval_reg _ _); try reflexivity.
 
   (**r Harsh64i *)
   Hopcode_solve Hopcode 0xc7 Harsh64i.
-
+  change_int_zero.
+  unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu, DxValues.Val_ulongofslong.
   destruct (Int.ltu _ _); [ |reflexivity].
 
   unfold upd_reg.
@@ -331,7 +364,7 @@ Proof.
 
   (**r Harsh64r *)
   Hopcode_solve Hopcode 0xcf Harsh64r.
-
+  change_int_8.
   destruct (rBPFValues.compu_lt_32 _ _); [ |reflexivity].
 
   unfold upd_reg.
@@ -340,26 +373,28 @@ Proof.
 (*ALU32*)
 
   (**r Hadd32i *)
-  Hopcode_solve_alu32 Hopcode 0x04 Hadd32i.
+  Hopcode_solve_alu32_imm Hopcode 0x04 Hadd32i.
 
   (**r Hadd32r *)
-  Hopcode_solve_alu32 Hopcode 0x0c Hadd32r.
+  Hopcode_solve_alu32_reg Hopcode 0x0c Hadd32r.
 
   (**r Hsub32i *)
-  Hopcode_solve_alu32 Hopcode 0x14 Hsub32i.
+  Hopcode_solve_alu32_imm Hopcode 0x14 Hsub32i.
 
   (**r Hsub32r *)
-  Hopcode_solve_alu32 Hopcode 0x1c Hsub32r.
+  Hopcode_solve_alu32_reg Hopcode 0x1c Hsub32r.
 
   (**r Hmul32i *)
-  Hopcode_solve_alu32 Hopcode 0x24 Hmul32i.
+  Hopcode_solve_alu32_imm Hopcode 0x24 Hmul32i.
 
   (**r Hmul32r *)
-  Hopcode_solve_alu32 Hopcode 0x2c Hmul32r.
+  Hopcode_solve_alu32_reg Hopcode 0x2c Hmul32r.
 
   (**r Hdiv32i *)
   Hopcode_solve Hopcode 0x34 Hdiv32i.
 
+  change_int_zero.
+  unfold rBPFValues.comp_ne_32, rBPFValues.sint32_to_vint, DxValues.val32_zero.
   unfold DxIntegers.int32_0.
   destruct negb; try reflexivity.
   destruct Val.divu; try reflexivity.
@@ -369,6 +404,7 @@ Proof.
   (**r Hdiv32r *)
   Hopcode_solve Hopcode 0x3c Hdiv32r.
 
+  change_int_8.
   unfold DxIntegers.int32_0.
   destruct rBPFValues.comp_ne_32; try reflexivity.
   destruct Val.divu; try reflexivity.
@@ -376,20 +412,21 @@ Proof.
   destruct Val.longofintu; try reflexivity.
 
   (**r Hor32i *)
-  Hopcode_solve_alu32 Hopcode 0x44 Hor32i.
+  Hopcode_solve_alu32_imm Hopcode 0x44 Hor32i.
 
   (**r Hor32r *)
-  Hopcode_solve_alu32 Hopcode 0x4c Hor32r.
+  Hopcode_solve_alu32_reg Hopcode 0x4c Hor32r.
 
   (**r Hand32i *)
-  Hopcode_solve_alu32 Hopcode 0x54 Hand32i.
+  Hopcode_solve_alu32_imm Hopcode 0x54 Hand32i.
 
   (**r Hand32r *)
-  Hopcode_solve_alu32 Hopcode 0x5c Hand32r.
+  Hopcode_solve_alu32_reg Hopcode 0x5c Hand32r.
 
   (**r Hlsh32i *)
   Hopcode_solve Hopcode 0x64 Hlsh32i.
-
+  change_int_zero.
+  unfold rBPFValues.compu_lt_32, rBPFValues.sint32_to_vint, DxValues.val32_32.
   unfold DxIntegers.int32_32.
   destruct (Int.ltu _ _); try reflexivity.
   unfold upd_reg.
@@ -397,7 +434,7 @@ Proof.
 
   (**r Hlsh32r *)
   Hopcode_solve Hopcode 0x6c Hlsh32r.
-
+  change_int_8.
   unfold DxValues.val32_32, DxIntegers.int32_32.
   destruct rBPFValues.compu_lt_32; try reflexivity.
   unfold upd_reg.
@@ -405,7 +442,8 @@ Proof.
 
   (**r Hrsh32i *)
   Hopcode_solve Hopcode 0x74 Hrsh32i.
-
+  change_int_zero.
+  unfold rBPFValues.compu_lt_32, rBPFValues.sint32_to_vint, DxValues.val32_32.
   unfold DxIntegers.int32_32.
   destruct (Int.ltu _ _); try reflexivity.
   unfold upd_reg.
@@ -413,18 +451,19 @@ Proof.
 
   (**r Hrsh32r *)
   Hopcode_solve Hopcode 0x7c Hrsh32r.
-
+  change_int_8.
   unfold DxValues.val32_32, DxIntegers.int32_32.
   destruct rBPFValues.compu_lt_32; try reflexivity.
   unfold upd_reg.
   destruct Val.longofintu; try reflexivity.
 
   (**r Hneg32 *)
-  Hopcode_solve_alu32 Hopcode 0x84 Hneg32.
+  Hopcode_solve_alu32_imm Hopcode 0x84 Hneg32.
 
   (**r Hmod32i *)
   Hopcode_solve Hopcode 0x94 Hmod32i.
-
+  change_int_zero.
+  unfold rBPFValues.comp_ne_32, rBPFValues.sint32_to_vint, DxValues.val32_zero.
   unfold DxIntegers.int32_0.
   destruct negb; try reflexivity.
   destruct Val.modu; try reflexivity.
@@ -433,7 +472,7 @@ Proof.
 
   (**r Hmod32r *)
   Hopcode_solve Hopcode 0x9c Hmod32r.
-
+  change_int_8.
   unfold DxIntegers.int32_0.
   destruct rBPFValues.comp_ne_32; try reflexivity.
   destruct Val.modu; try reflexivity.
@@ -441,31 +480,35 @@ Proof.
   destruct Val.longofintu; try reflexivity.
 
   (**r Hxor32i *)
-  Hopcode_solve_alu32 Hopcode 0xa4 Hxor32i.
+  Hopcode_solve_alu32_imm Hopcode 0xa4 Hxor32i.
 
   (**r Hxor32r *)
-  Hopcode_solve_alu32 Hopcode 0xac Hxor32r.
+  Hopcode_solve_alu32_reg Hopcode 0xac Hxor32r.
 
   (**r Hmov32i *)
   Hopcode_solve Hopcode 0xb4 Hmov32i.
+  change_int_zero.
   reflexivity.
 
   (**r Hmov32r *)
   Hopcode_solve Hopcode 0xbc Hmov32r.
+  change_int_8.
   unfold upd_reg.
   destruct Val.longofintu; reflexivity.
 
   (**r Harsh32i *)
   Hopcode_solve Hopcode 0xc4 Harsh32i.
-
+  change_int_zero.
+  unfold Val.longofintu, rBPFValues.val_intuoflongu, rBPFValues.sint32_to_vint.
+  unfold rBPFValues.compu_lt_32, Regs.get_immediate, DxValues.val32_32.
   unfold DxIntegers.int32_32.
   destruct (Int.ltu _ _); try reflexivity.
   unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
+  destruct Val.shr; try reflexivity.
 
   (**r Harsh32r *)
   Hopcode_solve Hopcode 0xcc Harsh32r.
-
+  change_int_8.
   unfold DxValues.val32_32, DxIntegers.int32_32.
   destruct rBPFValues.compu_lt_32; try reflexivity.
   unfold upd_reg.
@@ -473,7 +516,6 @@ Proof.
 
   (**r HLDDW *)
   Hopcode_solve Hopcode 0x18 HLDDW.
-
   reflexivity.
 
   (**r Hldx32 *)
@@ -609,6 +651,7 @@ Proof.
   (**r Hcall *)
   unfold rBPFValues.int64_to_sint32, rBPFValues.val_intsoflongu.
   Hopcode_solve Hopcode 0x85 Hcall.
+  change_int_zero.
   unfold Regs.get_immediate, rBPFValues.int64_to_sint32.
   reflexivity.
 

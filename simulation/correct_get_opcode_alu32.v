@@ -38,7 +38,7 @@ Section Get_opcode_alu32.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless opcode_and_07_correct)
+    (DList.DCons (stateless opcode_correct)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -54,7 +54,7 @@ Section Get_opcode_alu32.
     repeat intro.
     get_invariant _op.
 
-    unfold stateless, opcode_and_07_correct in c0.
+    unfold stateless, opcode_correct in c0.
     destruct c0 as (H0 & Hge).
     subst.
 
@@ -80,14 +80,7 @@ Section Get_opcode_alu32.
       simpl_opcode Hand.
       simpl_opcode Hlsh.
       simpl_opcode Hrsh.
-      simpl_opcode Hneg. (*
-      simpl_if Hneg.
-      destruct (c =? 132)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity |rewrite Nat.eqb_neq in Hc_eq].
-      exists c; split; [reflexivity| idtac].
-      unfold is_illegal_alu32_ins.
-      repeat simpl_land H0.
-      assumption.*)
-
+      simpl_opcode Hneg.
       simpl_opcode Hmod.
       simpl_opcode Hxor.
       simpl_opcode Hmov.

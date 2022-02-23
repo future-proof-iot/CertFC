@@ -23,7 +23,7 @@ From compcert Require Import Integers Values.
 From dx Require Import ResultMonad IR.
 From dx.Type Require Import Bool.
 
-From bpf.src Require Import CoqIntegers.
+From bpf.src Require Import CoqIntegers DxIntegers.
 From Coq Require Import ZArith.
 
 (* Derive Nat as unsigned int *)
@@ -124,6 +124,19 @@ Definition Const_nat8_and :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+Definition nat2int (n:nat) := (Int.repr (Z.of_nat n)).
+
+Definition nat8Touint32SymbolType :=
+  MkCompilableSymbolType [nat8CompilableType] (Some uint32CompilableType).
+
+Definition Const_nat2int :=
+  MkPrimitive nat8Touint32SymbolType
+                nat2int
+                (fun es => match es with
+                           | [e1] => Ok (e1)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 Module Exports.
   Definition nat8CompilableType := nat8CompilableType.
   Definition Const_nat8_0xf0    := Const_nat8_0xf0.
@@ -133,6 +146,7 @@ Module Exports.
   Definition Const_nat8_zero    := Const_nat8_zero.
   Definition Const_nat8_eq      := Const_nat8_eq.
   Definition Const_nat8_and     := Const_nat8_and.
+  Definition Const_nat2int      := Const_nat2int.
   Definition Const_nat8_0x05    := Const_nat8_0x05.
   Definition Const_nat8_0x84    := Const_nat8_0x84.
   Definition Const_nat8_0x87    := Const_nat8_0x87.

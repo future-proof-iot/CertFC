@@ -44,7 +44,7 @@ Section Eval_ins.
         (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int64_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => ins64_correct x v.
 
   Instance correct_function3_eval_ins : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
   Proof.
@@ -98,14 +98,16 @@ Section Eval_ins.
     }
     split.
     {
-      unfold match_res, State.eval_ins, int64_correct, List64.MyListIndexs32, List64.MyList.index_s32.
-      reflexivity.
+      unfold match_res, State.eval_ins, ins64_correct, List64.MyListIndexs32, List64.MyList.index_s32.
+      split; [reflexivity | ].
+      unfold match_list_ins in Hmatch.
+      assert (Hnat: (0 <= Z.to_nat (Int.signed c) < length (ins st))%nat). {
+        lia.
+      }
+      specialize (Hmatch (Z.to_nat (Int.signed c)) Hnat).
+      tauto.
     }
-    split.
-    {
-      constructor.
-    }
-    split; reflexivity.
+    split; [constructor | split; reflexivity].
   Qed.
 
 End Eval_ins.

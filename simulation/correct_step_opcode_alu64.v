@@ -49,53 +49,11 @@ Section Step_opcode_alu64.
       (DList.DCons (stateless val64_correct)
        (DList.DCons (stateless val64_correct)
           (DList.DCons (stateless reg_correct)
-            (DList.DCons (stateless opcode_and_07_correct)
+            (DList.DCons (stateless opcode_correct)
                     (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block mrs_block ins_block st m.
-
-
-Ltac build_app_aux T :=
-  match T with
-  | ?F ?X => let ty := type of X in
-             let r := build_app_aux F in
-             constr:((mk ty X) :: r)
-  | ?X    => constr:(@nil dpair)
-  end.
-
-Ltac get_function T :=
-  match T with
-  | ?F ?X => get_function F
-  | ?X    => X
-  end.
-
-Ltac build_app T :=
-  let a := build_app_aux T in
-  let v := (eval simpl in (DList.of_list_dp (List.rev a))) in
-  let f := get_function T in
-  match type of v with
-  | DList.t _ ?L =>
-      change T with (app (f: arrow_type L _) v)
-  end.
-
-Ltac change_app_for_body :=
-  match goal with
-  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac change_app_for_statement :=
-  match goal with
-  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
-  end.
-
-Ltac prove_incl :=
-  simpl; unfold incl; simpl; intuition congruence.
-
-Ltac prove_in_inv :=
-  simpl; intuition subst; discriminate.
 
 Ltac correct_forward L :=
   match goal with
@@ -1396,7 +1354,7 @@ Ltac correct_forward L :=
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
-        unfold stateless, opcode_and_07_correct in c3.
+        unfold stateless, opcode_correct in c3.
         destruct c3 as (Hv_eq & Hrange).
         rewrite <- Hv_eq.
         destruct (c2 =? 135)%nat eqn: Hc2_eq.
@@ -1410,7 +1368,6 @@ Ltac correct_forward L :=
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
         assert (Hneq: Int.eq (Int.repr (Z.of_nat c2)) (Int.repr 135) = false). {
           apply Int.eq_false.
-          destruct Hrange as (Hrange & _).
           apply nat8_neq_135; auto.
         }
         rewrite Hneq; clear Hneq.

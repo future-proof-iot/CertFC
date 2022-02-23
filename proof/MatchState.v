@@ -90,7 +90,10 @@ Fixpoint match_list_ins (m:mem) (b: block) (ofs:ptrofs) (l: MyListType) :=
   end. *)
 
 Definition match_list_ins (m:mem) (b: block) (l: list int64) :=
-  forall i, (0 <= i < List.length l)%nat -> Mem.loadv AST.Mint64 m  (Vptr b (Ptrofs.repr (8 * (Z.of_nat i)))) = Some (Vlong (List.nth i l Int64.zero)).
+  forall i, (0 <= i < List.length l)%nat ->
+    Mem.loadv AST.Mint64 m  (Vptr b (Ptrofs.repr (8 * (Z.of_nat i)))) = Some (Vlong (List.nth i l Int64.zero)) /\
+    0 <= (Int64.unsigned (Int64.shru (Int64.and (List.nth i l Int64.zero) (Int64.repr 4095)) (Int64.repr 8))) <= 10 /\ (**r dst \in [0,10] *)
+    0 <= (Int64.unsigned (Int64.shru (Int64.and (List.nth i l Int64.zero) (Int64.repr 65535)) (Int64.repr 12))) <= 10 (**r src \in [0,10] *).
 
 Definition match_ins (ins_blk: block) (st: State.state) (m:mem) :=
   List.length (ins st) = (ins_len st) /\
@@ -139,7 +142,7 @@ Definition is_byte_memval (mv: memval): Prop :=
       mpc      : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
       mflags   : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
       mregs    : match_registers (regs_st st) state_blk (Ptrofs.repr 8) m;
-      mins_len : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ 0 <= 8 * Z.of_nat (ins_len st) <= Ptrofs.max_unsigned;
+      mins_len : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ Z.of_nat (ins_len st) >= 0;
       mins     : Mem.loadv AST.Mptr m (Vptr state_blk (Ptrofs.repr 100)) = Some (Vptr ins_blk (Ptrofs.repr 0)) /\ match_ins ins_blk st m;
       mmrs_num : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 104)) = Some (Vint  (Int.repr (Z.of_nat (mrs_num st)))) /\
                  (Z.of_nat(mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)
@@ -619,8 +622,11 @@ Proof.
   intros.
   specialize (mem_regs0 i H).
   unfold Mem.loadv in *.
+  destruct mem_regs0 as (mem_regs0 & Hdst & Hsrc).
   rewrite <- mem_regs0.
+  split.
   eapply Mem.load_store_other; eauto.
+  split; assumption.
 Qed.
 
 Lemma upd_preserves_match_list_region:

@@ -635,7 +635,7 @@ Definition f_get_src64 := {|
                (_src64, tulong) :: (_t'4, tulong) :: (_t'3, tuint) ::
                (_t'2, tlong) :: (_t'1, tint) :: nil);
   fn_body :=
-(Sifthenelse (Ebinop Oeq (Econst_int (Int.repr 0) tint)
+(Sifthenelse (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
                (Ebinop Oand (Etempvar _x tuchar)
                  (Econst_int (Int.repr 8) tint) tint) tint)
   (Ssequence
@@ -650,7 +650,7 @@ Definition f_get_src64 := {|
           (Evar _eval_immediate (Tfunction (Tcons tint Tnil) tlong
                                   cc_default)) ((Etempvar _imm tint) :: nil))
         (Sset _imm64 (Etempvar _t'2 tlong)))
-      (Sreturn (Some (Etempvar _imm64 tlong)))))
+      (Sreturn (Some (Ecast (Etempvar _imm64 tlong) tulong)))))
   (Ssequence
     (Ssequence
       (Scall (Some _t'3)
@@ -679,7 +679,7 @@ Definition f_get_src32 := {|
                (_src32, tuint) :: (_t'4, tuint) :: (_t'3, tulong) ::
                (_t'2, tuint) :: (_t'1, tint) :: nil);
   fn_body :=
-(Sifthenelse (Ebinop Oeq (Econst_int (Int.repr 0) tint)
+(Sifthenelse (Ebinop Oeq (Econst_int (Int.repr 0) tuint)
                (Ebinop Oand (Etempvar _x tuchar)
                  (Econst_int (Int.repr 8) tint) tint) tint)
   (Ssequence

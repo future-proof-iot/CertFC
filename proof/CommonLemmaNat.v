@@ -711,6 +711,34 @@ Proof.
   lia.
 Qed.
 
+Lemma nat_odd_S:
+  forall n,
+  Nat.odd (S n) = negb (Nat.odd n).
+Proof.
+  intros.
+  destruct (Nat.odd n) eqn: Hodd.
+  - rewrite <- Nat.negb_even in Hodd.
+    rewrite Nat.odd_succ.
+    rewrite Bool.negb_true_iff in Hodd.
+    rewrite Hodd; reflexivity.
+  - rewrite <- Nat.negb_even in Hodd.
+    rewrite Nat.odd_succ.
+    rewrite Bool.negb_false_iff in Hodd.
+    rewrite Hodd; reflexivity.
+Qed.
+
+Lemma Zland_0xff:
+  forall c
+    (Hc_le : c <= 255),
+      Nat.land c 255 = c.
+Proof.
+  intros.
+  assert (Hc: c < 256) by lia.
+  clear Hc_le.
+  do 255 (destruct c; [reflexivity |]).
+  destruct c; [reflexivity |].
+  destruct c;  lia.
+Qed.
 
 Ltac simpl_if Ht :=
   match goal with

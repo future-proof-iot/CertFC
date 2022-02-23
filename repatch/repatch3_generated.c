@@ -40,10 +40,10 @@ static __attribute__((always_inline)) inline unsigned long long get_src64(struct
   long long imm64;
   unsigned int src;
   unsigned long long src64;
-  if (0 == (x & 8)) {
+  if (0U == (x & 8)) {
     imm = get_immediate(ins);
     imm64 = eval_immediate(imm);
-    return imm64;
+    return (unsigned long long) imm64;
   } else {
     src = get_src(ins);
     src64 = eval_reg(st, src);
@@ -57,7 +57,7 @@ static __attribute__((always_inline)) inline unsigned int get_src32(struct bpf_s
   unsigned int src;
   unsigned long long src64;
   unsigned int src32;
-  if (0 == (x & 8)) {
+  if (0U == (x & 8)) {
     imm = get_immediate(ins);
     return imm;
   } else {

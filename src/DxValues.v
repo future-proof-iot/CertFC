@@ -405,6 +405,20 @@ Definition Const_valS32TovalS64 :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+(** S64_to_U64: Val_ulongofslong
+  *)
+Definition Val_ulongofslong (i:val) := i.
+Definition valS64TovalU64SymbolType :=
+  MkCompilableSymbolType [valS64CompilableType] (Some val64CompilableType).
+
+Definition Const_valS64TovalU64 :=
+  MkPrimitive valS64TovalU64SymbolType
+                Val_ulongofslong
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_U64)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 (** Type signature: val -> val -> val
   *)
 Definition val64Toval64Toval64SymbolType :=
@@ -587,6 +601,7 @@ Module Exports.
 
   Definition valS64CompilableType   := valS64CompilableType.
   Definition Const_valS32TovalS64   := Const_valS32TovalS64.
+  Definition Const_valS64TovalU64   := Const_valS64TovalU64.
 (*
   Definition Const_sint16_to_vlong  := Const_sint16_to_vlong.*)
   Definition Const_val64TovalU32    := Const_val64TovalU32.

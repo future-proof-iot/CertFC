@@ -315,6 +315,20 @@ Definition Const_uint32_neg :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 
+Definition uint32Touint32ToboolSymbolType :=
+  MkCompilableSymbolType [uint32CompilableType; uint32CompilableType] (Some boolCompilableType).
+
+Definition C_int32_eq (x y: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Ebinop Cop.Oeq x y C_U32.
+
+Definition Const_int32_eq :=
+  MkPrimitive uint32Touint32ToboolSymbolType
+                Int.eq
+                (fun es => match es with
+                           | [e1;e2] => Ok (C_int32_eq e1 e2)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 Definition uint32Touint32Touint32SymbolType :=
   MkCompilableSymbolType [uint32CompilableType; uint32CompilableType] (Some uint32CompilableType).
 
@@ -339,7 +353,8 @@ Definition binop_expr_cast2 (op: Cop.binary_operation) (t ti : Ctypes.type) :=
 Instance CUINT32 : CType uint32_t := mkCType _ (cType uint32CompilableType).
 
 Definition Const_uint32_add := ltac: (mkprimitive Int.add (binop_expr Cop.Oadd C_U32)).
-Definition Const_uint32_sub := ltac: (mkprimitive Int.add (binop_expr Cop.Oadd C_U32)).
+Definition Const_uint32_sub := ltac: (mkprimitive Int.sub (binop_expr Cop.Osub C_U32)).
+Definition Const_uint32_and := ltac: (mkprimitive Int.and (binop_expr Cop.Oand C_U32)).
 
 (******************** SInt32 *******************)
 Definition C_S32_zero: Csyntax.expr :=
@@ -783,8 +798,10 @@ Module Exports. (*
   Definition Const_int32_0x08       := Const_int32_0x08.
 
   Definition Const_uint32_neg      := Const_uint32_neg.
+  Definition Const_int32_eq        := Const_int32_eq.
   Definition Const_uint32_add      := Const_uint32_add.
   Definition Const_uint32_sub      := Const_uint32_sub.
+  Definition Const_uint32_and      := Const_uint32_and.
   Definition sint32CompilableType  := sint32CompilableType.
   Definition Const_sint32_zero     := Const_sint32_zero.
   Definition Const_sint32_one      := Const_sint32_one.

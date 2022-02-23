@@ -8,17 +8,16 @@ From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
 
-
 (**
-Check get_dst.
-get_dst
+Check get_src.
+get_src
      : int64_t -> M reg
 
  *)
 
 Open Scope Z_scope.
 
-Section Get_dst.
+Section Get_src.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -29,10 +28,10 @@ Section Get_dst.
   Definition res : Type := (reg:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_dst.
+  Definition f : arrow_type args (M res) := get_src.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
-  Definition fn: Clight.function := f_get_dst.
+  Definition fn: Clight.function := f_get_src.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
@@ -42,7 +41,7 @@ Section Get_dst.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => reg_correct x v.
 
-  Instance correct_function3_get_dst : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function3_get_src : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -53,7 +52,7 @@ Section Get_dst.
     get_invariant _ins.
 
     unfold stateless, ins64_correct in c0.
-    destruct c0 as (Hv_eq & (Hreg_range_0 & Hreg_range10) & _).
+    destruct c0 as (Hv_eq & _ & (Hreg_range_0 & Hreg_range10)).
     subst.
 
     (**according to the type:
@@ -61,10 +60,10 @@ Section Get_dst.
        1. return value should be  
        2. the memory is same
      *)
-    unfold int64_to_dst_reg.
-    unfold z_to_reg, Regs.get_dst.
+    unfold int64_to_src_reg.
+    unfold z_to_reg, Regs.get_src.
     simpl in c.
-    exists (Vint (Int.repr (Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8))))), m, Events.E0.
+    exists (Vint (Int.repr (Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 65535)) (Int64.repr 12))))), m, Events.E0.
 
     repeat split; unfold step2.
     -
@@ -72,7 +71,7 @@ Section Get_dst.
     -
       unfold match_res.
       unfold reg_correct. (**r we need the invariant reg \in [0; 10] *)
-      remember ((Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8)))) as X.
+      remember ((Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 65535)) (Int64.repr 12)))) as X.
       Ltac zeqb :=
       match goal with
       | |- context[Z.eqb ?X1 ?X2] =>
@@ -96,7 +95,7 @@ Section Get_dst.
       reflexivity.
   Qed.
 
-End Get_dst.
+End Get_src.
 Close Scope Z_scope.
 
-Existing Instance correct_function3_get_dst.
+Existing Instance correct_function3_get_src.

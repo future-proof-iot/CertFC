@@ -38,7 +38,7 @@ Section Get_opcode_branch.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless opcode_and_07_correct)
+    (DList.DCons (stateless opcode_correct)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -54,7 +54,7 @@ Section Get_opcode_branch.
     repeat intro.
     get_invariant _op.
 
-    unfold stateless, opcode_and_07_correct in c0.
+    unfold stateless, opcode_correct in c0.
     destruct c0 as (H0 & Hge).
     subst.
 
@@ -71,16 +71,6 @@ Section Get_opcode_branch.
       unfold byte_to_opcode_branch_if.
       rewrite Int.zero_ext_and; [change (Int.repr (two_p 8 - 1)) with (Int.repr 255) | lia].
       rewrite nat8_land_240_255_eq; [| apply Hge].
-(*
-      simpl_if Hja.
-      destruct (c =? 5)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity |rewrite Nat.eqb_neq in Hc_eq].
-      exists c; split; [reflexivity| idtac].
-      unfold is_illegal_jmp_ins.
-      split.
-      intro.
-      assumption.
-
-      repeat simpl_land H0. *)
       simpl_opcode Hja.
       simpl_opcode Hjeq.
       simpl_opcode Hjgt.
@@ -94,19 +84,7 @@ Section Get_opcode_branch.
       simpl_opcode Hjsjt.
       simpl_opcode Hjsle.
       simpl_opcode Hcall.
-      simpl_opcode Hret. (*
-      simpl_if Hcall.
-      destruct (c =? 133)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity | rewrite Nat.eqb_neq in Hc_eq].
-      exists c; split; [reflexivity| ].
-      unfold is_illegal_jmp_ins.
-      repeat simpl_land H0.
-      assumption.
-      simpl_if Hret.
-      destruct (c =? 149)%nat eqn: Hc_eq; [rewrite Nat.eqb_eq in Hc_eq; rewrite Hc_eq; exists; reflexivity | rewrite Nat.eqb_neq in Hc_eq].
-      exists c; split; [reflexivity| ].
-      unfold is_illegal_jmp_ins.
-      repeat simpl_land H0.
-      assumption. *)
+      simpl_opcode Hret.
       exists c.
       split; [reflexivity |].
       unfold is_illegal_jmp_ins.

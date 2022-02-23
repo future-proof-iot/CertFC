@@ -58,71 +58,7 @@ Proof.
   correct_function_from_body args.
   correct_body.
   unfold f. unfold check_mem_aux2.
-  simpl. (*
-  (** goal: correct_body _ _ (bindM (is_well_chunk_bool ... *)
-  eapply correct_statement_seq_body with (modifies1:=nil).
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := true).
-
-  my_reflex.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
-
-  { unfold INV.
-    unfold var_inv_preserve.
-    intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    intuition. clear - H2 H.
-    unfold match_elt in *;
-      unfold fst in *.
-    destruct (Maps.PTree.get _mr le);auto.
-    simpl in *.
-    destruct H2 ; split; auto.
-    unfold match_region in *.
-    all: destruct H; auto.
-  }
-
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
-
-  intros.
-  change (match_temp_env INV le st m) in H.
-  unfold INV in H.
-  get_invariant _chunk.
-  exists (v::nil).
-  split.
-  unfold map_opt. unfold exec_expr. rewrite p0.
-  reflexivity.
-  intros. simpl.
-  tauto.
-
-  intros.
-  (** goal: correct_body _ _ (if x then ... *)
-  eapply correct_statement_if_body; [prove_in_inv | destruct x ]. 2:{ (**r if-else branch *)
-  unfold correct_body.
-  intros.
-  unfold returnM.
-  intros.
-  exists (Vint (Int.repr 0)), m0, Events.E0. 
-  repeat split.
-
-  forward_star.
-  forward_star.
-  intuition.
-  constructor.
-  reflexivity.
-  instantiate (1 := nil).
-  split; reflexivity.
-  }
-  (**r if-then branch *) *)
+  simpl.
 
   (** goal: correct_body _ _ (bindM (get_start_addr c) ... *)
   eapply correct_statement_seq_body with (modifies1:=nil).
