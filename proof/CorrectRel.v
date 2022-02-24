@@ -65,6 +65,9 @@ Definition opcode_correct (x: nat) (v: val) :=
 Definition opcode_and_07_correct (x: nat) (v: val) :=
    Vint (Int.repr (Z.of_nat x)) = v /\ (x <= 255) /\ (Nat.land x 0x07%nat = 0x07%nat). *)
 
+Definition opcode_and_07_correct (x: nat) (v: val) :=
+   Vint (Int.repr (Z.of_nat (Nat.land x 0x07))) = v /\ x <= 255.
+
 Definition is_illegal_alu64_ins (i:nat): Prop :=
   ((Nat.land i 240) <> 0x00) /\
   ((Nat.land i 240) <> 0x10) /\
@@ -207,6 +210,22 @@ Definition opcode_mem_st_reg_correct (opcode: opcode_mem_st_reg) (v: val) :=
     exists i,
       v = Vint (Int.repr (Z.of_nat i)) /\
       i <> 0x63 /\ i <> 0x6b /\ i <> 0x73 /\ i <> 0x7b
+  end.
+
+Definition opcode_step_correct (op: opcode) (v: val) :=
+  match op with
+  | op_BPF_ALU64   (**r 0xX7 / 0xXf *) => v = Vint (Int.repr (Z.of_nat 0x07))
+  | op_BPF_ALU32   (**r 0xX4 / 0xXc *) => v = Vint (Int.repr (Z.of_nat 0x04))
+  | op_BPF_Branch  (**r 0xX5 / 0xXd *) => v = Vint (Int.repr (Z.of_nat 0x05))
+  | op_BPF_Mem_ld_imm  (**r 0xX8 *)    => v = Vint (Int.repr (Z.of_nat 0x00))
+  | op_BPF_Mem_ld_reg  (**r 0xX1/0xX9 *) => v = Vint (Int.repr (Z.of_nat 0x01))
+  | op_BPF_Mem_st_imm  (**r 0xX2/0xXa *) => v = Vint (Int.repr (Z.of_nat 0x02))
+  | op_BPF_Mem_st_reg  (**r 0xX3/0xXb *) => v = Vint (Int.repr (Z.of_nat 0x03))
+
+  | op_BPF_ILLEGAL_INS =>
+    exists i,
+      v = Vint (Int.repr (Z.of_nat i)) /\
+      i <> 0x00 /\ i <> 0x01 /\ i <> 0x02 /\ i <> 0x03 /\ i <> 0x04 /\ i <> 0x05 /\ i <> 0x07
   end.
 
 Close Scope nat_scope.
