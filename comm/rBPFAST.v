@@ -34,3 +34,15 @@ Definition chunk_eqb (c1 c2: memory_chunk) : bool :=
   | Many64, Many64 => true
   | _, _ => false
   end.
+
+Lemma chunk_eqb_true:
+  forall x y, x = y <-> chunk_eqb x y = true.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
+Lemma chunk_eqb_false:
+  forall x y, x <> y <-> chunk_eqb x y = false.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.

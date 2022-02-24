@@ -103,7 +103,7 @@ Definition step_alu_binary_operation (a: arch) (bop: binOp) (d :reg) (s: reg+imm
     | BPF_XOR  => upd_reg d (Val.longofintu (Val.xor  d32 s32))
     | BPF_MOV  => upd_reg d (Val.longofintu s32)
     | BPF_ARSH => if compu_lt_32 s32 (Vint (Int.repr 32)) then
-                    upd_reg d (Val.longofintu (Val.shr  d32 s32))
+                    upd_reg d (Val.longofint (Val.shr  d32 s32))
                   else
                     upd_flag BPF_ILLEGAL_SHIFT (**r if 's' of 'shr d s' is 's > 32', then there is a acceptable error *)
     end

@@ -245,7 +245,7 @@ Definition step_opcode_alu32 (dst32: val) (src32: val) (dst: reg) (op: nat): M u
     do _ <- upd_reg dst (Val.longofintu src32); returnM tt
   | op_BPF_ARSH32  =>
     if compu_lt_32 src32 (Vint (Int.repr 32)) then
-      do _ <- upd_reg dst (Val.longofintu (Val.shr dst32 src32)); returnM tt
+      do _ <- upd_reg dst (Val.longofint (Val.shr dst32 src32)); returnM tt
     else
       upd_flag BPF_ILLEGAL_SHIFT
   | op_BPF_ALU32_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION

@@ -1,10 +1,105 @@
 From compcert Require Import Integers AST Ctypes.
-From Coq Require Import Arith ZArith Lia.
+From Coq Require Import Arith ZArith Lia Bool.
 
 From bpf.comm Require Import Flag Regs rBPFValues.
 From bpf.model Require Import Syntax Decode.
 
 Open Scope nat_scope.
+
+Fixpoint forall_nat (P : nat -> Prop) (n:nat) :=
+  match n with
+  | O => P O
+  | S n' => P n /\ forall_nat P n'
+  end.
+
+Lemma forall_nat_correct : forall P n,
+    forall_nat P n -> forall m, m <= n -> P m.
+Proof.
+  induction n.
+  - simpl.
+    intros. assert (m = 0) by lia.
+    congruence.
+  - simpl.
+    intros.
+    assert (m = S n \/ m <= n) by lia.
+    destruct H1.
+    subst. tauto.
+    apply IHn; tauto.
+Qed.
+
+Fixpoint forallb_nat (P : nat -> bool) (n:nat) :=
+  match n with
+  | O => P O
+  | S n' => P n && forallb_nat P n'
+  end.
+
+Lemma forallb_nat_correct : forall P n,
+    forallb_nat P n = true -> forall m, m <= n -> P m = true.
+Proof.
+  induction n.
+  - simpl.
+    intros. assert (m = 0) by lia.
+    congruence.
+  - simpl.
+    intros.
+    assert (m = S n \/ m <= n) by lia.
+    rewrite andb_true_iff in H.
+    destruct H1.
+    subst. tauto.
+    apply IHn; tauto.
+Qed.
+
+(*
+Inductive TestAB :=
+  | A | B.
+
+Definition eqAB (x y: TestAB) : bool :=
+  match x , y with
+  | A , A | B , B => true
+  | _ , _ => false
+  end.
+
+Lemma eqAB_eq : forall x y, x = y <-> eqAB x y = true.
+Proof.
+  destruct x,y; simpl; intuition congruence.
+Qed.
+
+Definition switch_f (n : nat) :=
+  match n with
+  | 255 => A
+  | _ => B
+  end.
+
+Lemma switch_not :
+  forall n
+    (Hneq: n <> 255),
+    switch_f n = B.
+Proof.
+  intros.
+  unfold switch_f.
+  rewrite eqAB_eq.
+  set (P := (fun n => eqAB match n with
+                           | 255 => A
+                           | _   => B
+                           end B)).
+  change (P n = true).
+  assert (n < 255 \/ n = 255 \/ n > 255) by lia.
+  destruct H as [H1 | [ H1 | H1]].
+  -
+    apply forallb_nat_correct with (n:= 254).
+    vm_compute ; reflexivity.
+    lia.
+  - lia.
+  - assert (exists n', 255 + n' = n).
+    {
+      exists (n - 255).
+      lia.
+    }
+    destruct H. subst.
+    unfold P.
+    simpl. destruct x. lia.
+    reflexivity.
+Qed. *)
 
 Definition get_instruction_if (opcode:nat) (rd rs:reg) (ofs: int) (i: int): instruction :=
   if opcode =? 0x07 then
@@ -192,12 +287,16 @@ Definition get_instruction_if (opcode:nat) (rd rs:reg) (ofs: int) (i: int): inst
   else
     BPF_ERR
 .
-
 (*
 Lemma bpf_instruction_eqb_eq : forall a b,
-    bpf_instruction_eqb a b = true -> a = b.
+    bpf_instruction_eqb a b = true <-> a = b.
 Proof.
   unfold bpf_instruction_eqb.
+  destruct a, b; simpl; try (intuition congruence).
+  - unfold arch_eqb, reg_eqb; destruct a, a0, r, r0; simpl; try (intuition congruence).
+  - intros.
+    destruct b; try (intuition congruence). Locate arch_eqb.
+    unfold arch_eqb, reg_eqb; destruct a, a0, r, r0, b, s; try (intuition congruence).
   destruct a.
   - destruct b; simpl; try congruence.
     destruct a, a0, r, r0; simpl; congruence.

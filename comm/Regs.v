@@ -34,6 +34,18 @@ Definition reg_eqb (r0 r1: reg) : bool :=
   | _, _ => false
   end.
 
+Lemma reg_eqb_true:
+  forall x y, x = y <-> reg_eqb x y = true.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
+Lemma reg_eqb_false:
+  forall x y, x <> y <-> reg_eqb x y = false.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
 Record regmap: Type := make_regmap{
   r0_val  : Values.val;
   r1_val  : Values.val;

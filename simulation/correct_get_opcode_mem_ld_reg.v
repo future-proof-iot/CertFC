@@ -1,10 +1,10 @@
-From bpf.comm Require Import Regs State Monad.
+From bpf.comm Require Import Regs State Monad LemmaNat.
 From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLemmaNat.
+From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
 
@@ -16,6 +16,7 @@ get_opcode_mem_ld_reg
 
 *)
 
+Open Scope nat_scope.
 Section Get_opcode_mem_ld_reg.
 
   (** The program contains our function of interest [fn] *)
@@ -68,7 +69,7 @@ Section Get_opcode_mem_ld_reg.
       forward_star.
     -
       unfold match_res, opcode_mem_ld_reg_correct.
-      rewrite Zland_0xff; auto.
+      rewrite Nat_land_0xff; auto.
       destruct (c =? 97) eqn: Hldxw;
       [rewrite Nat.eqb_eq in Hldxw; subst; reflexivity | rewrite Nat.eqb_neq in Hldxw].
       destruct (c =? 105) eqn: Hldxh;
@@ -103,7 +104,7 @@ Section Get_opcode_mem_ld_reg.
         rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
         rewrite LemmaNat.land_land.
         change (Z.to_nat 255) with 255.
-        rewrite Zland_0xff; auto.
+        rewrite Nat_land_0xff; auto.
     - constructor.
       simpl.
       rewrite Int.zero_ext_and.
@@ -115,5 +116,7 @@ Section Get_opcode_mem_ld_reg.
 Qed.
 
 End Get_opcode_mem_ld_reg.
+
+Close Scope nat_scope.
 
 Existing Instance correct_function3_get_opcode_mem_ld_reg.

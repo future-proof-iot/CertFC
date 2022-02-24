@@ -309,7 +309,7 @@ Ltac correct_forward L :=
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
         assert (Hneq: Int.eq (Int.repr (Z.of_nat c3)) (Int.repr 5) = false). {
           apply Int.eq_false.
-          apply nat8_neq_5; auto.
+          apply nat8_neq_k; auto; lia.
         }
         rewrite Hneq; clear Hneq.
         reflexivity.
@@ -1819,7 +1819,7 @@ Ltac correct_forward L :=
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
         assert (Hneq: Int.eq (Int.repr (Z.of_nat c3)) (Int.repr 133) = false). {
           apply Int.eq_false.
-          apply nat8_neq_133; auto.
+          apply nat8_neq_k; auto; lia.
         }
         rewrite Hneq; clear Hneq.
         reflexivity.
@@ -2000,7 +2000,7 @@ Ltac correct_forward L :=
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
         assert (Hneq: Int.eq (Int.repr (Z.of_nat c3)) (Int.repr 149) = false). {
           apply Int.eq_false.
-          apply nat8_neq_149; auto.
+          apply nat8_neq_k; auto; lia.
         }
         rewrite Hneq; clear Hneq.
         reflexivity.

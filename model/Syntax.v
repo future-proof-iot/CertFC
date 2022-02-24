@@ -17,6 +17,18 @@ Definition arch_eqb (a0 a1: arch) : bool :=
   | _, _ => false
   end.
 
+Lemma arch_eqb_true:
+  forall x y, x = y <-> arch_eqb x y = true.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
+Lemma arch_eqb_false:
+  forall x y, x <> y <-> arch_eqb x y = false.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
 (** For condition flags *)
 (*Inductive signedness := Signed | Unsigned.*)
 
@@ -42,6 +54,18 @@ Definition signedness_eqb (s1 s2: signedness) :=
   | _, _ => false
   end.
 
+Lemma signedness_eqb_true:
+  forall x y, x = y <-> signedness_eqb x y = true.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
+Lemma signedness_eqb_false:
+  forall x y, x <> y <-> signedness_eqb x y = false.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
 Lemma cond_eq: forall (x y: cond), {x=y} + {x<>y}.
 Proof.
   decide equality. all: apply signedness_eq32.
@@ -58,6 +82,20 @@ Definition cond_eqb (c0 c1: cond): bool :=
   | Le s0, Le s1 => signedness_eqb s0 s1
   | _, _ => false
   end.
+
+Lemma cond_eqb_true:
+  forall x y, x = y <-> cond_eqb x y = true.
+Proof.
+  unfold cond_eqb.
+  destruct x, y; simpl; try (rewrite <- signedness_eqb_true); intuition congruence.
+Qed.
+
+Lemma cond_eqb_false:
+  forall x y, x <> y <-> cond_eqb x y = false.
+Proof.
+  unfold cond_eqb.
+  destruct x, y; simpl; try (rewrite <- signedness_eqb_false); intuition congruence.
+Qed.
 
 Definition off := int.
 Definition imm := int.
@@ -87,6 +125,19 @@ Definition binOp_eqb (b0 b1: binOp): bool :=
   | BPF_ARSH, BPF_ARSH => true
   | _, _ => false
   end.
+
+Lemma binOp_eqb_true:
+  forall x y, x = y <-> binOp_eqb x y = true.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
+Lemma binOp_eqb_false:
+  forall x y, x <> y <-> binOp_eqb x y = false.
+Proof.
+  destruct x, y; simpl; intuition congruence.
+Qed.
+
 
 Inductive instruction: Type :=
   (**r ALU64/32*)
@@ -135,3 +186,46 @@ Definition bpf_instruction_eqb (a b: instruction) : bool :=
   | BPF_ERR, BPF_ERR => true
   | _, _ => false
   end.
+
+Lemma Int_eq_true:
+  forall x y : int, Int.eq x y = true <-> x = y.
+Proof.
+  split.
+  apply Int.same_if_eq.
+  intro H; rewrite H; apply Int.eq_true.
+Qed.
+
+Lemma Int_eq_false:
+  forall x y : int, Int.eq x y = false <-> x <> y.
+Proof.
+  split.
+  intro H.
+  assert (Hspec: if Int.eq x y then x = y else x <> y) by apply Int.eq_spec.
+  rewrite H in Hspec.
+  assumption.
+  apply Int.eq_false.
+Qed.
+
+(*
+Lemma bpf_instruction_eqb_true:
+  forall x y, x = y <-> bpf_instruction_eqb x y = true.
+Proof.
+  unfold bpf_instruction_eqb.
+  destruct x, y; simpl; try intuition congruence.
+  - destruct a, r, a0, r0; simpl; try(rewrite <- arch_eqb_true; rewrite <- reg_eqb_true); intuition congruence.
+  - destruct a, a0; simpl; try(rewrite <- arch_eqb_true; intuition congruence).
+    all: destruct b, b0; simpl; try(rewrite <- binOp_eqb_true; intuition congruence). TBC...
+    all: destruct r, r0, s, s0; simpl; try rewrite <- reg_eqb_true in *; try rewrite Int_eq_true; try intuition congruence.
+    destruct r, r0, s, s0; simpl; try rewrite <- reg_eqb_true in *; try rewrite Int_eq_true; try intuition congruence.
+     Search Int.eq. split. intro H; inversion H. rewrite <- reg_eqb_true.  tbc...
+    destruct a, b, r, s, a0, b0, r0, s0; simpl; try(rewrite <- arch_eqb_true; rewrite <- reg_eqb_true; rewrite <- binOp_eqb_true); intuition congruence.
+  - 
+  try (rewrite <- arch_eqb_true; rewrite <- reg_eqb_true; rewrite <- binOp_eqb_true; rewrite <- cond_eqb_true; rewrite <- chunk_eqb_true); 
+Qed. 
+
+Lemma bpf_instruction_eqb_false:
+  forall x y, x <> y <-> bpf_instruction_eqb x y = false.
+Proof.
+  unfold bpf_instruction_eqb.
+  destruct x, y; simpl; try (rewrite <- signedness_eqb_false); intuition congruence.
+Qed. *)

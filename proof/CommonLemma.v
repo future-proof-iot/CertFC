@@ -547,6 +547,7 @@ Proof.
       rewrite H.
       intro H0; inversion H0.
 Qed.
+
 (*
 Section Test.
   Variable A: Type.
@@ -562,7 +563,6 @@ Section Test.
     (Hlist : list_dualP ofs l),
       exists n, testP (16 * n) mr.
   Proof.
-    intros.
     induction l.
     - simpl in Hin. inversion Hin.
     - simpl in Hin. destruct Hlist as (Hlist0 & Hlist1).

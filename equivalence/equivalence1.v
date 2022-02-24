@@ -3,7 +3,7 @@
 From Coq Require Import Logic.FunctionalExtensionality ZArith Lia.
 From compcert Require Import Integers Values Memory Memdata.
 
-From bpf.comm Require Import State Monad.
+From bpf.comm Require Import State Monad LemmaNat.
 From bpf.src Require Import DxInstructions.
 
 From bpf.model Require Import Semantics.
@@ -41,16 +41,15 @@ Ltac unfold_dx :=
     unfold get_opcode_ins, get_opcode, byte_to_opcode;
     unfold_dx_name; unfold_dx_type
   end.
-(*
-Lemma equivalence_between_formal_and_dx_check_mem:
-  forall perm chunk addr,
-    Semantics.check_mem perm chunk addr = DxInstructions.check_mem perm chunk addr.
+
+Lemma Int64_unsigned_ge_0:
+  forall n,
+    0 <= Int64.unsigned n.
 Proof.
   intros.
-  unfold Semantics.check_mem, DxInstructions.check_mem, Semantics.is_well_chunk_bool, DxInstructions.is_well_chunk_bool, Semantics.check_mem_aux, DxInstructions.check_mem_aux.
-  unfold_dx.
-  reflexivity.
-Qed. *)
+  assert (H: 0 <= Int64.unsigned n < Int64.modulus) by apply Int64.unsigned_range.
+  lia.
+Qed.
 
 Open Scope nat_scope.
 
@@ -220,6 +219,64 @@ Proof.
     rewrite HeqHopcode.
     apply opcode_le_255.
   }
+  assert (Heq: Nat.land
+      (Z.to_nat
+         (Z.land
+            (Int.unsigned
+               (Int.repr
+                  (Int64.unsigned
+                     (Int64.and (State.eval_ins (State.eval_pc x) x)
+                        (Int64.repr 255))))) 255)) 7 = Nat.land Hopcode 7). {
+    rewrite HeqHopcode.
+    unfold Int64.and.
+    change (Int64.unsigned (Int64.repr 255)) with (Z.of_nat 255).
+    change 255%Z with (Z.of_nat 255).
+    assert (H : Int64.unsigned (State.eval_ins (State.eval_pc x) x) = Z.of_nat (Z.to_nat (Int64.unsigned (State.eval_ins (State.eval_pc x) x)))) by (rewrite Z2Nat.id; [reflexivity | apply Int64_unsigned_ge_0]).
+    rewrite H; rewrite land_land; clear H.
+    assert (H: 0<= (Nat.land
+                        (Z.to_nat
+                           (Int64.unsigned
+                              (State.eval_ins (State.eval_pc x) x)))
+                        255) <= 255). {
+      split; [lia | rewrite Nat.land_comm; rewrite land_bound; lia].
+    }
+    rewrite Int64.unsigned_repr; [| change Int64.max_unsigned with 18446744073709551615%Z; lia].
+    rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
+    rewrite land_land.
+    rewrite <- Nat.land_assoc.
+    rewrite Nat.land_diag.
+    reflexivity.
+  }
+  rewrite Heq; clear Heq.
+  assert (Heq: Z.to_nat
+                   (Z.land
+                      (Int.unsigned
+                         (Int.repr
+                            (Int64.unsigned
+                               (Int64.and
+                                  (State.eval_ins (State.eval_pc x) x)
+                                  (Int64.repr 255))))) 255) = Hopcode). {
+    rewrite HeqHopcode.
+    unfold Int64.and.
+    change (Int64.unsigned (Int64.repr 255)) with (Z.of_nat 255).
+    change 255%Z with (Z.of_nat 255).
+    assert (H : Int64.unsigned (State.eval_ins (State.eval_pc x) x) = Z.of_nat (Z.to_nat (Int64.unsigned (State.eval_ins (State.eval_pc x) x)))) by (rewrite Z2Nat.id; [reflexivity | apply Int64_unsigned_ge_0]).
+    rewrite H; rewrite land_land; clear H.
+    assert (H: 0<= (Nat.land
+                        (Z.to_nat
+                           (Int64.unsigned
+                              (State.eval_ins (State.eval_pc x) x)))
+                        255) <= 255). {
+      split; [lia | rewrite Nat.land_comm; rewrite land_bound; lia].
+    }
+    rewrite Int64.unsigned_repr; [| change Int64.max_unsigned with 18446744073709551615%Z; lia].
+    rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
+    rewrite land_land.
+    rewrite <- Nat.land_assoc.
+    rewrite Nat.land_diag.
+    reflexivity.
+  }
+  rewrite Heq; clear Heq.
   clear HeqHopcode.
 
   (**r ADD64i *)
@@ -499,7 +556,7 @@ Proof.
   (**r Harsh32i *)
   Hopcode_solve Hopcode 0xc4 Harsh32i.
   change_int_zero.
-  unfold Val.longofintu, rBPFValues.val_intuoflongu, rBPFValues.sint32_to_vint.
+  unfold Val.longofint, rBPFValues.val_intuoflongu, rBPFValues.sint32_to_vint.
   unfold rBPFValues.compu_lt_32, Regs.get_immediate, DxValues.val32_32.
   unfold DxIntegers.int32_32.
   destruct (Int.ltu _ _); try reflexivity.
@@ -512,7 +569,7 @@ Proof.
   unfold DxValues.val32_32, DxIntegers.int32_32.
   destruct rBPFValues.compu_lt_32; try reflexivity.
   unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
+  destruct Val.longofint; try reflexivity.
 
   (**r HLDDW *)
   Hopcode_solve Hopcode 0x18 HLDDW.
