@@ -1663,7 +1663,7 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         reflexivity.
-        admit.
+        reflexivity.
         reflexivity.
 
         unfold INV; intro H.
@@ -1907,7 +1907,7 @@ Ltac correct_forward L :=
         unfold stateM_correct in c3.
         destruct c3 as (_ & c3); assumption.
         reflexivity.
-Admitted.
+Qed.
 
 End Step_opcode_alu32.
 

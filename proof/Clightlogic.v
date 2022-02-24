@@ -1298,10 +1298,10 @@ Definition vc_binary_operation_casted (o: Cop.binary_operation) (t1 t2: Ctypes.t
 
 
   | Oshl | Oshr => match classify_shift t1 t2 with
-                   | shift_case_ii _ => Ctypes.type_eq t1 r && Ctypes.type_eq t2 r && is_Vint r
-                   | shift_case_ll _ => Ctypes.type_eq t1 r && Ctypes.type_eq t2 r   && is_Vlong r
-                   | shift_case_il  _ => is_Vint t1 && is_Vlong t2 && is_Vint r
-                   | shift_case_li _  => is_Vlong t1 && is_Vint t2 && is_Vlong r
+                   | shift_case_ii _ => is_Vint r
+                   | shift_case_ll _ => is_Vlong r
+                   | shift_case_il  _ => is_Vint r
+                   | shift_case_li _  => is_Vlong r
                    | shift_default     => false
                    end
   | Oeq | One | Olt | Ogt | Ole | Oge  => is_VBool r
@@ -1658,26 +1658,17 @@ Proof.
       unfold sem_shl in *.
       unfold sem_shift in *.
       destruct (classify_shift t1 t2) eqn:CS.
-      + rewrite! andb_true_iff in VC.
-        destruct VC as ((C1 & C2) & C3).
-        destruct (Ctypes.type_eq t1 t); try discriminate;
-          destruct (Ctypes.type_eq t2 t); try discriminate.
+      +
         destruct v1,v2 ; try discriminate.
         destruct (Int.ltu i0 Int.iwordsize); try discriminate.
         inv B. apply is_Vint_casted; auto.
-      + rewrite! andb_true_iff in VC;
-        destruct VC as ((C1 & C2) & C3).
-      destruct v1,v2 ; try discriminate.
-      destruct (Int64.ltu i0 Int64.iwordsize); try discriminate.
-      inv B. apply is_Vlong_casted; auto.
-    + rewrite! andb_true_iff in VC;
-        destruct VC as ((C1 & C2) & C3).
-      destruct v1,v2 ; try discriminate.
+      + destruct v1,v2 ; try discriminate.
+        destruct (Int64.ltu i0 Int64.iwordsize); try discriminate.
+        inv B. apply is_Vlong_casted; auto.
+    + destruct v1,v2 ; try discriminate.
       destruct (Int64.ltu i0 (Int64.repr 32)); try discriminate.
       inv B. apply is_Vint_casted; auto.
-    + rewrite! andb_true_iff in VC;
-        destruct VC as ((C1 & C2) & C3).
-      destruct v1,v2 ; try discriminate.
+    +  destruct v1,v2 ; try discriminate.
       destruct (Int.ltu i0 (Int64.iwordsize')); try discriminate.
       inv B. apply is_Vlong_casted; auto.
     +  discriminate.
@@ -1687,26 +1678,17 @@ Proof.
       unfold sem_shr in *.
       unfold sem_shift in *.
       destruct (classify_shift t1 t2) eqn:CS.
-      + rewrite! andb_true_iff in VC.
-        destruct VC as ((C1 & C2) & C3).
-        destruct (Ctypes.type_eq t1 t); try discriminate;
-          destruct (Ctypes.type_eq t2 t); try discriminate.
+      +
         destruct v1,v2 ; try discriminate.
         destruct (Int.ltu i0 Int.iwordsize); try discriminate.
         inv B. apply is_Vint_casted; auto.
-      + rewrite! andb_true_iff in VC;
-        destruct VC as ((C1 & C2) & C3).
-      destruct v1,v2 ; try discriminate.
-      destruct (Int64.ltu i0 Int64.iwordsize); try discriminate.
-      inv B. apply is_Vlong_casted; auto.
-    + rewrite! andb_true_iff in VC;
-        destruct VC as ((C1 & C2) & C3).
-      destruct v1,v2 ; try discriminate.
+      + destruct v1,v2 ; try discriminate.
+        destruct (Int64.ltu i0 Int64.iwordsize); try discriminate.
+        inv B. apply is_Vlong_casted; auto.
+    + destruct v1,v2 ; try discriminate.
       destruct (Int64.ltu i0 (Int64.repr 32)); try discriminate.
       inv B. apply is_Vint_casted; auto.
-    + rewrite! andb_true_iff in VC;
-        destruct VC as ((C1 & C2) & C3).
-      destruct v1,v2 ; try discriminate.
+    +  destruct v1,v2 ; try discriminate.
       destruct (Int.ltu i0 (Int64.iwordsize')); try discriminate.
       inv B. apply is_Vlong_casted; auto.
     +  discriminate.
@@ -1779,7 +1761,6 @@ Proof.
       intros. discriminate.
       intros. discriminate.
 Qed.
-
 
 Definition vc_cast_casted (o:Ctypes.type) (d:Ctypes.type) :=
   match classify_cast o d with
