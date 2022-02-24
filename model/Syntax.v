@@ -159,28 +159,23 @@ Inductive instruction: Type :=
   | BPF_ERR  : instruction
 .
 
+Definition sum_eqb {A B: Type} (eq1 : A -> A -> bool) (eq2 : B -> B -> bool) (x y : sum A B) : bool :=
+  match x, y with
+  | inl r0', inl r1' => eq1  r0' r1'
+  | inr i0', inr i1' => eq2  i0' i1'
+  | _, _ => false
+  end.
+
+
 Definition bpf_instruction_eqb (a b: instruction) : bool :=
   match a, b with
   | BPF_NEG a0 r0, BPF_NEG a1 r1 => arch_eqb a0 a1 && reg_eqb r0 r1
-  | BPF_BINARY a0 b0 r0 ri0, BPF_BINARY a1 b1 r1 ri1 => arch_eqb a0 a1 && binOp_eqb b0 b1 && reg_eqb r0 r1 &&
-      match ri0, ri1 with
-      | inl r0', inl r1' => reg_eqb r0' r1'
-      | inr i0', inr i1' => Int.eq  i0' i1'
-      | _, _ => false
-      end
+  | BPF_BINARY a0 b0 r0 ri0, BPF_BINARY a1 b1 r1 ri1 => arch_eqb a0 a1 && binOp_eqb b0 b1 && reg_eqb r0 r1 && sum_eqb reg_eqb Int.eq ri0 ri1
   | BPF_JA ofs0, BPF_JA ofs1 => Int.eq ofs0 ofs1
-  | BPF_JUMP c0 r0 ri0 ofs0, BPF_JUMP c1 r1 ri1 ofs1 => cond_eqb c0 c1 && reg_eqb r0 r1 && (match ri0, ri1 with
-      | inl r0', inl r1' => reg_eqb r0' r1'
-      | inr i0', inr i1' => Int.eq  i0' i1'
-      | _, _ => false
-      end) && Int.eq ofs0 ofs1
+  | BPF_JUMP c0 r0 ri0 ofs0, BPF_JUMP c1 r1 ri1 ofs1 => cond_eqb c0 c1 && reg_eqb r0 r1 && sum_eqb reg_eqb Int.eq ri0 ri1  && Int.eq ofs0 ofs1
   | BPF_LDDW r0 i0, BPF_LDDW r1 i1 => reg_eqb r0 r1 && Int.eq i0 i1
   | BPF_LDX mc0 d0 s0 ofs0, BPF_LDX mc1 d1 s1 ofs1 => chunk_eqb mc0 mc1 && reg_eqb d0 d1 && reg_eqb s0 s1 && Int.eq ofs0 ofs1
-  | BPF_ST mc0 r0 ri0 ofs0, BPF_ST mc1 r1 ri1 ofs1 => chunk_eqb mc0 mc1 && reg_eqb r0 r1 && (match ri0, ri1 with
-      | inl r0', inl r1' => reg_eqb r0' r1'
-      | inr i0', inr i1' => Int.eq  i0' i1'
-      | _, _ => false
-      end) && Int.eq ofs0 ofs1
+  | BPF_ST mc0 r0 ri0 ofs0, BPF_ST mc1 r1 ri1 ofs1 => chunk_eqb mc0 mc1 && reg_eqb r0 r1 && sum_eqb reg_eqb Int.eq ri0 ri1 && Int.eq ofs0 ofs1
   | BPF_CALL i0 , BPF_CALL i1 => Int.eq i0 i1
   | BPF_RET, BPF_RET
   | BPF_ERR, BPF_ERR => true
@@ -206,26 +201,76 @@ Proof.
   apply Int.eq_false.
 Qed.
 
-(*
+Lemma sum_eqb_true :
+  forall {A B: Type} eq1 eq2
+         (eq1_ok : forall x y, x = y <-> eq1 x y  = true)
+         (eq2_ok : forall x y, x = y <-> eq2 x y  = true)
+    (x y: sum A B),
+  x = y <-> sum_eqb eq1 eq2 x y = true.
+Proof.
+  destruct x,y; simpl.
+  - rewrite <- eq1_ok.
+    intuition congruence.
+  - intuition congruence.
+  - intuition congruence.
+  - rewrite <- eq2_ok.
+    intuition congruence.
+Qed.
+
 Lemma bpf_instruction_eqb_true:
   forall x y, x = y <-> bpf_instruction_eqb x y = true.
 Proof.
   unfold bpf_instruction_eqb.
-  destruct x, y; simpl; try intuition congruence.
-  - destruct a, r, a0, r0; simpl; try(rewrite <- arch_eqb_true; rewrite <- reg_eqb_true); intuition congruence.
-  - destruct a, a0; simpl; try(rewrite <- arch_eqb_true; intuition congruence).
-    all: destruct b, b0; simpl; try(rewrite <- binOp_eqb_true; intuition congruence). TBC...
-    all: destruct r, r0, s, s0; simpl; try rewrite <- reg_eqb_true in *; try rewrite Int_eq_true; try intuition congruence.
-    destruct r, r0, s, s0; simpl; try rewrite <- reg_eqb_true in *; try rewrite Int_eq_true; try intuition congruence.
-     Search Int.eq. split. intro H; inversion H. rewrite <- reg_eqb_true.  tbc...
-    destruct a, b, r, s, a0, b0, r0, s0; simpl; try(rewrite <- arch_eqb_true; rewrite <- reg_eqb_true; rewrite <- binOp_eqb_true); intuition congruence.
-  - 
-  try (rewrite <- arch_eqb_true; rewrite <- reg_eqb_true; rewrite <- binOp_eqb_true; rewrite <- cond_eqb_true; rewrite <- chunk_eqb_true); 
-Qed. 
+  destruct x, y; try intuition congruence.
+  - rewrite Bool.andb_true_iff.
+    rewrite <- arch_eqb_true.
+    rewrite <- reg_eqb_true.
+    intuition congruence.
+  - rewrite ! Bool.andb_true_iff.
+    rewrite <- arch_eqb_true.
+    rewrite <- reg_eqb_true.
+    rewrite <- sum_eqb_true.
+    rewrite <- binOp_eqb_true.
+    intuition congruence.
+    apply reg_eqb_true.
+    intros. rewrite Int_eq_true.
+    tauto.
+  - rewrite Int_eq_true. intuition congruence.
+  - rewrite! Bool.andb_true_iff.
+    rewrite <- cond_eqb_true.
+    rewrite <- sum_eqb_true.
+    rewrite Int_eq_true.
+    rewrite <- reg_eqb_true.
+    intuition congruence.
+    apply reg_eqb_true.
+    intros. rewrite Int_eq_true.
+    tauto.
+  - rewrite! Bool.andb_true_iff.
+    rewrite <- reg_eqb_true.
+    rewrite Int_eq_true.
+    intuition congruence.
+  - rewrite! Bool.andb_true_iff.
+    rewrite <- !reg_eqb_true.
+    rewrite Int_eq_true.
+    rewrite <- chunk_eqb_true.
+    intuition congruence.
+  - rewrite! Bool.andb_true_iff.
+    rewrite <- chunk_eqb_true.
+    rewrite <- reg_eqb_true.
+    rewrite <- sum_eqb_true.
+    rewrite Int_eq_true.
+    intuition congruence.
+    apply reg_eqb_true.
+    intros. rewrite Int_eq_true.
+    tauto.
+  -     intros. rewrite Int_eq_true.
+        intuition congruence.
+Qed.
 
 Lemma bpf_instruction_eqb_false:
   forall x y, x <> y <-> bpf_instruction_eqb x y = false.
 Proof.
-  unfold bpf_instruction_eqb.
-  destruct x, y; simpl; try (rewrite <- signedness_eqb_false); intuition congruence.
-Qed. *)
+  intros.
+  generalize (bpf_instruction_eqb_true x y).
+  destruct (bpf_instruction_eqb x y); intuition congruence.
+Qed.
