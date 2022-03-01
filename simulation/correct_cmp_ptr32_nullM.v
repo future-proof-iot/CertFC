@@ -49,7 +49,7 @@ Section Cmp_ptr32_nullM.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
-      (DList.DCons val_ptr_null_correct
+      (DList.DCons (val_ptr_null_block_correct state_block mrs_block ins_block)
         (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -68,15 +68,15 @@ Section Cmp_ptr32_nullM.
 
     unfold stateM_correct in c0.
     destruct c0 as (Hv_eq & Hmatch).
-    unfold val_ptr_null_correct in c1.
+    unfold val_ptr_null_block_correct in c1.
     destruct c1 as (Hv0_eq & Hptr).
-    destruct (rBPFValues.cmp_ptr32_null _ _) eqn: Hvalid_ptr.
+    unfold rBPFValues.cmp_ptr32_null.
+    destruct Val.cmpu_bool eqn: Hvalid_ptr.
     - intro.
       destruct Hptr as [Hptr | Hnull].
-      + unfold rBPFValues.cmp_ptr32_null in Hvalid_ptr.
-        destruct c; try inversion Hvalid_ptr.
+      + destruct c; try inversion Hvalid_ptr.
         clear Hvalid_ptr.
-        destruct Hptr as (b0 & ofs & Hptr).
+        destruct Hptr as (b0 & ofs & _ & Hptr & _).
         subst.
         inversion Hptr.
         clear Hvalid_ptr.
@@ -118,8 +118,7 @@ Section Cmp_ptr32_nullM.
           subst.
           reflexivity.
           split; [constructor; reflexivity | split; reflexivity].
-      + unfold rBPFValues.cmp_ptr32_null in Hvalid_ptr.
-        destruct c; inversion Hvalid_ptr.
+      + destruct c; inversion Hvalid_ptr.
         all: unfold Vnullptr in Hnull; simpl in Hnull;
              inversion Hnull;
              unfold Val.cmpu_bool, Vnullptr in Hvalid_ptr; simpl in Hvalid_ptr;

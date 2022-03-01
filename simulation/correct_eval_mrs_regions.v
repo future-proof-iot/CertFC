@@ -48,7 +48,7 @@ Section Eval_mrs_regions.
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => re = (bpf_mrs st) /\ match_region_list mrs_block re v st m /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => re = (bpf_mrs st) /\ match_region_list state_block mrs_block ins_block  re v st m /\ match_state state_block mrs_block ins_block st m.
 
   Instance correct_function3_eval_mrs_regions : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
   Proof.

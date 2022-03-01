@@ -252,7 +252,9 @@ end <> Vnullptr). {
     all: try (intro H; inversion H).
     all: eapply check_mem_load in Hmem; eauto.
     all: destruct Hmem as (res & Hmem & Hvlong_vint); clear H.
-    all: simpl in Hmem; rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem; rewrite Hmem in H2.
+    all: unfold load_mem, State.load_mem, Memory.Mem.loadv in H2.
+    all: simpl in Hmem; rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem.
+    all: rewrite Hmem in H2.
     all: unfold is_vlong_or_vint in Hvlong_vint.
     all: destruct res; try inversion Hvlong_vint; inversion H2.
     unfold Memory.Mem.loadv in Hmem.

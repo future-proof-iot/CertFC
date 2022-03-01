@@ -29,11 +29,11 @@ Definition correct_perm (p: permission) (n: int): Prop :=
   | Nonempty => n = Int.repr 0
   end.
 
-Definition match_region_at_ofs (mr:memory_region) (bl_regions : block) (ofs : ptrofs) (m: mem)  : Prop :=
-  (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions ofs) = Some (Vint vl) /\ (start_addr mr) = Vint vl)    /\ (**r start_addr mr = Vint vl*)
-    (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 4))) = Some (Vint vl) /\ (block_size mr) = Vint vl) /\ (**r block_size mr = Vint vl*)
-    (exists vl,  Mem.loadv AST.Mint32 m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vint vl) /\ correct_perm (block_perm mr)  vl) /\ (**r block_perm mr = Vint vl*)
-    (exists b,  Mem.loadv AST.Mptr  m (Vptr bl_regions (Ptrofs.add ofs (Ptrofs.repr 12))) = Some (Vptr b Ptrofs.zero) /\ (block_ptr mr) = Vptr b Ptrofs.zero).
+Definition match_region_at_ofs (mr:memory_region) (state_blk mrs_blk ins_blk: block) (ofs : ptrofs) (m: mem)  : Prop :=
+  (exists vl,  Mem.loadv AST.Mint32 m (Vptr mrs_blk ofs) = Some (Vint vl) /\ (start_addr mr) = Vint vl)    /\ (**r start_addr mr = Vint vl*)
+    (exists vl,  Mem.loadv AST.Mint32 m (Vptr mrs_blk (Ptrofs.add ofs (Ptrofs.repr 4))) = Some (Vint vl) /\ (block_size mr) = Vint vl) /\ (**r block_size mr = Vint vl*)
+    (exists vl,  Mem.loadv AST.Mint32 m (Vptr mrs_blk (Ptrofs.add ofs (Ptrofs.repr 8))) = Some (Vint vl) /\ correct_perm (block_perm mr)  vl) /\ (**r block_perm mr = Vint vl*)
+    (exists b, Mem.loadv AST.Mptr  m (Vptr mrs_blk (Ptrofs.add ofs (Ptrofs.repr 12))) = Some (Vptr b Ptrofs.zero) /\ (block_ptr mr) = Vptr b Ptrofs.zero /\ (Mem.valid_block m b /\ b <> state_blk /\ b <> mrs_blk /\ b <> ins_blk)).
 
 
 (*Definition size_of_region  :=  16. (* 4 * 32 bits *)*)
@@ -52,20 +52,20 @@ Fixpoint match_list_region (m:mem) (b: block) (ofs: nat) (l:list memory_region) 
   | mr :: l' => match_region_at_ofs mr b (Ptrofs.repr (16 * Z.of_nat ofs)) m /\ match_list_region m b (ofs+1) l'
   end. *)
 
-Definition match_list_region (m:mem) (b: block) (l:list memory_region) :=
-  forall i, (0 <= i < List.length l)%nat -> match_region_at_ofs (List.nth i l default_memory_region) b (Ptrofs.repr (16 * Z.of_nat i)) m.
+Definition match_list_region (m:mem) (state_blk mrs_blk ins_blk: block) (l:list memory_region) :=
+  forall i, (0 <= i < List.length l)%nat -> match_region_at_ofs (List.nth i l default_memory_region) state_blk mrs_blk ins_blk (Ptrofs.repr (16 * Z.of_nat i)) m.
 
-Definition match_regions (mrs_blk: block) (st: State.state) (m:mem) :=
+Definition match_regions (state_blk mrs_blk ins_blk: block) (st: State.state) (m:mem) :=
   List.length (bpf_mrs st) = (mrs_num st) /\ (**r the number of bpf_mrs is exactly the mrs_num *)
   Z.of_nat (List.length (bpf_mrs st)) * 16 <= Ptrofs.max_unsigned /\ (**r there is not overflow *)
-  match_list_region m mrs_blk (bpf_mrs st).
+  match_list_region m state_blk mrs_blk ins_blk (bpf_mrs st).
 
 
 Lemma match_regions_in:
-  forall l mr m b
+  forall l mr m state_blk mrs_blk ins_blk
     (Hnth_error : In mr l)
-    (Hmatch : match_list_region m b l),
-      exists n, match_region_at_ofs mr b (Ptrofs.repr (16 * Z.of_nat n)) m.
+    (Hmatch : match_list_region m state_blk mrs_blk ins_blk l),
+      exists n, match_region_at_ofs mr state_blk mrs_blk ins_blk (Ptrofs.repr (16 * Z.of_nat n)) m.
 Proof.
   unfold match_list_region.
   intros.
@@ -146,11 +146,16 @@ Definition is_byte_memval (mv: memval): Prop :=
       mins     : Mem.loadv AST.Mptr m (Vptr state_blk (Ptrofs.repr 100)) = Some (Vptr ins_blk (Ptrofs.repr 0)) /\ match_ins ins_blk st m;
       mmrs_num : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 104)) = Some (Vint  (Int.repr (Z.of_nat (mrs_num st)))) /\
                  (Z.of_nat(mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)
-      mem_regs : Mem.loadv AST.Mptr m (Vptr state_blk (Ptrofs.repr 108)) = Some (Vptr mrs_blk (Ptrofs.repr 0)) /\ match_regions mrs_blk st m;
+      mem_regs : Mem.loadv AST.Mptr m (Vptr state_blk (Ptrofs.repr 108)) = Some (Vptr mrs_blk (Ptrofs.repr 0)) /\ match_regions state_blk mrs_blk ins_blk st m;
       mperm    : Mem.range_perm m state_blk 0 (size_of_state st) Cur Freeable /\
                  Mem.range_perm m mrs_blk   0 (Z.of_nat (mrs_num st)) Cur Freeable /\
                  Mem.range_perm m ins_blk   0 (Z.of_nat (ins_len st)) Cur Readable; (**r we also need to say `mrs/ins_blk` *)
-      minvalid : ~Mem.valid_block (bpf_m st) state_blk /\ ~Mem.valid_block (bpf_m st) mrs_blk /\ ~Mem.valid_block (bpf_m st) ins_blk /\ mrs_blk <> state_blk /\  mrs_blk <> ins_blk /\  ins_blk <> state_blk;
+      minvalid : (~Mem.valid_block (bpf_m st) state_blk /\
+                  ~Mem.valid_block (bpf_m st) mrs_blk /\
+                  ~Mem.valid_block (bpf_m st) ins_blk) /\
+                 (mrs_blk <> state_blk /\ mrs_blk <> ins_blk /\ ins_blk <> state_blk) /\
+                 (forall b, b <> state_blk /\ b <> mrs_blk /\ b <> ins_blk ->
+                  Mem.valid_block m b -> Mem.valid_block (bpf_m st) b);
     }.
 
 End S.
@@ -276,47 +281,21 @@ Qed.
 
 (** TODO: nothing to do because we never update memory_regions, it should be done before running the interpter *)
 
-Definition match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  exists o, v = Vptr bl_region o /\
-              match_region_at_ofs mr bl_region o m.
+Definition match_region (state_blk mrs_blk ins_blk : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  exists o, v = Vptr mrs_blk o /\
+              match_region_at_ofs mr state_blk mrs_blk ins_blk o m.
 
-Definition match_region_list (bl_region : block) (mrl: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  v = Vptr bl_region Ptrofs.zero /\
+Definition match_region_list (state_blk mrs_blk ins_blk: block) (mrl: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  v = Vptr mrs_blk Ptrofs.zero /\
   mrl = (bpf_mrs st) /\
   List.length mrl = (mrs_num st) /\ (**r those two are from the match_state relation *)
-  match_list_region m bl_region mrl.
-
-(* Useful matching relations *)
-(*
-Definition match_region (bl_region : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  exists o, v = Vptr bl_region (Ptrofs.repr (o * 16)) /\
-              match_region_at_ofs mr bl_region (Ptrofs.repr o) m.
-
+  match_list_region m state_blk mrs_blk ins_blk mrl.
 
 Lemma same_memory_match_region :
-  forall bl_region st st' m m' mr v
+  forall state_blk mrs_blk ins_blk st st' m m' mr v
          (UMOD : unmodifies_effect nil m m' st st'),
-    match_region bl_region mr v st m ->
-    match_region bl_region mr v st' m'.
-Proof.
-  intros.
-  unfold match_region in *.
-  destruct H as (o & E & MR).
-  exists o.
-  split; auto.
-  unfold match_region_at_ofs in *.
-  unfold unmodifies_effect in UMOD.
-  destruct UMOD; subst.
-  repeat rewrite <- UMOD by (simpl ; tauto).
-  intuition.
-Qed.
-*)
-
-Lemma same_memory_match_region :
-  forall bl_region st st' m m' mr v
-         (UMOD : unmodifies_effect nil m m' st st'),
-    match_region bl_region mr v st m ->
-    match_region bl_region mr v st' m'.
+    match_region state_blk mrs_blk ins_blk mr v st m ->
+    match_region state_blk mrs_blk ins_blk mr v st' m'.
 Proof.
   intros.
   unfold match_region in *.
@@ -630,11 +609,11 @@ Proof.
 Qed.
 
 Lemma upd_preserves_match_list_region:
-  forall l chunk m0 m1 st_blk mrs_blk ofs0 vl
+  forall l chunk m0 m1 st_blk mrs_blk ins_blk ofs0 vl
   (Hstore : Mem.store chunk m0 st_blk ofs0 vl = Some m1)
-  (mem_regs : match_list_region m0 mrs_blk l)
+  (mem_regs : match_list_region m0 st_blk mrs_blk ins_blk l)
   (Hneq_blk : st_blk <> mrs_blk),
-    match_list_region m1 mrs_blk l.
+    match_list_region m1 st_blk mrs_blk ins_blk l.
 Proof.
   intro l.
   induction l;
@@ -660,7 +639,9 @@ Proof.
   eapply Mem.load_store_other; eauto | assumption].
 
   exists blk3; rewrite <- Hload3; split; [
-  eapply Mem.load_store_other; eauto | assumption].
+  eapply Mem.load_store_other; eauto | ].
+  intuition.
+  eapply Mem.store_valid_block_1; eauto.
 Qed.
 
 Lemma upd_reg_preserves_match_state:
@@ -763,8 +744,8 @@ Proof.
       reflexivity.
     }
     rewrite Hins_eq; clear Hins_eq.
-    destruct minvalid0 as (_ & _ & _ & _ & _ & minvalid0).
-    eapply upd_preserves_match_list_ins; eauto.
+    destruct minvalid0 as (_ & minvalid0 & _).
+    eapply upd_preserves_match_list_ins; eauto. intuition.
   - rewrite <- (upd_reg_same_mrs_num _ r (Vlong vl)).
     destruct mmrs_num0 as (Hload & Hge).
     split; [| assumption].
@@ -788,8 +769,8 @@ Proof.
 
     split; [assumption | ].
     split; [assumption | ].
-    destruct minvalid0 as (_ & _ & _ & minvalid0 & _ & _).
-    eapply upd_preserves_match_list_region; eauto.
+    destruct minvalid0 as (_ & minvalid0 & _).
+    eapply upd_preserves_match_list_region; eauto. intuition.
 
   - clear - mperm0 Hstore.
     unfold Mem.range_perm in *.
@@ -815,7 +796,9 @@ Proof.
     rewrite <- upd_reg_same_ins_len in *.
     assumption.
   - rewrite <- upd_reg_same_mem.
-    assumption.
+    intuition.
+    apply H14; auto.
+    eapply Mem.store_valid_block_2; eauto.
 Qed.
 
 
@@ -892,7 +875,7 @@ Proof.
     right; right.
     rewrite Ptrofs_unsigned_repr_n in *; try (simpl; lia).
   - 
-    destruct Hst' as (_ , _, _, _, _, Hins, _, _, _, (_ & _ & _ & _ & _ & Hneq_blk)).
+    destruct Hst' as (_ , _, _, _, _, Hins, _, _, _, (_ & Hneq_blk & _)).
     unfold match_ins in *.
     destruct Hins as (Hload & Hins_len & Hins_max & Hins).
     rewrite <- upd_pc_same_ins.
@@ -906,7 +889,7 @@ Proof.
 
     split; [assumption |].
     split; [assumption |].
-    eapply upd_preserves_match_list_ins; eauto.
+    eapply upd_preserves_match_list_ins; eauto. intuition.
   - 
     destruct Hst' as (_ , _, _, _, _, _, (Hmrs_len & Hge), _, _, _).
     rewrite <- upd_pc_same_mrs_num.
@@ -917,7 +900,7 @@ Proof.
     right; right.
     rewrite Ptrofs_unsigned_repr_n in *; try (simpl; lia).
   - 
-    destruct Hst' as (_ , _, _, _, _, _, _, Hmrs, _, (_ & _ & _ & Hneq_blk & _ & _)).
+    destruct Hst' as (_ , _, _, _, _, _, _, Hmrs, _, (_ & Hneq_blk & _)).
     unfold match_regions in *.
     rewrite <- upd_pc_same_mrs.
     rewrite <- upd_pc_same_mrs_num.
@@ -932,7 +915,7 @@ Proof.
 
     split; [assumption| ].
     split; [assumption| ].
-    eapply upd_preserves_match_list_region; eauto.
+    eapply upd_preserves_match_list_region; eauto. intuition.
   -
     destruct Hst' as (_ , _, _, _, _, _, _, _, Hperm, _).
     unfold size_of_state in *.
@@ -956,7 +939,9 @@ Proof.
   -
     destruct Hst' as (_ , _, _, _, _, _, _, _, _, Hvalid).
     rewrite <- upd_pc_same_mem.
-    assumption.
+    intuition.
+    apply H3; auto.
+    eapply Mem.store_valid_block_2; eauto.
 Qed.
 
 Lemma upd_flag_preserves_match_state:
@@ -1031,7 +1016,7 @@ Proof.
     right; right.
     rewrite Ptrofs_unsigned_repr_n in *; try (simpl; lia).
   - 
-    destruct Hst' as (_ , _, _, _, _, Hins, _, _, _, (_ & _ & _ & _ & _ & Hneq_blk)).
+    destruct Hst' as (_ , _, _, _, _, Hins, _, _, _, (_ & Hneq_blk & _)).
     unfold match_ins in *.
     destruct Hins as (Hload & Hins_len & Hins_max & Hins).
     rewrite <- upd_flag_same_ins.
@@ -1045,8 +1030,8 @@ Proof.
 
     split; [assumption |].
     split; [assumption |].
-    eapply upd_preserves_match_list_ins; eauto.
-  - 
+    eapply upd_preserves_match_list_ins; eauto. intuition.
+  -
     destruct Hst' as (_ , _, _, _, _, _, (Hmrs_len & Hge), _, _, _).
     rewrite <- upd_flag_same_mrs_num.
     split; [| assumption].
@@ -1056,7 +1041,7 @@ Proof.
     right; right.
     rewrite Ptrofs_unsigned_repr_n in *; try (simpl; lia).
   - 
-    destruct Hst' as (_ , _, _, _, _, _, _, Hmrs, _, (_ & _ & _ & Hneq_blk & _ & _)).
+    destruct Hst' as (_ , _, _, _, _, _, _, Hmrs, _, (_ & Hneq_blk & _)).
     unfold match_regions in *.
     rewrite <- upd_flag_same_mrs.
     rewrite <- upd_flag_same_mrs_num.
@@ -1070,7 +1055,7 @@ Proof.
 
     split; [assumption| ].
     split; [assumption| ].
-    eapply upd_preserves_match_list_region; eauto.
+    eapply upd_preserves_match_list_region; eauto. intuition.
   -
     destruct Hst' as (_ , _, _, _, _, _, _, _, Hperm, _).
     unfold size_of_state in *.
@@ -1094,7 +1079,9 @@ Proof.
   -
     destruct Hst' as (_ , _, _, _, _, _, _, _, _, Hvalid).
     rewrite <- upd_flag_same_mem.
-    assumption.
+    intuition.
+    apply H3; auto.
+    eapply Mem.store_valid_block_2; eauto.
 Qed.
 
 Lemma match_state_implies_valid_pointer:
@@ -1110,9 +1097,256 @@ Proof.
   simpl.
   apply Mem.perm_valid_block in Hvalid.
   clear - minvalid0 Hvalid.
-  destruct minvalid0 as (Hv0 & Hv1 & Hv2 & H).
+  destruct minvalid0 as ((Hv0 & Hv1 & Hv2) & H).
   repeat split.
   all: eapply Mem.valid_not_valid_diff; eauto.
 Qed.
+
+Lemma match_state_implies_load_equal:
+  forall state_block mrs_block ins_block st m addr b ofs
+    (Hmatch : match_state state_block mrs_block ins_block st m)
+    (Hvalid_blk: Mem.valid_block m b)
+    (Hinvalid: b <> state_block /\ b <> mrs_block /\ b <> ins_block),
+      Mem.load addr (bpf_m st) b ofs = Mem.load addr m b ofs.
+Proof.
+  intros.
+  destruct Hmatch.
+  symmetry.
+  eapply Mem.load_unchanged_on_1; eauto.
+  destruct minvalid0 as (_ & _ & Hvalid_block).
+  apply Hvalid_block; auto.
+Qed.
+
+Lemma store_perm_iff:
+  forall chunk m1 m2 b ofs addr b0 ofs0 k p
+  (Hstore : Mem.store chunk m1 b ofs addr = Some m2),
+      Mem.perm m1 b0 ofs0 k p <-> Mem.perm m2 b0 ofs0 k p.
+Proof.
+  intros.
+  split; intro.
+  - eapply Mem.perm_store_1 with (k:=k) (p:=p) in Hstore; eauto.
+  - eapply Mem.perm_store_2 with (k:=k) (p:=p) in Hstore; eauto.
+Qed.
+
+Lemma store_match_state_same:
+  forall st1 m m1 m2 chunk b ofs addr
+    (Hstore : Mem.store chunk (bpf_m st1) b ofs addr = Some m)
+    (Hstore_m2 : Mem.store chunk m1 b ofs addr = Some m2)
+    (Hunchanged_on_contents : Maps.ZMap.get ofs (Maps.PMap.get b (Mem.mem_contents m1)) =
+                        Maps.ZMap.get ofs
+                          (Maps.PMap.get b (Mem.mem_contents (bpf_m st1)))),
+      Maps.ZMap.get ofs (Maps.PMap.get b (Mem.mem_contents m2)) =
+      Maps.ZMap.get ofs (Maps.PMap.get b (Mem.mem_contents m)).
+Proof.
+  intros.
+  apply Mem.store_mem_contents in Hstore as Hcontents0; auto.
+  apply Mem.store_mem_contents in Hstore_m2 as Hcontents1; auto.
+  rewrite Hcontents0, Hcontents1.
+  repeat rewrite Maps.PMap.gss.
+  clear - Hunchanged_on_contents.
+  generalize (encode_val chunk addr).
+  intros.
+  destruct l.
+  - simpl.
+    assumption.
+  - simpl.
+    rewrite Mem.setN_other; [|intros; lia].
+    rewrite Mem.setN_other; [|intros; lia].
+    repeat rewrite Maps.ZMap.gss.
+    reflexivity.
+Qed.
+
+
+Remark mem_setN_inside:
+  forall vl c p q,
+  (p < q < p + Z.of_nat (List.length vl)) ->
+  Maps.ZMap.get q (Mem.setN vl p c) = List.nth (Z.to_nat (q-p)) vl Memdata.Undef.
+Proof.
+  induction vl; intros; simpl.
+  simpl in H; lia.
+
+  simpl length in H.
+  rewrite Nat2Z.inj_succ in H.
+
+Admitted.
+
+Lemma store_match_state_same_other:
+  forall (*state_block mrs_block ins_block*) st1 m m1 m2 chunk b ofs ofs0 addr (*
+    (Hvalid_blk : Mem.valid_block m1 b)
+    (Hinvalid : b <> state_block /\ b <> mrs_block /\ b <> ins_block)
+    (Hst : match_state state_block mrs_block ins_block st1 m1)
+    (Hvar: is_vint_or_vlong_chunk chunk addr = true) *)
+    (Hstore : Mem.store chunk (bpf_m st1) b ofs addr = Some m)
+    (Hstore_m2 : Mem.store chunk m1 b ofs addr = Some m2)
+    (Hother: ofs < ofs0 < ofs + size_chunk chunk)
+    (Hunchanged_on_contents : Maps.ZMap.get ofs0 (Maps.PMap.get b (Mem.mem_contents m1)) =
+                        Maps.ZMap.get ofs0
+                          (Maps.PMap.get b (Mem.mem_contents (bpf_m st1)))),
+      Maps.ZMap.get ofs0 (Maps.PMap.get b (Mem.mem_contents m2)) =
+      Maps.ZMap.get ofs0 (Maps.PMap.get b (Mem.mem_contents m)).
+Proof.
+  intros.
+  apply Mem.store_mem_contents in Hstore as Hcontents0; auto.
+  apply Mem.store_mem_contents in Hstore_m2 as Hcontents1; auto.
+  rewrite Hcontents0, Hcontents1.
+  repeat rewrite Maps.PMap.gss.
+
+  assert (Hlen: List.length (encode_val chunk addr) = size_chunk_nat chunk) by apply encode_val_length.
+  revert Hlen.
+  generalize (encode_val chunk addr).
+  unfold size_chunk_nat.
+  intros.
+  admit. (*
+  unfold is_vint_or_vlong_chunk in Hvar.
+  destruct chunk eqn: Hchunk; destruct addr eqn: Haddr; inversion Hvar; unfold size_chunk in Hother, Hlen.
+  - (**r chunk = Mint8unsigned; addr = Vint i *)
+    lia.
+  - (**r chunk = Mint16unsigned; addr = Vint i *)
+    subst.
+    assert (Hofs0_eq: ofs0 = ofs + 1) by lia.
+    destruct l.
+    simpl; assumption.
+    simpl.
+    rewrite Hofs0_eq.
+    f_equal.
+
+    rewrite Mem.setN_same.
+    rewrite Mem.setN_other.
+    2:{
+      intros. rewrite Hofs0_eq. lia.
+    }
+    change (Z.to_nat 1) with 1%nat in Hlen. *)
+Admitted.
+
+Lemma store_match_state_other:
+  forall st1 m m1 m2 chunk b ofs addr
+    (Hstore : Mem.store chunk (bpf_m st1) b ofs addr = Some m)
+    (Hstore_m2 : Mem.store chunk m1 b ofs addr = Some m2),
+    forall b0 ofs0
+    (Hother: b0 <> b \/ ofs0 < ofs \/ ofs + size_chunk chunk <= ofs0)
+    (Hunchanged_on_contents :
+      Maps.ZMap.get ofs0 (Maps.PMap.get b0 (Mem.mem_contents m1)) =
+      Maps.ZMap.get ofs0 (Maps.PMap.get b0 (Mem.mem_contents (bpf_m st1)))),
+      Maps.ZMap.get ofs0 (Maps.PMap.get b0 (Mem.mem_contents m2)) =
+      Maps.ZMap.get ofs0 (Maps.PMap.get b0 (Mem.mem_contents m)).
+Proof.
+  intros.
+  apply Mem.store_mem_contents in Hstore as Hcontents0; auto.
+  apply Mem.store_mem_contents in Hstore_m2 as Hcontents1; auto.
+  rewrite Hcontents0, Hcontents1.
+  destruct (b0 =? b)%positive eqn: Hblk_eq; [rewrite Pos.eqb_eq in Hblk_eq | rewrite Pos.eqb_neq in Hblk_eq].
+  - subst.
+    repeat rewrite Maps.PMap.gss.
+    destruct Hother as [Hfalse | Hother]; [intuition|].
+    repeat rewrite Mem.setN_outside.
+    + assumption.
+    + rewrite Memdata.encode_val_length.
+      unfold size_chunk_nat, size_chunk.
+      unfold size_chunk in Hother.
+      destruct Hother as [Hle | Hge].
+      * left.
+        lia.
+      * right.
+        destruct chunk; lia.
+    + rewrite Memdata.encode_val_length.
+      unfold size_chunk_nat, size_chunk.
+      unfold size_chunk in Hother.
+      destruct Hother as [Hle | Hge].
+      * left.
+        lia.
+      * right.
+        destruct chunk; lia.
+  - repeat (rewrite Maps.PMap.gso; [| lia]).
+    assumption.
+Qed.
+
+Lemma store_reg_preserive_match_state:
+  forall state_block mrs_block ins_block st1 st2 m1 chunk b ofs addr m
+    (*(Hwell_chunk: is_well_chunkb chunk)
+    (Hvar: is_vint_or_vlong_chunk chunk addr = true) *)
+    (Hvalid_blk: Mem.valid_block m1 b)
+    (Hinvalid: b <> state_block /\ b <> mrs_block /\ b <> ins_block)
+    (Hst: match_state state_block mrs_block ins_block st1 m1)
+    (Hstore: Mem.store chunk (bpf_m st1) b ofs addr = Some m)
+    (Hupd_st: upd_mem m st1 = st2),
+      exists m2,
+        Mem.store chunk m1 b ofs addr = Some m2 /\
+        match_state state_block mrs_block ins_block st2 m2.
+Proof.
+  intros.
+  assert (Hvalid_access: Mem.valid_access m1 chunk b ofs Writable). {
+    destruct Hst.
+    destruct minvalid0 as ( _ & _ & Hvalid).
+    specialize (Hvalid b Hinvalid Hvalid_blk).
+    clear - munchange0 Hvalid Hvalid_blk Hinvalid Hstore.
+    destruct munchange0.
+
+    eapply Mem.store_valid_access_3 in Hstore as Hvalid_acc; eauto.
+    eapply Mem.valid_access_store with (v:= addr) in Hvalid_acc as Hres; eauto.
+
+    unfold Mem.valid_access in *.
+    destruct Hvalid_acc as (Hvalid_acc & Haligh).
+    split; [| assumption].
+    unfold Mem.range_perm in *.
+    intros.
+    specialize (Hvalid_acc ofs0 H).
+    specialize (unchanged_on_perm b ofs0 Cur Writable Hinvalid Hvalid).
+    apply unchanged_on_perm; assumption.
+  }
+  eapply Mem.valid_access_store with (v:= addr) in Hvalid_access; eauto.
+  destruct Hvalid_access as (m2 & Hstore_m2).
+  exists m2.
+  split; [assumption |].
+
+  subst.
+  set (Hst' := Hst).
+  split.
+  - destruct Hst' as (Hunchanged_on, _, _, _, _, _, _, _, _, _).
+    destruct Hunchanged_on.
+    unfold upd_mem; simpl.
+    split.
+    + eapply Mem.nextblock_store in Hstore_m2; auto.
+      rewrite Hstore_m2.
+      eapply Mem.nextblock_store in Hstore; auto.
+      rewrite Hstore.
+      assumption.
+    + intros.
+      eapply Mem.store_valid_block_2 in Hstore as Hvalid_block; eauto.
+      specialize (unchanged_on_perm b0 ofs0 k p H Hvalid_block).
+      eapply store_perm_iff with (b0:=b0) (ofs0:=ofs0) (k:=k) (p:=p) in Hstore as Hperm_1; eauto.
+      eapply store_perm_iff with (b0:=b0) (ofs0:=ofs0) (k:=k) (p:=p) in Hstore_m2 as Hperm_2; eauto.
+      intuition.
+    + intros.
+      eapply Mem.perm_store_2 in Hstore as Hperm; eauto.
+      specialize (unchanged_on_contents b0 ofs0 H Hperm).
+      clear unchanged_on_nextblock unchanged_on_perm H0 Hperm.
+
+      destruct (b0 =? b)%positive eqn: Hblk_eq; [rewrite Pos.eqb_eq in Hblk_eq | rewrite Pos.eqb_neq in Hblk_eq].
+      * (**r b0 = b *)
+        subst.
+        destruct (ofs0 =? ofs)%Z eqn: Hofs_eq; [rewrite Z.eqb_eq in Hofs_eq | rewrite Z.eqb_neq in Hofs_eq].
+        ** (**r ofs0 = ofs *)
+          subst.
+          eapply store_match_state_same; eauto.
+        ** (**r ofs0 <> ofs *)
+          rewrite Z.lt_gt_cases in Hofs_eq.
+          destruct Hofs_eq as [Hofs_le | Hofs_ge].
+          { (**r ofs0 < ofs*)
+            eapply store_match_state_other; eauto.
+          }
+          { (**r ofs < ofs0 *)
+            destruct (ofs + size_chunk chunk <=? ofs0)%Z eqn: Hge; [rewrite Z.leb_le in Hge | rewrite Z.leb_gt in Hge].
+            { (**r ofs + size_chunk chunk <= ofs0 *)
+              eapply store_match_state_other; eauto.
+            }
+            { (**r ofs < ofs0 < ofs + size_chunk chunk *)
+              admit.
+            }
+          }
+      * (**r b0 <> b *)
+        eapply store_match_state_other; eauto.
+  - 
+
+Admitted.
 
 Close Scope Z_scope.

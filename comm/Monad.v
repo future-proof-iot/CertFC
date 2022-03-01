@@ -36,8 +36,11 @@ Definition eval_mem_regions: M MyMemRegionsType := fun st => Some (eval_mem_regi
 
 Definition eval_mem : M Mem.mem := fun st => Some (eval_mem st, st).
 
-
-Definition load_mem (chunk: memory_chunk) (ptr: val): M val := fun st => Some (load_mem chunk ptr st, st).
+Definition load_mem (chunk: memory_chunk) (ptr: val): M val := fun st => 
+  match load_mem chunk ptr st with
+  | Some res => if Val.eq res Vundef then None else Some (res, st)
+  | None => None
+  end.
 
 Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) : M unit := fun st => 
   match store_mem_imm chunk ptr v st with

@@ -51,7 +51,7 @@ Section Check_mem.
             (DList.DNil _)))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => x = v /\ ((exists b ofs, x = Vptr b ofs) \/ v = Vint (Int.zero)) /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => (val_ptr_null_block_correct state_block mrs_block ins_block x v st m) /\ match_state state_block mrs_block ins_block st m.
 
   Instance correct_function3_check_mem : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
   Proof.
@@ -112,9 +112,8 @@ Section Check_mem.
       }
       split.
       {
-        unfold match_res, Vnullptr, Int.zero; simpl.
-        split; [reflexivity | ].
-        split.
+        unfold match_res, val_ptr_null_block_correct, Vnullptr, Int.zero; simpl.
+        split; [split; [reflexivity |] | ].
         right.
         reflexivity.
         get_invariant _st.
@@ -247,8 +246,8 @@ Section Check_mem.
     unfold map_opt, exec_expr.
     rewrite p0, p1, p2, p3, p4, p5; reflexivity.
     simpl;intros.
-    instantiate (1 := mrs_block).
     instantiate (1 := ins_block).
+    instantiate (1 := mrs_block).
     instantiate (1 := state_block).
     unfold correct_check_mem_aux.stateM_correct.
     unfold stateM_correct in c2.
@@ -295,10 +294,10 @@ Section Check_mem.
     unfold map_opt, exec_expr.
     rewrite p0, p1; reflexivity.
     simpl;intros.
-    unfold val_ptr_null_correct.
-    unfold correct_check_mem_aux.match_res in c3.
-    change Vnullptr with (Vint Int.zero).
-    destruct c3 as (Hv0_eq & Hptr & Hst).
+    unfold correct_cmp_ptr32_nullM.stateM_correct, stateless, val_ptr_null_block_correct.
+    unfold correct_check_mem_aux.match_res, val_ptr_null_block_correct in c3.
+    destruct c3 as ((Hv0_eq & Hptr) & Hst).
+    unfold stateM_correct in c2.
     subst.
     intuition eauto.
 
@@ -308,12 +307,12 @@ Section Check_mem.
       intros.
       unfold INV in H.
       get_invariant _check_mem__1.
-      unfold correct_check_mem_aux.match_res in c2.
-      destruct c2 as (Hv_eq & Hptr & Hst).
+      unfold correct_check_mem_aux.match_res, val_ptr_null_block_correct in c2.
+      destruct c2 as ((Hv_eq & Hptr) & Hst).
       subst.
       exists v, m4, Events.E0.
       instantiate (1 := nil).
-      destruct Hptr as [ (b & ofs & Hptr) | Hnull].
+      destruct Hptr as [ (b & ofs & Hvalid_blk & Hptr & Hinvalid) | Hnull].
       - rewrite Hptr.
         split.
         forward_star.
@@ -323,9 +322,9 @@ Section Check_mem.
         rewrite Hptr.
         forward_star.
         split.
-        unfold match_res.
-        split; [reflexivity | ].
-        split; [left; eexists; eexists; reflexivity | assumption].
+        unfold match_res, val_ptr_null_block_correct.
+        split; [split; [reflexivity | ] | assumption].
+        left; exists b; eexists; split; [assumption | split; [reflexivity | assumption]].
         split; [constructor; reflexivity | split; reflexivity].
       - rewrite Hnull.
         split.
@@ -335,9 +334,9 @@ Section Check_mem.
         rewrite Hnull.
         forward_star.
         split.
-        unfold match_res.
-        split; [reflexivity | ].
-        split; [right; reflexivity | assumption].
+        unfold match_res, val_ptr_null_block_correct.
+        split; [split; [reflexivity |] | assumption].
+        right; reflexivity.
         split; [constructor; reflexivity | split; reflexivity].
     }
     eapply correct_body_Sreturn_Some; eauto.
@@ -346,12 +345,13 @@ Section Check_mem.
     unfold exec_expr; simpl.
     reflexivity.
     split.
-    unfold match_res, Vnullptr, Int.zero; simpl.
-    split; [reflexivity |].
+    unfold match_res, val_ptr_null_block_correct, Vnullptr, Int.zero; simpl.
+    split; [split; [reflexivity |] |].
+    right; reflexivity.
     get_invariant _st.
     unfold stateM_correct in c2.
     destruct c2 as (_ & Hst).
-    split; [right; reflexivity | assumption].
+    assumption.
     reflexivity.
 
     intuition.

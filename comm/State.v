@@ -100,18 +100,33 @@ Definition upd_mem (m: Mem.mem) (st: state): state := {| (**r never be used I gu
   bpf_m   := m;
 |}.
 
-Definition _to_vlong (v: val): val :=
+Definition is_well_chunkb (chunk: memory_chunk) : bool :=
+  match chunk with
+  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 => true
+  | _ => false
+  end.
+
+Definition is_vint_or_vlong_chunk (chunk: memory_chunk) (v: val): bool :=
+  match chunk, v with
+  | Mint8unsigned, Vint _
+  | Mint16unsigned, Vint _
+  | Mint32, Vint _
+  | Mint64, Vlong _  => true
+  | _, _ => false
+  end.
+
+Definition _to_vlong (v: val): option val :=
   match v with
-  | Vlong n => Vlong n (**r Mint64 *)
-  | Vint  n => Vlong (Int64.repr (Int.unsigned n)) (**r Mint8unsigned, Mint16unsigned, Mint32 *) (* (u64) v *)
-  | _       => Vundef
+  | Vlong n => Some (Vlong n) (**r Mint64 *)
+  | Vint  n => Some (Vlong (Int64.repr (Int.unsigned n))) (**r Mint8unsigned, Mint16unsigned, Mint32 *) (* (u64) v *)
+  | _       => None
   end.
 
 Definition vlong_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
   match v with
   | Vlong n =>
     match chunk with
-    | Mint8unsigned | Mint16unsigned | Mint32 => Vint (Int.repr (Int64.unsigned n))
+    | Mint8unsigned | Mint16unsigned | Mint32 => Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned n)))
     | Mint64 => Vlong n
     | _      => Vundef
     end
@@ -129,19 +144,15 @@ Definition vint_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
   | _       => Vundef
   end.
 
-Definition load_mem (chunk: memory_chunk) (ptr: val) (st: state) :=
+Definition load_mem (chunk: memory_chunk) (ptr: val) (st: state): option val :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 =>
     match Mem.loadv chunk (bpf_m st) ptr with
     | Some res => _to_vlong res
-    | None => val64_zero
+    | None => None
     end
-  | Mint64 =>
-    match Mem.loadv Mint64 (bpf_m st) ptr with
-    | Some res => res
-    | None => val64_zero
-    end
-  | _ => val64_zero
+  | Mint64 => Mem.loadv chunk (bpf_m st) ptr
+  | _ => None
   end
 .
 
@@ -153,7 +164,7 @@ Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) (st: state): 
       | Some m => Some (upd_mem m st)
       | None => None
       end
-  | _ => Some (upd_flag BPF_ILLEGAL_MEM st)
+  | _ => None
   end
 .
 
@@ -165,7 +176,7 @@ Definition store_mem_reg (chunk: memory_chunk) (ptr: val) (v: val) (st: state): 
     | Some m => Some (upd_mem m st)
     | None => None
     end
-  | _ => Some (upd_flag BPF_ILLEGAL_MEM st)
+  | _ => None (*Some (upd_flag BPF_ILLEGAL_MEM st)*)
   end.
 
 Definition eval_ins_len (st: state): int := Int.repr (Z.of_nat (ins_len st)).

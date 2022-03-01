@@ -52,11 +52,11 @@ Section Check_mem_aux.
         (DList.DCons (stateless perm_correct)
           (DList.DCons (stateless match_chunk)
             (DList.DCons (stateless valu32_correct)
-              (DList.DCons (match_region_list mrs_block)
+              (DList.DCons (match_region_list state_block mrs_block ins_block)
                 (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => x = v /\ ((exists b ofs, x = Vptr b ofs) \/ v = Vint (Int.zero)) /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => (val_ptr_null_block_correct state_block mrs_block ins_block x v st m) /\ match_state state_block mrs_block ins_block st m.
 
 Lemma check_mem_aux_eq: forall n p c v l,
   check_mem_aux n p c v l =
@@ -123,9 +123,9 @@ Qed.
       }
       split.
       unfold match_res.
-      unfold Vnullptr, Int.zero; simpl.
-      split; [reflexivity |].
-      split; [ right; reflexivity |].
+      unfold val_ptr_null_block_correct, Vnullptr, Int.zero; simpl.
+      split; [ split; [reflexivity|] |].
+      right; reflexivity.
       assumption.
       split;[ constructor; reflexivity | simpl; split; reflexivity].
     }
@@ -325,6 +325,9 @@ Qed.
     unfold map_opt, exec_expr.
     rewrite p0, p1; reflexivity.
     simpl;intros.
+    unfold correct_check_mem_aux2.match_res in c5.
+    unfold val_ptr_null_block_correct in c5.
+    unfold stateless, val_ptr_null_block_correct.
     intuition eauto.
 
     intros.
@@ -336,10 +339,10 @@ Qed.
       get_invariant _check_mem.
       unfold stateM_correct in c4.
       destruct c4 as (Hv_eq & Hst).
-      unfold correct_check_mem_aux2.match_res in c5.
+      unfold correct_check_mem_aux2.match_res, val_ptr_null_block_correct in c5.
       destruct c5 as (Hv0_eq & Hc5_eq); subst.
       instantiate (1 := nil).
-      destruct Hc5_eq as [ (b & ofs & Hptr) | Hnull].
+      destruct Hc5_eq as [ (b & ofs & Hvalid_blk & Hptr & Hinvalid) | Hnull].
       - rewrite Hptr.
         eexists; exists m3, Events.E0.
         split.
@@ -349,10 +352,12 @@ Qed.
         reflexivity.
         forward_star.
         split.
-        unfold match_res.
+        unfold match_res, val_ptr_null_block_correct.
         rewrite Hptr.
-        split; [reflexivity | ].
-        split; [left; eexists; eexists; reflexivity | assumption].
+        split; [split; [reflexivity|] | assumption].
+        left; exists b; eexists.
+        split; [assumption | ].
+        split; [reflexivity | assumption].
         split; [rewrite Hptr; constructor; reflexivity | split; reflexivity].
       - rewrite Hnull.
         eexists; exists m3, Events.E0.
@@ -364,9 +369,9 @@ Qed.
         forward_star.
         rewrite Hnull.
         split.
-        unfold match_res.
-        split; [reflexivity | ].
-        split; [right; reflexivity | assumption].
+        unfold match_res, val_ptr_null_block_correct.
+        split; [split; [reflexivity|] | assumption].
+        right; reflexivity.
         split; [constructor; reflexivity | split; reflexivity].
     }
 

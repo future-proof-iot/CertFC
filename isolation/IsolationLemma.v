@@ -587,7 +587,10 @@ Proof.
   destruct cmp_ptr32_null; inversion Hsem; clear Hsem.
   destruct b; inversion H0; subst.
   - split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
-  - destruct State.load_mem in H0; inversion H0.
+  - unfold load_mem in H1.
+    destruct State.load_mem in H1; inversion H1.
+    destruct Val.eq in H1; inversion H1.
+    destruct v in H3; inversion H3.
     split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto].
 Qed.
 
@@ -868,7 +871,7 @@ Proof.
     | Some m => Some (upd_mem m st1)
     | None => None
     end
-| _ => Some (State.upd_flag Flag.BPF_ILLEGAL_MEM st1)
+| _ => None
 end = match
       Mem.storev chunk (bpf_m st1) (Vptr b0 ofs)
         match chunk with

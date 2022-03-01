@@ -42,7 +42,7 @@ Definition is_vlong (v: val) :=
 Definition match_arg  :
   DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
   DList.DCons
-    (match_region mrs_block)
+    (match_region state_block mrs_block ins_block)
     (DList.DCons
         (stateless perm_correct)
         (DList.DCons
@@ -50,8 +50,8 @@ Definition match_arg  :
            (DList.DCons (stateless match_chunk)
                         (DList.DNil _)))).
 
-Definition match_res (v1 :val) (v2:val) (st: State.state) (m: Mem.mem) :=
-  v1 = v2 /\ ((exists b ofs, v1 = Vptr b ofs) \/ v1 = Vint (Int.zero)).
+Definition match_res (v1 :res) (v2:val) (st: State.state) (m: Mem.mem) :=
+  val_ptr_null_block_correct state_block mrs_block ins_block v1 v2 st m.
 
 Lemma correct_function3_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg match_res a.
 Proof.
@@ -501,7 +501,7 @@ Ltac destruct_if Hname :=
   unfold stateless, perm_correct in c7.
   unfold correct_get_block_perm.match_res, perm_correct in c8.
   unfold match_region, match_region_at_ofs in c9.
-  destruct c9 as (ofs & Hv5_eq & ((Hvl_start_addr & Hstart_addr & Hstart_addr_eq) & (Hvl_block_size & Hblock_size & Hblock_size_eq) & (Hvl_block_perm & Hblock_perm & Hblock_perm_eq) & (Hb_block_ptr & Hblock_ptr & Hblock_ptr_eq))).
+  destruct c9 as (ofs & Hv5_eq & ((Hvl_start_addr & Hstart_addr & Hstart_addr_eq) & (Hvl_block_size & Hblock_size & Hblock_size_eq) & (Hvl_block_perm & Hblock_perm & Hblock_perm_eq) & (Hb_block_ptr & Hblock_ptr & Hblock_ptr_eq &Hvalid_blk))).
   subst.
 
   (**r we also need those info below *)
@@ -602,7 +602,12 @@ Ltac destruct_if Hname :=
 
   left.
   eexists; eexists.
-  unfold Val.add; simpl; rewrite Hblock_ptr_eq; reflexivity.
+  unfold Val.add; simpl; rewrite Hblock_ptr_eq.
+  instantiate (1 := Hb_block_ptr).
+  destruct Hvalid_blk as (Hvalid_blk & Hinvalid).
+  split.
+  assumption.
+  split; [ reflexivity | assumption].
   rewrite Hblock_ptr_eq.
   unfold Val.add.
   simpl.

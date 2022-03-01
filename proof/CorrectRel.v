@@ -19,11 +19,14 @@ Definition val64_correct (x:val) (v: val) :=
 Definition valu32_correct (x:val) (v: val) :=
   x = v /\ exists vi, x = Vint vi.
 
-Definition val_ptr_correct (x:val) (v: val) :=
-  x = v /\ exists b ofs, x = Vptr b ofs.
-
+Definition val_ptr_correct (stb mrs ins: block) (x:val) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  x = v /\ (exists b ofs, Mem.valid_block m b /\ x = Vptr b ofs /\ (b <> stb /\ b <> mrs /\ b <> ins)).
+(*
 Definition val_ptr_null_correct (x:val) (v: val) (st: State.state) (m: Mem.mem) :=
-  x = v /\ ((exists b ofs, x = Vptr b ofs) \/ x = Vnullptr).
+  x = v /\ ((exists b ofs, x = Vptr b ofs) \/ x = Vint (Int.zero)). *)
+
+Definition val_ptr_null_block_correct (stb mrs ins: block) (x:val) (v: val) (st: State.state) (m:Memory.Mem.mem):=
+  x = v /\ ((exists b ofs, Mem.valid_block m b /\ x = Vptr b ofs /\ (b <> stb /\ b <> mrs /\ b <> ins)) \/ x = Vint (Int.zero)).
 
 Definition addr_valu32_correct (x:val) (v: val) :=
   x = v /\ exists b ofs, x = Vptr b ofs.

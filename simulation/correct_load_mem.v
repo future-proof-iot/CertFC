@@ -17,7 +17,6 @@ load_mem
 
  *)
 
-
 Section Load_mem.
 
   (** The program contains our function of interest [fn] *)
@@ -48,33 +47,27 @@ Definition val_ptr_correctM (blk: block) (x:val) (v: val) (stm:State.state) (m: 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
     DList.DCons stateM_correct
-                (DList.DCons (stateless match_chunk)
-                             (DList.DCons (val_ptr_correctM mrs_block)
-                                          (DList.DNil _))).
+      (DList.DCons (stateless match_chunk)
+         (DList.DCons (val_ptr_correct state_block mrs_block ins_block)
+            (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block mrs_block ins_block st m.
-Ltac exec_seq_of_labeled_statement :=
-  match goal with
-  | |- context[seq_of_labeled_statement ?X] =>
-      let x := (eval simpl in (seq_of_labeled_statement X)) in
-      change (seq_of_labeled_statement X) with x
-  end.
 
   Instance correct_function3_load_mem : forall a, correct_function3 p args res f fn [] false match_arg_list match_res a.
 Proof.
   correct_function_from_body args.
   correct_body.
-  unfold f, INV.
+  unfold f, load_mem, State.load_mem, Mem.loadv, INV, app, _to_vlong.
   repeat intro.
   get_invariant _st.
   get_invariant _chunk.
   get_invariant _addr.
   unfold stateM_correct in c1.
   unfold stateless, match_chunk in c2.
-  unfold val_ptr_correctM in c3.
+  unfold stateless, val_ptr_correct in c3.
   destruct c1 as (Hptr & Hmatch).
-  destruct c3 as (Hc0_eq & (ofs & Hv1_eq)).
+  destruct c3 as (Hc0_eq & b & ofs & Hvalid_blk & Hc0_ptr & Hneq_blk).
 (*
   destruct c3 as (Heq_c0 & (ofs & Heq_ptr) & (res0 & Hload0 & Hst0)  & (res1 & Hload1 & Hst1) & (res2 & Hload2 & Hst2) & (res3 & Hload3 & Hst3)). *)
   subst.
@@ -84,318 +77,104 @@ Proof.
      1. return value should be Vlong.
      2. the memory is same
    *)
-  
-  destruct c.
-  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
-    split.
-    {
-      eapply Smallstep.star_step; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor.
-      eapply Smallstep.star_step; eauto;
-      [econstructor;eauto |
-        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
-                                             econstructor; eauto|]].
-      eapply Smallstep.star_refl.
-      reflexivity.
-    }
-    split.
-    { (**r match_res *)
-      unfold match_res.
-      split.
-      unfold val64_correct.
-      unfold State.load_mem.
-      split.
-      reflexivity.
-      eexists; reflexivity.
-      (**r match_state *)
-      assumption.
-    }
-    split.
-    constructor.
-    simpl; auto.
-  - (**r destruct Hmatch. *)
-    eexists. exists m, Events.E0.
-    split.
-    {
+  unfold rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z in p1.
+  unfold match_res, val64_correct.
+
+  assert (Hload_eq: Mem.load c (bpf_m st) b (Ptrofs.unsigned ofs) = Mem.load c m b (Ptrofs.unsigned ofs)). {
+    eapply match_state_implies_load_equal; eauto.
+  }
+  rewrite Hload_eq; clear Hload_eq.
+  destruct c; try constructor.
+  - (**r c = Mint8unsigned *)
+    destruct Mem.load eqn: Hload; try constructor.
+    destruct v eqn: Hv_eq; try constructor.
+    all: destruct Val.eq; [constructor|].
+    all: intros; eexists; exists m, Events.E0.
+    + split.
       forward_star.
-      unfold rBPFAST.well_chunk_Z.
       fold Int.one; rewrite Int.unsigned_one.
       simpl.
       unfold step2.
       forward_star.
       forward_star.
-      admit.
-      (**r match_state should say the load/store permission of mrs_block? *)
-      apply Hload0.
+      unfold Mem.loadv.
+      rewrite Hload; reflexivity.
+      reflexivity.
       simpl.
-      unfold Cop.sem_cast; simpl.
-      reflexivity.
-      repeat forward_star.
-      reflexivity.
-    }
-    split.
-    unfold State.load_mem.
-    unfold _to_vlong, Regs.val64_zero.
-    unfold match_res, val64_correct.
-    split; [| assumption].
-    rewrite Hst0.
-    split; [reflexivity |].
-    eexists; reflexivity.
-
-    split.
-    simpl.
-    constructor.
-    simpl.
-    split; reflexivity.
-  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
-    split.
-    {
-      eapply Smallstep.star_step; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor.
-      eapply Smallstep.star_step; eauto;
-      [econstructor;eauto |
-        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
-                                             econstructor; eauto|]].
-      eapply Smallstep.star_refl.
-      reflexivity.
-    }
-    split.
-    { (**r match_res *)
-      unfold match_res.
-      split.
-      unfold val64_correct.
-      unfold State.load_mem.
-      split.
-      reflexivity.
+      forward_star.
+      split; [split; [split; [reflexivity |] | assumption] |].
       eexists; reflexivity.
-      (**r match_state *)
-      assumption.
-    }
-    split.
-    constructor.
-    simpl; auto.
-  -
-    eexists. exists m, Events.E0.
-    split.
-    {
+      split; [constructor | split; reflexivity].
+    + apply Mem.load_type in Hload.
+      inversion Hload.
+  - (**r c = Mint16unsigned *)
+    destruct Mem.load eqn: Hload; try constructor.
+    destruct v eqn: Hv_eq; try constructor.
+    all: destruct Val.eq; [constructor|].
+    all: intros; eexists; exists m, Events.E0.
+    + split.
       forward_star.
-      repeat forward_star.
-      unfold rBPFAST.well_chunk_Z.
-      rewrite Int_unsigned_repr_n with (n:=2%Z); [| try lia].
+      change (Int.unsigned (Int.repr 2)) with 2%Z.
+      simpl.
+      unfold step2.
+      forward_star.
+      forward_star.
+      unfold Mem.loadv.
+      rewrite Hload; reflexivity.
+      reflexivity.
       simpl.
       forward_star.
-      repeat forward_star.
-      forward_star.
-      repeat forward_star.
-      apply Hload1.
-      simpl.
-      unfold Cop.sem_cast; simpl.
-      reflexivity.
-      repeat forward_star.
-      reflexivity.
-    }
-    split.
-    unfold State.load_mem.
-    unfold _to_vlong, Regs.val64_zero.
-    unfold match_res, val64_correct.
-    split; [| assumption].
-    rewrite Hst1.
-    split; [reflexivity |].
-    eexists; reflexivity.
-
-    split.
-    simpl.
-    constructor.
-    simpl.
-    split; reflexivity.
-  -
-    eexists. exists m, Events.E0.
-    split.
-    {
-      forward_star.
-      repeat forward_star.
-      unfold rBPFAST.well_chunk_Z.
-      rewrite Int_unsigned_repr_n with (n:=4%Z); [| try lia].
-      simpl.
-      forward_star.
-      repeat forward_star.
-      forward_star.
-      repeat forward_star.
-      apply Hload2.
-      simpl.
-      unfold Cop.sem_cast; simpl.
-      reflexivity.
-      repeat forward_star.
-      reflexivity.
-    }
-    split.
-    unfold State.load_mem.
-    unfold _to_vlong, Regs.val64_zero.
-    unfold match_res, val64_correct.
-    split; [| assumption].
-    rewrite Hst2.
-    split; [reflexivity |].
-    eexists; reflexivity.
-
-    split.
-    simpl.
-    constructor.
-    simpl.
-    split; reflexivity.
-  -
-    eexists. exists m, Events.E0.
-    split.
-    {
-      forward_star.
-      repeat forward_star.
-      unfold rBPFAST.well_chunk_Z.
-      rewrite Int_unsigned_repr_n with (n:=8%Z); [| try lia].
-      simpl.
-      forward_star.
-      repeat forward_star.
-      forward_star.
-      repeat forward_star.
-      apply Hload3.
-      simpl.
-      unfold Cop.sem_cast; simpl.
-      reflexivity.
-      repeat forward_star.
-      reflexivity.
-    }
-    split.
-    unfold State.load_mem.
-    unfold _to_vlong, Regs.val64_zero.
-    unfold match_res, val64_correct.
-    split; [| assumption].
-    rewrite Hst3.
-    split; [reflexivity |].
-    eexists; reflexivity.
-
-    split.
-    simpl.
-    constructor.
-    simpl.
-    split; reflexivity.
-  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
-    split.
-    {
-      eapply Smallstep.star_step; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor.
-      eapply Smallstep.star_step; eauto;
-      [econstructor;eauto |
-        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
-                                             econstructor; eauto|]].
-      eapply Smallstep.star_refl.
-      reflexivity.
-    }
-    split.
-    { (**r match_res *)
-      unfold match_res.
-      split.
-      unfold val64_correct.
-      unfold State.load_mem.
-      split.
-      reflexivity.
+      split; [split; [split; [reflexivity |] | assumption] |].
       eexists; reflexivity.
-      (**r match_state *)
-      assumption.
-    }
-    split.
-    constructor.
-    simpl; auto.
-  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
-    split.
-    {
-      eapply Smallstep.star_step; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor.
-      eapply Smallstep.star_step; eauto;
-      [econstructor;eauto |
-        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
-                                             econstructor; eauto|]].
-      eapply Smallstep.star_refl.
+      split; [constructor | split; reflexivity].
+    + apply Mem.load_type in Hload.
+      inversion Hload.
+  - (**r c = Mint32 *)
+    destruct Mem.load eqn: Hload; try constructor.
+    destruct v eqn: Hv_eq; try constructor.
+    all: destruct Val.eq; [constructor|].
+    all: intros; eexists; exists m, Events.E0.
+    + split.
+      forward_star.
+      change (Int.unsigned (Int.repr 4)) with 4%Z.
+      simpl.
+      unfold step2.
+      forward_star.
+      forward_star.
+      unfold Mem.loadv.
+      rewrite Hload; reflexivity.
       reflexivity.
-    }
-    split.
-    { (**r match_res *)
-      unfold match_res.
-      split.
-      unfold val64_correct.
-      unfold State.load_mem.
-      split.
-      reflexivity.
+      simpl.
+      forward_star.
+      split; [split; [split; [reflexivity |] | assumption] |].
       eexists; reflexivity.
-      (**r match_state *)
-      assumption.
-    }
-    split.
-    constructor.
-    simpl; auto.
-  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
-    split.
-    {
-      eapply Smallstep.star_step; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor.
-      eapply Smallstep.star_step; eauto;
-      [econstructor;eauto |
-        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
-                                             econstructor; eauto|]].
-      eapply Smallstep.star_refl.
+      split; [constructor | split; reflexivity].
+    + apply Mem.load_type in Hload.
+      inversion Hload.
+  - (**r c = Mint64 *)
+    destruct Mem.load eqn: Hload; try constructor.
+    destruct v eqn: Hv_eq.
+    all: destruct Val.eq eqn: Heq; [constructor|].
+    all: try (apply Mem.load_type in Hload as Hload1; inversion Hload1).
+    all: intros; eexists; exists m, Events.E0.
+    + inversion Heq.
+    + split.
+      forward_star.
+      change (Int.unsigned (Int.repr 8)) with 8%Z.
+      simpl.
+      unfold step2.
+      forward_star.
+      forward_star.
+      unfold Mem.loadv.
+      rewrite Hload; reflexivity.
       reflexivity.
-    }
-    split.
-    { (**r match_res *)
-      unfold match_res.
-      split.
-      unfold val64_correct.
-      unfold State.load_mem.
-      split.
-      reflexivity.
+      simpl.
+      forward_star.
+      split; [split; [split; [reflexivity |] | assumption] |].
       eexists; reflexivity.
-      (**r match_state *)
-      assumption.
-    }
-    split.
-    constructor.
-    simpl; auto.
-  - exists (Vlong (Int64.repr 0)); subst; exists m, Events.E0.
-    split.
-    {
-      eapply Smallstep.star_step; eauto.
-      econstructor; eauto.
-      econstructor; eauto.
-      econstructor.
-      eapply Smallstep.star_step; eauto;
-      [econstructor;eauto |
-        eapply Smallstep.star_step; eauto ; [econstructor; eauto;
-                                             econstructor; eauto|]].
-      eapply Smallstep.star_refl.
-      reflexivity.
-    }
-    split.
-    { (**r match_res *)
-      unfold match_res.
-      split.
-      unfold val64_correct.
-      unfold State.load_mem.
-      split.
-      reflexivity.
-      eexists; reflexivity.
-      (**r match_state *)
-      assumption.
-    }
-    split.
-    constructor.
-    simpl; auto.
+      split; [constructor | split; reflexivity].
+      Unshelve.
+      all: assumption.
 Qed.
 
 End Load_mem.

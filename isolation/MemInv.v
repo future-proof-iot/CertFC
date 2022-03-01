@@ -754,7 +754,7 @@ Lemma mem_inv_store_reg:
     (Hstore: store_mem_reg chunk addr (Vlong src) st1 = Some st2),
       memory_inv st2.
 Proof.
-  unfold store_mem_reg, State.vlong_to_vint_or_vlong, Mem.storev; intros.
+  unfold store_mem_reg, vlong_to_vint_or_vlong, Mem.storev; intros.
   assert (Hmem_inv' := Hmem_inv).
   unfold memory_inv in Hmem_inv'.
   destruct Hmem_inv' as (Hmem_inv_length & Hmem_inv_disjoint &_ ).
@@ -769,7 +769,7 @@ Proof.
                      (Ptrofs.unsigned ofs)
                      match chunk with
                      | Mint8unsigned | Mint16unsigned | Mint32 =>
-                         Vint (Int.repr (Int64.unsigned src))
+                         Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned src)))
                      | Mint64 => Vlong src
                      | _ => Vundef
                      end
@@ -779,7 +779,7 @@ Proof.
              | Some m => Some (upd_mem m st1)
              | None => None
              end
-         | _ => Some (upd_flag Flag.BPF_ILLEGAL_MEM st1)
+         | _ => None
           end =
              match
                match addr with
@@ -788,7 +788,7 @@ Proof.
                      (Ptrofs.unsigned ofs)
                      match chunk with
                      | Mint8unsigned | Mint16unsigned | Mint32 =>
-                         Vint (Int.repr (Int64.unsigned src))
+                         Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned src)))
                      | Mint64 => Vlong src
                      | _ => Vundef
                      end
@@ -803,7 +803,7 @@ Proof.
     }
     rewrite Heq in Hstore; clear Heq.
     destruct addr; try inversion Hstore; clear Hstore.
-    destruct (Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned i)) eqn: Hstore; try inversion H0.
+    destruct Mem.store eqn: Hstore; try inversion H0.
     clear H0.
 
     split;[eapply mem_inv_store_length; eauto | split; [ eapply mem_inv_store_disjoint; eauto|idtac]].
@@ -841,7 +841,7 @@ Proof.
              | Some m => Some (upd_mem m st1)
              | None => None
              end
-         | _ => Some (upd_flag Flag.BPF_ILLEGAL_MEM st1)
+         | _ => None
          end =
              match
                match addr with

@@ -41,11 +41,11 @@ Section Get_mem_region.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
       (DList.DCons mrs_correct1
-        (DList.DCons (match_region_list mrs_block)
+        (DList.DCons (match_region_list state_block mrs_block ins_block)
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => match_region mrs_block r v st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => match_region state_block mrs_block ins_block r v st m.
 
 Lemma memory_region_in_nth_error:
   forall n l

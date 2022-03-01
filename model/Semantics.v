@@ -23,7 +23,7 @@ Definition eval_src32 (s:reg+imm): M val :=
   | inr i => returnM (sint32_to_vint i) (**r the immediate is always int *)
   end.
 
-
+(*
 Definition _to_vlong (v: val): val :=
   match v with
   | Vlong n => Vlong n (**r Mint64 *)
@@ -40,7 +40,7 @@ Definition vlong_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
     | _      => Vundef
     end
   | _       => Vundef
-  end.
+  end. *)
 
 Lemma intu_to_long_intu_eq:
   forall i j, i = Vint j -> val_intuoflongu (Val.longofintu i) = i.
