@@ -389,7 +389,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
         (**r correct_body p unit (if rBPFValues.compl_ne c0 val32_zero then ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         change Vzero with (Vint Int.zero).
         unfold rBPFValues.comp_ne_32.
         destruct (match c0 with
@@ -739,7 +739,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compu_lt_32.
         (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (match c0 with
                   | Vint n1 => Int.ltu n1 (Int.repr 32)
                   | _ => false
@@ -913,7 +913,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compu_lt_32.
         (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (match c0 with
                   | Vint n1 => Int.ltu n1 (Int.repr 32)
                   | _ => false
@@ -1086,7 +1086,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (c2 =? 132)%nat eqn: Hneg_eq.
 
 
@@ -1271,7 +1271,7 @@ Ltac correct_forward L :=
         intros.
         unfold Vzero.
         (**r correct_body p unit (if rBPFValues.compl_ne c0 valu32_zero then ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (rBPFValues.comp_ne_32 c0 (Vint Int.zero)) eqn: Hmod_zero.
 
 
@@ -1621,7 +1621,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compu_lt_32.
         (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (match c0 with
                   | Vint n1 => Int.ltu n1 (Int.repr 32)
                   | _ => false

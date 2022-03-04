@@ -3315,7 +3315,10 @@ Section S.
            (modifies : list block)
            (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
       st le m
-      (C1 : correct_body p res (if x then f1 else f2) fn (if x then s1 else s2)
+(C1 :
+forall
+       (EXEC : exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Val.of_bool x)),
+correct_body p res (if x then f1 else f2) fn (if x then s1 else s2)
                          modifies  var_inv match_res st
                          le m)
       (TY : classify_bool (typeof e) = bool_case_i)
@@ -3330,13 +3333,13 @@ Section S.
     unfold correct_body.
     intros PRE.
     unfold correct_body in C1.
-    specialize(C1 PRE).
+    specialize (EVAL PRE).
+    specialize(C1 EVAL PRE).
     destruct x;auto.
     - destruct (f1 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
       destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
-      specialize (EVAL PRE).
       apply eval_expr_eval in EVAL.
       exists v1,m1,t1.
       repeat split.
@@ -3356,7 +3359,6 @@ Section S.
       destruct p0 as (v',st').
       intros.
       destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
-      specialize (EVAL PRE).
       apply eval_expr_eval in EVAL.
       exists v1,m1,t1.
       repeat split.

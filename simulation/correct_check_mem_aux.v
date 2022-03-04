@@ -135,7 +135,7 @@ Qed.
     correct_body.
     unfold f, app.
     rewrite check_mem_aux_eq.
-    eapply correct_statement_if_body_expr.
+    eapply correct_statement_if_body_expr. intro EXPR.
     simpl.
     apply correct_statement_seq_set with (match_res1 := fun _ => mrs_correct c).
     +

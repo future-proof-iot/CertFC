@@ -397,7 +397,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
         (**r correct_body p unit (if rBPFValues.compl_ne c0 val64_zero then ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (rBPFValues.compl_ne c0 (Vlong Int64.zero)) eqn: Hdiv_zero.
 
 
@@ -803,7 +803,7 @@ Ltac correct_forward L :=
         eexists ; reflexivity.
         intros.
         (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (rBPFValues.compu_lt_32 _ _) eqn: Hlt_64.
 
         eapply correct_statement_seq_body_unit.
@@ -1032,7 +1032,7 @@ Ltac correct_forward L :=
         eexists ; reflexivity.
         intros.
         (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (rBPFValues.compu_lt_32 _ _) eqn: Hlt_64.
 
         eapply correct_statement_seq_body_unit.
@@ -1207,7 +1207,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (c2 =? 135)%nat eqn: Hneg_eq.
 
 
@@ -1390,7 +1390,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
         (**r correct_body p unit (if rBPFValues.compl_ne c0 val64_zero then ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (rBPFValues.compl_ne c0 (Vlong Int64.zero)) eqn: Hmod_zero.
 
 
@@ -1798,7 +1798,7 @@ Ltac correct_forward L :=
         eexists ; reflexivity.
         intros.
         (**r correct_body p unit (if rBPFValues.compu_lt_32 ... *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
         destruct (rBPFValues.compu_lt_32 _ _) eqn: Hlt_64.
 
         eapply correct_statement_seq_body_unit.

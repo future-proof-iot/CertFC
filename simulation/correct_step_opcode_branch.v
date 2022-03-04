@@ -146,7 +146,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (c3 =? 5)%nat eqn: Hneg_eq.
 
@@ -332,7 +332,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compl_eq.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 => match c0 with
@@ -453,7 +453,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.complu_gt.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 => match c0 with
@@ -573,7 +573,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.complu_ge.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 =>
@@ -694,7 +694,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.complu_lt.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 => match c0 with
@@ -814,7 +814,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.complu_le.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 =>
@@ -935,7 +935,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.complu_set.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 =>
@@ -1056,7 +1056,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compl_ne.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 =>
@@ -1177,7 +1177,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compl_gt.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 => match c0 with
@@ -1297,7 +1297,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compl_ge.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 =>
@@ -1418,7 +1418,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compl_lt.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 => match c0 with
@@ -1538,7 +1538,7 @@ Ltac correct_forward L :=
         intros.
         unfold rBPFValues.compl_le.
         (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (match c with
     | Vlong n1 =>
@@ -1659,7 +1659,7 @@ Ltac correct_forward L :=
         intros.
         (**r because upd_reg return unit, here we use *_unit? *)
 
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (c3 =? 133)%nat eqn: Hneg_eq.
         admit.
@@ -1842,7 +1842,7 @@ Ltac correct_forward L :=
         intros.
         (**r because upd_reg return unit, here we use *_unit? *)
 
-        eapply correct_statement_if_body_expr.
+        eapply correct_statement_if_body_expr. intro EXPR.
 
         destruct (c3 =? 149)%nat eqn: Hneg_eq.
 

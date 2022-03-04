@@ -62,7 +62,7 @@ Section Get_src32.
     unfold f, app, get_src32.
     intros.
 
-    eapply correct_statement_if_body_expr.
+    eapply correct_statement_if_body_expr. intro EXPR.
     destruct Int.eq eqn: Heq.
     - eapply correct_statement_seq_body with (modifies1:=nil).
       change_app_for_statement.
