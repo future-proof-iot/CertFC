@@ -2848,6 +2848,52 @@ Section S.
   Qed.
 End S.
 
+Section S.
+  (** The program contains our function of interest [fn] *)
+  Variable p : Clight.program.
+
+  Variable args : list Type.
+  Variable res : Type.
+
+  Variable f : arrow_type args (M res).
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Variable fn : Clight.function.
+
+  Lemma correct_function_modifies_more : forall mods mods' is_pure match_args matchres a
+(CF : correct_function3 p args res f fn mods' is_pure match_args matchres a)
+(INCL :incl mods' mods) ,
+   correct_function3 p args res f fn mods is_pure match_args matchres a.
+Proof.
+   repeat intro.
+   destruct CF.
+   econstructor.
+   intros.
+   specialize (fn_eval_ok4 st).
+   destruct (app f a st);auto.
+   destruct p0 ; auto.
+   intros.
+destruct (fn_eval_ok4 lval k m H H0) as (v & m' & t & ST & MR & CS & UN).
+   repeat eexists; repeat split;eauto.
+    clear - UN INCL.
+   unfold incl,unmodifies_effect in *.
+destruct mods'.
+- destruct mods. tauto.
+  destruct UN ; subst.
+  apply Mem.unchanged_on_refl.
+- destruct mods.
+  exfalso. apply (INCL b). simpl. tauto.
+  revert UN.
+  revert INCL.
+  generalize (b::mods').
+  generalize (b0::mods).
+  intros.
+  eapply Mem.unchanged_on_implies; eauto.
+  intros. simpl. intro. apply INCL in H1. tauto.
+Qed.
+
+End S.
+
+
 
 
 
