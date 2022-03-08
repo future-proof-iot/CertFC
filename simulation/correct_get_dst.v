@@ -36,7 +36,7 @@ Section Get_dst.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless ins64_correct)
+    (DList.DCons (stateless int64_correct)
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -50,10 +50,14 @@ Section Get_dst.
     unfold INV.
     unfold f.
     repeat intro.
+    simpl.
+    unfold get_dst, int64_to_dst_reg.
+    destruct int64_to_dst_reg' eqn: Hdst; [| constructor].
+    unfold int64_to_dst_reg' in Hdst.
+
     get_invariant _ins.
 
-    unfold stateless, ins64_correct in c0.
-    destruct c0 as (Hv_eq & (Hreg_range_0 & Hreg_range10) & _).
+    unfold stateless, int64_correct in c0.
     subst.
 
     (**according to the type:
@@ -61,8 +65,7 @@ Section Get_dst.
        1. return value should be  
        2. the memory is same
      *)
-    unfold int64_to_dst_reg.
-    unfold z_to_reg, Regs.get_dst.
+    unfold z_to_reg, Regs.get_dst in Hdst.
     simpl in c.
     exists (Vint (Int.repr (Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8))))), m, Events.E0.
 
@@ -75,22 +78,55 @@ Section Get_dst.
       remember ((Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8)))) as X.
       Ltac zeqb :=
       match goal with
-      | |- context[Z.eqb ?X1 ?X2] =>
+      | |- context[?X1 =? ?X2] =>
           destruct (Z.eqb X1 X2) eqn:Heq; [
       rewrite Z.eqb_eq in Heq; rewrite Heq; try reflexivity | rewrite Z.eqb_neq in Heq]
       end.
-      try zeqb; rename Heq into Heq0.
-      try zeqb; rename Heq into Heq1.
-      try zeqb; rename Heq into Heq2.
-      try zeqb; rename Heq into Heq3.
-      try zeqb; rename Heq into Heq4.
-      try zeqb; rename Heq into Heq5.
-      try zeqb; rename Heq into Heq6.
-      try zeqb; rename Heq into Heq7.
-      try zeqb; rename Heq into Heq8.
-      try zeqb; rename Heq into Heq9.
-      assert (HZ_eq: X = 10). { lia. }
-      rewrite HZ_eq; reflexivity.
+      destruct (X =? 0) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq0].
+
+      destruct (X =? 1) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq1].
+
+      destruct (X =? 2) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq2].
+
+      destruct (X =? 3) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq3].
+
+      destruct (X =? 4) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq4].
+
+      destruct (X =? 5) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq5].
+
+      destruct (X =? 6) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq6].
+
+      destruct (X =? 7) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq7].
+
+      destruct (X =? 8) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq8].
+
+      destruct (X =? 9) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq9].
+
+      destruct (X =? 10) eqn: Heq;
+      [ rewrite Z.eqb_eq in Heq; rewrite Heq; inversion Hdst; simpl; reflexivity |
+        rewrite Z.eqb_neq in Heq; rename Heq into Heq10].
+
+      inversion Hdst.
     - simpl.
       constructor.
       reflexivity.

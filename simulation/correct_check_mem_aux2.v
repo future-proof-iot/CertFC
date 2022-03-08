@@ -29,12 +29,6 @@ Definition f := check_mem_aux2.
 (* [fn] is the Cligth function which has the same behaviour as [f] *)
 Definition fn: Clight.function := f_check_mem_aux2.
 
-Definition is_vlong (v: val) :=
-  match v with
-  | Vlong _ => True
-  | _       => False
-  end.
-
   Variable state_block: block. (**r a block storing all rbpf state information? *)
   Variable mrs_block: block.
   Variable ins_block: block.
@@ -42,16 +36,16 @@ Definition is_vlong (v: val) :=
 Definition match_arg  :
   DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
   DList.DCons
-    (match_region state_block mrs_block ins_block)
+    (mr_correct state_block mrs_block ins_block)
     (DList.DCons
         (stateless perm_correct)
         (DList.DCons
-           (stateless valu32_correct)
+           (stateless val32_correct)
            (DList.DCons (stateless match_chunk)
                         (DList.DNil _)))).
 
 Definition match_res (v1 :res) (v2:val) (st: State.state) (m: Mem.mem) :=
-  val_ptr_null_block_correct state_block mrs_block ins_block v1 v2 st m.
+  val_ptr_correct state_block mrs_block ins_block v1 v2 st m.
 
 Lemma correct_function3_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg match_res a.
 Proof.
@@ -92,7 +86,8 @@ Proof.
   unfold map_opt,exec_expr.
   rewrite p0.
   reflexivity.
-  simpl. intros.
+  simpl; intros.
+  unfold mr_correct in c3.
   intuition eauto.
   intros.
   (** goal: correct_body _ _ (bindM (get_block_size c) ... *)
@@ -129,6 +124,7 @@ Proof.
   unfold map_opt, exec_expr.
   rewrite p0; reflexivity.
   simpl;intros.
+  unfold mr_correct in c3.
   intuition eauto.
   intros.
   (**r goal: correct_body p val (bindM (get_block_perm c) ... *)
@@ -165,6 +161,7 @@ Proof.
   unfold map_opt, exec_expr.
   rewrite p0; reflexivity.
   simpl;intros.
+  unfold mr_correct in c3.
   intuition eauto.
   intros.
 
@@ -244,7 +241,7 @@ Proof.
   simpl;intros.
   intuition eauto.
 
-  unfold stateless, valu32_correct, memory_chunk_to_valu32, well_chunk_Z.
+  unfold stateless, val32_correct, memory_chunk_to_valu32, well_chunk_Z.
   unfold stateless, match_chunk, memory_chunk_to_valu32, well_chunk_Z in c4.
   intuition eauto.
   intros.
@@ -282,11 +279,11 @@ Ltac destruct_if Hname :=
     get_invariant _chunk.
     get_invariant _mr_perm.
     get_invariant _perm.
-    unfold correct_get_add.match_res, valu32_correct in c3.
+    unfold correct_get_add.match_res, val32_correct in c3.
     destruct c3 as (H0_eq & (vi0 & Hvi0_eq)).
-    unfold correct_get_sub.match_res, valu32_correct in c4.
+    unfold correct_get_sub.match_res, val32_correct in c4.
     destruct c4 as (H2_eq & (vi2 & Hvi2_eq)).
-    unfold correct_get_block_size.match_res, valu32_correct in c5.
+    unfold correct_get_block_size.match_res, val32_correct in c5.
     destruct c5 as (H4_eq & (vi4 & Hvi4_eq)).
     unfold stateless, match_chunk, memory_chunk_to_valu32 in c6.
     unfold correct_get_block_perm.match_res, perm_correct in c7.
@@ -314,11 +311,10 @@ Ltac destruct_if Hname :=
     }
 
     exists (Vint Int.zero), m4, Events.E0.
-    repeat split.
-
-    unfold compu_lt_32, compu_le_32, compu_le_32, val32_modu, memory_chunk_to_valu32, memory_chunk_to_valu32_upbound in Hcond.
-    change Int.max_unsigned with 4294967295 in Hcond.
-    - destruct (Int.ltu _ _) eqn: Hltu.
+    split.
+    - unfold compu_lt_32, compu_le_32, compu_le_32, val32_modu, memory_chunk_to_valu32, memory_chunk_to_valu32_upbound in Hcond.
+      change Int.max_unsigned with 4294967295 in Hcond.
+      destruct (Int.ltu _ _) eqn: Hltu.
       + rewrite andb_true_l in Hcond.
         destruct (negb (Int.ltu (Int.repr (_ - well_chunk_Z _)) _)) eqn: Hle.
       * rewrite andb_true_l in Hcond.
@@ -462,10 +458,15 @@ Ltac destruct_if Hname :=
         do 4 forward_star.
         do 4 forward_star.
         forward_star.
-    - right; unfold Vnullptr; simpl; reflexivity.
-    - constructor; reflexivity.
-    - instantiate (1 := nil).
-      split; reflexivity.
+    - unfold match_res, val_ptr_correct.
+      split.
+      + unfold Vnullptr; simpl.
+        split; [reflexivity |].
+        get_invariant _mr.
+        unfold mr_correct in c3.
+        intuition auto.
+      + instantiate (1 := nil).
+        split; [constructor; reflexivity | split; reflexivity].
   }
 
   (**r if-Hcond-then *)
@@ -491,15 +492,17 @@ Ltac destruct_if Hname :=
   get_invariant _mr_perm.
   get_invariant _mr.
 
-  unfold correct_get_add.match_res, valu32_correct in c3.
+  unfold correct_get_add.match_res, val32_correct in c3.
   destruct c3 as (H0_eq & (vi0 & Hvi0_eq)).
-  unfold correct_get_sub.match_res, valu32_correct in c4.
+  unfold correct_get_sub.match_res, val32_correct in c4.
   destruct c4 as (H2_eq & (vi2 & Hvi2_eq)).
-  unfold correct_get_block_size.match_res, valu32_correct in c5.
+  unfold correct_get_block_size.match_res, val32_correct in c5.
   destruct c5 as (H4_eq & (vi4 & Hvi4_eq)).
   unfold stateless, match_chunk, memory_chunk_to_valu32 in c6.
   unfold stateless, perm_correct in c7.
   unfold correct_get_block_perm.match_res, perm_correct in c8.
+  unfold mr_correct in c9.
+  destruct c9 as (Hin & c9 & Hst).
   unfold match_region, match_region_at_ofs in c9.
   destruct c9 as (ofs & Hv5_eq & ((Hvl_start_addr & Hstart_addr & Hstart_addr_eq) & (Hvl_block_size & Hblock_size & Hblock_size_eq) & (Hvl_block_perm & Hblock_perm & Hblock_perm_eq) & (Hb_block_ptr & Hblock_ptr & Hblock_ptr_eq &Hvalid_blk))).
   subst.
@@ -532,87 +535,83 @@ Ltac destruct_if Hname :=
   rewrite Hchunk_ne_zero in Hmod.
 
   eexists; exists m4, Events.E0.
-  repeat split.
-  do 4 forward_star.
-  simpl.
-  rewrite Hltu.
-  unfold Val.of_bool.
-  unfold Cop.bool_val, Vtrue; simpl.
-  rewrite Int_eq_one_zero.
-  unfold negb.
-  reflexivity.
-  simpl.
-  unfold step2; forward_star.
-  forward_star.
-  simpl.
-  unfold Cop.sem_mod, Cop.sem_binarith; simpl.
-  unfold Int.sub. fold Int.mone. rewrite Int.unsigned_mone.
-  change (Int.modulus - 1) with 4294967295.
-  rewrite Hwell_chunk_unsigned.
-  rewrite Hle.
-  simpl.
-  unfold Cop.bool_val, Vtrue; simpl.
-  rewrite Int_eq_one_zero.
-  unfold negb.
-  reflexivity.
-  simpl.
-  unfold step2; forward_star.
-  forward_star.
-  simpl.
-  unfold Cop.sem_mod, Cop.sem_binarith; simpl.
-  rewrite Hchunk_ne_zero.
-  reflexivity.
-  simpl.
-  unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
-  fold Int.zero.
-  rewrite Hmod.
-  simpl.
-  unfold Vtrue.
-  reflexivity.
-  simpl.
-  unfold Cop.sem_cast; simpl.
-  rewrite Int_eq_one_zero.
-  reflexivity.
-  do 4 forward_star.
-  forward_star.
-  post_process.
-  post_process.
-  unfold Cop.sem_binary_operation; simpl.
-  unfold Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
-  unfold rBPFMemType.perm_ge in Hperm.
-  destruct c0, x1; unfold Int.ltu; rewrite c7, c8; repeat rewrite Int_unsigned_repr_n; try reflexivity; try lia; simpl in Hperm; inversion Hperm.
-  unfold Cop.sem_cast; simpl.
-  rewrite Int_eq_one_zero.
-  reflexivity.
-  do 4 forward_star.
-  post_process.
-  unfold align, Ctypes.alignof; simpl.
-  apply Hblock_ptr.
-  try post_process.
-  reflexivity.
-  simpl.
-  rewrite Hblock_ptr_eq.
-  unfold Val.add.
-  simpl.
-  fold Ptrofs.one.
-  rewrite Ptrofs.mul_commut.
-  rewrite Ptrofs.mul_one.
-  forward_star.
-  forward_star.
-
-  left.
-  eexists; eexists.
-  unfold Val.add; simpl; rewrite Hblock_ptr_eq.
-  instantiate (1 := Hb_block_ptr).
-  destruct Hvalid_blk as (Hvalid_blk & Hinvalid).
-  split.
-  assumption.
-  split; [ reflexivity | assumption].
-  rewrite Hblock_ptr_eq.
-  unfold Val.add.
-  simpl.
-  constructor.
   all: try reflexivity.
+  split.
+  - do 4 forward_star.
+    simpl.
+    rewrite Hltu.
+    unfold Val.of_bool.
+    unfold Cop.bool_val, Vtrue; simpl.
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    reflexivity.
+    simpl.
+    unfold step2; forward_star.
+    forward_star.
+    simpl.
+    unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+    unfold Int.sub. fold Int.mone. rewrite Int.unsigned_mone.
+    change (Int.modulus - 1) with 4294967295.
+    rewrite Hwell_chunk_unsigned.
+    rewrite Hle.
+    simpl.
+    unfold Cop.bool_val, Vtrue; simpl.
+    rewrite Int_eq_one_zero.
+    unfold negb.
+    reflexivity.
+    simpl.
+    unfold step2; forward_star.
+    forward_star.
+    simpl.
+    unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+    rewrite Hchunk_ne_zero.
+    reflexivity.
+    simpl.
+    unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+    fold Int.zero.
+    rewrite Hmod.
+    simpl.
+    unfold Vtrue.
+    reflexivity.
+    simpl.
+    unfold Cop.sem_cast; simpl.
+    rewrite Int_eq_one_zero.
+    reflexivity.
+    do 4 forward_star.
+    forward_star.
+    post_process.
+    post_process.
+    unfold Cop.sem_binary_operation; simpl.
+    unfold Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
+    unfold rBPFMemType.perm_ge in Hperm.
+    destruct c0, x1; unfold Int.ltu; rewrite c7, c8; repeat rewrite Int_unsigned_repr_n; try reflexivity; try lia; simpl in Hperm; inversion Hperm.
+    unfold Cop.sem_cast; simpl.
+    rewrite Int_eq_one_zero.
+    reflexivity.
+    do 4 forward_star.
+    post_process.
+    unfold align, Ctypes.alignof; simpl.
+    apply Hblock_ptr.
+    try post_process.
+    reflexivity.
+    simpl.
+    unfold Val.add.
+    simpl.
+    fold Ptrofs.one.
+    rewrite Ptrofs.mul_commut.
+    rewrite Ptrofs.mul_one.
+    forward_star.
+    forward_star.
+  - unfold match_res, val_ptr_correct.
+    split.
+    + split.
+      * rewrite Hblock_ptr_eq.
+        unfold Val.add.
+        simpl.
+        constructor.
+      * assumption.
+    + rewrite Ptrofs.add_zero_l.
+      split; [simpl; constructor | split; reflexivity].
 Qed.
 
 End Check_mem_aux2.

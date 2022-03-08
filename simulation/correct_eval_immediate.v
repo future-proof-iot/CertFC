@@ -36,7 +36,7 @@ Section Eval_immediate.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless sint32_correct)
+    (DList.DCons (stateless int32_correct)
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -52,28 +52,21 @@ Section Eval_immediate.
     repeat intro.
     get_invariant _ins.
 
-    unfold stateless, sint32_correct in c0.
+    unfold stateless, int32_correct in c0.
     subst.
 
     eexists; exists m, Events.E0.
 
     split.
-    {
-      forward_star.
-      forward_star.
-    }
-    split.
-    {
-      unfold match_res, rBPFValues.sint32_to_vint, val64_correct.
-      split.
-      - unfold Val.longofint; simpl.
-        reflexivity.
-      - unfold Val.longofint.
-        eexists; reflexivity.
-    }
-    split.
-    constructor.
-    split; reflexivity.
+    - repeat forward_star.
+    - split.
+      + unfold match_res, rBPFValues.sint32_to_vint, val64_correct.
+        split.
+        * unfold Val.longofint; simpl.
+          reflexivity.
+        * unfold Val.longofint.
+          eexists; reflexivity.
+      + split; [constructor | split; reflexivity].
   Qed.
 
 End Eval_immediate.

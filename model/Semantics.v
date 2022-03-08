@@ -192,9 +192,6 @@ Definition step_branch_cond (c: cond) (d: reg) (s: reg+imm): M bool :=
     end
   end).
 
-Definition get_mem_region (n:nat) (mrs: MyMemRegionsType): M memory_region :=
-  returnM (MyMemRegionsIndexnat mrs n).
-
 Definition get_add (x y: val): M val := returnM (Val.add x y).
 
 Definition get_sub (x y: val): M val := returnM (Val.sub x y).
@@ -287,18 +284,23 @@ Definition step_store_operation (chunk: memory_chunk) (d: reg) (s: reg+imm) (ofs
         if is_null then
           upd_flag BPF_ILLEGAL_MEM
         else
-          do _ <- store_mem_reg chunk ptr src; returnM tt
+          do _ <- store_mem_reg ptr chunk src; returnM tt
     | inr i =>
       do ptr  <- check_mem Writable chunk addr;
       do is_null   <- cmp_ptr32_nullM ptr;
         if is_null then
           upd_flag BPF_ILLEGAL_MEM
         else
-          do _ <- store_mem_imm chunk ptr (sint32_to_vint i); returnM tt
+          do _ <- store_mem_imm ptr chunk (sint32_to_vint i); returnM tt
     end
 .
 
-Definition decodeM (i: int64) : M instruction := returnM (decode i).
+Definition decodeM (i: int64) : M instruction := fun st =>
+  match (decode i) with
+  | Some ins => Some (ins, st)
+  | None => None
+  end.
+
 Definition get_immediate (ins:int64):M int := returnM (get_immediate ins).
 
 Definition step : M unit :=

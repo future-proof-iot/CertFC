@@ -46,13 +46,13 @@ GenerateIntermediateRepresentation SymbolIRs
   eval_ins_len
   eval_ins
   cmp_ptr32_nullM
+  get_dst
+  get_src
+  get_mem_region
   _bpf_get_call
   exec_function
   __
-  get_mem_region
-  get_dst
   reg64_to_reg32
-  get_src
   get_offset
   get_immediate
   eval_immediate
@@ -77,8 +77,7 @@ GenerateIntermediateRepresentation SymbolIRs
   is_well_chunk_bool
   check_mem_aux2
   check_mem_aux
-  check_mem (*
-  comp_and_0x08_byte *)
+  check_mem
   step_opcode_alu64
   step_opcode_alu32
   step_opcode_branch

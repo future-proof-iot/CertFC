@@ -48,6 +48,10 @@ Proof.
   unfold DxInstructions.get_dst, DxInstructions.get_src64, DxInstructions.get_src32, DxInstructions.get_immediate, DxInstructions.eval_immediate, DxInstructions.step_opcode_alu64, DxInstructions.get_src; unfold_dx.
   unfold get_dst, DxInstructions.step_opcode_mem_ld_imm; unfold_dx.
   unfold DxInstructions.get_opcode_mem_ld_imm, DxInstructions.get_immediate; unfold_dx.
+  match goal with
+  | |- context[(if ?X then _ else _) ] =>
+    destruct X; [| reflexivity]
+  end.
   destruct (match
     Nat.land
       (Z.to_nat
@@ -67,12 +71,18 @@ Proof.
   - unfold DxInstructions.get_opcode_alu64; unfold_dx.
     unfold get_immediate, eval_immediate, step_opcode_alu64; unfold_dx.
     unfold get_opcode_alu64, DxValues.Val_slongofint, get_src, upd_reg; unfold_dx.
-    destruct ((0 =?
-   Nat.land
-     (Z.to_nat
-        (Int64.unsigned
-           (Int64.and (State.eval_ins (State.eval_pc x) x) (Int64.repr 255))))
-     8)%nat).
+    unfold DxMonad.int64_to_dst_reg. TBC.
+    destruct int64_to_dst_reg; [| reflexivity].
+    destruct p.
+    destruct (Nat.land
+      (Z.to_nat
+         (Z.land
+            (Int.unsigned
+               (Int.repr
+                  (Int64.unsigned
+                     (Int64.and (State.eval_ins (State.eval_pc x) x)
+                        (Int64.repr 255))))) 255)) 7).
+    + 
     + destruct (byte_to_opcode_alu64
     (Z.to_nat
        (Int64.unsigned

@@ -765,11 +765,13 @@ Proof.
              match
                match addr with
                | Vptr b ofs =>
-                   Mem.store chunk (bpf_m st1) b 
-                     (Ptrofs.unsigned ofs)
+                   Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned ofs)
                      match chunk with
-                     | Mint8unsigned | Mint16unsigned | Mint32 =>
+                     | Mint8unsigned =>
                          Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned src)))
+                     | Mint16unsigned =>
+                         Vint (Int.zero_ext 16 (Int.repr (Int64.unsigned src)))
+                     | Mint32 => Vint (Int.repr (Int64.unsigned src))
                      | Mint64 => Vlong src
                      | _ => Vundef
                      end
@@ -784,11 +786,13 @@ Proof.
              match
                match addr with
                | Vptr b ofs =>
-                   Mem.store chunk (bpf_m st1) b 
-                     (Ptrofs.unsigned ofs)
+                   Mem.store chunk (bpf_m st1) b (Ptrofs.unsigned ofs)
                      match chunk with
-                     | Mint8unsigned | Mint16unsigned | Mint32 =>
+                     | Mint8unsigned =>
                          Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned src)))
+                     | Mint16unsigned =>
+                         Vint (Int.zero_ext 16 (Int.repr (Int64.unsigned src)))
+                     | Mint32 => Vint (Int.repr (Int64.unsigned src))
                      | Mint64 => Vlong src
                      | _ => Vundef
                      end

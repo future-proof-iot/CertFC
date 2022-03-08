@@ -37,12 +37,12 @@ Section Get_sub.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless valu32_correct)
-       (DList.DCons (stateless valu32_correct)
+    (DList.DCons (stateless val32_correct)
+       (DList.DCons (stateless val32_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val32_correct x v.
 
   Instance correct_function3_get_sub : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
@@ -55,7 +55,7 @@ Section Get_sub.
     get_invariant _x.
     get_invariant _y.
 
-    unfold stateless, valu32_correct in c1, c2.
+    unfold stateless, val32_correct in c1, c2.
     destruct c1 as (Hc_eq & vi & Hvi_eq).
     destruct c2 as (Hc0_eq & vj & Hvj_eq).
     subst.

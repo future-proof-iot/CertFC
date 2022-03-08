@@ -49,7 +49,7 @@ Close Scope Z_scope.
 
 Definition int64ToregSymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some regCompilableType).
-
+(*
 Definition Const_int64_to_dst_reg :=
   MkPrimitive int64ToregSymbolType
                 int64_to_dst_reg
@@ -69,6 +69,7 @@ Definition Const_int64_to_src_reg :=
                                           C_U64_12 C_U64) C_U32)
                            | _       => Err PrimitiveEncodingFailed
                            end).
+*)
 
 Definition Const_int64_to_offset :=
   MkPrimitive int64Tosint32SymbolType
@@ -137,9 +138,9 @@ Module Exports.
   Definition Const_R7               := Const_R7.
   Definition Const_R8               := Const_R8.
   Definition Const_R9               := Const_R9.
-  Definition Const_R10              := Const_R10.
+  Definition Const_R10              := Const_R10. (*
   Definition Const_int64_to_dst_reg := Const_int64_to_dst_reg.
-  Definition Const_int64_to_src_reg := Const_int64_to_src_reg.
+  Definition Const_int64_to_src_reg := Const_int64_to_src_reg. *)
   Definition Const_int64_to_offset  := Const_int64_to_offset.
   Definition Const_int64_to_immediate := Const_int64_to_immediate.
   Definition regmapCompilableType   := regmapCompilableType.

@@ -71,6 +71,8 @@ Ltac compute_if :=
   match goal with
   | |- context[(if ?X then _ else _) = (if ?X then _ else _)] =>
     destruct (X); [| reflexivity]
+  | |- context[(if ?X then _ else _) ] =>
+    destruct (X); [| reflexivity]
   end.
 
 Ltac Hopcode_solve HOP OP NAME :=
@@ -207,6 +209,10 @@ Proof.
   unfold eval_pc.
   unfold eval_ins.
   unfold Decode.decode.
+  compute_if.
+  unfold get_dst, DxMonad.int64_to_dst_reg, int64_to_dst_reg.
+  unfold Regs.int64_to_dst_reg', Regs.int64_to_src_reg'. TBC.
+  destruct Regs.z_to_reg eqn: Hdst; [].
   rewrite switch_if_same.
   unfold get_instruction_if, Decode.get_instruction, Regs.get_opcode.
   remember (Z.to_nat

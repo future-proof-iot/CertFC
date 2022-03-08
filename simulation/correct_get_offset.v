@@ -40,7 +40,7 @@ Section Get_offset.
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => sint32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int32_correct x v.
 
   Instance correct_function3_get_offset : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
@@ -59,12 +59,11 @@ Section Get_offset.
 
     split.
     {
-      forward_star.
-      forward_star.
+      repeat forward_star.
     }
     split.
     {
-      unfold match_res, sint32_correct, Regs.get_offset; simpl.
+      unfold match_res, int32_correct, Regs.get_offset; simpl.
       (**r according to the clight representation, we delete the self-defined library int16 in order to simplify the proof here *)
       reflexivity.
     }

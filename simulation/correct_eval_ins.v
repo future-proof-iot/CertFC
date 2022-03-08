@@ -34,41 +34,41 @@ Section Eval_ins.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_ins.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct
-      (DList.DCons ins_idx_correct
+    DList.DCons (stateM_correct state_block mrs_block ins_block)
+      (DList.DCons (stateless int32_correct)
         (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => ins64_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int64_correct x v.
 
   Instance correct_function3_eval_ins : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
     repeat intro.
+    unfold f; simpl.
+    destruct eval_ins eqn: Heval_ins; [| constructor].
+    destruct p0.
+    intros.
     unfold INV in H.
     get_invariant _st.
     get_invariant _idx.
     unfold stateM_correct in c0.
     destruct c0 as (Hv_eq & Hst).
-    unfold ins_idx_correct in c1.
-    destruct c1 as (Hc_eq & Hc_range).
-    (**r I should say idx is less than Int.max_signed *)
+    unfold stateless, int32_correct in c1.
     subst.
 
     (** we need to get the value of pc in the memory *)
-    destruct Hst. clear - p0 p1 Hc_range mins_len mins.
+    destruct Hst. clear - p0 p1 Heval_ins mins_len mins.
     destruct mins_len as (Hload_eq & Hge).
     destruct mins as (Hins_eq & Hlen & Hle & Hmatch).
     eexists; exists m, Events.E0.
 
     split.
     {
+      unfold step2.
       forward_star.
       unfold Coqlib.align; rewrite Ptrofs.add_zero_l.
       simpl.
@@ -79,35 +79,51 @@ Section Eval_ins.
       simpl.
       unfold match_list_ins in Hmatch.
       unfold Ptrofs.mul.
-      unfold Ptrofs.of_ints.
+      unfold Ptrofs.of_intu, Ptrofs.of_int.
       change (Ptrofs.unsigned (Ptrofs.repr 8)) with 8%Z.
-      rewrite Ptrofs.unsigned_repr with (z:= (Int.signed c)); [| lia].
-      rewrite Ptrofs.unsigned_repr; [| lia].
-      rewrite Hlen in Hmatch.
-      assert (Hnat: (0 <= Z.to_nat (Int.signed c) < ins_len st)%nat). {
+      change Ptrofs.max_signed with 2147483647%Z in Hle.
+      unfold eval_ins in Heval_ins.
+      context_destruct_if_inversion.
+      unfold Int.cmp in Hcond.
+      simpl in c.
+      rewrite Bool.andb_true_iff in Hcond.
+      destruct Hcond as (Hlow & Hhigh).
+      apply Cle_Zle_unsigned in Hlow.
+      apply Clt_Zlt_unsigned in Hhigh.
+      change (Int.unsigned Int.zero) with 0%Z in Hlow.
+      rewrite Int.unsigned_repr in Hhigh. 2:{
+        change Int.max_unsigned with 4294967295%Z.
         lia.
       }
+      rewrite Ptrofs.unsigned_repr with (z:= (Int.unsigned c)); [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
+      rewrite Ptrofs.unsigned_repr; [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
+      rewrite Hlen in Hmatch.
+      assert (Hnat: (0 <= Z.to_nat (Int.unsigned c) < ins_len st)%nat) by lia.
       specialize (Hmatch _ Hnat); clear Hnat.
       unfold Mem.loadv in Hmatch.
-      assert (Hnat: Z.of_nat (Z.to_nat (Int.signed c)) = Int.signed c). { apply Z2Nat.id. lia. }
+      assert (Hnat: Z.of_nat (Z.to_nat (Int.unsigned c)) = Int.unsigned c). { apply Z2Nat.id. lia. }
       rewrite Hnat in Hmatch; clear Hnat.
-      rewrite Ptrofs.unsigned_repr in Hmatch; [| lia].
+      rewrite Ptrofs.unsigned_repr in Hmatch; [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
+      subst.
       apply Hmatch.
+      unfold Cop.sem_cast, typeof; simpl.
       reflexivity.
       forward_star.
     }
     split.
     {
-      unfold match_res, State.eval_ins, ins64_correct, List64.MyListIndexs32, List64.MyList.index_s32.
-      split; [reflexivity | ].
-      unfold match_list_ins in Hmatch.
-      assert (Hnat: (0 <= Z.to_nat (Int.signed c) < length (ins st))%nat). {
-        lia.
-      }
-      specialize (Hmatch (Z.to_nat (Int.signed c)) Hnat).
-      tauto.
+      unfold match_res, int64_correct.
+      unfold eval_ins in Heval_ins.
+      context_destruct_if_inversion.
+      unfold State.eval_ins, List64.MyListIndexs32, List64.MyList.index_s32.
+      reflexivity.
     }
-    split; [constructor | split; reflexivity].
+    split.
+    constructor.
+    split; [reflexivity |].
+    unfold eval_ins in Heval_ins.
+    context_destruct_if_inversion.
+    reflexivity.
   Qed.
 
 End Eval_ins.

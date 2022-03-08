@@ -39,11 +39,11 @@ Section Get_immediate.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless ins64_correct)
+    (DList.DCons (stateless int64_correct)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => sint32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int32_correct x v.
 
   Instance correct_function3_get_immediate : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.
@@ -55,8 +55,7 @@ Section Get_immediate.
     repeat intro.
     get_invariant _ins.
 
-    unfold stateless, ins64_correct in c0.
-    destruct c0 as (c0 & _).
+    unfold stateless, int64_correct in c0.
     subst v.
 
     eexists. exists m, Events.E0.

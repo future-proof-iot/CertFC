@@ -1,5 +1,7 @@
 # Isolation proof (Certirbpf ensures the sandboxing property)
 
+*NB: The isolation proof only works on the commits before 2022-03-03, the ongoing modification will destroy the isolation proof. We plan to complete the simulation proof firstly and then add a new invariant called verifier_inv in order to prove the isolation property. The new invariant will be abandoned only when a verified rbpf verifier is done*
+
 This folder is used to prove the isolation property of the proof model (rbpf-coq interpreter).
 
 *using the make command: `make isolation`*

@@ -39,16 +39,13 @@ Section Eval_mrs_regions.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_mrs_regions.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    (DList.DCons stateM_correct
+    (DList.DCons (stateM_correct state_block mrs_block ins_block)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => re = (bpf_mrs st) /\ match_region_list state_block mrs_block ins_block  re v st m /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => mrs_correct state_block mrs_block ins_block re v st m.
 
   Instance correct_function3_eval_mrs_regions : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
   Proof.
@@ -85,25 +82,14 @@ Section Eval_mrs_regions.
     }
     split.
     {
-      unfold match_res.
-      split.
+      unfold match_res, mrs_correct.
       unfold State.eval_mem_regions.
-      reflexivity.
-      split;[ | assumption].
-      unfold match_region_list, Ptrofs.zero, State.eval_mem_regions.
       split; [reflexivity |].
-      split; [reflexivity |].
-      destruct mem_regs as ( _ & Hmrs).
-      unfold match_regions in Hmrs.
-      destruct Hmrs as (Hlen & _ & Hmrs).
-      split; assumption.
+      destruct mem_regs as (_ & mem_regs).
+      split;[ reflexivity | split; assumption].
     }
 
-    split.
-    simpl.
-    constructor.
-    simpl.
-    split; reflexivity.
+    split; [simpl; constructor | split; reflexivity].
   Qed.
 
 End Eval_mrs_regions.

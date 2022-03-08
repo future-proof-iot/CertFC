@@ -126,7 +126,9 @@ Definition vlong_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
   match v with
   | Vlong n =>
     match chunk with
-    | Mint8unsigned | Mint16unsigned | Mint32 => Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned n)))
+    | Mint8unsigned => Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned n)))
+    | Mint16unsigned => Vint (Int.zero_ext 16 (Int.repr (Int64.unsigned n)))
+    | Mint32 => Vint (Int.repr (Int64.unsigned n))
     | Mint64 => Vlong n
     | _      => Vundef
     end
@@ -137,8 +139,10 @@ Definition vint_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
   match v with
   | Vint n =>
     match chunk with
-    | Mint8unsigned | Mint16unsigned | Mint32 => Vint n
-    | Mint64 => Vlong (Int64.repr (Int.unsigned n))
+    | Mint8unsigned => (Vint (Int.zero_ext 8 n))
+    | Mint16unsigned => (Vint (Int.zero_ext 16 n))
+    | Mint32 => Vint n
+    | Mint64 => (Vlong (Int64.repr (Int.signed n)))
     | _      => Vundef
     end
   | _       => Vundef
@@ -156,7 +160,7 @@ Definition load_mem (chunk: memory_chunk) (ptr: val) (st: state): option val :=
   end
 .
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) (st: state): option state :=
+Definition store_mem_imm (ptr: val) (chunk: memory_chunk) (v: val) (st: state): option state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
     let src := vint_to_vint_or_vlong chunk v in
@@ -168,7 +172,7 @@ Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) (st: state): 
   end
 .
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr: val) (v: val) (st: state): option state :=
+Definition store_mem_reg (ptr: val) (chunk: memory_chunk) (v: val) (st: state): option state :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
     let src := vlong_to_vint_or_vlong chunk v in

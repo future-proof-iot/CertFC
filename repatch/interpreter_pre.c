@@ -16,11 +16,11 @@ void print_bpf_state(struct bpf_state* st){
 }
 */
 
-static __attribute__((always_inline)) inline int eval_pc (struct bpf_state* st) {
+static __attribute__((always_inline)) inline unsigned int eval_pc (struct bpf_state* st) {
   return (*st).state_pc;
 }
 
-static __attribute__((always_inline)) inline void upd_pc(struct bpf_state* st, int pc) {
+static __attribute__((always_inline)) inline void upd_pc(struct bpf_state* st, unsigned int pc) {
   (*st).state_pc = pc;
   return ;
 }
@@ -84,7 +84,7 @@ static __attribute__((always_inline)) inline unsigned long long load_mem(struct 
   //}
 }
 
-static __attribute__((always_inline)) inline void store_mem_reg(struct bpf_state* st, unsigned int chunk, unsigned char* addr, unsigned long long v){
+static __attribute__((always_inline)) inline void store_mem_reg(struct bpf_state* st, unsigned char* addr, unsigned int chunk, unsigned long long v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
@@ -99,7 +99,7 @@ static __attribute__((always_inline)) inline void store_mem_reg(struct bpf_state
   //}
 }
 
-static __attribute__((always_inline)) inline void store_mem_imm(struct bpf_state* st, unsigned int chunk, unsigned char* addr, int v){
+static __attribute__((always_inline)) inline void store_mem_imm(struct bpf_state* st, unsigned char* addr, unsigned int chunk, int v){
   /*if (addr == 0U) {
     (*st).bpf_flag = BPF_ILLEGAL_MEM; return ;
   }
@@ -119,13 +119,28 @@ static __attribute__((always_inline)) inline int eval_ins_len(struct bpf_state* 
   return (*st).ins_len;
 }
 
-static __attribute__((always_inline)) inline unsigned long long eval_ins(struct bpf_state* st, int idx)
+static __attribute__((always_inline)) inline unsigned long long eval_ins(struct bpf_state* st, unsigned int idx)
 {
   return *((*st).ins + idx);
 }
 
-static __attribute__((always_inline)) inline _Bool cmp_ptr32_nullM(struct bpf_state* st, unsigned char* addr){
+static __attribute__((always_inline)) inline _Bool cmp_ptr32_nullM(unsigned char* addr){
    return (addr == 0);
+}
+
+static __attribute__((always_inline)) inline unsigned int get_dst(unsigned long long ins)
+{
+  return (unsigned int) ((ins & 4095LLU) >> 8LLU);
+}
+
+static __attribute__((always_inline)) inline unsigned int get_src(unsigned long long ins)
+{
+  return (unsigned int) ((ins & 65535LLU) >> 12LLU);
+}
+
+static __attribute__((always_inline)) inline struct memory_region *get_mem_region(unsigned int n, struct memory_region *mrs)
+{
+  return mrs + n;
 }
 
 static __attribute__((always_inline)) inline unsigned char *_bpf_get_call(int imm) {

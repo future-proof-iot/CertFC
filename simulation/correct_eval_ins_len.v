@@ -34,15 +34,13 @@ Section Eval_ins_len.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_ins_len.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct (DList.DNil _).
+    DList.DCons (stateM_correct state_block mrs_block ins_block)
+      (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => x = Int.repr (Z.of_nat (ins_len st)).
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int32_correct x v.
 
   Instance correct_function3_eval_ins_len : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
   Proof.
@@ -75,7 +73,7 @@ Section Eval_ins_len.
     split.
     {
       unfold match_res, State.eval_ins_len.
-      reflexivity.
+      split; reflexivity.
     }
     split.
     {

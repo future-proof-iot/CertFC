@@ -44,7 +44,7 @@ Section Get_block_size.
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val32_correct x v.
 
   Instance correct_function3_get_block_size : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
   Proof.

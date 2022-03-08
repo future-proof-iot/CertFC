@@ -109,13 +109,17 @@ Definition get_instruction (opcode:nat) (rd rs:reg) (ofs: int) (i: int): instruc
   end.
 Close Scope nat_scope.
 
-Definition decode (ins: int64): instruction :=
+Definition decode (ins: int64): option instruction :=
   let n_opcode := get_opcode ins in
-  let n_dst    := int64_to_dst_reg ins in
-  let n_src    := int64_to_src_reg ins in
+  let n_dst    := int64_to_dst_reg' ins in
+  let n_src    := int64_to_src_reg' ins in
   let n_ofs    := get_offset ins in
   let n_imm    := get_immediate ins in
-     get_instruction n_opcode n_dst n_src n_ofs n_imm.
+    match n_dst, n_src with
+    | Some dst, Some src =>
+      Some (get_instruction n_opcode dst src n_ofs n_imm)
+    | _, _ => None
+    end.
 (*
 Definition well_decode_imm (ins: int64) :=
   match decode ins with

@@ -55,19 +55,9 @@ const char old_words[][200] = {
 	"load_mem(2",
 	"load_mem(4",
 	"load_mem(8",
-	"store_mem_imm(1",
-	"store_mem_imm(2",
-	"store_mem_imm(4",
-	"store_mem_imm(8",
-	"store_mem_reg(1",
+	"store_mem_imm(addr_ptr",
+	"store_mem_reg(addr_ptr",
 	
-	"store_mem_reg(2",
-	"store_mem_reg(4",
-	"store_mem_reg(8",
-	"store_mem_reg(1",
-	"store_mem_reg(2",
-	"store_mem_reg(4",
-	"store_mem_reg(8",
 	"unsigned char *check_mem_aux(",
 	"return check_mem_aux(",
 	"unsigned char *check_mem(",
@@ -115,7 +105,6 @@ const char old_words[][200] = {
 	"unsigned long long *l",
 	"eval_ins_len()",
 	"eval_ins(",
-	"= cmp_ptr32_nullM(",
 	"exec_function("
 	
 	};
@@ -156,19 +145,9 @@ const char new_words[][200] = {
 	"load_mem(st, 2",
 	"load_mem(st, 4",
 	"load_mem(st, 8",
-	"store_mem_imm(st, 1",
-	"store_mem_imm(st, 2",
-	"store_mem_imm(st, 4",
-	"store_mem_imm(st, 8",
-	"store_mem_reg(st, 1",
+	"store_mem_imm(st, addr_ptr",
+	"store_mem_reg(st, addr_ptr",
 	
-	"store_mem_reg(st, 2",
-	"store_mem_reg(st, 4",
-	"store_mem_reg(st, 8",
-	"store_mem_reg(st, 1",
-	"store_mem_reg(st, 2",
-	"store_mem_reg(st, 4",
-	"store_mem_reg(st, 8",
 	"static __attribute__((always_inline)) inline unsigned char *check_mem_aux(struct bpf_state* st, ",
 	"return check_mem_aux(st, ",
 	"static __attribute__((always_inline)) inline unsigned char *check_mem(struct bpf_state* st, ",
@@ -216,7 +195,6 @@ const char new_words[][200] = {
 	"const unsigned long long *l",
 	"eval_ins_len(st)",
 	"eval_ins(st, ",
-	"= cmp_ptr32_nullM(st, ",
 	"exec_function(st, "
 	
 	};

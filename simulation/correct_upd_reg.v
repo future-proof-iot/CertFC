@@ -38,12 +38,9 @@ Section Upd_reg.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct
+    DList.DCons (stateM_correct state_block mrs_block ins_block)
       (DList.DCons (stateless reg_correct)
         (DList.DCons (stateless val64_correct)
           (DList.DNil _))).
@@ -103,16 +100,8 @@ Section Upd_reg.
         simpl.
         constructor.
       + unfold unmodifies_effect, modifies, In.
-        intros.
-        destruct (Pos.eq_dec state_block b).
-        subst b.
-        exfalso.
-        apply H0.
-        left; reflexivity.
-        apply POrderedType.PositiveOrder.neq_sym in n.
-        symmetry.
-        apply (Mem.load_store_other AST.Mint64 m _ _ _ m1 Hstore chk _ _).
-        left; assumption.
+
+        eapply Mem.store_unchanged_on; eauto.
 Qed.
 
 End Upd_reg.

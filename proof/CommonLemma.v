@@ -563,14 +563,14 @@ Section Test.
     (Hlist : list_dualP ofs l),
       exists n, testP (16 * n) mr.
   Proof.
-    induction l.
+    induction l; intros.
     - simpl in Hin. inversion Hin.
     - simpl in Hin. destruct Hlist as (Hlist0 & Hlist1).
       destruct Hin.
       + subst. exists ofs; assumption.
-      + apply IHl. assumption.
-        admit.
-  Admitted.
+      + apply IHl with (ofs:= (ofs+1)%nat). assumption.
+        assumption.
+  Qed.
   Variable default_A: A.
   Definition list_dualP' (ofs: nat) (l:list A) :=
     forall n, (0 <= n < List.length l)%nat -> testP (16 * ofs) (nth n l default_A).
@@ -646,6 +646,65 @@ Proof.
   rewrite Z.mod_small in H0; [ | lia].
   assumption.
 Qed.
+
+Lemma Clt_Zlt_signed:
+  forall ofs hi,
+    Int.lt ofs hi = true ->
+      Int.signed ofs < Int.signed hi.
+Proof.
+  intros.
+  unfold Int.lt in H.
+  destruct (Coqlib.zlt _ _) in H; try inversion H.
+  assumption.
+Qed.
+
+Lemma Cle_Zle_signed:
+  forall lo ofs,
+    negb (Int.lt ofs lo) = true ->
+      Int.signed lo <= Int.signed ofs.
+Proof.
+  intros.
+  rewrite negb_true_iff in H.
+  unfold Int.lt in H.
+  destruct (Coqlib.zlt _ _) in H; try inversion H.
+  lia.
+Qed.
+
+Lemma Clt_Zlt_unsigned:
+  forall ofs hi,
+    Int.ltu ofs hi = true ->
+      Int.unsigned ofs < Int.unsigned hi.
+Proof.
+  intros.
+  unfold Int.ltu in H.
+  destruct (Coqlib.zlt _ _) in H; try inversion H.
+  assumption.
+Qed.
+
+Lemma Cle_Zle_unsigned:
+  forall lo ofs,
+    negb (Int.ltu ofs lo) = true ->
+      Int.unsigned lo <= Int.unsigned ofs.
+Proof.
+  intros.
+  rewrite negb_true_iff in H.
+  unfold Int.ltu in H.
+  destruct (Coqlib.zlt _ _) in H; try inversion H.
+  lia.
+Qed.
+
+
+Ltac context_destruct_if_inversion :=
+  let Heq := fresh "Hcond" in
+    match goal with
+    | H: (if ?X then _ else _) = _ |- _ =>
+      destruct X eqn: Hcond; inversion H
+    end.
+
+Ltac split_and := repeat match goal with
+| |- ?A /\ ?B => split
+end.
+
 (*
 Lemma Zeq_dec_eqb_intro:
   forall a b,

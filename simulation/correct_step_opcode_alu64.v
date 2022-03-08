@@ -37,15 +37,12 @@ Section Step_opcode_alu64.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_step_opcode_alu64.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    (DList.DCons stateM_correct
+    (DList.DCons (stateM_correct state_block mrs_block ins_block)
       (DList.DCons (stateless val64_correct)
        (DList.DCons (stateless val64_correct)
           (DList.DCons (stateless reg_correct)
@@ -53,7 +50,7 @@ Section Step_opcode_alu64.
                     (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
 
 Ltac correct_forward L :=
   match goal with
@@ -208,7 +205,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -293,7 +290,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -378,7 +375,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -477,7 +474,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
 
         unfold rBPFValues.compl_ne, val64_zero in Hdiv_zero.
@@ -548,7 +545,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
         reflexivity.
 
@@ -645,7 +642,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -730,7 +727,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -852,14 +849,12 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src32.
-        unfold stateless, stateM_correct in c3.
-        destruct c3 as (Hv_eq & Hst); subst.
         unfold stateless, reg_correct in c4.
         unfold stateless, val64_correct in c5.
         destruct c5 as (Hv1_eq & (vl & Hvl_eq)); subst.
-        unfold correct_reg64_to_reg32.match_res, valu32_correct in c6.
+        unfold correct_reg64_to_reg32.match_res, val32_correct in c6.
         destruct c6 as (Hv2_eq & (vi & Hvi_eq)); subst.
-        exists ((Vptr state_block Ptrofs.zero) :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shll (Vlong vl) (Vint vi)) :: nil). (**r star here *)
+        exists (v :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shll (Vlong vl) (Vint vi)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3.
         simpl.
@@ -871,10 +866,9 @@ Ltac correct_forward L :=
         unfold Int64.shl', Int64.shl.
         rewrite Hint_unsigned_int64; reflexivity.
         intros.
-        unfold correct_upd_reg.stateM_correct, stateless, reg_correct, val64_correct.
+        unfold stateless, reg_correct, val64_correct.
         simpl.
-        intuition.
-        eexists ; reflexivity.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -883,7 +877,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
 
         (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
@@ -929,15 +923,13 @@ Ltac correct_forward L :=
         unfold INV; intro H.
         correct_Forall.
         get_invariant _st.
-        unfold stateM_correct in c3.
-        destruct c3 as (Hv_eq & Hst); subst.
-        exists ((Vptr state_block Ptrofs.zero) :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
+        exists (v :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
         unfold Cop.sem_unary_operation; simpl.
         split; [reflexivity |].
         intros.
-        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag.
+        unfold stateless, flag_correct, int_of_flag.
         simpl.
         intuition.
         intros.
@@ -948,13 +940,13 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
         reflexivity.
 
         intros.
         get_invariant _src32.
-        unfold correct_reg64_to_reg32.match_res, valu32_correct in c3.
+        unfold correct_reg64_to_reg32.match_res, val32_correct in c3.
         destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
         unfold exec_expr.
         rewrite p0.
@@ -1081,14 +1073,12 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src32.
-        unfold stateless, stateM_correct in c3.
-        destruct c3 as (Hv_eq & Hst); subst.
         unfold stateless, reg_correct in c4.
         unfold stateless, val64_correct in c5.
         destruct c5 as (Hv1_eq & (vl & Hvl_eq)); subst.
-        unfold correct_reg64_to_reg32.match_res, valu32_correct in c6.
+        unfold correct_reg64_to_reg32.match_res, val32_correct in c6.
         destruct c6 as (Hv2_eq & (vi & Hvi_eq)); subst.
-        exists ((Vptr state_block Ptrofs.zero) :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shrlu (Vlong vl) (Vint vi)) :: nil). (**r star here *)
+        exists (v :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shrlu (Vlong vl) (Vint vi)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3.
         simpl.
@@ -1100,10 +1090,9 @@ Ltac correct_forward L :=
         unfold Int64.shru', Int64.shru.
         rewrite Hint_unsigned_int64; reflexivity.
         intros.
-        unfold correct_upd_reg.stateM_correct, stateless, reg_correct, val64_correct.
+        unfold stateless, reg_correct, val64_correct.
         simpl.
-        intuition.
-        eexists ; reflexivity.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -1112,7 +1101,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
 
         (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
@@ -1158,15 +1147,13 @@ Ltac correct_forward L :=
         unfold INV; intro H.
         correct_Forall.
         get_invariant _st.
-        unfold stateM_correct in c3.
-        destruct c3 as (Hv_eq & Hst); subst.
-        exists ((Vptr state_block Ptrofs.zero) :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
+        exists (v :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
         unfold Cop.sem_unary_operation; simpl.
         split; [reflexivity |].
         intros.
-        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag.
+        unfold stateless, flag_correct, int_of_flag.
         simpl.
         intuition.
         intros.
@@ -1177,13 +1164,13 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
         reflexivity.
 
         intros.
         get_invariant _src32.
-        unfold correct_reg64_to_reg32.match_res, valu32_correct in c3.
+        unfold correct_reg64_to_reg32.match_res, val32_correct in c3.
         destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
         unfold exec_expr.
         rewrite p0.
@@ -1278,7 +1265,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
         eapply correct_statement_seq_body_unit.
         change_app_for_statement.
@@ -1346,7 +1333,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
         reflexivity.
 
@@ -1470,7 +1457,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
 
         unfold rBPFValues.compl_ne, val64_zero in Hmod_zero.
@@ -1541,7 +1528,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
         reflexivity.
 
@@ -1638,7 +1625,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -1723,7 +1710,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -1847,14 +1834,12 @@ Ltac correct_forward L :=
         get_invariant _dst.
         get_invariant _dst64.
         get_invariant _src32.
-        unfold stateless, stateM_correct in c3.
-        destruct c3 as (Hv_eq & Hst); subst.
         unfold stateless, reg_correct in c4.
         unfold stateless, val64_correct in c5.
         destruct c5 as (Hv1_eq & (vl & Hvl_eq)); subst.
-        unfold correct_reg64_to_reg32.match_res, valu32_correct in c6.
+        unfold correct_reg64_to_reg32.match_res, val32_correct in c6.
         destruct c6 as (Hv2_eq & (vi & Hvi_eq)); subst.
-        exists ((Vptr state_block Ptrofs.zero) :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shrl (Vlong vl) (Vint vi)) :: nil). (**r star here *)
+        exists (v :: (Vint (Int.repr (id_of_reg c1))) :: (Val.shrl (Vlong vl) (Vint vi)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3.
         simpl.
@@ -1867,10 +1852,9 @@ Ltac correct_forward L :=
         unfold Int64.shr', Int64.shr.
         rewrite Hint_unsigned_int64; reflexivity.
         intros.
-        unfold correct_upd_reg.stateM_correct, stateless, reg_correct, val64_correct.
+        unfold stateless, reg_correct, val64_correct.
         simpl.
-        intuition.
-        eexists ; reflexivity.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -1879,7 +1863,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
 
         (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
@@ -1925,15 +1909,13 @@ Ltac correct_forward L :=
         unfold INV; intro H.
         correct_Forall.
         get_invariant _st.
-        unfold stateM_correct in c3.
-        destruct c3 as (Hv_eq & Hst); subst.
-        exists ((Vptr state_block Ptrofs.zero) :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
+        exists (v :: Vint (Int.neg (Int.repr 10)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
         unfold Cop.sem_unary_operation; simpl.
         split; [reflexivity |].
         intros.
-        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag.
+        unfold stateless, flag_correct, int_of_flag.
         simpl.
         intuition.
         intros.
@@ -1944,13 +1926,13 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
         reflexivity.
 
         intros.
         get_invariant _src32.
-        unfold correct_reg64_to_reg32.match_res, valu32_correct in c3.
+        unfold correct_reg64_to_reg32.match_res, val32_correct in c3.
         destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
         unfold exec_expr.
         rewrite p0.
@@ -2056,9 +2038,7 @@ Ltac correct_forward L :=
         unfold INV; intro HH.
         correct_Forall.
         get_invariant _st.
-        unfold stateM_correct in c3.
-        destruct c3 as (Hv_eq & Hst); subst.
-        exists ((Vptr state_block Ptrofs.zero) ::
+        exists (v ::
                 (Vint (Int.neg (Int.repr 1))) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -2066,7 +2046,7 @@ Ltac correct_forward L :=
         split.
         reflexivity.
         intros.
-        unfold correct_upd_flag.stateM_correct, stateless, flag_correct, int_of_flag; simpl.
+        unfold stateless, flag_correct, int_of_flag; simpl.
         split; auto.
         intros.
 
@@ -2076,7 +2056,7 @@ Ltac correct_forward L :=
         intros.
         get_invariant _st.
         unfold stateM_correct in c3.
-        destruct c3 as (_ & c3); assumption.
+        destruct c3 as (_ & c3); auto.
         reflexivity.
 Qed.
 

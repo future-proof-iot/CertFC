@@ -35,17 +35,14 @@ Section Get_mem_region.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_mem_region.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-      (DList.DCons mrs_correct1
-        (DList.DCons (match_region_list state_block mrs_block ins_block)
+      (DList.DCons (stateless nat_correct)
+        (DList.DCons (mrs_correct state_block mrs_block ins_block)
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => match_region state_block mrs_block ins_block r v st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => mr_correct state_block mrs_block ins_block r v st m.
 
 Lemma memory_region_in_nth_error:
   forall n l
@@ -68,54 +65,71 @@ Qed.
     correct_body.
     unfold INV.
     unfold f.
-    repeat intro.
+    repeat intro; simpl.
+    destruct get_mem_region eqn: Hregion; [|constructor].
+    destruct p0.
+    intros.
     get_invariant _n.
     get_invariant _mrs.
 
-    unfold mrs_correct1 in c1.
-    destruct c1 as (Hv_eq & Hrange & Hmax).
-    unfold match_region_list in c2.
-    destruct c2 as (Hv0_eq & Hmrs_eq & Hmrs_num_eq & Hmatch).
+    unfold stateless, nat_correct in c1.
+    unfold mrs_correct, match_regions in c2.
+    destruct c2 as (Hv0_eq & Hmrs_eq & (Hmrs_num_eq & Hrange & Hmatch) & Hst).
     subst.
 
     eexists; exists m, Events.E0.
     split.
     {
+      unfold step2.
       repeat forward_star.
     }
+
+    unfold get_mem_region in Hregion.
+    context_destruct_if_inversion.
+    rewrite Nat.ltb_lt in Hcond.
+    unfold match_list_region in Hmatch.
+    rewrite Hmrs_num_eq in Hmatch.
+    assert (HrangeNat: (0 <= c < mrs_num st)%nat) by lia.
+    specialize (Hmatch c HrangeNat).
+    (**r because 0<=c < length mrs, so we know nth_error must return Some mr *)
+    assert (HrangeZ: (0 <= Z.of_nat c < Z.of_nat (mrs_num st))%Z) by lia.
+    rewrite <- Hmrs_num_eq in HrangeZ.
+    apply memory_region_in_nth_error with (n:=c) (l:= bpf_mrs st) in HrangeZ as Hnth_error.
+    destruct Hnth_error as (mr & Hnth_error).
+    rewrite Hnth_error in H1.
+    inversion H1.
+    eapply nth_error_nth in Hnth_error.
+    rewrite Hnth_error in Hmatch.
+    subst mr.
+    subst s.
     split.
     {
-      unfold match_res, match_res, MyMemRegionsIndexnat, Memory_regions.index_nat.
-      unfold match_region.
+      unfold match_res, mr_correct, match_region.
+      split.
+      rewrite <- Hnth_error.
+      apply nth_In; lia.
+      split; [| assumption].
       rewrite Ptrofs.add_zero_l.
       eexists.
       split; [reflexivity |].
       simpl.
       unfold Ctypes.align_attr; simpl.
-      unfold Z.max; simpl.
-      unfold align; simpl.
-      (**r because 0<=c < length mrs, so we know nth_error must return Some mr *)
-      rewrite <- Hmrs_num_eq in Hrange.
-      apply memory_region_in_nth_error with (n:=c) (l:= bpf_mrs st) in Hrange as Hnth_error.
-      destruct Hnth_error as (mr & Hnth_error).
-      rewrite Hnth_error.
+      unfold Z.max, align; simpl.
       unfold Ptrofs.of_intu, Ptrofs.of_int.
       unfold Ptrofs.mul.
-      rewrite Ptrofs.unsigned_repr; [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
-      rewrite Ptrofs.unsigned_repr; [| rewrite Int.unsigned_repr; [lia | change Int.max_unsigned with Ptrofs.max_unsigned; lia]].
-      rewrite Int.unsigned_repr; [ | change Int.max_unsigned with Ptrofs.max_unsigned; lia].
-      unfold match_list_region in Hmatch.
-      assert (Hlen: (0 <= c < Datatypes.length (bpf_mrs st))%nat). {
-        lia.
-      }
-      specialize (Hmatch c Hlen).
-      apply nth_error_nth with (d:= default_memory_region) in Hnth_error.
-      rewrite Hnth_error in Hmatch.
+      change (Ptrofs.unsigned (Ptrofs.repr 16)) with 16%Z.
+      rewrite Hmrs_num_eq in Hrange.
+      change Ptrofs.max_unsigned with Int.max_unsigned in Hrange.
+      assert (HrangeZ_of_Nat: (0 <= Z.of_nat c < Int.max_unsigned)%Z) by lia.
+      rewrite Int.unsigned_repr; [| lia].
+      change Int.max_unsigned with Ptrofs.max_unsigned in HrangeZ_of_Nat.
+      rewrite Ptrofs.unsigned_repr; [| lia].
       assumption.
     }
     split.
     constructor.
-    simpl; split; reflexivity.
+
+    split; reflexivity.
 Qed.
 
 End Get_mem_region.

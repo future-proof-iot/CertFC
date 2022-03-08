@@ -91,7 +91,7 @@ Section Get_opcode_mem_ld_imm.
         }
         rewrite Hswitch; clear Hswitch.
         exists c.
-        split; [ | assumption].
+        split; [ | split; assumption].
         unfold Int.and.
         change (Int.unsigned (Int.repr 255)) with (Z.of_nat (Z.to_nat 255%Z)).
         rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].

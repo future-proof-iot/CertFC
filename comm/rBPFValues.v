@@ -10,7 +10,7 @@ From compcert.lib Require Import Integers.
 
 (******************** Val2PTR *******************)
 
-Definition cmp_ptr32_null (m: Mem.mem) (v: val): option bool := Val.cmpu_bool (Mem.valid_pointer m) Ceq Vnullptr v.
+Definition cmp_ptr32_null (m: Mem.mem) (v: val): option bool := Val.cmpu_bool (Mem.valid_pointer m) Ceq v Vnullptr.
 
 
 (** Type signature: val -> val -> option val
@@ -177,5 +177,9 @@ Definition int64_to_offset16 (i: int64) := Int.sign_ext 16 (Int.repr (Int64.unsi
 (** int64_to_sint32: int64_t -> sint32_t
   *)
 Definition int64_to_sint32 (x: int64): int := Int.repr (Int64.unsigned x).
+
+Definition sint32_to_uint32 (i: int): int := i.
+
+Definition Int_leu (x y: int): bool := negb (Int.ltu y x).
 
 Definition Int_le (x y: int): bool := negb (Int.lt y x).

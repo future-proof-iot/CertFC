@@ -6,9 +6,19 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
 
-From bpf.proof Require Import CommonLib.
+From bpf.proof Require Import CommonLib MatchState.
 
 Open Scope Z_scope.
+
+Definition stateM_correct  (stb mrs ins: block) (st:unit) (v: val) (st:State.state) (m: Memory.Mem.mem) :=
+    v = Vptr stb Ptrofs.zero /\ match_state stb mrs ins st m.
+
+Definition modified_block (v:val) (defalut_blk: block): block :=
+  match v with
+  | Vptr b _ => b
+  | _ => defalut_blk
+  end.
+
 
 Definition int64_correct (x:int64) (v: val) :=
   Vlong x = v.
@@ -16,57 +26,35 @@ Definition int64_correct (x:int64) (v: val) :=
 Definition val64_correct (x:val) (v: val) :=
   x = v /\ exists vl, x = Vlong vl.
 
-Definition valu32_correct (x:val) (v: val) :=
+Definition val32_correct (x:val) (v: val) :=
   x = v /\ exists vi, x = Vint vi.
 
 Definition val_ptr_correct (stb mrs ins: block) (x:val) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  x = v /\ (exists b ofs, Mem.valid_block m b /\ x = Vptr b ofs /\ (b <> stb /\ b <> mrs /\ b <> ins)).
-(*
-Definition val_ptr_null_correct (x:val) (v: val) (st: State.state) (m: Mem.mem) :=
-  x = v /\ ((exists b ofs, x = Vptr b ofs) \/ x = Vint (Int.zero)). *)
+  x = v /\
+  match_state stb mrs ins st m.
 
-Definition val_ptr_null_block_correct (stb mrs ins: block) (x:val) (v: val) (st: State.state) (m:Memory.Mem.mem):=
-  x = v /\ ((exists b ofs, Mem.valid_block m b /\ x = Vptr b ofs /\ (b <> stb /\ b <> mrs /\ b <> ins)) \/ x = Vint (Int.zero)).
-
-Definition addr_valu32_correct (x:val) (v: val) :=
-  x = v /\ exists b ofs, x = Vptr b ofs.
-
-Definition sint32_correct (x: int) (v: val) :=
+Definition int32_correct (x: int) (v: val) :=
   Vint x = v.
 
-Definition nat8_correct (x: nat) (v: val) :=
+Definition nat_correct (x: nat) (v: val) :=
   Vint (Int.repr (Z.of_nat x)) = v.
 
-Definition nat_correct (x: nat) (v: val) :=
+Definition nat_correct_mrs_num (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x <= Z.of_nat (mrs_num st).
+
+Definition nat_correct_overflow (x: nat) (v: val) :=
   Vint (Int.repr (Z.of_nat x)) = v /\
     (* Avoid overflow *)
-    Int.unsigned (Int.repr (Z.of_nat x)) = Z.of_nat x.
+    0 <= Z.of_nat x <= Int.max_unsigned.
 
 Definition reg_correct (r: reg) (v: val) :=
-  (*complu_lt_32 v (Vint (Int.repr 11)) = true /\ (**r ensured by verifier *) *)
     v = Vint (Int.repr (id_of_reg r)).
 
-Definition ins64_correct (x:int64) (v: val) :=
-  Vlong x = v /\
-  0 <= (Int64.unsigned (Int64.shru (Int64.and x (Int64.repr 4095)) (Int64.repr 8))) <= 10 /\ (**r dst \in [0,10] *)
-  0 <= (Int64.unsigned (Int64.shru (Int64.and x (Int64.repr 65535)) (Int64.repr 12))) <= 10. (**r src \in [0,10] *)
-
-(*
-Definition dst_int64_correct (x:int64) (v: val) :=
-  Vlong x = v /\
-    0 <= (Int64.unsigned (Int64.shru (Int64.and x (Int64.repr 4095)) (Int64.repr 8))) <= 10.
-
-Definition src_int64_correct (x:int64) (v: val) :=
-  Vlong x = v /\
-    0 <= (Int64.unsigned (Int64.shru (Int64.and x (Int64.repr 65535)) (Int64.repr 12))) <= 10. *)
 
 Open Scope nat_scope.
 
 Definition opcode_correct (x: nat) (v: val) :=
    Vint (Int.repr (Z.of_nat x)) = v /\ x <= 255.
-(*
-Definition opcode_and_07_correct (x: nat) (v: val) :=
-   Vint (Int.repr (Z.of_nat x)) = v /\ (x <= 255) /\ (Nat.land x 0x07%nat = 0x07%nat). *)
 
 Definition opcode_and_07_correct (x: nat) (v: val) :=
    Vint (Int.repr (Z.of_nat (Nat.land x 0x07))) = v /\ x <= 255.
@@ -85,7 +73,6 @@ Definition is_illegal_alu64_ins (i:nat): Prop :=
   ((Nat.land i 240) <> 0xa0) /\
   ((Nat.land i 240) <> 0xb0) /\
   ((Nat.land i 240) <> 0xc0).
-
 
 Definition opcode_alu64_correct (opcode: opcode_alu64) (v: val) :=
   match opcode with
@@ -176,7 +163,7 @@ Definition opcode_branch_correct (opcode: opcode_branch) (v: val) :=
 Definition opcode_mem_ld_imm_correct (opcode: opcode_mem_ld_imm) (v: val) :=
   match opcode with
   | op_BPF_LDDW => v = Vint (Int.repr (Z.of_nat 0x18))
-  | op_BPF_LDX_IMM_ILLEGAL_INS => exists i, v = Vint (Int.repr (Z.of_nat i)) /\ i <> 0x18
+  | op_BPF_LDX_IMM_ILLEGAL_INS => exists i, v = Vint (Int.repr (Z.of_nat i)) /\ i <> 0x18 /\ i <= 255
   end.
 
 Definition opcode_mem_ld_reg_correct (opcode: opcode_mem_ld_reg) (v: val) :=
@@ -188,7 +175,8 @@ Definition opcode_mem_ld_reg_correct (opcode: opcode_mem_ld_reg) (v: val) :=
   | op_BPF_LDX_REG_ILLEGAL_INS =>
     exists i,
       v = Vint (Int.repr (Z.of_nat i)) /\
-      i <> 0x61 /\ i <> 0x69 /\ i <> 0x71 /\ i <> 0x79
+      (i <> 0x61 /\ i <> 0x69 /\ i <> 0x71 /\ i <> 0x79) /\
+      i <= 255
   end.
 
 Definition opcode_mem_st_imm_correct (opcode: opcode_mem_st_imm) (v: val) :=
@@ -200,7 +188,8 @@ Definition opcode_mem_st_imm_correct (opcode: opcode_mem_st_imm) (v: val) :=
   | op_BPF_ST_ILLEGAL_INS =>
     exists i,
       v = Vint (Int.repr (Z.of_nat i)) /\
-      i <> 0x62 /\ i <> 0x6a /\ i <> 0x72 /\ i <> 0x7a
+      (i <> 0x62 /\ i <> 0x6a /\ i <> 0x72 /\ i <> 0x7a) /\
+      i <= 255
   end.
 
 Definition opcode_mem_st_reg_correct (opcode: opcode_mem_st_reg) (v: val) :=
@@ -212,7 +201,8 @@ Definition opcode_mem_st_reg_correct (opcode: opcode_mem_st_reg) (v: val) :=
   | op_BPF_STX_ILLEGAL_INS =>
     exists i,
       v = Vint (Int.repr (Z.of_nat i)) /\
-      i <> 0x63 /\ i <> 0x6b /\ i <> 0x73 /\ i <> 0x7b
+      (i <> 0x63 /\ i <> 0x6b /\ i <> 0x73 /\ i <> 0x7b) /\
+      i <= 255
   end.
 
 Definition opcode_step_correct (op: opcode) (v: val) :=
@@ -228,12 +218,13 @@ Definition opcode_step_correct (op: opcode) (v: val) :=
   | op_BPF_ILLEGAL_INS =>
     exists i,
       v = Vint (Int.repr (Z.of_nat i)) /\
-      i <> 0x00 /\ i <> 0x01 /\ i <> 0x02 /\ i <> 0x03 /\ i <> 0x04 /\ i <> 0x05 /\ i <> 0x07
+      (i <> 0x00 /\ i <> 0x01 /\ i <> 0x02 /\ i <> 0x03 /\ i <> 0x04 /\ i <> 0x05 /\ i <> 0x07) /\
+      i <= 255
   end.
 
 Close Scope nat_scope.
 
-
+(*
 Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
   v = Vptr b Ptrofs.zero /\
     forall pc, 0 <= Z.of_nat pc < Z.of_nat len ->
@@ -243,26 +234,34 @@ Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm
 .
 
 Definition pc_correct (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x <= Z.of_nat (ins_len st). (**r the number of input instructions should be less than Ptrofs.max_unsigned *)
-(*
-Definition pc_correct1 (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x < Z.of_nat (ins_len st) /\
-  8 * (Z.of_nat(ins_len st)) <= Ptrofs.max_unsigned. *)
+  Vint (Int.repr (Z.of_nat x)) = v. (* /\  0 <= Z.of_nat x <= Z.of_nat (ins_len st).*) (**r the number of input instructions should be less than Ptrofs.max_unsigned *) *)
 
+Definition mr_correct (stb mrs ins: block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  List.In mr (bpf_mrs st) /\
+  match_region stb mrs ins mr v st m /\
+  match_state stb mrs ins st m.
+
+Definition mrs_correct (stb_blk mrs_blk ins_blk: block) (mrs: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  v = Vptr mrs_blk Ptrofs.zero /\
+  mrs = (bpf_mrs st) /\
+  match_regions stb_blk mrs_blk ins_blk st m /\
+  match_state stb_blk mrs_blk ins_blk st m.
+
+ (*
 Definition mrs_correct (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x <= Z.of_nat (mrs_num st).
+  Vint (Int.repr (Z.of_nat x)) = v. /\  0 <= Z.of_nat x <= Z.of_nat (mrs_num st).
 
 Definition mrs_correct1 (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x < Z.of_nat (mrs_num st) /\
-  16 * (Z.of_nat(mrs_num st)) <= Ptrofs.max_unsigned.
-
-Definition ins_idx_correct (x: int) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+  16 * (Z.of_nat(mrs_num st)) <= Ptrofs.max_unsigned.*)
+(*
+Definition ins_pc_correct (x: int) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   Vint x = v /\
   0 <= Int.signed x < Z.of_nat (ins_len st).
 
 
 Definition len_correct (len: nat) (x: int) (v: val) :=
-  Vint x = v /\  Int.signed x = Z.of_nat len.
+  Vint x = v /\  Int.signed x = Z.of_nat len. *)
 
 Definition match_chunk (x : memory_chunk) (b: val) :=
   b = memory_chunk_to_valu32 x.

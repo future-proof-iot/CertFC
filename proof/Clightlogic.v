@@ -8,6 +8,7 @@ From compcert Require Import Clight.
 
 From bpf.comm Require Import State Monad.
 From compcert Require Import Integers.
+From compcert Require Import Memory.
 From compcert Require Import Smallstep.
 From compcert Require Import Clightdefs.
 Import Clightdefs.ClightNotations.
@@ -459,10 +460,7 @@ Ltac car_cdr :=
 Definition unmodifies_effect (l : list block) (m m' : Memory.Mem.mem) (st st' : State.state) : Prop :=
   match l with
   | nil => m = m' /\ st = st'
-  | _ =>
-  forall b, ~ In b l -> forall chk o,
-      Memory.Mem.load chk m b o =
-        Memory.Mem.load chk m' b o
+  | _ => Mem.unchanged_on (fun b _ => ~ In b l) m m'
   end.
 
 Lemma unmodifies_effect_refl : forall mods m st,
@@ -471,7 +469,8 @@ Proof.
   unfold unmodifies_effect.
   destruct mods.
   tauto.
-  auto.
+  intros.
+  apply Mem.unchanged_on_refl.
 Qed.
 
 
@@ -485,9 +484,7 @@ Proof.
   destruct l.
   firstorder; subst; reflexivity.
   intros.
-  rewrite H by auto.
-  rewrite H0 by auto.
-  reflexivity.
+  eapply Mem.unchanged_on_trans; eauto.
 Qed.
 
 Lemma unmodifies_effect_trans_weak : forall l1 l2 l3 m1 m2 m3 st1 st2 st3,
@@ -507,24 +504,67 @@ Proof.
         specialize (H1 b) ; simpl in H1.
         intuition congruence.
     + destruct l2.
-      * intuition congruence.
-      * intros.
-        destruct H ; subst.
+      * destruct H, H0; subst.
+        apply Mem.unchanged_on_refl.
+      * destruct H ; subst.
+        unfold incl in H1, H2.
+        assert (Himplies: forall a,
+                ~ In a (b :: l3) -> ~ In a (b0 :: l2)). {
+          clear - H1.
+          intros.
+          intro.
+          apply H.
+          apply H1; auto.
+        }
+        eapply unchanged_on_weakP; eauto.
         apply H0.
-        intuition.
+        intros.
+        apply Himplies.
+        assumption.
   - destruct l3.
     +
       specialize (H2 b) ; simpl in H2.
       intuition congruence.
-    + intros.
-      destruct l2.
+    + destruct l2.
       * destruct H0; subst.
+        unfold incl in H2.
+        assert (Himplies: forall a,
+                ~ In a (b0 :: l3) -> ~ In a (b :: l1)). {
+          clear - H2.
+          intros.
+          intro.
+          apply H.
+          apply H2; auto.
+        }
+        eapply unchanged_on_weakP; eauto.
         apply H.
-        intuition.
-      * rewrite H.
+        intros.
+        apply Himplies.
+        assumption.
+      * unfold incl in H1, H2.
+        assert (Himplies0: forall a,
+                ~ In a (b0 :: l3) -> ~ In a (b :: l1)). {
+          clear - H2.
+          intros.
+          intro.
+          apply H.
+          apply H2; auto.
+        }
+        assert (Himplies1: forall a,
+                ~ In a (b0 :: l3) -> ~ In a (b1 :: l2)). {
+          clear - H1.
+          intros.
+          intro.
+          apply H.
+          apply H1; auto.
+        }
+        eapply unchanged_on_weakP_trans with (m2:=m2); eauto.
+        apply H.
         apply H0.
-        intuition.
-        intuition.
+        intros.
+        apply Himplies0; assumption.
+        intros.
+        apply Himplies1; assumption.
 Qed.
 
 
@@ -2895,8 +2935,6 @@ End S.
 
 
 
-
-
 Section S.
   (** The program contains our function of interest [fn] *)
   Variable p : Clight.program.
@@ -3567,7 +3605,7 @@ Proof.
   constructor.
   unfold unmodifies_effect.
   destruct modifies. tauto.
-  reflexivity.
+  apply Mem.unchanged_on_refl.
 Qed.
 
 Lemma correct_body_Sreturn_Some :

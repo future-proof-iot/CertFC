@@ -10,16 +10,11 @@ From bpf.monadicmodel Require Import Opcode.
 
 Open Scope monad_scope.
 
-Definition get_mem_region (n:nat) (mrs: MyMemRegionsType): M memory_region :=
-  returnM (MyMemRegionsIndexnat mrs n).
-
-Definition get_dst (ins: int64): M reg :=
-  returnM (int64_to_dst_reg ins).
+Definition get_dst (ins: int64): M reg := int64_to_dst_reg ins.
 
 Definition reg64_to_reg32 (d: val): M val := returnM (val_intuoflongu d).
 
-Definition get_src (ins: int64): M reg :=
-  returnM (int64_to_src_reg ins).
+Definition get_src (ins: int64): M reg := int64_to_src_reg ins.
 
 Definition get_offset (ins:int64):M int := returnM (get_offset ins).
 
@@ -343,7 +338,7 @@ Definition step_opcode_mem_ld_imm (imm: int) (pc: int) (dst: reg) (op: nat): M u
   do opcode_ld <- get_opcode_mem_ld_imm op;
   match opcode_ld with
   | op_BPF_LDDW      =>
-    if (Int.lt (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
+    if (Int.ltu (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
       do next_ins <- eval_ins (Int.add pc Int.one);
       do next_imm <- get_immediate next_ins;
       do _ <- upd_reg dst (Val.orl (Val.longofint (sint32_to_vint imm)) (Val.shll  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint (Int.repr 32))));
@@ -401,28 +396,28 @@ Definition step_opcode_mem_st_imm (imm: val) (addr: val) (pc: int) (dst: reg) (o
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_imm Mint32 addr_ptr imm; returnM tt
+        do _ <- store_mem_imm addr_ptr Mint32 imm; returnM tt
   | op_BPF_STH       =>
     do addr_ptr <- check_mem Writable Mint16unsigned addr;
     do is_null   <- cmp_ptr32_nullM addr_ptr;
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_imm Mint16unsigned addr_ptr imm; returnM tt
+        do _ <- store_mem_imm addr_ptr Mint16unsigned imm; returnM tt
   | op_BPF_STB       =>
     do addr_ptr <- check_mem Writable Mint8unsigned addr;
     do is_null   <- cmp_ptr32_nullM addr_ptr;
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_imm Mint8unsigned addr_ptr imm; returnM tt
+        do _ <- store_mem_imm addr_ptr Mint8unsigned imm; returnM tt
   | op_BPF_STDW      =>
     do addr_ptr <- check_mem Writable Mint64 addr;
     do is_null   <- cmp_ptr32_nullM addr_ptr;
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_imm Mint64 addr_ptr imm; returnM tt
+        do _ <- store_mem_imm addr_ptr Mint64 imm; returnM tt
   | op_BPF_ST_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
@@ -435,28 +430,28 @@ Definition step_opcode_mem_st_reg (src64: val) (addr: val) (pc: int) (dst: reg) 
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_reg Mint32 addr_ptr src64; returnM tt
+        do _ <- store_mem_reg addr_ptr Mint32 src64; returnM tt
   | op_BPF_STXH      =>
     do addr_ptr <- check_mem Writable Mint16unsigned addr;
     do is_null   <- cmp_ptr32_nullM addr_ptr;
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_reg Mint16unsigned addr_ptr src64; returnM tt
+        do _ <- store_mem_reg addr_ptr Mint16unsigned src64; returnM tt
   | op_BPF_STXB      =>
     do addr_ptr <- check_mem Writable Mint8unsigned addr;
     do is_null   <- cmp_ptr32_nullM addr_ptr;
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_reg Mint8unsigned addr_ptr src64; returnM tt
+        do _ <- store_mem_reg addr_ptr Mint8unsigned src64; returnM tt
   | op_BPF_STXDW     =>
     do addr_ptr <- check_mem Writable Mint64 addr;
     do is_null   <- cmp_ptr32_nullM addr_ptr;
       if is_null then
         upd_flag BPF_ILLEGAL_MEM
       else
-        do _ <- store_mem_reg Mint64 addr_ptr src64; returnM tt
+        do _ <- store_mem_reg addr_ptr Mint64 src64; returnM tt
   | op_BPF_STX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
@@ -489,7 +484,6 @@ Definition step: M unit :=
     do imm    <- get_immediate ins;
     step_opcode_mem_ld_imm imm pc dst op              (**r 0xX8 *)
   | op_BPF_Mem_ld_reg  =>
-    do dst    <- get_dst ins;
     do src    <- get_src ins;
     do src64  <- eval_reg src;
     do ofs    <- get_offset ins;
@@ -517,7 +511,7 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
   | S fuel0 =>
     do len  <- eval_ins_len;
     do pc <- eval_pc;
-      if(andb (Int_le Int.zero pc) (Int.lt pc len)) then (**r 0 < pc < len: pc is less than the length of l *)
+      if(andb (Int_leu Int.zero pc) (Int.ltu pc len)) then (**r 0 < pc < len: pc is less than the length of l *)
         do _ <- step;
         do f <- eval_flag;
           if flag_eq f BPF_OK then

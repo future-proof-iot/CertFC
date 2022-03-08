@@ -36,14 +36,11 @@ Section Upd_pc.
   Definition fn: Clight.function := f_upd_pc.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
-  
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct
-                (DList.DCons (stateless sint32_correct)
+    DList.DCons (stateM_correct state_block mrs_block ins_block)
+                (DList.DCons (stateless int32_correct)
                              (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -54,21 +51,25 @@ Section Upd_pc.
     correct_function_from_body args.
     correct_body.
     repeat intro.
+
+    simpl in c.
+    unfold f; simpl.
+    destruct upd_pc eqn: Hupd_pc; [| constructor].
+    destruct p0.
+    intros.
+
     unfold INV in H.
     get_invariant _st.
     get_invariant _pc.
     unfold stateM_correct in c0.
-    unfold stateless, sint32_correct in c1.
+    unfold stateless, int32_correct in c1.
     destruct c0 as (Hv_eq & Hst).
-    (*pose (mpc_store state_block st m Hst c (bpf_m st)). *)   
     subst.
     
     (** we need to get the proof of `upd_pc` store permission *)
     apply (upd_pc_store _ _ _ _ c _) in Hst as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** pc \in [ (state_block,0), (state_block,8) ) *)
-
-    simpl in c.
     (**according to the type of upd_pc:
          static void upd_pc(struct bpf_state* st, unsigned long long pc)
        1. return value should be Vundef (i.e. void)
@@ -81,27 +82,15 @@ Section Upd_pc.
       repeat forward_star.
     - split.
       split.
-      eapply upd_pc_preserves_match_state.
-      apply Hst.
+      eapply upd_pc_preserves_match_state; eauto.
+      unfold upd_pc in Hupd_pc.
+      context_destruct_if_inversion.
       reflexivity.
-      apply Hstore.
       reflexivity.
 
-      split.
-      simpl.
-      constructor.
+      split; [simpl;constructor |].
 
-      unfold unmodifies_effect, modifies, In.
-      intros.
-      destruct (Pos.eq_dec state_block b).
-      subst b.
-      exfalso.
-      apply H0.
-      left; reflexivity.
-      apply POrderedType.PositiveOrder.neq_sym in n.
-      symmetry.
-      apply (Mem.load_store_other AST.Mint32 m _ _ _ m1 Hstore chk _ _).
-      left; assumption.
+      eapply Mem.store_unchanged_on; eauto.
 Qed.
 
 End Upd_pc.

@@ -40,18 +40,15 @@ Section Get_src32.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_src32.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct
+    DList.DCons (stateM_correct state_block mrs_block ins_block)
       (DList.DCons (stateless opcode_correct)
-        (DList.DCons (stateless ins64_correct)
+        (DList.DCons (stateless int64_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => valu32_correct x v.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val32_correct x v.
 
   Instance correct_function3_get_src32 : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
   Proof.
@@ -103,13 +100,13 @@ Section Get_src32.
       eapply correct_body_Sreturn_Some; eauto.
       intros.
       get_invariant _imm.
-      unfold correct_get_immediate.match_res, sint32_correct in c1.
+      unfold correct_get_immediate.match_res, int32_correct in c1.
       subst.
       split.
       unfold exec_expr, empty_env.
       rewrite p0; reflexivity.
       split.
-      unfold match_res, rBPFValues.sint32_to_vint, valu32_correct; simpl.
+      unfold match_res, rBPFValues.sint32_to_vint, val32_correct; simpl.
       split; [reflexivity | eexists; reflexivity].
       reflexivity.
       right.
@@ -147,7 +144,7 @@ Section Get_src32.
       unfold map_opt, exec_expr. rewrite p0.
       reflexivity.
       intros; simpl.
-      unfold ins64_correct.
+      unfold int64_correct.
       tauto.
 
       intros.
@@ -188,8 +185,7 @@ Section Get_src32.
       instantiate (1 := mrs_block).
       instantiate (1 := state_block).
       unfold correct_get_src.match_res in c2.
-      unfold correct_eval_reg.stateM_correct, stateless.
-      unfold stateM_correct in c1.
+      unfold stateless.
       tauto.
 
       intros.

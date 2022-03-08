@@ -1,6 +1,7 @@
 From compcert Require Import AST Integers Values Memory.
 
 From bpf.comm Require Import Regs Flag rBPFValues MemRegion State.
+From Coq Require Import ZArith.
 
 Definition M (A: Type) := state -> option (A * state).
 
@@ -15,8 +16,19 @@ Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B :=
     end.
 
 Definition eval_pc: M int := fun st => Some (eval_pc st, st).
-Definition upd_pc (p: int): M unit := fun st => Some (tt, upd_pc p st).
-Definition upd_pc_incr: M unit := fun st => Some (tt, upd_pc_incr st).
+
+Definition upd_pc (p: int): M unit := fun st =>
+  if andb (Int.cmpu Cle Int.zero p) (Int.cmpu Clt p (Int.repr (Z.of_nat (ins_len st)))) then
+    Some (tt, upd_pc p st)
+  else (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
+    None.
+
+Definition upd_pc_incr: M unit := fun st =>
+  if andb (Int.cmpu Cle Int.zero (Int.add (pc_loc st) Int.one))
+          (Int.cmpu Clt (Int.add (pc_loc st) Int.one) (Int.repr (Z.of_nat (ins_len st)))) then
+    Some (tt, upd_pc_incr st)
+  else (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
+    None.
 
 Definition eval_flag: M bpf_flag := fun st => Some (eval_flag st, st).
 Definition upd_flag (f:bpf_flag) : M unit := fun st => Some (tt, upd_flag f st).
@@ -42,26 +54,53 @@ Definition load_mem (chunk: memory_chunk) (ptr: val): M val := fun st =>
   | None => None
   end.
 
-Definition store_mem_imm (chunk: memory_chunk) (ptr: val) (v: val) : M unit := fun st => 
-  match store_mem_imm chunk ptr v st with
+Definition store_mem_imm (ptr: val) (chunk: memory_chunk) (v: val) : M unit := fun st =>
+  match store_mem_imm ptr chunk v st with
   | Some res => Some (tt, res)
   | None => None
   end.
 
-Definition store_mem_reg (chunk: memory_chunk) (ptr: val) (v: val) : M unit := fun st => 
-  match store_mem_reg chunk ptr v st with
+Definition store_mem_reg (ptr: val) (chunk: memory_chunk) (v: val) : M unit := fun st => 
+  match store_mem_reg ptr chunk v st with
   | Some res => Some (tt, res)
   | None => None
   end.
 
 Definition eval_ins_len : M int := fun st => Some (eval_ins_len st, st).
-Definition eval_ins (idx: int) : M int64 := fun st => Some (eval_ins idx st, st).
+
+Definition eval_ins (idx: int) : M int64 := fun st =>
+  if andb (Int.cmpu Cle Int.zero idx)
+          (Int.cmpu Clt idx (Int.repr (Z.of_nat (ins_len st)))) then
+    Some (eval_ins idx st, st)
+  else (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
+    None.
 
 Definition cmp_ptr32_nullM (v: val): M bool := fun st =>
   match cmp_ptr32_null (State.eval_mem st) v with
   | Some res => Some (res, st)
-  | None     => None
+  | None     => None (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
   end.
+
+Definition int64_to_dst_reg (ins: int64): M reg := fun st =>
+  match int64_to_dst_reg' ins with
+  | Some r => Some (r, st)
+  | None => None (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
+  end.
+
+Definition int64_to_src_reg (ins: int64): M reg := fun st =>
+  match int64_to_src_reg' ins with
+  | Some r => Some (r, st)
+  | None => None (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
+  end.
+
+Definition get_mem_region (n:nat) (mrs: MyMemRegionsType): M memory_region := fun st =>
+  if (Nat.ltb n (mrs_num st)) then
+    match List.nth_error mrs n with
+    | Some mr => Some (mr, st)
+    | None => None
+    end
+  else
+    None.
 
 Declare Scope monad_scope.
 Notation "'do' x <- a ; b" :=

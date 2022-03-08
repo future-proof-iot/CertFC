@@ -39,16 +39,13 @@ Section Eval_mrs_num.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_mrs_num.
 
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
-
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    (DList.DCons stateM_correct
+    (DList.DCons (stateM_correct state_block mrs_block ins_block)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => mrs_correct re v st m /\ re = (mrs_num st) /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => nat_correct re v /\ re = (mrs_num st) /\ match_state state_block mrs_block ins_block st m.
 
   Instance correct_function3_eval_mrs_num : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
   Proof.
@@ -85,9 +82,8 @@ Section Eval_mrs_num.
     {
       unfold match_res.
       split.
-      - unfold mrs_correct, eval_mem_num.
-        split; [reflexivity | ].
-        lia.
+      - unfold nat_correct, eval_mem_num.
+        reflexivity.
       - split.
         unfold eval_mem_num.
         reflexivity.

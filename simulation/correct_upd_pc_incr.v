@@ -37,15 +37,11 @@ Section Upd_pc_incr.
 
   Definition modifies : list block := [state_block]. (* of the C code *)
   (* [match_mem] related the Coq monadic state and the C memory *)
-  (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
-
-
-  Definition stateM_correct (st:unit) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr state_block Ptrofs.zero /\ match_state state_block mrs_block ins_block stm m.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons stateM_correct (DList.DNil _).
+    DList.DCons (stateM_correct state_block mrs_block ins_block)
+      (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
@@ -55,6 +51,10 @@ Section Upd_pc_incr.
     correct_function_from_body args.
     correct_body.
     repeat intro.
+    unfold f; simpl.
+    destruct upd_pc_incr eqn: Hupd_pc; [| constructor].
+    destruct p0.
+    intros.
     unfold INV in H.
     get_invariant _st.
     unfold stateM_correct in c.
@@ -85,28 +85,16 @@ Section Upd_pc_incr.
       reflexivity.
     - split.
       split.
-      eapply upd_pc_preserves_match_state.
-      apply Hst.
+      eapply upd_pc_preserves_match_state; eauto.
+      unfold upd_pc_incr in Hupd_pc.
+      context_destruct_if_inversion.
       unfold State.upd_pc, State.upd_pc_incr.
       reflexivity.
-      apply Hstore.
       reflexivity.
 
-      simpl.
-      constructor.
-      constructor.
+      split; [simpl;constructor |].
 
-      unfold unmodifies_effect, modifies, In.
-      intros.
-      destruct (Pos.eq_dec state_block b).
-      subst b.
-      exfalso.
-      apply H0.
-      left; reflexivity.
-      apply POrderedType.PositiveOrder.neq_sym in n.
-      symmetry.
-      apply (Mem.load_store_other AST.Mint32 m _ _ _ m1 Hstore chk _ _).
-      left; assumption.
+      eapply Mem.store_unchanged_on; eauto.
 Qed.
 
 End Upd_pc_incr.
