@@ -782,14 +782,19 @@ static __attribute__((always_inline)) inline void bpf_interpreter_aux(struct bpf
     fuel0 = fuel - 1U;
     len = eval_ins_len(st);
     pc = eval_pc(st);
-    if (0U <= pc && pc < len) {
-      step(st); //print_bpf_state(st);
-      f = eval_flag(st);
-      if (f == 0) {
-        upd_pc_incr(st);
-        bpf_interpreter_aux(st, fuel0);
-        return;
+    if (0U <= pc) {
+      if (pc < len) {
+        step(st); //print_bpf_state(st);
+        f = eval_flag(st);
+        if (f == 0) {
+          upd_pc_incr(st);
+          bpf_interpreter_aux(st, fuel0);
+          return;
+        } else {
+          return;
+        }
       } else {
+        upd_flag(st, -5);
         return;
       }
     } else {
@@ -803,14 +808,18 @@ unsigned long long bpf_interpreter(struct bpf_state* st, unsigned int fuel)
 {
   struct memory_region *mrs;
   struct memory_region *bpf_ctx;
+  unsigned int start;
   int f;
+  unsigned long long res;
   mrs = eval_mrs_regions(st);
   bpf_ctx = get_mem_region(0U, mrs);
-  upd_reg(st, 1U, (*bpf_ctx).start_addr);
+  start = get_start_addr(bpf_ctx);
+  upd_reg(st, 1U, (unsigned long long) start);
   bpf_interpreter_aux(st, fuel);
   f = eval_flag(st);
   if (f == 1) {
-    return eval_reg(st, 0U);
+    res = eval_reg(st, 0U);
+    return res;
   } else {
     return 0LLU;
   }

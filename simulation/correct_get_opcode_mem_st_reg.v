@@ -18,7 +18,7 @@ get_opcode_mem_st_reg
 Open Scope nat_scope.
 
 Section Get_opcode_mem_st_reg.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -34,14 +34,14 @@ Section Get_opcode_mem_st_reg.
   Definition fn: Clight.function := f_get_opcode_mem_st_reg.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless opcode_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (opcode_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => opcode_mem_st_reg_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (opcode_mem_st_reg_correct x).
 
-  Instance correct_function3_get_opcode_mem_st_reg : forall a, correct_function3 p args res f fn nil true match_arg_list match_res a.
+  Instance correct_function_get_opcode_mem_st_reg : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -57,7 +57,7 @@ Section Get_opcode_mem_st_reg.
 
     eexists. exists m, Events.E0.
     unfold byte_to_opcode_mem_st_reg.
-    repeat split; unfold step2.
+    split_and; unfold step2;auto.
     -
       forward_star.
       simpl.
@@ -113,10 +113,11 @@ Section Get_opcode_mem_st_reg.
       rewrite Int.and_idem.
       reflexivity.
       lia.
-Qed.
+    - apply unmodifies_effect_refl.
+  Qed.
 
 End Get_opcode_mem_st_reg.
 
 Close Scope nat_scope.
 
-Existing Instance correct_function3_get_opcode_mem_st_reg.
+Existing Instance correct_function_get_opcode_mem_st_reg.

@@ -17,7 +17,7 @@ exec_function
 *)
 
 Section Exec_function.
-
+  Context {S:special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -28,25 +28,20 @@ Section Exec_function.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := exec_function.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_exec_function.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    (DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (val_ptr_correct state_block mrs_block ins_block)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    (dcons (fun x => StateLess (is_state_handle))
+      (dcons (fun x => StateLess (eq x))
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => val32_correct r v /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> Inv := fun r  => StateLess (val32_correct r).
 
-  Axiom correct_function3_exec_function : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
+  Axiom correct_function_exec_function : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
 
 End Exec_function.
 
-Existing Instance correct_function3_exec_function.
-
+Existing Instance correct_function_exec_function.

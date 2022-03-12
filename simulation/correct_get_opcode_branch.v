@@ -17,7 +17,7 @@ get_opcode_branch
 *)
 
 Section Get_opcode_branch.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -29,22 +29,18 @@ Section Get_opcode_branch.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := get_opcode_branch.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_opcode_branch.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless opcode_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (opcode_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => opcode_branch_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (opcode_branch_correct x).
 
-  Instance correct_function3_get_opcode_branch : forall a, correct_function3 p args res f fn nil true match_arg_list match_res a.
+  Instance correct_function_get_opcode_branch : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -54,16 +50,17 @@ Section Get_opcode_branch.
     repeat intro.
     get_invariant _op.
 
-    unfold stateless, opcode_correct in c0.
+    unfold eval_inv, opcode_correct in c0.
     destruct c0 as (H0 & Hge).
     subst.
 
     eexists. exists m, Events.E0.
 
-    repeat split; unfold step2.
+    split_and; unfold step2.
     -
       repeat forward_star.
     - simpl.
+      unfold opcode_branch_correct.
       (**r Search (Int.zero_ext).*)
       rewrite Int.zero_ext_idem;[idtac | lia].
       unfold match_res, opcode_branch_correct.
@@ -95,8 +92,10 @@ Section Get_opcode_branch.
       simpl.
       rewrite Int.zero_ext_idem;[idtac | lia].
       reflexivity.
-Qed.
+    - auto.
+    - apply unmodifies_effect_refl.
+  Qed.
 
 End Get_opcode_branch.
 
-Existing Instance correct_function3_get_opcode_branch.
+Existing Instance correct_function_get_opcode_branch.

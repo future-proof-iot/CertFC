@@ -213,7 +213,621 @@ Proof.
   exists p; assumption.
 Qed.
 
-Lemma nat_land_7_eq_intro:
+Lemma nat_land_7_eq_0_intro:
+  forall n,
+  Nat.land n 7 = 0 -> exists m, n = 0 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - inversion H.
+  - rewrite ! Nat.add_0_l in H.
+    rewrite ! Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq.
+    destruct Hn_eq as (m & Hn_eq).
+    clear Hodd.
+    subst.
+    rewrite ! Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + inversion H.
+    + rewrite ! Nat.add_0_l in H.
+      rewrite <- Nat.negb_even in Hodd.
+      rewrite Bool.negb_false_iff in Hodd.
+      apply Heven_spec in Hodd as Hn_eq.
+      destruct Hn_eq as (m0 & Hn_eq).
+      clear Hodd.
+      subst.
+      rewrite ! Div2.div2_double in H.
+      destruct (Nat.odd m0) eqn: Hodd.
+      * inversion H.
+      * rewrite <- Nat.negb_even in Hodd.
+        rewrite Bool.negb_false_iff in Hodd.
+        apply Heven_spec in Hodd as Hn_eq.
+        destruct Hn_eq as (m & Hn_eq).
+        clear Hodd.
+        subst.
+        exists m; lia.
+Qed.
+
+Lemma nat_land_7_eq_0_elim:
+  forall n,
+  (exists m, n = 0 + 8 * m) -> Nat.land n 7 = 0.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 0) with false.
+  unfold xorb, andb.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold andb.
+  rewrite ! Nat.add_0_l.
+  rewrite ! Nat.add_0_r.
+  assert (Heq: 8 * m = 2 * (4 * m)) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double.
+  assert (Heq: 4 * m = 2 * (2 * m)) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold andb.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold andb.
+  reflexivity.
+Qed.
+
+Lemma nat_land_7_eq_0:
+  forall n,
+    Nat.land n 7 = 0 <-> exists m, n = 0 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_0_intro.
+  apply nat_land_7_eq_0_elim.
+Qed.
+
+
+Lemma nat_land_7_eq_2_intro:
+  forall n,
+  Nat.land n 7 = 2 -> exists m, n = 2 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - apply Hodd_spec in Hodd as Hn_eq.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Nat.add_0_r in H.
+    rewrite Nat.add_1_r in H.
+    rewrite ! Div2.div2_double_plus_one in H.
+    destruct (Nat.odd m) eqn: Hoddm.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+  - rewrite Nat.add_0_l in H.
+    rewrite ! Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq.
+    destruct Hn_eq as (m & Hn_eq).
+    clear Hodd.
+    subst.
+    rewrite ! Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite Nat.add_1_r in H.
+      rewrite ! Div2.div2_double_plus_one in H.
+      destruct (Nat.odd _) eqn: Hodd.
+      * inversion H.
+      * rewrite <- Nat.negb_even in Hodd.
+        rewrite Bool.negb_false_iff in Hodd.
+        apply Heven_spec in Hodd as Hn_eq.
+        destruct Hn_eq as (m & Hn_eq).
+        subst.
+        exists m; lia.
+    + rewrite Nat.add_0_l in H.
+      rewrite <- Nat.negb_even in Hodd.
+      rewrite Bool.negb_false_iff in Hodd.
+      destruct Nat.odd; inversion H.
+Qed.
+
+Lemma nat_land_7_eq_2_elim:
+  forall n,
+  (exists m, n = 2 + 8 * m) -> Nat.land n 7 = 2.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 2) with false.
+  unfold xorb, andb.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold andb.
+  assert (Heq: (2 + 8 * m) = 2 * (1 + 4 * m)) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double.
+  assert (Heq: 1 + 4 * m = S (2 * (2 * m))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Nat.odd_succ.
+  rewrite Nat.even_mul.
+  change (Nat.even 4) with true.
+  unfold orb.
+  rewrite ! Nat.add_0_l.
+  rewrite ! Nat.add_0_r.
+  rewrite Div2.div2_double_plus_one.
+  change (Nat.even 2) with true.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold andb.
+  reflexivity.
+Qed.
+
+Lemma nat_land_7_eq_2:
+  forall n,
+    Nat.land n 7 = 2 <-> exists m, n = 2 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_2_intro.
+  apply nat_land_7_eq_2_elim.
+Qed.
+
+
+
+Lemma nat_land_7_eq_4_intro:
+  forall n,
+  Nat.land n 7 = 4 -> exists m, n = 4 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Nat.add_0_r in H.
+    rewrite ! Nat.add_1_r in H.
+    rewrite ! Div2.div2_double_plus_one in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+  - rewrite ! Nat.add_0_l in H.
+    rewrite ! Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + rewrite Nat.add_0_l in H.
+      rewrite <- Nat.negb_even in Hodd.
+      rewrite Bool.negb_false_iff in Hodd.
+      apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite ! Div2.div2_double in H.
+      destruct (Nat.odd m0) eqn: Hodd.
+      * apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+        destruct Hn_eq as (m & Hn_eq).
+        subst.
+        exists m; lia.
+      * inversion H.
+Qed.
+
+Lemma nat_land_7_eq_4_elim:
+  forall n,
+  (exists m, n = 4 + 8 * m) -> Nat.land n 7 = 4.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 4) with false.
+  unfold xorb, andb.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold andb.
+  assert (Heq: (4 + 8 * m) = 2 * (2 + 4 * m)) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double.
+  assert (Heq: 2 + 4 * m = 2 * (1 + 2 * m)) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold andb.
+  rewrite ! Nat.add_0_l.
+  rewrite ! Nat.add_0_r.
+  assert (Heq: (1 + 2 * m) = (S (2*m))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Nat.odd_succ.
+  rewrite Nat.even_mul.
+  change (Nat.even 2) with true.
+  unfold orb.
+  reflexivity.
+Qed.
+
+Lemma nat_land_7_eq_4:
+  forall n,
+    Nat.land n 7 = 4 <-> exists m, n = 4 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_4_intro.
+  apply nat_land_7_eq_4_elim.
+Qed.
+
+Lemma nat_land_7_eq_6_intro:
+  forall n,
+  Nat.land n 7 = 6 -> exists m, n = 6 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Nat.add_0_r in H.
+    rewrite ! Nat.add_1_r in H.
+    rewrite ! Div2.div2_double_plus_one in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+  - rewrite ! Nat.add_0_l in H.
+    rewrite ! Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite ! Nat.add_1_r in H.
+      rewrite ! Div2.div2_double_plus_one in H.
+      destruct (Nat.odd _) eqn: Hodd.
+      * apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+        destruct Hn_eq as (m & Hn_eq).
+        subst.
+        exists m; lia.
+      * inversion H.
+    + rewrite Nat.add_0_l in H.
+      destruct (Nat.odd (Nat.div2 m)); inversion H.
+Qed.
+
+Lemma nat_land_7_eq_6_elim:
+  forall n,
+  (exists m, n = 6 + 8 * m) -> Nat.land n 7 = 6.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 6) with false.
+  unfold xorb, andb.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold andb.
+  assert (Heq: (6 + 8 * m) = 2 * (S (2 * ( S (2 * m))))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double.
+  rewrite Nat.odd_succ.
+  rewrite Nat.even_mul.
+  change (Nat.even 2) with true.
+  unfold orb.
+  rewrite ! Nat.add_0_l.
+  rewrite Div2.div2_double_plus_one.
+  rewrite Nat.odd_succ.
+  rewrite Nat.even_mul.
+  change (Nat.even 2) with true.
+  unfold orb.
+  reflexivity.
+Qed.
+
+Lemma nat_land_7_eq_6:
+  forall n,
+    Nat.land n 7 = 6 <-> exists m, n = 6 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_6_intro.
+  apply nat_land_7_eq_6_elim.
+Qed.
+
+Lemma nat_land_7_eq_1_intro:
+  forall n,
+  Nat.land n 7 = 1 -> exists m, n = 1 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Nat.add_0_r in H.
+    rewrite ! Nat.add_1_r in H.
+    rewrite ! Div2.div2_double_plus_one in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + inversion H.
+    + rewrite Nat.add_0_l in H.
+      rewrite <- Nat.negb_even in Hodd.
+      rewrite Bool.negb_false_iff in Hodd.
+      apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite ! Div2.div2_double in H.
+      destruct Nat.odd eqn:Hodd.
+      * inversion H.
+      * rewrite <- Nat.negb_even in Hodd.
+        rewrite Bool.negb_false_iff in Hodd.
+        apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+        destruct Hn_eq as (m & Hn_eq).
+        subst.
+        exists m; lia.
+  - rewrite Nat.add_0_l in H.
+    rewrite ! Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+Qed.
+
+Lemma nat_land_7_eq_1_elim:
+  forall n,
+  (exists m, n = 1 + 8 * m) -> Nat.land n 7 = 1.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 1) with true.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold xorb, andb.
+  assert (Heq: (1 + 8 * m) = S (2 * (2 * (2 * m)))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double_plus_one.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold xorb, andb.
+  rewrite Div2.div2_double.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold xorb, andb.
+  lia.
+Qed.
+
+Lemma nat_land_7_eq_1:
+  forall n,
+    Nat.land n 7 = 1 <-> exists m, n = 1 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_1_intro.
+  apply nat_land_7_eq_1_elim.
+Qed.
+
+Lemma nat_land_7_eq_3_intro:
+  forall n,
+  Nat.land n 7 = 3 -> exists m, n = 3 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Nat.add_0_r in H.
+    rewrite ! Nat.add_1_r in H.
+    rewrite ! Div2.div2_double_plus_one in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite ! Nat.add_1_r in H.
+      rewrite ! Div2.div2_double_plus_one in H.
+      destruct (Nat.odd _) eqn: Hodd.
+      * inversion H.
+      * rewrite <- Nat.negb_even in Hodd.
+        rewrite Bool.negb_false_iff in Hodd.
+        apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+        destruct Hn_eq as (m & Hn_eq).
+        subst.
+        exists m; lia.
+    + rewrite Nat.add_0_l in H.
+      rewrite <- Nat.negb_even in Hodd.
+      rewrite Bool.negb_false_iff in Hodd.
+      apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite ! Div2.div2_double in H.
+      destruct Nat.odd eqn:Hodd.
+      * inversion H.
+      * inversion H.
+  - rewrite Nat.add_0_l in H.
+    rewrite ! Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+Qed.
+
+Lemma nat_land_7_eq_3_elim:
+  forall n,
+  (exists m, n = 3 + 8 * m) -> Nat.land n 7 = 3.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 3) with true.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold xorb, andb.
+  assert (Heq: (3 + 8 * m) = S (2 * (S (2 * (2 * m))))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double_plus_one.
+  rewrite Nat.odd_succ.
+  rewrite Nat.even_mul.
+  change (Nat.even 2) with true.
+  unfold orb.
+  rewrite Div2.div2_double_plus_one.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold andb.
+  lia.
+Qed.
+
+Lemma nat_land_7_eq_3:
+  forall n,
+    Nat.land n 7 = 3 <-> exists m, n = 3 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_3_intro.
+  apply nat_land_7_eq_3_elim.
+Qed.
+
+Lemma nat_land_7_eq_5_intro:
+  forall n,
+  Nat.land n 7 = 5 -> exists m, n = 5 + 8 * m.
+Proof.
+  intros.
+  rewrite Nat.land_comm in H.
+  unfold Nat.land in H.
+  simpl in H.
+  destruct (Nat.odd n) eqn: Hodd.
+  - apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Nat.add_0_r in H.
+    rewrite ! Nat.add_1_r in H.
+    rewrite ! Div2.div2_double_plus_one in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite ! Nat.add_1_r in H.
+      rewrite ! Div2.div2_double_plus_one in H.
+      destruct (Nat.odd _) eqn: Hodd.
+      * inversion H.
+      * inversion H.
+    + rewrite Nat.add_0_l in H.
+      rewrite <- Nat.negb_even in Hodd.
+      rewrite Bool.negb_false_iff in Hodd.
+      apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+      destruct Hn_eq as (m0 & Hn_eq).
+      subst.
+      rewrite ! Div2.div2_double in H.
+      destruct Nat.odd eqn:Hodd.
+      * apply Hodd_spec in Hodd as Hn_eq; clear Hodd.
+        destruct Hn_eq as (m & Hn_eq).
+        subst.
+        exists m; lia.
+      * inversion H.
+  - rewrite Nat.add_0_l in H.
+    rewrite ! Nat.add_0_r in H.
+    rewrite <- Nat.negb_even in Hodd.
+    rewrite Bool.negb_false_iff in Hodd.
+    apply Heven_spec in Hodd as Hn_eq; clear Hodd.
+    destruct Hn_eq as (m & Hn_eq).
+    subst.
+    rewrite ! Div2.div2_double in H.
+    destruct (Nat.odd m) eqn: Hodd.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+Qed.
+
+Lemma nat_land_7_eq_5_elim:
+  forall n,
+  (exists m, n = 5 + 8 * m) -> Nat.land n 7 = 5.
+Proof.
+  intros.
+  destruct H as (m & H).
+  rewrite Nat.land_comm.
+  unfold Nat.land.
+  simpl.
+  subst.
+  rewrite Nat.odd_add.
+  change (Nat.odd 5) with true.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 8) with false.
+  unfold xorb, andb.
+  assert (Heq: (5 + 8 * m) = S (2 * (2 * (S (2 * m))))) by lia.
+  rewrite Heq; clear Heq.
+  rewrite Div2.div2_double_plus_one.
+  rewrite Nat.odd_mul.
+  change (Nat.odd 2) with false.
+  unfold andb.
+  rewrite Div2.div2_double.
+  rewrite Nat.odd_succ.
+  rewrite Nat.even_mul.
+  change (Nat.even 2) with true.
+  unfold orb.
+  lia.
+Qed.
+
+Lemma nat_land_7_eq_5:
+  forall n,
+    Nat.land n 7 = 5 <-> exists m, n = 5 + 8 * m.
+Proof.
+  intros.
+  split.
+  apply nat_land_7_eq_5_intro.
+  apply nat_land_7_eq_5_elim.
+Qed.
+
+Lemma nat_land_7_eq_7_intro:
   forall n,
   Nat.land n 7 = 7 -> exists m, n = 7 + 8 * m.
 Proof.
@@ -252,23 +866,11 @@ Proof.
     subst.
     repeat rewrite Div2.div2_double in H.
     destruct (Nat.odd m) eqn: Hoddm.
-    + apply Hodd_spec in Hoddm as Hm_eq.
-      destruct Hm_eq as (m0 & Hm_eq).
-      subst.
-      rewrite Nat.add_1_r in H.
-      repeat rewrite Div2.div2_double_plus_one in H.
-      destruct (Nat.odd m0) eqn: Hoddm0.
-      * apply Hodd_spec in Hoddm0 as Hm0_eq.
-        destruct Hm0_eq as (m & Hm_eq).
-        subst.
-        exists m.
-        lia.
-      * inversion H.
-    + rewrite Nat.add_0_l in H.
-      destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
+    + destruct (Nat.odd (Nat.div2 _)); inversion H.
 Qed.
 
-Lemma nat_land_7_eq_elim:
+Lemma nat_land_7_eq_7_elim:
   forall n,
   (exists m, n = 7 + 8 * m) -> Nat.land n 7 = 7.
 Proof.
@@ -302,12 +904,29 @@ Proof.
   lia.
 Qed.
 
-Lemma nat_land_7_eq:
+Lemma nat_land_7_eq_7:
   forall n,
     Nat.land n 7 = 7 <-> exists m, n = 7 + 8 * m.
 Proof.
   intros.
   split.
-  apply nat_land_7_eq_intro.
-  apply nat_land_7_eq_elim.
+  apply nat_land_7_eq_7_intro.
+  apply nat_land_7_eq_7_elim.
+Qed.
+
+Lemma nat_land_7_eq:
+  forall n k
+    (Hrange: k <= 7),
+      Nat.land n 7 = k <-> exists m, n = k + 8 * m.
+Proof.
+  intros.
+  destruct k; [apply nat_land_7_eq_0 | ].
+  destruct k; [apply nat_land_7_eq_1 | ].
+  destruct k; [apply nat_land_7_eq_2 | ].
+  destruct k; [apply nat_land_7_eq_3 | ].
+  destruct k; [apply nat_land_7_eq_4 | ].
+  destruct k; [apply nat_land_7_eq_5 | ].
+  destruct k; [apply nat_land_7_eq_6 | ].
+  destruct k; [apply nat_land_7_eq_7 | ].
+  lia.
 Qed.

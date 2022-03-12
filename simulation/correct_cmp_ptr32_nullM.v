@@ -24,7 +24,7 @@ static __attribute__((always_inline)) inline _Bool cmp_ptr32_nullM(struct bpf_st
 *)
 
 Section Cmp_ptr32_nullM.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -36,22 +36,50 @@ Section Cmp_ptr32_nullM.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := cmp_ptr32_nullM.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_cmp_ptr32_nullM.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
+(*  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
     DList.DCons (val_ptr_correct state_block mrs_block ins_block)
+        (DList.DNil _). *)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    dcons (fun x => StateLess (eq x))
         (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_bool x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (match_bool x).
 
-  Instance correct_function3_cmp_ptr32_nullM : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Lemma cmpu_valid_pointer : forall m m'
+    (VALID : forall blk ofs, Mem.valid_pointer m blk ofs = true ->
+       Mem.valid_pointer m' blk ofs = true) v b,
+      Val.cmpu_bool (Mem.valid_pointer m) Ceq v
+          (Vint Int.zero) = Some b ->
+      Val.cmpu_bool (Mem.valid_pointer m') Ceq v
+          (Vint Int.zero) = Some b.
+  Proof.
+    unfold Val.cmpu_bool.
+    intros.
+    destruct v; auto.
+    destruct Archi.ptr64 eqn:A; auto.
+    destruct (Int.eq Int.zero Int.zero &&
+                (Mem.valid_pointer m b0 (Ptrofs.unsigned i)
+                 || Mem.valid_pointer m b0 (Ptrofs.unsigned i - 1))
+             ) eqn: T; try discriminate.
+    destruct     (Int.eq Int.zero Int.zero &&
+    (Mem.valid_pointer m' b0 (Ptrofs.unsigned i)
+     || Mem.valid_pointer m' b0 (Ptrofs.unsigned i - 1))) eqn:T';auto.
+    rewrite andb_true_iff in T.
+    rewrite orb_true_iff in T.
+    rewrite andb_false_iff in T'.
+    rewrite orb_false_iff in T'.
+    intuition try congruence.
+    apply VALID in H2. congruence.
+    apply VALID in H2. congruence.
+  Qed.
+
+  
+  Instance correct_function_cmp_ptr32_nullM : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -61,91 +89,33 @@ Section Cmp_ptr32_nullM.
     repeat intro.
     get_invariant _addr.
 
-    unfold val_ptr_correct in c0.
-    destruct c0 as (c0 & Hst).
-
-    unfold rBPFValues.cmp_ptr32_null, State.eval_mem.
-    unfold Val.cmpu_bool.
-    change Vnullptr with (Vint Int.zero); simpl.
-
-    destruct c eqn: Hc_eq; try constructor.
-    - (**r Vint i *)
-      intro.
-      eexists; exists m, Events.E0.
-      split.
-
+    unfold eval_inv in c0.
+    subst.
+    destruct (rBPFValues.cmp_ptr32_null (State.eval_mem st) v) eqn: CMP ; auto.
+    exists (Val.of_bool b).
+    exists m. exists Events.E0.
+    unfold rBPFValues.cmp_ptr32_null in CMP.
+    change Vnullptr with (Vint Int.zero) in *; simpl.
+    split_and; auto.
+    -
+      apply cmpu_valid_pointer with (m':= m) in CMP.
       unfold step2; forward_star.
       unfold Cop.sem_binary_operation, typeof; simpl.
       unfold Cop.sem_cmp; simpl.
       unfold Cop.cmp_ptr; simpl.
-      unfold option_map; simpl.
-      rewrite <- c0.
-      unfold Val.cmpu_bool, Int.cmpu, Val.of_bool.
-      reflexivity.
-
+      change (Int.repr 0) with (Int.zero).
+      rewrite CMP. reflexivity.
       unfold Cop.sem_cast; simpl.
-      unfold Vtrue, Vfalse.
-      instantiate (1:= (if Int.eq i (Int.repr 0) then Vint Int.one else Vint Int.zero)).
-      fold Int.zero.
-      destruct (Int.eq i Int.zero).
-      rewrite Int_eq_one_zero.
-      reflexivity.
-      rewrite Int.eq_true.
-      reflexivity.
-
+      instantiate (1:= (Val.of_bool b)).
+      destruct b; reflexivity.
       forward_star.
-      unfold match_res, match_bool.
-      fold Int.zero.
-      destruct (Int.eq i Int.zero).
-      split; [reflexivity | ].
-      split; [constructor; reflexivity | split; reflexivity].
-      split; [reflexivity | ].
-      split; [constructor; reflexivity | split; reflexivity].
-    - (**r Vptr b i *)
-      match goal with
-      | |- context[if ?X then _ else _] =>
-        destruct X eqn: Heq; try constructor
-      end.
-      intros.
-      eexists; exists m, Events.E0.
-      split.
-
-      unfold step2; repeat forward_star.
-      unfold Cop.sem_binary_operation, typeof; simpl.
-      unfold Cop.sem_cmp, Cop.cmp_ptr; simpl.
-      unfold option_map; simpl.
-      rewrite <- c0.
-      unfold Val.cmpu_bool, Int.cmpu, Val.of_bool; simpl.
-      fold Int.zero.
-      rewrite Int.eq_true in *.
-      rewrite andb_true_l in *.
-      unfold Vtrue, Vfalse.
-
-      destruct (Mem.valid_pointer _ _ _) eqn: Hvalid1.
-
-      eapply match_state_implies_valid_pointer in Hvalid1; eauto.
-      rewrite Hvalid1.
-      rewrite orb_true_l.
-      reflexivity.
-
-      rewrite orb_false_l in Heq.
-      clear Hvalid1.
-      destruct (Mem.valid_pointer _ _ _) eqn: Hvalid1; [| inversion Heq].
-      eapply match_state_implies_valid_pointer in Hvalid1; eauto.
-      rewrite Hvalid1.
-      rewrite orb_true_r.
-      reflexivity.
-      simpl.
-      unfold Cop.sem_cast; simpl.
-      rewrite Int.eq_true.
-      reflexivity.
-
-      split.
-      + unfold match_res, match_bool.
-        reflexivity.
-      + split; [constructor; reflexivity | split; reflexivity].
+      intros *.
+      eapply match_state_implies_valid_pointer ; eauto.
+    -  unfold match_bool. destruct b; reflexivity.
+    -  destruct b; constructor.
+       reflexivity. reflexivity.
   Qed.
 
 End Cmp_ptr32_nullM.
 
-Existing Instance correct_function3_cmp_ptr32_nullM.
+Existing Instance correct_function_cmp_ptr32_nullM.

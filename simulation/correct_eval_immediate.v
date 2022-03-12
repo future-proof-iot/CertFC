@@ -19,6 +19,7 @@ eval_immediate
 Open Scope Z_scope.
 
 Section Eval_immediate.
+  Context {S: special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -35,14 +36,14 @@ Section Eval_immediate.
   Definition fn: Clight.function := f_eval_immediate.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless int32_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (int32_correct x))
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
+  Definition match_res : res -> Inv := fun x => StateLess (val64_correct x).
 
-  Instance correct_function3_eval_immediate : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function_eval_immediate : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -52,24 +53,21 @@ Section Eval_immediate.
     repeat intro.
     get_invariant _ins.
 
-    unfold stateless, int32_correct in c0.
+    unfold eval_inv, int32_correct in c0.
     subst.
 
     eexists; exists m, Events.E0.
 
-    split.
+    split_and;auto.
     - repeat forward_star.
-    - split.
-      + unfold match_res, rBPFValues.sint32_to_vint, val64_correct.
-        split.
-        * unfold Val.longofint; simpl.
-          reflexivity.
-        * unfold Val.longofint.
-          eexists; reflexivity.
-      + split; [constructor | split; reflexivity].
+    -   unfold eval_inv, match_res, rBPFValues.sint32_to_vint, val64_correct.
+        unfold Val.longofint; simpl.
+        eauto.
+    - constructor.
+    - apply unmodifies_effect_refl.
   Qed.
 
 End Eval_immediate.
 Close Scope Z_scope.
 
-Existing Instance correct_function3_eval_immediate.
+Existing Instance correct_function_eval_immediate.

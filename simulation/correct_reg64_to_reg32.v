@@ -17,7 +17,7 @@ reg64_to_reg32
 *)
 
 Section Reg64_to_reg32.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -33,14 +33,14 @@ Section Reg64_to_reg32.
   Definition fn: Clight.function := f_reg64_to_reg32.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless val64_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (val64_correct x))
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val32_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (val32_correct x).
 
-  Instance correct_function3_reg64_to_reg32 : forall a, correct_function3 p args res f fn nil true match_arg_list match_res a.
+  Instance correct_function_reg64_to_reg32 : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -50,7 +50,7 @@ Section Reg64_to_reg32.
     repeat intro.
     get_invariant _d.
 
-    unfold stateless, val64_correct in c0.
+    unfold eval_inv, val64_correct in c0.
     destruct c0 as (Hc_eq & (vl & Hvl_eq)).
     subst.
 
@@ -61,16 +61,18 @@ Section Reg64_to_reg32.
       *)
     eexists; exists m, Events.E0.
 
-    repeat split; unfold step2.
+        split_and;auto;unfold step2.
     -
       repeat forward_star.
-    - simpl.
-      eexists; reflexivity.
+    - unfold eval_inv,match_res.
+      simpl. unfold val32_correct.
+      split ; eauto.
     - simpl.
       constructor.
       reflexivity.
+    - apply unmodifies_effect_refl.
   Qed.
 
 End Reg64_to_reg32.
 
-Existing Instance correct_function3_reg64_to_reg32.
+Existing Instance correct_function_reg64_to_reg32.

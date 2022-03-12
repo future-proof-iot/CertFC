@@ -7,15 +7,8 @@ From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma Comm
 
 From bpf.clight Require Import interpreter.
 
-
-(**
-Check DxMonad.eval_reg.
-eval_reg
-     : DxRegs.reg -> M val64_t
-*)
-
-
 Section Eval_reg.
+  Context {S: special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -28,23 +21,19 @@ Section Eval_reg.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.eval_reg.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_reg.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-                (DList.DCons (stateless reg_correct)
-                             (DList.DNil _)).
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons  (fun _ => StateLess is_state_handle)
+(dcons  (fun x => (StateLess (reg_correct x)))
+(DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (val64_correct x).
 
-  Instance correct_function3_eval_reg : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
+  Instance correct_function_eval_reg : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -52,16 +41,22 @@ Section Eval_reg.
     repeat intro.
     get_invariant _st.
     get_invariant _i.
-    unfold stateM_correct in c0.
-    unfold stateless, reg_correct in c1.
-    destruct c0 as (Hptr & Hmatch).
+    unfold eval_inv, is_state_handle in c0.
+    unfold eval_inv, reg_correct in c1.
     subst.
-    destruct Hmatch.
-    clear munchange mpc mflags mperm.
-    unfold match_registers in mregs.
     simpl in c.
-    specialize (mregs c).
-    destruct mregs as (vl & Hreg_load & Hinj).
+    assert (MR : exists vl : int64,
+            Mem.loadv AST.Mint64 m
+              (Vptr st_blk
+                 (Ptrofs.add (Ptrofs.repr 8)
+                    (Ptrofs.repr (8 * id_of_reg c)))) =
+            Some (Vlong vl) /\ Vlong vl = eval_regmap c (regs_st st)).
+    {
+      destruct MS.
+      unfold match_registers in mregs.
+      auto.
+    }
+    destruct MR as (vl & Hreg_load & Hinj).
 
     (**according to:
          static unsigned long long eval_reg(struct bpf_state* st, unsigned int i)
@@ -69,7 +64,7 @@ Section Eval_reg.
        2. the memory is same
       *)
     exists (Vlong vl), m, Events.E0.
-    repeat split; unfold step2.
+    split_and; unfold step2.
     -
       repeat forward_star.
 
@@ -97,16 +92,16 @@ Section Eval_reg.
       reflexivity.
 
       unfold Cop.sem_cast; reflexivity.
-    - 
+    - simpl.
       unfold State.eval_reg.
-      symmetry; assumption.
-    - unfold State.eval_reg; exists vl; symmetry; assumption.
-    -
-      simpl.
-      constructor.
+      unfold val64_correct. split ; auto.
+      exists vl. auto.
+    - constructor.
+    - auto.
+    - apply unmodifies_effect_refl.
   Qed.
   
 
 End Eval_reg.
 
-Existing Instance correct_function3_eval_reg.
+Existing Instance correct_function_eval_reg.

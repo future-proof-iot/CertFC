@@ -1,6 +1,6 @@
 From bpf.comm Require Import State Monad.
 From Coq Require Import List Lia ZArith.
-From compcert Require Import Integers Values Clight Memory.
+From compcert Require Import Coqlib Integers Values Clight Memory.
 Import ListNotations.
 
 From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
@@ -15,7 +15,7 @@ eval_pc
 *)
 
 Section Eval_pc.
-
+  Context {S : special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -27,59 +27,49 @@ Section Eval_pc.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.eval_pc.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_pc.
 
-  (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DNil _).
+Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+  dcons
+    (fun x => StateLess is_state_handle)
+    (DList.DNil _).
+
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int32_correct x v.
 
-  Instance correct_function3_eval_pc : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
+Definition match_res : res -> Inv := fun x  => StateLess (int32_correct x).
+
+Instance correct_function_eval_pc :
+  forall a, correct_function p args res f fn ModNothing false (match_state ) match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
+    eapply correct_body_Sreturn_Some.
     repeat intro.
-    unfold INV in H.
+    unfold INV in H0.
     get_invariant _st.
-    unfold stateM_correct in c.
-    destruct c as (Hv_eq & Hst).
-    subst.
-
-    (** we need to get the value of pc in the memory *)
-    destruct Hst; clear munchange mregs mflags mperm.
-    unfold Mem.loadv in mpc.
-    (** pc \in [ (state_block,0), (state_block,8) ) *)
-    (**according to the type of eval_pc:
-         unsigned long long eval_pc (struct bpf_state* st)
-       1. return value should be Vlong
-       2. the memory is same
-      *)
-    exists (Vint (pc_loc st)), m, Events.E0.
-
-    repeat split; unfold step2.
-    - (* goal: Smallstep.star  _ _ (State _ (Ssequence ... *)
-      repeat forward_star.
-
-      unfold Coqlib.align; rewrite Ptrofs.add_zero.
-      unfold Ptrofs.zero; simpl.
-      rewrite Ptrofs.unsigned_repr.
-      rewrite <- mpc; reflexivity.
-      rewrite Ptrofs_max_unsigned_eq32.
-      lia.
-      reflexivity.
+    exists (Vint (pc_loc st)).
+    split_and.
+    -
+    unfold exec_expr.
+    unfold eval_inv in c. unfold is_state_handle in c.
+    subst. rewrite p0.
+    simpl. unfold exec_deref_loc.
+    simpl.
+    inv H.
+    unfold Coqlib.align; rewrite Ptrofs.add_zero.
+    unfold Ptrofs.zero; simpl.
+    rewrite Ptrofs.unsigned_repr.
+    rewrite <- mpc; reflexivity.
+    rewrite Ptrofs_max_unsigned_eq32.
+    lia.
     - simpl.
       constructor.
-      reflexivity.
+    - simpl. reflexivity.
+    - simpl ; auto.
   Qed.
 
 End Eval_pc.
 
-Existing  Instance correct_function3_eval_pc.
+Existing  Instance correct_function_eval_pc.

@@ -12,10 +12,7 @@ From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState Comm
 From bpf.clight Require Import interpreter.
 
 Section Is_well_chunk_bool.
-
-  Variable st_block : block.
-  Variable mrs_block: block.
-  Variable ins_block: block.
+  Context {S: special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -30,6 +27,7 @@ Section Is_well_chunk_bool.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_is_well_chunk_bool.
 
+
   Ltac exec_seq_of_labeled_statement :=
     match goal with
     | |- context[seq_of_labeled_statement ?X] =>
@@ -37,8 +35,8 @@ Section Is_well_chunk_bool.
         change (seq_of_labeled_statement X) with x
     end.
 
-  Instance correct_function_is_well_chunk_bool2 : forall a, correct_function3
-      p args res f fn nil true (DList.DCons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool) a.
+  Instance correct_function_is_well_chunk_bool2 : forall a, correct_function
+      p args res f fn ModNothing true match_state (dcons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool) a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -49,13 +47,13 @@ Section Is_well_chunk_bool.
     destruct p0 as (v',st'); intros.
 
     get_invariant _chunk.
-    unfold stateless, match_chunk in c0.
+    unfold stateless, eval_inv, match_chunk in c0.
     subst.
 
     exists (Vint (if v' then Integers.Int.one else Integers.Int.zero)).
     exists m, Events.E0.
     
-    repeat split; unfold step2.
+    split_and; unfold step2;auto.
     -
       unfold memory_chunk_to_valu32, well_chunk_Z in p0.
       unfold align_chunk in p0.
@@ -64,11 +62,13 @@ Section Is_well_chunk_bool.
       forward_star; forward_star;
       [ rewrite Int.unsigned_repr; [idtac | rewrite Int_max_unsigned_eq64; lia]; simpl; forward_star |
       repeat forward_star | reflexivity].
-    - simpl.
-      constructor.
-      destruct v' ; reflexivity.
-    - unfold is_well_chunk_bool, returnM in Heq.
-      destruct c; inversion Heq; reflexivity.
+    - unfold match_bool. reflexivity.
+    - constructor. destruct v'.
+      reflexivity. reflexivity.
+    - unfold is_well_chunk_bool in Heq.
+      destruct c; inv Heq;auto.
+    - unfold is_well_chunk_bool in Heq.
+      destruct c; inv Heq;auto.
   Qed.
 
 End Is_well_chunk_bool.

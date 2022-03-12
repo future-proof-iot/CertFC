@@ -4,7 +4,7 @@ From Coq Require Import Program.Equality.
 From dx Require Import IR.
 From compcert Require Import Coqlib Values.
 From compcert Require Import SimplExpr.
-From compcert Require Import Clight.
+From compcert Require Import Clight Globalenvs.
 
 From bpf.comm Require Import State Monad.
 From compcert Require Import Integers.
@@ -16,6 +16,10 @@ Import Clightdefs.ClightNotations.
 From bpf.proof Require Import clight_exec.
 Open Scope type_scope.
 
+Ltac split_and :=
+repeat match goal with
+| |- ?A /\ ?B => split
+end.
 
 Definition without_mem {A B : Type} (P : A -> B -> Prop)
            (a : A) (b: B) (m: Memory.Mem.mem) :=  P a b.
@@ -456,117 +460,87 @@ Ltac car_cdr :=
     rewrite (DList.Dnil_nil _ DL) in *; clear DL
          end.
 
-(**r ysh: adding st st' *)
-Definition unmodifies_effect (l : list block) (m m' : Memory.Mem.mem) (st st' : State.state) : Prop :=
-  match l with
-  | nil => m = m' /\ st = st'
-  | _ => Mem.unchanged_on (fun b _ => ~ In b l) m m'
-  end.
+Inductive modifies_spec :=
+| ModNothing (* Same memory *)
+| ModSomething (* Arbitrary modification *).
+
+Definition incl_modifies (m1 m2 : modifies_spec) :=
+match m1, m2 with
+| ModNothing , _  | _ , ModSomething => True
+| _ , ModNothing  => False
+end.
+
+Definition lub_modifies (m1 m2: modifies_spec) :=
+match m1 , m2 with
+| ModNothing , x | x , ModNothing => x
+| ModSomething , _  => ModSomething
+end.
+
+Lemma incl_lub_left : forall m1 m2,
+incl_modifies m1 (lub_modifies m1 m2).
+Proof.
+ destruct m1,m2; simpl; auto.
+Qed.
+
+Lemma incl_lub_right : forall m1 m2,
+incl_modifies m2 (lub_modifies m1 m2).
+Proof.
+ destruct m1,m2; simpl; auto.
+Qed.
+
+Definition unmodifies_effect (md : modifies_spec) (m m' : Memory.Mem.mem) (st: State.state) (st':State.state) : Prop :=
+  match md with
+   | ModNothing => m = m' /\ st = st'
+  | ModSomething => True
+end.
 
 Lemma unmodifies_effect_refl : forall mods m st,
   unmodifies_effect mods m m st st.
 Proof.
-  unfold unmodifies_effect.
-  destruct mods.
-  tauto.
-  intros.
-  apply Mem.unchanged_on_refl.
+unfold unmodifies_effect.
+destruct mods; auto.
 Qed.
 
 
+Lemma unmodifies_effect_mono : forall mods mods' m m' st st'
+  (INCL : incl_modifies mods' mods)
+  (UN : unmodifies_effect mods' m m' st st'),
+  unmodifies_effect mods m m' st st'.
+Proof.
+ intros.
+ destruct mods'.
+ - simpl in UN. destruct UN. subst.
+   apply unmodifies_effect_refl.
+ - destruct mods ; simpl in *; try tauto.
+Qed.
+
 Lemma unmodifies_effect_trans : forall l m1 m2 m3 st1 st2 st3,
     unmodifies_effect l m1 m2 st1 st2 ->
-    unmodifies_effect l m2 m3 st2 st3 ->
+    unmodifies_effect l m2 m3 st2 st3->
     unmodifies_effect l m1 m3 st1 st3.
 Proof.
   unfold unmodifies_effect.
   intros.
-  destruct l.
-  firstorder; subst; reflexivity.
-  intros.
-  eapply Mem.unchanged_on_trans; eauto.
+  destruct l. intuition congruence.
+  auto.
 Qed.
 
-Lemma unmodifies_effect_trans_weak : forall l1 l2 l3 m1 m2 m3 st1 st2 st3,
-    unmodifies_effect l1 m1 m2 st1 st2 ->
-    unmodifies_effect l2 m2 m3 st2 st3 ->
-    incl l2 l3 -> incl l1 l3 ->
-    unmodifies_effect l3 m1 m3 st1 st3.
-Proof.
-  unfold unmodifies_effect.
-  intros.
-  destruct l1.
-  - destruct l3.
-    +
-      destruct l2.
-      * intuition congruence.
-      * unfold incl in H1.
-        specialize (H1 b) ; simpl in H1.
-        intuition congruence.
-    + destruct l2.
-      * destruct H, H0; subst.
-        apply Mem.unchanged_on_refl.
-      * destruct H ; subst.
-        unfold incl in H1, H2.
-        assert (Himplies: forall a,
-                ~ In a (b :: l3) -> ~ In a (b0 :: l2)). {
-          clear - H1.
-          intros.
-          intro.
-          apply H.
-          apply H1; auto.
-        }
-        eapply unchanged_on_weakP; eauto.
-        apply H0.
-        intros.
-        apply Himplies.
-        assumption.
-  - destruct l3.
-    +
-      specialize (H2 b) ; simpl in H2.
-      intuition congruence.
-    + destruct l2.
-      * destruct H0; subst.
-        unfold incl in H2.
-        assert (Himplies: forall a,
-                ~ In a (b0 :: l3) -> ~ In a (b :: l1)). {
-          clear - H2.
-          intros.
-          intro.
-          apply H.
-          apply H2; auto.
-        }
-        eapply unchanged_on_weakP; eauto.
-        apply H.
-        intros.
-        apply Himplies.
-        assumption.
-      * unfold incl in H1, H2.
-        assert (Himplies0: forall a,
-                ~ In a (b0 :: l3) -> ~ In a (b :: l1)). {
-          clear - H2.
-          intros.
-          intro.
-          apply H.
-          apply H2; auto.
-        }
-        assert (Himplies1: forall a,
-                ~ In a (b0 :: l3) -> ~ In a (b1 :: l2)). {
-          clear - H1.
-          intros.
-          intro.
-          apply H.
-          apply H1; auto.
-        }
-        eapply unchanged_on_weakP_trans with (m2:=m2); eauto.
-        apply H.
-        apply H0.
-        intros.
-        apply Himplies0; assumption.
-        intros.
-        apply Himplies1; assumption.
-Qed.
 
+Inductive Inv :=
+| StateLess (SL : val -> Prop) : Inv
+| StateFull (SF : val -> State.state -> Memory.Mem.mem -> Prop) : Inv.
+
+Definition is_stateless (i : Inv) :=
+match i with
+| StateLess _ => true
+| StateFull _ => false
+end.
+
+Definition eval_inv (i : Inv) (v: val) (st: State.state) (m: Memory.Mem.mem) :=
+match i with
+| StateLess sl => sl v
+| StateFull sf => sf v st m
+end.
 
 
 Definition all_args (l : list Type) (is_pure: bool) :=
@@ -593,19 +567,21 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn: Clight.function.
 
-  Variable modifies : list block. (* of the C code *)
+  Variable modifies : modifies_spec.
 
 (*  Variable match_mem : State.state -> val -> Memory.Mem.mem -> Prop.*)
 
-  Variable is_pure : bool.
+  Variable is_pure : bool. (* [is_pure] is true iff the C function does not take the monadic state as argument. *)
+
+  Variable match_state : State.state -> mem -> Prop.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Variable match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) (all_args args is_pure).
+  Variable match_arg_list : DList.t (fun x => x -> Inv) (all_args args is_pure).
 
   (* [match_res] relates the Coq result and the C result *)
-  Variable match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_res : res -> Inv.
 
-  Class correct_function3 (a: DList.t (fun x => x) args) :=
+  Class correct_function (a: DList.t (fun x => x) args) :=
     mk_correct_function3
       {
         fn_eval_ok3 : forall (st:State.state),
@@ -613,10 +589,10 @@ Section S.
           | None => True
           | Some (v',st') =>
               (* We prove that we can reach a return state *)
-              forall (lval: DList.t (fun _ => val) (all_args  args is_pure))
-                     k m,
-                (* they satisfy the invariants *)
-                DList.Forall2 (fun (a:Type) (R: a -> val -> State.state -> Memory.Mem.mem ->Prop) (X:a * val) => R (fst X) (snd X) st m)
+              forall (lval: DList.t (fun _ => val) (all_args  args is_pure)) k m
+                (MS : match_state st m),
+                (* they satisfy the pre-condition *)
+                DList.Forall2 (fun (a:Type) (R: a -> Inv) (X:a * val) => eval_inv (R (fst X)) (snd X) st m)
                               match_arg_list (DList.zip  (all_args_list args is_pure a ) lval) ->
                 (* We prove that we can reach a return state *)
                 Forall2 (fun v t => Cop.val_casted v (snd t)) (DList.to_list (fun _ v => v) lval) (fn_params fn) ->
@@ -626,13 +602,60 @@ Section S.
                                                        (DList.to_list (fun x v => v) lval)  k m) t
                      (Returnstate v (call_cont k) m') /\
                   (* The return memory matches the return state *)
-                  match_res  v' v st' m' /\ Cop.val_casted v (fn_return fn) /\
-                  unmodifies_effect modifies m m' st st'
+                  eval_inv (match_res  v') v st' m' /\ Cop.val_casted v (fn_return fn) /\
+                  unmodifies_effect modifies m m' st st' /\
+                  match_state st' m'
               end
       }.
 
 End S.
 
+Section S.
+  (** The program contains our function of interest [fn] *)
+  Variable p : Clight.program.
+
+  (* [Args,Res] provides the mapping between the Coq and the C types *)
+  Variable args : list Type.
+  Variable res : Type.
+
+  (* [f] is a Coq Monadic function with the right type *)
+  Variable f : arrow_type args (M res).
+
+  (* [fn] is the Cligth function which has the same behaviour as [f] *)
+  Variable fn: Clight.function.
+
+  Variable modifies : modifies_spec.
+
+(*  Variable match_mem : State.state -> val -> Memory.Mem.mem -> Prop.*)
+
+  Variable is_pure : bool. (* [is_pure] is true iff the C function does not take the monadic state as argument. *)
+
+  Variable match_state : State.state -> mem -> Prop.
+
+  (* [match_arg] relates the Coq arguments and the C arguments *)
+  Variable match_arg_list : DList.t (fun x => x -> Inv) (all_args args is_pure).
+  Variable match_res : res -> Inv.
+
+  Lemma correct_function_strengthen :
+    forall a,
+    correct_function p args res f fn ModNothing is_pure match_state match_arg_list match_res a ->
+      correct_function p args res f fn ModSomething is_pure match_state match_arg_list match_res a.
+  Proof.
+    constructor.
+    intros. destruct H.
+    specialize (fn_eval_ok4 st).
+    destruct (app f a st) ; auto.
+    destruct p0; auto.
+    intros.
+    specialize (fn_eval_ok4  _ k _ MS H H0).
+    destruct fn_eval_ok4 as (v & m' & t & ST & EI & VC & UM & MS').
+    eexists. eexists. eexists.
+    split_and; eauto.
+    simpl in UM. destruct UM ; subst.
+    apply unmodifies_effect_refl.
+  Qed.
+
+End S.
 
 Definition apply_cont (k:cont) : option (statement * cont) :=
   match k with
@@ -655,7 +678,7 @@ Section S.
   Variable fn : Clight.function.
   Variable stm: Clight.statement.
 
-  Variable modifies : list block.
+  Variable modifies : modifies_spec.
 
   Variable match_arg : State.state -> temp_env -> Memory.Mem.mem -> Prop.
 
@@ -672,39 +695,49 @@ Section S.
                   Star (Clight.semantics2 p) (State fn stm k empty_env le m) t
                        (State  fn s' k' empty_env le' m') /\
                     (* The return memory matches the return state *)
-                    match_res v' st' le' m' /\ unmodifies_effect modifies m m' st st'
+match_res v' st' le' m' /\ unmodifies_effect modifies m m' st st'
     end.
 
 End S.
 
 
 Definition match_elt (st: State.state) (m : Memory.Mem.mem) (le : temp_env)
-           (r : (AST.ident * Ctypes.type) * (val -> State.state -> Memory.Mem.mem -> Prop)) :=
+           (r : (AST.ident * Ctypes.type) * Inv) :=
   match Maps.PTree.get (fst (fst r)) le with
   | None => False
-  | Some v => (snd r) v st m /\ Cop.val_casted v (snd (fst r))
+  | Some v => eval_inv (snd r) v st m /\ Cop.val_casted v (snd (fst r))
   end.
 
-Definition match_temp_env (dl : list ((AST.ident * Ctypes.type) * (val -> State.state -> Memory.Mem.mem -> Prop)))
+Definition match_temp_env (dl : list ((AST.ident * Ctypes.type) * Inv))
            (le:temp_env) (st: State.state) (m : Memory.Mem.mem)
             : Prop :=
   Forall (match_elt st m le) dl.
 
-Definition pre
-           (var_inv : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
-            (st: State.state) (le: temp_env)  (m: Memory.Mem.mem) :=
-  match_temp_env var_inv le st m.
+Definition pre (ms : State.state -> mem -> Prop)
+           (var_inv : list (positive * Ctypes.type * Inv))
+            (st: State.state) (le: temp_env)  (m: mem) :=
+          ms st m /\  match_temp_env var_inv le st m.
 
-Definition post {r: Type}
-           (match_res : r -> val -> State.state -> Memory.Mem.mem -> Prop)
-           (var_inv : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+Definition filter_inv (l : list (positive * Ctypes.type * Inv)) :=
+  List.filter (fun '((_,_),i) => is_stateless i) l.
+
+Definition inv_of_modifies (m:modifies_spec) (l: list (positive * Ctypes.type * Inv)) :=
+match m with
+| ModNothing => l
+| ModSomething => filter_inv l
+end.
+
+Definition post {r: Type} (modifies: modifies_spec)
+           (ms : State.state -> mem -> Prop)
+           (match_res : r -> Inv)
+           (var_inv : list (positive * Ctypes.type * Inv))
            (vr : positive * Ctypes.type) (res : r)  (st:State.state) (le: temp_env) (m: Memory.Mem.mem) :=
-  match_temp_env ((vr, match_res res) :: var_inv) le st m.
+    ms st m /\ match_temp_env ((vr, match_res res) :: inv_of_modifies modifies var_inv) le st m.
 
-Definition post_unit (match_res : unit -> val -> State.state -> Memory.Mem.mem -> Prop)
-           (var_inv : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+Definition post_unit (modifies: modifies_spec) (ms : State.state -> mem -> Prop) (match_res : unit -> Inv)
+           (var_inv : list (positive * Ctypes.type * Inv))
            (r : unit) (st:State.state) (le: temp_env) (m: Memory.Mem.mem) :=
-  match_temp_env var_inv le st m /\ match_res r Vundef st m.
+   ms st m /\ match_temp_env var_inv le st m /\ eval_inv (match_res r) Vundef st m.
 
 
 
@@ -718,13 +751,16 @@ Section S.
   Variable fn : Clight.function.
   Variable stm: Clight.statement.
 
-  Variable modifies : list block.
+  Variable modifies : modifies_spec.
 
-  Variable match_arg : list ((AST.ident * Ctypes.type) * (val -> State.state -> Memory.Mem.mem -> Prop)).
+  Variable match_state : State.state -> mem -> Prop.
 
-  Variable match_res : res -> val  -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_arg : list ((AST.ident * Ctypes.type) * Inv).
+
+  Variable match_res : res -> Inv.
 
   Definition correct_body (st : State.state)   (le:temp_env) (m:Memory.Mem.mem) :=
+    forall (MS : match_state st m),
     match_temp_env match_arg le st m ->
     match f st with
           | None => True
@@ -737,23 +773,23 @@ Section S.
                      t
                      (Returnstate v (call_cont k) m') /\
                   (* The return memory matches the return state *)
-                  match_res v' v st' m' /\ Cop.val_casted v (fn_return fn) /\
-                  unmodifies_effect modifies m m' st st'
+                  eval_inv (match_res v') v st' m' /\ Cop.val_casted v (fn_return fn) /\ match_state st' m' /\ unmodifies_effect modifies m m' st st'
           end.
 
 End S.
 
 
 Definition list_rel (args : list Type)
-           (rargs : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args)
-           (a     : DList.t (fun x => x) args) :        list (val -> State.state -> Memory.Mem.mem -> Prop) :=
+           (rargs : DList.t (fun x => x -> Inv) args)
+           (a     : DList.t (fun x => x) args) : list Inv :=
   DList.to_list (fun (x : Type) H  => H)
-             (DList.map2 (fun (a0 : Type) (F : a0 -> val -> State.state -> Memory.Mem.mem -> Prop) x   => F x) rargs a).
+             (DList.map2 (fun (a0 : Type) (F : a0 -> Inv) x   => F x) rargs a).
 
-Definition list_rel_arg (p : list (AST.ident * Ctypes.type)) (args : list Type) (rargs : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args)
-           (a     : DList.t (fun x => x) args) :
-         list  (AST.ident * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop))
-  :=  List.combine p (list_rel args rargs a).
+Definition list_rel_arg (p : list (AST.ident * Ctypes.type)) (args : list Type)
+(rargs : DList.t (fun x => x -> Inv) args)
+(a     : DList.t (fun x => x) args) :
+list  (AST.ident * Ctypes.type * Inv)
+:=  List.combine p (list_rel args rargs a).
 
 
 Lemma get_bind_parameter_temps_s :
@@ -780,11 +816,11 @@ Lemma match_arg_list_match_init_env :
   forall (targs: list Type)
          (lval: DList.t (fun _ => val) targs)
          (a   : DList.t (fun x => x) targs)
-         (ma : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) targs)
+         (ma : DList.t (fun x => x -> Inv) targs)
          m p te st
          (HLEN : length p = length targs)
          (NOREP1: Coqlib.list_norepet (var_names p))
-         (MA : DList.Forall2 (fun (a : Type) (R : a -> val -> State.state -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m
+         (MA : DList.Forall2 (fun (a : Type) (R : a -> Inv) (X : a * val) => eval_inv (R (fst X)) (snd X) st m
                              ) ma (DList.zip a lval))
          (MA' : Forall2
                   (fun (v : val) (t : AST.ident * Ctypes.type) =>
@@ -845,17 +881,18 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn: Clight.function.
 
-  Variable modifies : list block.
+  Variable modifies : modifies_spec.
 
   (* If [is_pure] is true, the C code has no handler to the monadic state *)
   Variable is_pure : bool.
 
   (* Usually, only the first arguments is using State.state.
      Most of the arguments do not use Memory.Mem.mem either *)
+  Variable match_state : State.state -> mem -> Prop.
 
-  Variable match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) (all_args args is_pure).
+  Variable match_arg_list : DList.t (fun x => x -> Inv) (all_args args is_pure).
 
-  Variable match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_res : res -> Inv.
 
 
   Lemma correct_function_from_body : forall
@@ -865,18 +902,18 @@ Section S.
       (NOVAR : fn_vars fn = nil)
       (HLEN : Datatypes.length (fn_params fn) = Datatypes.length (all_args args is_pure))
       a
-      (C : forall st le m, correct_body p  res (app f a) fn (fn_body fn) modifies
+      (C : forall st le m, correct_body p  res (app f a) fn (fn_body fn) modifies match_state
                                           (list_rel_arg (fn_params fn) (all_args args is_pure) match_arg_list (all_args_list args is_pure  a))
                                           match_res st le m)
 
     ,
-        correct_function3 p args res f fn modifies is_pure match_arg_list match_res a.
+        correct_function p args res f fn modifies is_pure match_state match_arg_list match_res a.
   Proof.
     econstructor.
     intros.
     destruct (app f a st) eqn: EQ; auto.
     destruct p0 as (v',st').
-    intros lval k m MM MA.
+    intros lval k m MS MM MA.
     specialize (C st (bind_parameter_temps_s (fn_params fn) ((DList.to_list (fun (_ : Type) (v0 : val) => v0) lval))
           (create_undef_temps (fn_temps fn))) m).
     unfold correct_body in C.
@@ -887,23 +924,28 @@ Section S.
     }
     intros (v2& m'& t'& EX & RES).
     do 3 eexists.
-    split ; eauto.
+    split_and; try tauto.
+    -
     eapply star_step.
     econstructor ; eauto.
     econstructor ; eauto.
-    - rewrite NOVAR.
-      econstructor ; eauto.
-    - rewrite bind_parameter_temps_eq.
-      reflexivity.
-      simpl.
-      rewrite DList.length_to_list.
-      auto.
-    - eapply star_trans.
-      eauto.
-      apply star_refl.
-      reflexivity.
-    - reflexivity.
-  Qed.
+    rewrite NOVAR.
+    econstructor ; eauto.
+    rewrite bind_parameter_temps_eq.
+    reflexivity.
+    simpl.
+    rewrite DList.length_to_list.
+    auto.
+    eapply star_trans.
+    eauto.
+    apply star_refl.
+    reflexivity.
+    reflexivity.
+    - tauto.
+    - tauto.
+    - tauto.
+    - tauto.
+Qed.
 
 
 End S.
@@ -1002,12 +1044,12 @@ Proof.
 Qed.
 
 Lemma match_temp_env_up :
-  forall te st m st' m'  (l:list (AST.ident * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+  forall te st m st' m'  (l:list (AST.ident * Ctypes.type * Inv))
          (MOD :
                 forall x t r v,
                   In ((x,t),r) l ->
                   Maps.PTree.get x te = Some v ->
-                  r v st m -> r v st' m')
+                  eval_inv r v st m -> eval_inv r v st' m')
   ,
     match_temp_env l te st m ->
     match_temp_env l te st' m'.
@@ -1029,15 +1071,15 @@ Proof.
     simpl. right;eauto.
 Qed.
 
-
-Definition var_inv_preserve {res: Type} (var_inv : list (positive * Ctypes.type * (val ->State.state -> Memory.Mem.mem -> Prop))) (match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop)
-           (modifies : list block) (te: temp_env)
+(*Definition var_inv_preserve {res: Type} (var_inv : list (positive * Ctypes.type * (val ->State.state -> Memory.Mem.mem -> Prop))) (match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop)
+           (modifies : modifies_spec) (te: temp_env)
   :=
   forall  r rv m m' st st',
-    unmodifies_effect modifies m m' st st' ->
-    match_res r rv st' m' ->
-    match_temp_env var_inv te st m  ->
-    match_temp_env var_inv te st' m'.
+unmodifies_effect modifies m m' st st' ->
+match_res r rv st' m' ->
+match_temp_env var_inv te st m  ->
+match_temp_env var_inv te st' m'.
+*)
 
 Definition  exec_deref_loc (ty : Ctypes.type) (m : Memory.Mem.mem) (b : block) (ofs : ptrofs) : option val :=
   match Ctypes.access_mode ty with
@@ -1046,6 +1088,7 @@ Definition  exec_deref_loc (ty : Ctypes.type) (m : Memory.Mem.mem) (b : block) (
   | Ctypes.By_copy => Some (Vptr b ofs)
   | Ctypes.By_nothing => None
   end.
+
 
 (**r ysh: executing clight expressions, return the result of the expression (Q: Clight has `eval_expr`, is a relation ), this definition should be equivalent to clight's `eval_expr` *)
 Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr) {struct e} : option val :=
@@ -1087,7 +1130,23 @@ Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr
                          | None => None
                          | Some v => Cop.sem_cast v (typeof e) ty m
                          end
-  | Efield _ _ _      => None (**r ysh: None -> *)
+| Efield e i ty      => match exec_expr ge ev le m e with
+                        | Some (Vptr l ofs) =>
+                            match typeof e with
+                              | Ctypes.Tstruct id _  =>
+                                  match Maps.PTree.get id ge.(genv_cenv) with
+                                  | Some co =>
+                                      match Ctypes.field_offset ge i (Ctypes.co_members co) with
+                                      | Errors.OK(delta) =>
+                                          exec_deref_loc ty m l (Ptrofs.add ofs (Ptrofs.repr delta))
+                                      |  _  => None
+                                      end
+                                  | _   => None
+                                  end
+                            |  _ => None
+                            end
+                        |  _ => None
+                        end
   | Esizeof _ _       => None
   | Ealignof _ _      => None
   end.
@@ -1137,17 +1196,14 @@ Proof.
       apply deref_loc_var. auto.
   - simpl. intros.
     econstructor ; eauto.
-  - (**r ysh: `intros ; discriminate.` -> *)
-    intros.
+  - intros.
     simpl in H.
     destruct (exec_expr ge ev te m e) eqn: He; try discriminate.
     destruct v0 eqn: Hv0; try discriminate.
     subst.
     econstructor.
-    econstructor.
-    apply IHe.
-    reflexivity.
-    apply deref_loc_var. auto.
+    econstructor. eauto.
+    apply deref_loc_var. simpl. auto.
   - intros ; discriminate.
   - simpl.
     intros.
@@ -1165,8 +1221,16 @@ Proof.
     destruct (exec_expr ge ev te m e) eqn:E; try discriminate.
     inv H. econstructor.
     eauto. auto.
-  - intros.
-    discriminate.
+  - simpl. intros.
+    destruct (exec_expr ge ev te m e) eqn:EX; try discriminate.
+    destruct v0 ; try discriminate.
+    specialize (IHe _ eq_refl).
+    destruct (typeof e) eqn:TO ; try discriminate.
+    destruct (@Maps.PTree.get Ctypes.composite i1 (genv_cenv ge)) eqn:GET ; try discriminate.
+    destruct (Ctypes.field_offset ge i (Ctypes.co_members c)) eqn:OF; try discriminate.
+    econstructor.
+    econstructor; eauto.
+    eapply deref_loc_var; auto.
   - discriminate.
   - discriminate.
 Qed.
@@ -2118,7 +2182,7 @@ Fixpoint vc_casted (inv: list (positive * Ctypes.type)) (e:expr) :=
                              vc_binary_operation_casted o (typeof e1) (typeof e2) t
   | Ecast e ty        => vc_casted inv e &&
                            vc_cast_casted (typeof e) ty
-  | Efield e _ _      => false (**r ysh: `false` -> `vc_casted inv e` *)
+  | Efield e _ _      => false
   | Esizeof _ _       => false
   | Ealignof _ _      => false
   end.
@@ -2217,9 +2281,44 @@ Fixpoint type_of_list (l : list Ctypes.type) : Ctypes.typelist :=
   | cons e l => Ctypes.Tcons e (type_of_list l)
   end.
 
+Lemma in_inv_of_modifies : forall x md l,
+  In x (inv_of_modifies md l) -> In x l.
+Proof.
+  unfold inv_of_modifies.
+  destruct md; auto.
+  intros. unfold filter_inv in H.
+  rewrite filter_In in H. tauto.
+Qed.
+
+Lemma match_temp_env_inv_of_modifies :
+  forall md m m' st st' var_inv le
+    (UNMOD : unmodifies_effect md m m' st st')
+    (ALL   : Forall (match_elt st m le) var_inv),
+    match_temp_env (inv_of_modifies md var_inv) le st' m'.
+Proof.
+  unfold match_temp_env.
+  destruct md; simpl; auto.
+  - intuition subst. auto.
+  - intros.
+    rewrite Forall_forall in ALL.
+    rewrite Forall_forall.
+    intros. unfold filter_inv in H.
+    rewrite filter_In in H.
+    destruct H as (IN & ST).
+    destruct x. destruct p.
+    apply ALL in IN. clear ALL.
+    unfold match_elt in *.
+    simpl in *.
+    destruct (Maps.PTree.get i0 le); try tauto.
+    destruct i ; try discriminate.
+    simpl in *. tauto.
+Qed.
+
 Section S.
   Variable p : program.
   Variable fn: Clight.function.
+
+
 
   Lemma correct_statement_call :
     forall  (has_cast : bool) args res (f : arrow_type args (M res)) is_pure a loc
@@ -2230,12 +2329,13 @@ Section S.
            (TF : type_of_fundef (Ctypes.Internal fct) =
                    Ctypes.Tfunction targs ti AST.cc_default)
 
-           (match_arg : DList.t (fun x : Type => x -> val -> State.state -> Memory.Mem.mem -> Prop) (all_args args is_pure))
-           (match_res : res -> val  -> State.state -> Memory.Mem.mem -> Prop)
-           (C : forall a, correct_function3 p args res f fct modifies is_pure match_arg match_res a)
-           (var_inv : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (match_state : State.state -> mem -> Prop)
+           (match_arg : DList.t (fun x : Type => x -> Inv) (all_args args is_pure))
+           (match_res : res -> Inv)
+           (C : correct_function p args res f fct modifies  is_pure match_state match_arg match_res a)
+           (var_inv : list (positive * Ctypes.type * Inv))
            (le : temp_env) (m : Memory.Mem.mem) (st : State.state)
-           (VARINV: var_inv_preserve var_inv match_res modifies  le)
+(*           (VARINV: var_inv_preserve var_inv match_res modifies  le)*)
            (TI    : ti = fn_return fct)
            (TARGS : targs = type_of_list (map typeof eargs))
            (TARGS1 : map typeof eargs = map snd (fn_params fct))
@@ -2248,7 +2348,7 @@ Section S.
              exists lval,
                map_opt (exec_expr (Clight.globalenv p) empty_env le m) eargs = Some lval
             /\ forall (LEN :List.length lval = (List.length (all_args args is_pure))),
-      DList.Forall2 (fun (a : Type) (R : a -> val -> State.state -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
+      DList.Forall2 (fun (a : Type) (R : a -> Inv) (X : a * val) => eval_inv (R (fst X)) (snd X) st m) match_arg
                     (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
     ,
       correct_statement p res (app f a) fn
@@ -2259,16 +2359,17 @@ Section S.
           eargs)
        (Sset vres (if has_cast then
           (Ecast (Etempvar tres ti) ti) else Etempvar tres ti)))
-    modifies (pre  var_inv) (post  match_res var_inv (vres,ti)) st le m.
+    modifies (pre  match_state var_inv) (post  modifies match_state match_res var_inv (vres,ti)) st le m.
   Proof.
     repeat intro.
     rename H into PRE.
-    destruct (C a).
+    destruct C.
     specialize (fn_eval_ok4  st).
     destruct (app f a st); try congruence.
     destruct p0 as (v',st').
     intros s' k k' K.
     unfold pre in PRE. unfold match_temp_env in PRE.
+    destruct PRE as (MS & PRE).
     destruct (LVAL PRE) as (lval & MAP & ALL).
     clear LVAL.
     assert (LEN : Datatypes.length lval = Datatypes.length (all_args args is_pure)).
@@ -2284,128 +2385,18 @@ Section S.
                                    (Kseq (Sset vres (if has_cast
                 then Ecast (Etempvar tres ti) ti
                                                      else Etempvar tres ti)) k)) m).
-(*
-    assert (MA : DList.Forall2 (fun (a : Type) (R : a -> val -> State.state -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
-                  (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN))).
-    {
-      unfold match_temp_env in PRE.
-      rewrite Forall_forall in PRE.
-      revert PRE.
-      revert LVAL VAR.
-      clear.
-      revert lval LEN.
-      revert  lvar var_inv.
-      revert match_arg.
-      generalize ((all_args_list args is_pure a)) as a'.
-      generalize (all_args args is_pure) as args'.
-      induction a'.
-      - intros. car_cdr.
-        simpl. auto.
-      - intros. car_cdr.
-        simpl.
-        destruct lval. discriminate.
-        simpl.
-        destruct lvar. discriminate.
-        simpl in LVAL.
-        assert (In (p, c v) var_inv).
-        { apply VAR. simpl. tauto. }
-        generalize (PRE _ H).
-        unfold match_elt.
-        change AST.ident with positive in *.
-        simpl.
-        destruct (Maps.PTree.get (fst p) le) eqn:G;try discriminate.
-        destruct (map_opt
-             (fun x : positive * Ctypes.type => Maps.PTree.get (fst x) le)
-             lvar) eqn:M ; try discriminate.
-        inv LVAL.
-        split. tauto.
-        eapply IHa'; eauto.
-        repeat intro.
-        apply VAR.
-        right. auto.
-    }
-    assert (MA' : Forall2
-                  (fun (v : val) (t : AST.ident * Ctypes.type) =>
-                   Cop.val_casted v (snd t))
-                  lval
-                  lvar).
-    {
-      revert PRE.
-      assert (P: incl lvar  (map fst var_inv)).
-      {
-        revert VAR.
-        rewrite <- (map_fst_combine lvar (list_rel (all_args args is_pure)
-                                                   match_arg (all_args_list args is_pure a))) at 2.
-        apply incl_map.
-        unfold list_rel.
-        rewrite DList.length_to_list.
-        clear - LEN LVAL.
-        apply length_map_opt in LVAL.
-        rewrite LEN in *.
-        auto.
-      }
-      revert LVAL.
-      revert P.
-      clear.
-      revert lval.
-      unfold match_temp_env.
-      induction lvar.
-      - simpl. intros.
-        inv LVAL. constructor.
-      - simpl.
-        intros.
-        change AST.ident with positive in *.
-        destruct (Maps.PTree.get (fst a) le) eqn: G; try discriminate.
-        destruct (           map_opt (fun x : positive * Ctypes.type => Maps.PTree.get (fst x) le)) eqn:M ; try discriminate.
-        inv LVAL.
-        constructor.
-        assert (INM : In a (map fst var_inv)).
-        { apply P.
-          simpl. tauto. }
-        rewrite in_map_iff in INM.
-        destruct INM as (x & FST & IN).
-        rewrite Forall_forall in PRE.
-        apply PRE in IN.
-        unfold match_elt in IN.
-        change AST.ident with positive in *.
-        rewrite FST in *.
-        rewrite G in IN.
-        tauto.
-        apply IHlvar; auto.
-        eapply incl_cons_inv; eauto.
-    } *)
+
     assert (EQ: lval = (DList.to_list (fun (_ : Type) (v : val) => v)
                                    (DList.of_list_sl lval (all_args args is_pure) LEN))).
     { apply (DList.to_list_of_list_sl ). }
-(*    assert (MA2:= MA').
-    rewrite EQ in MA'.
-    assert (MA'' : Forall2
-          (fun (v : val) (t : AST.ident * Ctypes.type) =>
-             Cop.val_casted v (snd t)) lval (fn_params fct)).
-    {
-      revert MA2.
-      revert TARGSF.
-      clear.
-      revert lvar lval.
-      induction (fn_params fct).
-      - destruct lvar ; simpl; try discriminate.
-        auto.
-      - destruct lvar; try discriminate.
-        simpl. intros. inv TARGSF.
-        inv MA2;auto.
-        constructor ;auto.
-        unfold AST.ident in *.
-        rewrite H0 in H4;auto.
-        eapply IHl;eauto.
-    } *)
-    (*rewrite EQ in MA''.*)
+
     assert (ALLCASTED : Forall2 (fun (v : val) (t : AST.ident * Ctypes.type) => val_casted v (snd t))
     lval (fn_params fct)).
     {
       eapply check_cast; eauto.
       eapply var_casted_list_map_fst; eauto.
     }
-    destruct (fn_eval_ok4 ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD).
+    destruct (fn_eval_ok4 MS ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD & MS').
     rewrite <- EQ. assumption.
     do 3 eexists.
     split.
@@ -2474,7 +2465,7 @@ Section S.
     reflexivity.
     reflexivity.
     unfold post.
-    repeat split; auto.
+    split_and; auto.
     unfold match_temp_env.
     apply Forall_cons.
     - unfold match_elt.
@@ -2482,10 +2473,21 @@ Section S.
       rewrite Maps.PTree.gss.
       subst. tauto.
     - apply match_temp_env_set; auto.
+      intro.
+      rewrite in_map_iff in H.
+      destruct H as (x & EQIN & IN).
+      apply in_inv_of_modifies in IN.
+      apply NOTIN1.
+      rewrite in_map_iff. exists x. tauto.
       apply match_temp_env_set; auto.
+      intro.
+      rewrite in_map_iff in H.
+      destruct H as (x & EQIN & IN).
+      apply in_inv_of_modifies in IN.
+      apply NOTIN2.
+      rewrite in_map_iff. exists x. tauto.
       revert PRE.
-      eapply VARINV. auto.
-      eauto.
+      apply match_temp_env_inv_of_modifies; auto.
   Qed.
 
 End S.
@@ -2502,15 +2504,15 @@ Section S.
                                             (Vptr loc Ptrofs.zero) = Some (Ctypes.Internal fct))
            (TF : type_of_fundef (Ctypes.Internal fct) =
                    Ctypes.Tfunction targs ti AST.cc_default)
+           (match_state : State.state -> mem -> Prop)
+           (match_arg : DList.t (fun x : Type => x -> Inv) (all_args args is_pure))
+           (match_res : unit -> Inv)
+           (C : correct_function p args unit f fct modifies is_pure match_state match_arg match_res a)
+           (match_res_Vundef : forall x v st m, eval_inv (match_res x) v st m -> v = Vundef)
 
-           (match_arg : DList.t (fun x : Type => x -> val -> State.state -> Memory.Mem.mem -> Prop) (all_args args is_pure))
-           (match_res : unit -> val  -> State.state -> Memory.Mem.mem -> Prop)
-           (C : forall a, correct_function3 p args unit f fct modifies is_pure match_arg match_res a)
-           (match_res_Vundef : forall x v st m, match_res x v st m -> v = Vundef)
-
-           (var_inv : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (var_inv : list (positive * Ctypes.type * Inv))
            (le : temp_env) (m : Memory.Mem.mem) (st : State.state)
-           (VARINV: var_inv_preserve var_inv match_res modifies  le)
+(*           (VARINV: var_inv_preserve var_inv match_res modifies  le)*)
            (TI    : ti = fn_return fct)
            (TARGS : targs = type_of_list (map typeof eargs))
            (TARGS1 : map typeof eargs = map snd (fn_params fct))
@@ -2521,7 +2523,7 @@ Section S.
              exists lval,
                map_opt (exec_expr (Clight.globalenv p) empty_env le m) eargs = Some lval
             /\ forall (LEN :List.length lval = (List.length (all_args args is_pure))),
-      DList.Forall2 (fun (a : Type) (R : a -> val -> State.state -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
+      DList.Forall2 (fun (a : Type) (R : a -> Inv) (X : a * val) => eval_inv (R (fst X)) (snd X) st m) match_arg
                     (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
     ,
       correct_statement p unit (app f a) fn
@@ -2529,16 +2531,17 @@ Section S.
           (Evar fvar
              (Ctypes.Tfunction targs ti AST.cc_default))
           eargs)
-    modifies (pre  var_inv) (post_unit match_res  var_inv) st le m.
+    modifies (pre  match_state var_inv) (post_unit modifies match_state match_res  (inv_of_modifies modifies var_inv)) st le m.
   Proof.
     repeat intro.
     rename H into PRE.
-    destruct (C a).
+    destruct C.
     specialize (fn_eval_ok4  st).
     destruct (app f a st); try congruence.
     destruct p0 as (v',st').
     intros s' k k' K.
     unfold pre in PRE. unfold match_temp_env in PRE.
+    destruct PRE as (MS& PRE).
     destruct (LVAL PRE) as (lval & MAP & ALL).
     clear LVAL.
     assert (LEN : Datatypes.length lval = Datatypes.length (all_args args is_pure)).
@@ -2561,7 +2564,7 @@ Section S.
       eapply check_cast; eauto.
       eapply var_casted_list_map_fst; eauto.
     }
-    destruct (fn_eval_ok4 ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD).
+    destruct (fn_eval_ok4 MS ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD & MS').
     rewrite <- EQ. assumption.
     assert (v1 = Vundef). eapply match_res_Vundef; eauto.
     subst.
@@ -2612,10 +2615,7 @@ Section S.
     reflexivity.
     unfold post_unit.
     repeat split; auto.
-    unfold match_temp_env.
-    revert PRE.
-    eapply VARINV. auto.
-    eauto.
+    eapply match_temp_env_inv_of_modifies; eauto.
   Qed.
 
 End S.
@@ -2634,13 +2634,12 @@ Section S.
                                             (Vptr loc Ptrofs.zero) = Some (Ctypes.Internal fct))
            (TF : type_of_fundef (Ctypes.Internal fct) =
                    Ctypes.Tfunction targs ti AST.cc_default)
-
-           (match_arg : DList.t (fun x : Type => x -> val -> State.state -> Memory.Mem.mem -> Prop) (all_args args is_pure))
-           (match_res : res -> val  -> State.state -> Memory.Mem.mem -> Prop)
-           (C : correct_function3 p args res f fct modifies is_pure match_arg match_res a)
-           (var_inv : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (match_state : State.state -> mem -> Prop)
+           (match_arg : DList.t (fun x : Type => x -> Inv) (all_args args is_pure))
+           (match_res : res -> Inv)
+           (C : correct_function p args res f fct modifies is_pure match_state match_arg match_res a)
+           (var_inv : list (positive * Ctypes.type * Inv))
            (le : temp_env) (m : Memory.Mem.mem) (st : State.state)
-           (VARINV: var_inv_preserve var_inv match_res modifies  le)
            (TI    : ti = fn_return fct)
            (TIN    : ti = fn_return fn)
            (TARGS : targs = type_of_list (map typeof eargs))
@@ -2654,7 +2653,7 @@ Section S.
              exists lval,
                map_opt (exec_expr (Clight.globalenv p) empty_env le m) eargs = Some lval
             /\ forall (LEN :List.length lval = (List.length (all_args args is_pure))),
-      DList.Forall2 (fun (a : Type) (R : a -> val -> State.state -> Memory.Mem.mem -> Prop) (X : a * val) => R (fst X) (snd X) st m) match_arg
+      DList.Forall2 (fun (a : Type) (R : a -> Inv) (X : a * val) => eval_inv (R (fst X)) (snd X) st m) match_arg
                     (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
     ,
       correct_body p res (app f a) fn
@@ -2665,7 +2664,7 @@ Section S.
           eargs)
        (Sreturn (Some (if has_cast then
                    (Ecast (Etempvar tres ti) ti) else Etempvar tres ti))))
-    modifies var_inv match_res  st le m.
+    modifies match_state var_inv match_res  st le m.
   Proof.
     repeat intro.
     rename H into PRE.
@@ -2812,7 +2811,7 @@ Section S.
       eapply check_cast; eauto.
       eapply var_casted_list_map_fst; eauto.
     }
-    destruct (fn_eval_ok4 ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD).
+    destruct (fn_eval_ok4 MS ALL) as (v1 & m1 & t1 & STAR & RES' & CAST  &MOD & MS').
     rewrite <- EQ. assumption.
     do 3 eexists.
     split.
@@ -2899,10 +2898,10 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Lemma correct_function_modifies_more : forall mods mods' is_pure match_args matchres a
-(CF : correct_function3 p args res f fn mods' is_pure match_args matchres a)
-(INCL :incl mods' mods) ,
-   correct_function3 p args res f fn mods is_pure match_args matchres a.
+  Lemma correct_function_modifies_more : forall mods mods' is_pure match_state match_args matchres a
+(CF : correct_function p args res f fn mods' is_pure match_state match_args matchres a)
+(INCL :incl_modifies mods' mods) ,
+   correct_function p args res f fn mods is_pure match_state match_args matchres a.
 Proof.
    repeat intro.
    destruct CF.
@@ -2912,28 +2911,12 @@ Proof.
    destruct (app f a st);auto.
    destruct p0 ; auto.
    intros.
-destruct (fn_eval_ok4 lval k m H H0) as (v & m' & t & ST & MR & CS & UN).
-   repeat eexists; repeat split;eauto.
-    clear - UN INCL.
-   unfold incl,unmodifies_effect in *.
-destruct mods'.
-- destruct mods. tauto.
-  destruct UN ; subst.
-  apply Mem.unchanged_on_refl.
-- destruct mods.
-  exfalso. apply (INCL b). simpl. tauto.
-  revert UN.
-  revert INCL.
-  generalize (b::mods').
-  generalize (b0::mods).
-  intros.
-  eapply Mem.unchanged_on_implies; eauto.
-  intros. simpl. intro. apply INCL in H1. tauto.
+destruct (fn_eval_ok4 lval k m MS H H0) as (v & m' & t & ST & MR & CS & UN & MS').
+repeat eexists; repeat split;eauto.
+eapply unmodifies_effect_mono; eauto.
 Qed.
 
 End S.
-
-
 
 Section S.
   (** The program contains our function of interest [fn] *)
@@ -2950,26 +2933,28 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable match_res1 : res1 -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_res1 : res1 -> Inv.
 
-  Variable match_res2 : res2  -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_res2 : res2  -> Inv.
+
+  Variable match_state : State.state -> mem -> Prop.
 
   Lemma correct_statement_seq_body :
     forall (s1 s2:Clight.statement) vret ti
-           (modifies1 modifies2 modifiesr: list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies1 modifies2 modifiesr: modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
-      (C1  : correct_statement p res1 f1 fn s1 modifies1 (pre  var_inv) (post  match_res1 var_inv (vret,ti)) st le m)
-      (C2  : forall le m st x, correct_body p res2 (f2 x) fn s2 modifies2  ((vret,ti,match_res1 x):: var_inv) match_res2 st le m)
-      (MOD : union Pos.eqb modifies1 modifies2 = modifiesr)
+      (C1  : correct_statement p res1 f1 fn s1 modifies1 (pre match_state var_inv) (post modifies1 match_state match_res1 var_inv (vret,ti)) st le m)
+      (C2  : forall le m st x, correct_body p res2 (f2 x) fn s2 modifies2 match_state ((vret,ti,match_res1 x):: (inv_of_modifies modifies1 var_inv)) match_res2 st le m)
+      (MOD : lub_modifies modifies1 modifies2 = modifiesr)
     ,
              correct_body p  res2 (bindM f1 f2) fn
-             (Ssequence s1 s2) modifiesr  var_inv match_res2 st le m.
+             (Ssequence s1 s2) modifiesr  match_state var_inv match_res2 st le m.
   Proof.
     intros.
     subst.
     unfold correct_body.
-    intros PRE.
+    intros MS PRE.
     unfold bindM.
     unfold correct_statement in C1.
     destruct (f1 st) eqn:F1 ; try congruence.
@@ -2977,17 +2962,17 @@ Section S.
     destruct (f2 v1 st1) eqn:F2; try congruence.
     destruct p0 as (v2,st2).
     intros.
-    destruct (C1 PRE s2 (Kseq s2 k) k  eq_refl) as
+    destruct (C1 (conj MS PRE) s2 (Kseq s2 k) k  eq_refl) as
       (le'& m' & t & ST & MR & MOD).
     specialize (C2 le' m' st1 v1).
     unfold correct_body in C2.
     rewrite F2 in C2.
-    assert (PRE2 : pre  ((vret, ti, match_res1 v1) :: var_inv) st1 le' m').
+    assert (PRE2 : pre match_state ((vret, ti, match_res1 v1) :: inv_of_modifies modifies1 var_inv) st1 le' m').
     {
       unfold pre. unfold post in MR.
       tauto.
     }
-    destruct (C2  PRE2  k) as
+    destruct (C2 (proj1 PRE2) (proj2 PRE2)  k) as
       (le2& m2 & t2 & ST2 & MR2).
     exists le2. exists m2. exists (t ++ t2).
     split;auto.
@@ -2999,27 +2984,33 @@ Section S.
     reflexivity.
     reflexivity.
     repeat split ; try tauto.
-    destruct (union_incl Pos.eqb Pos.eqb_eq modifies1 modifies2) as (I1 & I2).
-    eapply unmodifies_effect_trans_weak; eauto.
+    generalize (incl_lub_left modifies1 modifies2) as I1.
+    generalize (incl_lub_right modifies1 modifies2) as I2.
+    intros.
+    destruct MR2 as (_ &  _ & MOD2).
+    eapply unmodifies_effect_trans.
+    eapply unmodifies_effect_mono. apply I1.
+    apply MOD.
+    eapply unmodifies_effect_mono. apply I2.
+    auto.
     tauto.
     auto.
     auto.
-  Qed.
+Qed.
 
   Lemma correct_statement_seq_body_nil :
     forall (s1 s2:Clight.statement) vret ti
-           (modifies : list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies : modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
-      (C1 : correct_statement p res1 f1 fn s1 nil (pre  var_inv) (post  match_res1 var_inv (vret,ti)) st le m)
-      (C2 : forall le m st x, correct_body p res2 (f2 x) fn s2 modifies  ((vret,ti,match_res1 x):: var_inv) match_res2 st le m)
+      (C1 : correct_statement p res1 f1 fn s1 ModNothing (pre match_state var_inv) (post ModNothing match_state match_res1 var_inv (vret,ti)) st le m)
+      (C2 : forall le m st x, correct_body p res2 (f2 x) fn s2 modifies match_state ((vret,ti,match_res1 x):: var_inv) match_res2 st le m)
     ,
              correct_body p  res2 (bindM f1 f2) fn
-             (Ssequence s1 s2) modifies  var_inv match_res2 st le m.
+             (Ssequence s1 s2) modifies match_state var_inv match_res2 st le m.
   Proof.
     intros.
     eapply correct_statement_seq_body; eauto.
-    apply union_nil.
   Qed.
 (*
   Lemma correct_statement_seq_body_pure :
@@ -3087,25 +3078,27 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable modifies : list block.
+  Variable modifies : modifies_spec.
 
-  Variable match_res1 : unit -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_state : State.state -> mem -> Prop.
 
-  Variable match_res2 : res2  -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_res1 : unit -> Inv.
+
+  Variable match_res2 : res2  -> Inv.
 
   Lemma correct_statement_seq_body_unit :
     forall (s1 s2:Clight.statement)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
-      (C1 : correct_statement p unit f1 fn s1 modifies (pre  var_inv) (post_unit  match_res1 var_inv) st le m)
-      (C2 : forall le m st x, correct_body p res2 (f2 x) fn s2 modifies  var_inv match_res2 st le m)
+      (C1 : correct_statement p unit f1 fn s1 modifies (pre match_state var_inv) (post_unit modifies match_state match_res1 var_inv) st le m)
+      (C2 : forall le m st x, correct_body p res2 (f2 x) fn s2 modifies match_state var_inv match_res2 st le m)
     ,
              correct_body p  res2 (bindM f1 f2) fn
-             (Ssequence s1 s2) modifies  var_inv match_res2 st le m.
+             (Ssequence s1 s2) modifies match_state var_inv match_res2 st le m.
   Proof.
     intros.
     unfold correct_body.
-    intros PRE.
+    intros MS PRE.
     unfold bindM.
     unfold correct_statement in C1.
     destruct (f1 st) eqn:F1 ; try congruence.
@@ -3113,17 +3106,17 @@ Section S.
     destruct (f2 v1 st1) eqn:F2; try congruence.
     destruct p0 as (v2,st2).
     intros.
-    destruct (C1 PRE s2 (Kseq s2 k) k  eq_refl) as
+    destruct (C1 (conj MS PRE) s2 (Kseq s2 k) k  eq_refl) as
       (le'& m' & t & ST & MR & MOD).
     specialize (C2 le' m' st1 v1).
     unfold correct_body in C2.
     rewrite F2 in C2.
-    assert (PRE2 : pre  var_inv st1 le' m').
+    assert (PRE2 : pre match_state var_inv st1 le' m').
     {
       unfold pre. unfold post_unit in MR.
       tauto.
     }
-    destruct (C2  PRE2  k) as
+    destruct (C2 (proj1 PRE2) (proj2 PRE2)  k) as
       (le2& m2 & t2 & ST2 & MR2).
     exists le2. exists m2. exists (t ++ t2).
     split;auto.
@@ -3154,28 +3147,30 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_state : State.state -> mem -> Prop.
+
+  Variable match_res : res -> Inv.
 
 
   Lemma correct_statement_seq_body_drop :
     forall (s1 s2:Clight.statement)
-           (modifies : list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies : modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
-      (C2 : forall le m st, correct_body p res f fn s1 modifies  var_inv match_res st le m)
+      (C2 : forall le m st, correct_body p res f fn s1 modifies match_state var_inv match_res st le m)
     ,
              correct_body p  res f fn
-             (Ssequence s1 s2) modifies  var_inv match_res st le m.
+             (Ssequence s1 s2) modifies  match_state var_inv match_res st le m.
   Proof.
     intros.
     unfold correct_body.
-    intros PRE.
+    intros MS PRE.
     unfold correct_body in C2.
-    specialize (C2 le m st PRE).
+    specialize (C2 le m st MS PRE).
     destruct (f st) eqn:F1 ; try congruence.
     destruct p0 as (v1,st1).
     intros.
-    destruct (C2 (Kseq s2 k)) as (vr & mr & tr & STAR & MR & VC & UNM).
+    destruct (C2 (Kseq s2 k)) as (vr & mr & tr & STAR & MR & VC & UNM & MS').
     exists vr, mr,tr.
     repeat split; auto.
     eapply star_step.
@@ -3197,15 +3192,14 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma correct_body_id : forall p (res:Type) (f: M res) fn (s:statement) md pr pst st le m,
-    correct_body p res (bindM (returnM tt) (fun _ => f)) fn s md pr pst st le m ->
-    correct_body p res f fn s md pr pst st le m.
+Lemma correct_body_id : forall p (res:Type) (f: M res) fn (s:statement) md ms pr pst st le m,
+    correct_body p res (bindM (returnM tt) (fun _ => f)) fn s md ms pr pst st le m ->
+    correct_body p res f fn s md ms pr pst st le m.
 Proof.
   repeat intro.
   unfold correct_body in H.
   rewrite <- bind_id_left in H.
-  apply H.
-  apply H0.
+  apply H; auto.
 Qed.
 
 Lemma bind_id_right : forall {A: Type} (f: M A) x  , f x = bindM f returnM x.
@@ -3216,9 +3210,9 @@ Proof.
   destruct (f x); auto. destruct p; auto.
 Qed.
 
-Lemma correct_body_id_right : forall p (res:Type) (f: M res) fn (s:statement) md pr pst st le m,
-    correct_body p res (bindM f returnM) fn s md pr pst st le m ->
-    correct_body p res f fn s md pr pst st le m.
+Lemma correct_body_id_right : forall p (res:Type) (f: M res) fn (s:statement) md ms pr pst st le m,
+    correct_body p res (bindM f returnM) fn s md ms pr pst st le m ->
+    correct_body p res f fn s md ms pr pst st le m.
 Proof.
   repeat intro.
   unfold correct_body in H.
@@ -3240,33 +3234,35 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable match_res1 : unit -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_state : State.state -> mem -> Prop.
 
-  Variable match_res2 : res  -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_res1 : Inv.
+
+  Variable match_res2 : res  -> Inv.
 
   Lemma correct_statement_seq_set :
     forall (r:AST.ident) (e:expr) (s2:Clight.statement) (*vret ti*)
-           (modifies : list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies : modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m 
-      (EVAL: match_temp_env var_inv le st m ->
+      (EVAL: match_state st m -> match_temp_env var_inv le st m ->
              exists v, exec_expr (globalenv (semantics2 p)) empty_env le m e = Some v  /\
-                         match_res1 tt v st m /\val_casted v (typeof e))
+                         (eval_inv match_res1  v st m /\val_casted v (typeof e)))
       (FR     :   ~ In r (map (fun x => fst (fst x)) var_inv))
-     (C2 : forall le st x m, correct_body p res f fn s2 modifies  ((r,typeof e,match_res1 x):: var_inv) match_res2 st le m)
+     (C2 : forall le st  m, correct_body p res f fn s2 modifies  match_state ((r,typeof e,match_res1):: var_inv) match_res2 st le m)
     ,
              correct_body p  res f fn
-             (Ssequence (Sset r e) s2) modifies  var_inv match_res2 st le m.
+             (Ssequence (Sset r e) s2) modifies match_state  var_inv match_res2 st le m.
   Proof.
     intros.
     apply correct_body_id.
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     instantiate (1 := typeof e).
     instantiate (1 := r).
-    instantiate (1:= match_res1).
+    instantiate (1:= fun _ => match_res1).
     - repeat intro.
-    unfold pre in H.
-    specialize (EVAL H).
+    unfold pre in H. destruct H as (MS & MT).
+    specialize (EVAL MS MT).
     destruct EVAL as (v & EVAL & MR & CAST).
     apply eval_expr_eval in EVAL.
     repeat eexists.
@@ -3277,7 +3273,7 @@ Section S.
     econstructor ; eauto.
     reflexivity.
     reflexivity.
-    unfold post.
+    assumption.
     apply match_temp_env_cons.
     unfold match_elt.
     simpl.
@@ -3286,7 +3282,7 @@ Section S.
     eapply match_temp_env_set; auto.
     - intros.
       eauto.
-    - apply union_nil.
+    - reflexivity.
   Qed.
 
 End S.
@@ -3308,29 +3304,31 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop.
+ Variable match_state : State.state -> mem -> Prop.
+
+  Variable match_res : res -> Inv.
 
 
   Lemma correct_statement_if_body :
     forall (s1 s2:Clight.statement) (x:bool) vr
-           (modifies : list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies : modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
-      (IN : In ((vr, Clightdefs.tbool, (stateless match_bool x))) var_inv)
+      (IN : In (vr, Clightdefs.tbool, (StateLess (match_bool x))) var_inv)
       (C1 : correct_body p res (if x then f1 else f2) fn (if x then s1 else s2)
-                         modifies  var_inv match_res st
+                         modifies match_state  var_inv match_res st
                          le m)
     ,
 
       correct_body p res (if x then f1 else f2) fn
                           (Sifthenelse (Etempvar vr Clightdefs.tbool)
-                                       s1 s2) modifies  var_inv match_res st le m.
+                                       s1 s2) modifies match_state var_inv match_res st le m.
   Proof.
     intros.
     unfold correct_body.
-    intros PRE.
+    intros MS PRE.
     unfold correct_body in C1.
-    specialize(C1 PRE).
+    specialize(C1 MS PRE).
     assert (GET : Maps.PTree.get vr le = Some (Vint (if x then Int.one else Int.zero))).
     {
       unfold match_temp_env in PRE.
@@ -3348,7 +3346,7 @@ Section S.
     - destruct (f1 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3 & I4).
       exists v1,m1,t1.
       repeat split.
       eapply star_step.
@@ -3360,11 +3358,11 @@ Section S.
       eauto.
       reflexivity.
       auto. auto.
-      auto.
+      auto. auto.
     - destruct (f2 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3 & I4).
       exists v1,m1,t1.
       repeat split.
       eapply star_step.
@@ -3376,7 +3374,7 @@ Section S.
       eauto.
       reflexivity.
       auto. auto.
-      auto.
+      auto. auto.
   Qed.
 
 End S.
@@ -3392,38 +3390,40 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_state : State.state -> mem -> Prop.
+
+  Variable match_res : res -> Inv.
 
   Lemma correct_statement_if_body_expr :
     forall (s1 s2:Clight.statement) (x:bool) e
-           (modifies : list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies : modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
 (C1 :
 forall
        (EXEC : exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Val.of_bool x)),
 correct_body p res (if x then f1 else f2) fn (if x then s1 else s2)
-                         modifies  var_inv match_res st
+                         modifies match_state var_inv match_res st
                          le m)
       (TY : classify_bool (typeof e) = bool_case_i)
-      (EVAL: match_temp_env var_inv le st m -> exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Val.of_bool x))
+      (EVAL: match_state st m -> match_temp_env var_inv le st m -> exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Val.of_bool x))
     ,
 
       correct_body p res (if x then f1 else f2) fn
                           (Sifthenelse e
-                                       s1 s2) modifies  var_inv match_res st le m.
+                                       s1 s2) modifies match_state var_inv match_res st le m.
   Proof.
     intros.
     unfold correct_body.
-    intros PRE.
+    intros MS PRE.
     unfold correct_body in C1.
-    specialize (EVAL PRE).
-    specialize(C1 EVAL PRE).
+    specialize (EVAL MS PRE).
+    specialize(C1 EVAL MS PRE).
     destruct x;auto.
     - destruct (f1 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3 & I4).
       apply eval_expr_eval in EVAL.
       exists v1,m1,t1.
       repeat split.
@@ -3438,11 +3438,11 @@ correct_body p res (if x then f1 else f2) fn (if x then s1 else s2)
       eauto.
       reflexivity.
       auto. auto.
-      auto.
+      auto. auto.
     - destruct (f2 st) eqn:F1; try auto.
       destruct p0 as (v',st').
       intros.
-      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+      destruct (C1 k) as (v1 & m1 & t1 & STAR & I1 & I2 & I3 & I4).
       apply eval_expr_eval in EVAL.
       exists v1,m1,t1.
       repeat split.
@@ -3456,7 +3456,7 @@ correct_body p res (if x then f1 else f2) fn (if x then s1 else s2)
       eauto.
       reflexivity.
       auto. auto.
-      auto.
+      auto. auto.
   Qed.
 
 End S.
@@ -3472,36 +3472,38 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_state : State.state -> mem -> Prop.
+
+  Variable match_res : res -> Inv.
 
 
   Lemma correct_statement_switch_ex :
     forall e l
-           (modifies : list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies : modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
 
       (TY : classify_switch (typeof e) = switch_case_i)
-      (EVAL: match_temp_env var_inv le st m ->
+      (EVAL: match_state st m -> match_temp_env var_inv le st m ->
              exists n,
                exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Vint (Int.repr n)) /\  0 <= n < Int.modulus /\
-                 correct_body p res f fn (seq_of_labeled_statement (select_switch n l))                            modifies  var_inv match_res st
+                 correct_body p res f fn (seq_of_labeled_statement (select_switch n l))                            modifies match_state var_inv match_res st
                               le m)
     ,
 
       correct_body p res f fn
-                          (Sswitch e l) modifies  var_inv match_res st le m.
+                          (Sswitch e l) modifies match_state var_inv match_res st le m.
   Proof.
     intros.
     unfold correct_body.
-    intros PRE.
-    specialize (EVAL PRE).
+    intros MS PRE.
+    specialize (EVAL MS PRE).
     destruct EVAL as (n & EVAL & SMALL & CB).
     unfold correct_body in CB.
     destruct (f st) eqn:F1; try auto.
     destruct p0 as (v',st').
     intros.
-    destruct (CB PRE (Kswitch k)) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+    destruct (CB MS PRE (Kswitch k)) as (v1 & m1 & t1 & STAR & I1 & I2 & I3 & I4).
     apply eval_expr_eval in EVAL.
     exists v1,m1,t1.
     repeat split.
@@ -3515,7 +3517,7 @@ Section S.
     reflexivity.
     auto.
     auto.
-    auto.
+    auto. auto.
   Qed.
 
 End S.
@@ -3532,37 +3534,39 @@ Section S.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Variable fn : Clight.function.
 
-  Variable match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop.
+  Variable match_state : State.state -> mem -> Prop.
+
+  Variable match_res : res -> Inv.
 
 
   Lemma correct_statement_switch :
     forall (n:Z) e l
-           (modifies : list block)
-           (var_inv  : list (positive * Ctypes.type * (val -> State.state -> Memory.Mem.mem -> Prop)))
+           (modifies : modifies_spec)
+           (var_inv  : list (positive * Ctypes.type * Inv))
       st le m
 
       (C1 : correct_body p res f fn (seq_of_labeled_statement (select_switch n l))
-                         modifies  var_inv match_res st
+                         modifies match_state var_inv match_res st
                          le m)
       (TY : classify_switch (typeof e) = switch_case_i)
-      (EVAL: match_temp_env var_inv le st m ->
+      (EVAL: match_state st m -> match_temp_env var_inv le st m ->
                exec_expr (globalenv (semantics2 p)) empty_env le m e = Some (Vint (Int.repr n)))
       (SMALL : 0 <= n < Int.modulus)
     ,
 
       correct_body p res f fn
-                          (Sswitch e l) modifies  var_inv match_res st le m.
+                          (Sswitch e l) modifies match_state var_inv match_res st le m.
   Proof.
     intros.
     unfold correct_body.
-    intros PRE.
+    intros MS PRE.
     unfold correct_body in C1.
-    specialize(C1 PRE).
-    specialize (EVAL PRE).
+    specialize(C1 MS PRE).
+    specialize (EVAL MS PRE).
     destruct (f st) eqn:F1; try auto.
     destruct p0 as (v',st').
     intros.
-    destruct (C1 (Kswitch k)) as (v1 & m1 & t1 & STAR & I1 & I2 & I3).
+    destruct (C1 (Kswitch k)) as (v1 & m1 & t1 & STAR & I1 & I2 & I3 & I4).
     apply eval_expr_eval in EVAL.
     exists v1,m1,t1.
     repeat split.
@@ -3576,79 +3580,70 @@ Section S.
     reflexivity.
     auto.
     auto.
-    auto.
+    auto. auto.
   Qed.
 
 End S.
 
 Lemma correct_body_Sreturn_None :
   forall p fn modifies inv
-         (match_res : unit -> val -> State.state -> Memory.Mem.mem -> Prop)
+         (match_state : State.state -> mem -> Prop)
+         (match_res : unit -> Inv)
          st le m,
-    (match_temp_env inv le st m -> match_res tt Vundef st m) ->
+    (match_state st m -> match_temp_env inv le st m -> eval_inv (match_res tt) Vundef st m) ->
     (fn_return fn = Ctypes.Tvoid) ->
 
     correct_body p unit (returnM tt) fn (Sreturn None) modifies
-               inv match_res st le m.
+               match_state inv match_res st le m.
 Proof.
   repeat intro.
   eexists Vundef.
   exists m. exists Events.E0.
-  repeat split.
-  eapply star_step.
+  repeat split; auto.
+  - eapply star_step.
   econstructor ; eauto.
   reflexivity.
   eapply star_refl.
   reflexivity.
-  auto.
-  rewrite H0.
+  - rewrite H0.
   constructor.
-  unfold unmodifies_effect.
-  destruct modifies. tauto.
-  apply Mem.unchanged_on_refl.
+  - apply unmodifies_effect_refl.
 Qed.
 
 Lemma correct_body_Sreturn_Some :
   forall p fn modifies inv A
-         (match_res : A -> val -> State.state -> Memory.Mem.mem -> Prop)
-         st le m a v e
-    (EVALRES: match_temp_env inv le st m ->
+        (match_state : State.state -> mem -> Prop)
+        (match_res : A -> Inv)
+         st le m a  e
+    (EVALRES: match_state st m -> match_temp_env inv le st m ->
+   exists v,
      exec_expr (Clight.globalenv p) empty_env le m e = Some v /\
-     match_res a v st m /\   vc_casted (map fst inv) e = true),
-    (fn_return fn = typeof e) \/ sem_cast v (typeof e) (fn_return fn) m = Some v ->
+     eval_inv (match_res a) v st m  /\
+       sem_cast v (typeof e) (fn_return fn) m = Some v /\ (val_casted v (fn_return fn) -> val_casted v (typeof e))
+),
 
     correct_body p A (returnM a) fn (Sreturn (Some e)) modifies
-               inv match_res st le m.
+               match_state inv match_res st le m.
 Proof.
   repeat intro.
+  destruct (EVALRES MS H) as (v & EVAL & MR & CASTED & RET).
   eexists v.
   exists m. exists Events.E0.
-  destruct (EVALRES H0) as (EVAL & MR & CASTED).
   assert (VC : val_casted v (typeof e)).
   {
-    eapply vc_casted_correct;eauto.
-    eapply var_casted_list_map_fst;eauto.
+    apply cast_val_is_casted in CASTED.
+    auto.
   }
-  repeat split.
+  repeat split; auto.
   - eapply star_step.
     econstructor ; eauto.
-    apply eval_expr_eval.
-    eauto.
-    { destruct H.
-      - rewrite e0.
-      apply cast_val_casted; auto.
-        - apply e0.
-    }
+    apply eval_expr_eval; auto.
     reflexivity.
     eapply star_refl.
     reflexivity.
-  - tauto.
-  - destruct H.
-    congruence.
-    eapply cast_val_is_casted. eauto.
+  -    eapply cast_val_is_casted. eauto.
   - apply unmodifies_effect_refl.
 Qed.
-
 
 
 

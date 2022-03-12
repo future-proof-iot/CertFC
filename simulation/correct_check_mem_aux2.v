@@ -15,7 +15,7 @@ From bpf.simulation Require Import correct_get_sub correct_get_add correct_get_s
 Open Scope Z_scope.
 
 Section Check_mem_aux2.
-
+Context {S:special_blocks}.
 (** The program contains our function of interest [fn] *)
 Definition p : Clight.program := prog.
 
@@ -29,25 +29,20 @@ Definition f := check_mem_aux2.
 (* [fn] is the Cligth function which has the same behaviour as [f] *)
 Definition fn: Clight.function := f_check_mem_aux2.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
 Definition match_arg  :
-  DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-  DList.DCons
-    (mr_correct state_block mrs_block ins_block)
-    (DList.DCons
+  DList.t (fun x => x -> Inv) args :=
+  dcons
+    (statefull (mr_correct ))
+    (dcons
         (stateless perm_correct)
-        (DList.DCons
+        (dcons
            (stateless val32_correct)
-           (DList.DCons (stateless match_chunk)
+           (dcons (stateless match_chunk)
                         (DList.DNil _)))).
 
-Definition match_res (v1 :res) (v2:val) (st: State.state) (m: Mem.mem) :=
-  val_ptr_correct state_block mrs_block ins_block v1 v2 st m.
+Definition match_res : res -> Inv := stateless eq.
 
-Lemma correct_function3_check_mem_aux2_correct : forall a, correct_function3 p args res f fn (nil) true match_arg match_res a.
+Lemma correct_function_check_mem_aux2_correct : forall a, correct_function p args res f fn ModNothing true match_state match_arg match_res a.
 Proof.
   correct_function_from_body args.
   correct_body.
@@ -55,22 +50,14 @@ Proof.
   simpl.
 
   (** goal: correct_body _ _ (bindM (get_start_addr c) ... *)
-  eapply correct_statement_seq_body with (modifies1:=nil).
+  eapply correct_statement_seq_body with (modifies1:=ModNothing).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
   reflexivity.
   reflexivity.
   typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
-    intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    destruct H; subst.
-    intuition.
-  }
+
   reflexivity.
   reflexivity.
   reflexivity.
@@ -87,26 +74,18 @@ Proof.
   rewrite p0.
   reflexivity.
   simpl; intros.
-  unfold mr_correct in c3.
+  unfold mr_correct in c3. simpl in c3.
   intuition eauto.
   intros.
   (** goal: correct_body _ _ (bindM (get_block_size c) ... *)
-  eapply correct_statement_seq_body with (modifies1:=nil).
+  eapply correct_statement_seq_body with (modifies1:=ModNothing).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
   reflexivity.
   reflexivity.
   typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
-    intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    destruct H; subst.
-    intuition.
-  }
+
   reflexivity.
   reflexivity.
   reflexivity.
@@ -116,7 +95,7 @@ Proof.
   reflexivity.
 
   unfold INV; intro H.
-  correct_Forall.
+  correct_Forall. simpl in H.
   get_invariant _mr.
   (**  exists lval : list val, _ [Etempvar _mr3 _] = Some lval *)
   exists (v::nil).
@@ -124,26 +103,18 @@ Proof.
   unfold map_opt, exec_expr.
   rewrite p0; reflexivity.
   simpl;intros.
-  unfold mr_correct in c3.
+  unfold eval_inv,statefull,mr_correct in c3.
   intuition eauto.
   intros.
   (**r goal: correct_body p val (bindM (get_block_perm c) ... *)
-  eapply correct_statement_seq_body with (modifies1:=nil).
+  eapply correct_statement_seq_body with (modifies1:=ModNothing).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
   reflexivity.
   reflexivity.
   typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
-    intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    destruct H; subst.
-    intuition.
-  }
+
   reflexivity.
   reflexivity.
   reflexivity.
@@ -154,6 +125,7 @@ Proof.
 
   unfold INV; intro H.
   correct_Forall.
+  simpl in H.
   get_invariant _mr.
   (**  exists lval : list val, _ [Etempvar _mr3 _] = Some lval *)
   exists (v::nil).
@@ -161,28 +133,19 @@ Proof.
   unfold map_opt, exec_expr.
   rewrite p0; reflexivity.
   simpl;intros.
-  unfold mr_correct in c3.
+  unfold eval_inv,statefull,mr_correct in c3.
   intuition eauto.
   intros.
 
-
   (** goal:  correct_body _ _ (bindM (get_sub c0 x0) ... *)
-  eapply correct_statement_seq_body with (modifies1:=nil).
+  eapply correct_statement_seq_body with (modifies1:=ModNothing).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
   reflexivity.
   reflexivity.
   typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
-    intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    destruct H; subst.
-    intuition.
-  }
+
   reflexivity.
   reflexivity.
   reflexivity.
@@ -192,7 +155,7 @@ Proof.
   reflexivity.
 
   unfold INV; intro H.
-  correct_Forall.
+  correct_Forall. simpl in H.
   get_invariant _addr.
   get_invariant _start.
   (**  exists lval : list val, _ [(Etempvar _addr0 _); (Etempvar _start _)] = Some lval *)
@@ -205,22 +168,13 @@ Proof.
   eauto.
   intros.
   (** goal:  correct_body _ _ (bindM (get_add x2 (memory_chunk_to_valu32 c1)) ... *)
-  eapply correct_statement_seq_body with (modifies1:=nil).
+  eapply correct_statement_seq_body with (modifies1:=ModNothing).
   change_app_for_statement.
   eapply correct_statement_call with (has_cast := false).
   my_reflex.
   reflexivity.
   reflexivity.
   typeclasses eauto.
-  { unfold INV.
-    unfold var_inv_preserve.
-    intros.
-    unfold match_temp_env in *.
-    rewrite Forall_fold_right in *.
-    simpl in *.
-    destruct H; subst.
-    intuition.
-  }
   reflexivity.
   reflexivity.
   reflexivity.
@@ -230,7 +184,7 @@ Proof.
   reflexivity.
 
   unfold INV; intro H.
-  correct_Forall.
+  correct_Forall. simpl in H.
   get_invariant _lo_ofs.
   get_invariant _chunk.
   unfold map_opt, exec_expr.
@@ -261,7 +215,7 @@ Ltac destruct_if Hname :=
   2:{
     unfold list_rel_arg,app;
     match goal with
-    |- correct_body _ _ _ _ ?B _ ?INV
+    |- correct_body _ _ _ _ ?B _ _ ?INV
                  _ _ _ _ =>
       let I := fresh "INV" in
       set (I := INV) ; simpl in I;
@@ -279,6 +233,7 @@ Ltac destruct_if Hname :=
     get_invariant _chunk.
     get_invariant _mr_perm.
     get_invariant _perm.
+    unfold eval_inv,stateless, statefull in *.
     unfold correct_get_add.match_res, val32_correct in c3.
     destruct c3 as (H0_eq & (vi0 & Hvi0_eq)).
     unfold correct_get_sub.match_res, val32_correct in c4.
@@ -289,7 +244,6 @@ Ltac destruct_if Hname :=
     unfold correct_get_block_perm.match_res, perm_correct in c7.
     unfold stateless, perm_correct in c8.
     subst.
-
 
     (**r we also need those info below *)
     assert (Hneq1: _lo_ofs <> _t'7). {
@@ -311,7 +265,7 @@ Ltac destruct_if Hname :=
     }
 
     exists (Vint Int.zero), m4, Events.E0.
-    split.
+    split_and.
     - unfold compu_lt_32, compu_le_32, compu_le_32, val32_modu, memory_chunk_to_valu32, memory_chunk_to_valu32_upbound in Hcond.
       change Int.max_unsigned with 4294967295 in Hcond.
       destruct (Int.ltu _ _) eqn: Hltu.
@@ -458,21 +412,17 @@ Ltac destruct_if Hname :=
         do 4 forward_star.
         do 4 forward_star.
         forward_star.
-    - unfold match_res, val_ptr_correct.
-      split.
-      + unfold Vnullptr; simpl.
-        split; [reflexivity |].
-        get_invariant _mr.
-        unfold mr_correct in c3.
-        intuition auto.
-      + instantiate (1 := nil).
-        split; [constructor; reflexivity | split; reflexivity].
+    - unfold match_res, stateless.
+      reflexivity.
+    - constructor. reflexivity.
+    - auto.
+    - apply unmodifies_effect_refl.
   }
 
   (**r if-Hcond-then *)
   unfold list_rel_arg,app;
   match goal with
-  |- correct_body _ _ _ _ ?B _ ?INV
+  |- correct_body _ _ _ _ ?B _ _ ?INV
                _ _ _ _ =>
     let I := fresh "INV" in
     set (I := INV) ; simpl in I;
@@ -491,6 +441,7 @@ Ltac destruct_if Hname :=
   get_invariant _perm.
   get_invariant _mr_perm.
   get_invariant _mr.
+  unfold eval_inv,stateless,statefull in *.
 
   unfold correct_get_add.match_res, val32_correct in c3.
   destruct c3 as (H0_eq & (vi0 & Hvi0_eq)).
@@ -602,21 +553,18 @@ Ltac destruct_if Hname :=
     rewrite Ptrofs.mul_one.
     forward_star.
     forward_star.
-  - unfold match_res, val_ptr_correct.
-    split.
-    + split.
-      * rewrite Hblock_ptr_eq.
-        unfold Val.add.
-        simpl.
-        constructor.
-      * assumption.
-    + rewrite Ptrofs.add_zero_l.
-      split; [simpl; constructor | split; reflexivity].
+  - unfold match_res, stateless.
+    split_and ; auto.
+    * rewrite Hblock_ptr_eq.
+      unfold Val.add.
+      simpl. reflexivity.
+    * constructor.
+    * apply unmodifies_effect_refl.
 Qed.
 
 End Check_mem_aux2.
 
 Close Scope Z_scope.
 
-Existing Instance correct_function3_check_mem_aux2_correct.
+Existing Instance correct_function_check_mem_aux2_correct.
 (*  *)

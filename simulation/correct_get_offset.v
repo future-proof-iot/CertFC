@@ -19,7 +19,7 @@ get_offset
 Open Scope Z_scope.
 
 Section Get_offset.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -35,14 +35,14 @@ Section Get_offset.
   Definition fn: Clight.function := f_get_offset.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless int64_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (int64_correct x))
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int32_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (int32_correct x).
 
-  Instance correct_function3_get_offset : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function_get_offset : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -52,25 +52,25 @@ Section Get_offset.
     repeat intro.
     get_invariant _ins.
 
-    unfold stateless, int64_correct in c0.
+    unfold eval_inv, int64_correct in c0.
     subst.
 
     eexists; exists m, Events.E0.
 
-    split.
+    split_and; auto.
     {
       repeat forward_star.
     }
-    split.
     {
       unfold match_res, int32_correct, Regs.get_offset; simpl.
       (**r according to the clight representation, we delete the self-defined library int16 in order to simplify the proof here *)
       reflexivity.
     }
-    split;[constructor; reflexivity | split; reflexivity].
+    constructor;auto.
+    apply unmodifies_effect_refl.
   Qed.
 
 End Get_offset.
 Close Scope Z_scope.
 
-Existing Instance correct_function3_get_offset.
+Existing Instance correct_function_get_offset.

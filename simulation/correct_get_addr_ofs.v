@@ -25,6 +25,7 @@ returnM (val_intuoflongu (Val.addl x (Val.longofintu (sint32_to_vint ofs))))
 *)
 
 Section Get_addr_ofs.
+  Context {S: special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -41,15 +42,15 @@ Section Get_addr_ofs.
   Definition fn: Clight.function := f_get_addr_ofs.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless val64_correct)
-       (DList.DCons (stateless int32_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (stateless val64_correct)
+       (dcons (stateless int32_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val32_correct x v.
+  Definition match_res : res -> Inv := stateless val32_correct.
 
-  Instance correct_function3_get_addr_ofs : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function_get_addr_ofs : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -60,8 +61,8 @@ Section Get_addr_ofs.
     get_invariant _x.
     get_invariant _ofs.
 
-    unfold stateless, val64_correct in c1.
-    unfold stateless, int32_correct in c2.
+    unfold stateless, eval_inv, val64_correct in c1.
+    unfold stateless, eval_inv,int32_correct in c2.
     destruct c1 as (Hc_eq & (vi & Hvi_eq)).
     subst c v v0.
 
@@ -75,16 +76,16 @@ unsigned int get_addr_ofs(unsigned long long x, int ofs)
       *)
     eexists. exists m, Events.E0.
 
-    repeat split; unfold step2.
+    split_and; unfold step2;auto.
     -
       repeat forward_star.
-    - simpl.
-      eexists; reflexivity.
+    - simpl. unfold val32_correct. eauto.
     - simpl.
       constructor.
       reflexivity.
+    - apply unmodifies_effect_refl.
   Qed.
 
 End Get_addr_ofs.
 
-Existing Instance correct_function3_get_addr_ofs.
+Existing Instance correct_function_get_addr_ofs.

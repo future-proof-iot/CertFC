@@ -15,6 +15,7 @@ eval_ins
 *)
 
 Section Eval_ins.
+  Context {S: special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -27,23 +28,19 @@ Section Eval_ins.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := eval_ins.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_ins.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (stateless int32_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess is_state_handle)
+      (dcons (fun x => StateLess (int32_correct x))
         (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => int64_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (int64_correct x).
 
-  Instance correct_function3_eval_ins : forall a, correct_function3 p args res f fn nil false match_arg_list match_res a.
+  Instance correct_function_eval_ins : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -55,18 +52,18 @@ Section Eval_ins.
     unfold INV in H.
     get_invariant _st.
     get_invariant _idx.
-    unfold stateM_correct in c0.
-    destruct c0 as (Hv_eq & Hst).
-    unfold stateless, int32_correct in c1.
+    unfold eval_inv, is_state_handle in c0.
+    unfold eval_inv, int32_correct in c1.
     subst.
 
     (** we need to get the value of pc in the memory *)
-    destruct Hst. clear - p0 p1 Heval_ins mins_len mins.
+    assert (MS':=MS).
+    destruct MS. clear - MS' p0 p1 Heval_ins mins_len mins.
     destruct mins_len as (Hload_eq & Hge).
     destruct mins as (Hins_eq & Hlen & Hle & Hmatch).
     eexists; exists m, Events.E0.
 
-    split.
+    split_and; auto.
     {
       unfold step2.
       forward_star.
@@ -110,22 +107,20 @@ Section Eval_ins.
       reflexivity.
       forward_star.
     }
-    split.
     {
-      unfold match_res, int64_correct.
+      unfold int64_correct.
       unfold eval_ins in Heval_ins.
       context_destruct_if_inversion.
-      unfold State.eval_ins, List64.MyListIndexs32, List64.MyList.index_s32.
       reflexivity.
     }
-    split.
     constructor.
-    split; [reflexivity |].
     unfold eval_ins in Heval_ins.
     context_destruct_if_inversion.
-    reflexivity.
+    congruence.
+    unfold eval_ins in Heval_ins.
+    context_destruct_if_inversion. reflexivity.
   Qed.
 
 End Eval_ins.
 
-Existing  Instance correct_function3_eval_ins.
+Existing  Instance correct_function_eval_ins.

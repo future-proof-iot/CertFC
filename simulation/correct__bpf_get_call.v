@@ -18,7 +18,7 @@ _bpf_get_call
 *)
 
 Section Bpf_get_call.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -29,24 +29,20 @@ Section Bpf_get_call.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := _bpf_get_call.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f__bpf_get_call.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-      (DList.DCons (stateless val32_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+      (dcons (fun x => StateLess (val32_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun r v st m => val_ptr_correct state_block mrs_block ins_block r v st m.
+  Definition match_res : res -> Inv := fun r  => StateLess (eq r).
 
-  Axiom correct_function3__bpf_get_call : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Axiom correct_function__bpf_get_call : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
 
 End Bpf_get_call.
 
-Existing Instance correct_function3__bpf_get_call.
-
+Existing Instance correct_function__bpf_get_call.

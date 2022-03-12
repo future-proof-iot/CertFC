@@ -17,7 +17,7 @@ store_mem_imm
  *)
 
 Section Store_mem_imm.
-
+  Context {S : special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -29,27 +29,21 @@ Section Store_mem_imm.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.store_mem_imm.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
-  Variable modifies : block. (* of the C code *)
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_store_mem_imm.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (val_ptr_correct state_block mrs_block ins_block)
-         (DList.DCons (stateless match_chunk)
-            (DList.DCons (stateless val32_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess is_state_handle)
+      (dcons (fun x => StateLess (eq x))
+         (dcons (fun x => StateLess (match_chunk x))
+            (dcons (fun x => StateLess (val32_correct x))
               (DList.DNil _)))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
+  Definition match_res : res -> Inv := fun x => StateLess (eq Vundef).
 
-  Instance correct_function3_store_mem_imm : forall ptr ck v, correct_function3 p args res f fn [(modified_block ptr ins_block)] false match_arg_list match_res (DList.DCons ptr
+  Instance correct_function_store_mem_imm : forall ptr ck v, correct_function p args res f fn ModSomething false match_state match_arg_list match_res (DList.DCons ptr
       (DList.DCons ck
          (DList.DCons v
               (DList.DNil _)))).
@@ -62,12 +56,9 @@ Proof.
   get_invariant _chunk.
   get_invariant _addr.
   get_invariant _v.
-  unfold stateM_correct in c.
-  unfold stateless, match_chunk in c0.
-  unfold val_ptr_correct in c1.
-  unfold stateless, val32_correct in c2.
-  destruct c as (Hptr & Hmatch).
-  destruct c1 as (Hc0_eq & Hst).
+  unfold eval_inv, is_state_handle in *.
+  unfold match_chunk in c0.
+  unfold val32_correct in c2.
   destruct c2 as (Hc1_eq & vi & Hvi_eq).
   subst.
 
@@ -77,79 +68,47 @@ Proof.
   destruct ck; try constructor.
   all: destruct v2; try constructor.
   all: destruct Mem.store eqn: Hstore; [| constructor].
-  all: eapply store_reg_preserive_match_state in Hmatch as Hstore_m2; eauto.
+  all: eapply store_reg_preserive_match_state in MS as Hstore_m2; eauto.
   all: destruct Hstore_m2 as (m2 & Hstore_m2 & Hmatch_m2).
   all: intros; exists Vundef, m2, Events.E0.
   - (**r c = Mint8unsigned *)
-    split.
-    forward_star.
+    split_and; auto.
+    + forward_star.
     change (Int.unsigned (Int.repr 1)) with 1%Z.
     simpl.
     unfold step2.
     repeat forward_star.
-    split.
-    split; [ assumption |reflexivity].
-    split; [constructor | ].
-    unfold modified_block.
-    unfold unmodifies_effect.
-    eapply Mem.store_unchanged_on; eauto.
-    intros.
-    intro.
-    apply H1.
-    unfold In.
-    left; reflexivity.
+    + constructor.
+    + exact I.
   - (**r c = Mint16unsigned *)
-    split.
-    forward_star.
+    split_and; auto.
+    + forward_star.
     change (Int.unsigned (Int.repr 2)) with 2%Z.
     simpl.
     unfold step2.
     repeat forward_star.
-    split.
-    split; [ assumption |reflexivity].
-    split; [constructor | ].
-    unfold modified_block.
-    unfold unmodifies_effect.
-    eapply Mem.store_unchanged_on; eauto.
-    intros.
-    intro.
-    apply H1.
-    unfold In.
-    left; reflexivity.
+    + constructor.
+    + exact I.
   - (**r c = Mint32 *)
-    split.
-    forward_star.
+    split_and; auto.
+    + forward_star.
     change (Int.unsigned (Int.repr 4)) with 4%Z.
     simpl.
     unfold step2.
     repeat forward_star.
-    split.
-    split; [ assumption |reflexivity].
-    split; [constructor | ].
-    unfold modified_block.
-    unfold unmodifies_effect.
-    eapply Mem.store_unchanged_on; eauto.
-    intros.
-    intro.
-    apply H1.
-    unfold In.
-    left; reflexivity.
+    + constructor.
+    + exact I.
   - (**r c = Mint64 *)
-    split.
-    forward_star.
+    split_and; auto.
+    + forward_star.
     change (Int.unsigned (Int.repr 8)) with 8%Z.
     simpl.
     unfold step2.
     repeat forward_star.
-    simpl.
-    split.
-    split; [ assumption |reflexivity].
-    split; [constructor | ].
-    unfold modified_block.
-    unfold unmodifies_effect.
-    eapply Mem.store_unchanged_on; eauto.
+    + constructor.
+    + exact I.
 Qed.
 
 End Store_mem_imm.
 
-Existing Instance correct_function3_store_mem_imm.
+Existing Instance correct_function_store_mem_imm.

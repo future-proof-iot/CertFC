@@ -31,14 +31,14 @@ Ltac build_app T :=
 
 Ltac change_app_for_body :=
   match goal with
-  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _
+  | |- @correct_body _ _ ?F _ _ _ _ _ _ _ _ _
     => build_app F
   end.
 
+
 Ltac change_app_for_statement :=
   match goal with
-  | |- @correct_statement _ _ ?F _ _ _ _ _ _ _ _
-    => build_app F
+  | |- correct_statement _ _ ?F _ _ _ _ _ _ _ _  => build_app F
   end.
 
 Ltac prove_incl :=
@@ -124,14 +124,15 @@ Ltac get_invariant VAR :=
   let v := fresh "v" in
   let p := fresh "p" in
   let c := fresh "c" in
+  let vc := fresh "vc" in
   let v1 := fresh "v1" in
-  match goal with
+  lazymatch goal with
   | H:match_temp_env ?L ?LE ?ST ?M
     |- _ =>
         let tp := get_inv_from_list VAR L in
         match tp with
         | (?T, ?P) =>
-            assert (I : exists v, Maps.PTree.get VAR LE = Some v /\ P v ST M /\ Cop.val_casted v T);
+            assert (I : exists v, Maps.PTree.get VAR LE = Some v /\ eval_inv P v ST M /\ Cop.val_casted v T);
              [ unfold match_temp_env in H; rewrite Forall_forall in H;
                assert (E : match_elt ST M LE (VAR, T, P));
                 [ (apply H; unfold AST.ident;
@@ -142,7 +143,7 @@ Ltac get_invariant VAR :=
                ; [
                  exists v1 ; split ;[reflexivity | exact E]
                | (exfalso ; assumption) ]]
-             | destruct I as (v, (p, (c, _))) ]
+             | destruct I as (v, (p, (c, vc))) ]
         end
   end.
 
@@ -155,12 +156,18 @@ Ltac correct_body :=
   end;
   car_cdr ;*)  unfold list_rel_arg,app;
   match goal with
-    |- correct_body _ _ _ _ ?B _ ?INV
+    |- correct_body _ _ _ _ ?B _ _ ?INV
                  _ _ _ _ =>
       let I := fresh "INV" in
       set (I := INV) ; simpl in I;
       let B1 := eval simpl in B in
         change B with B1
+  end.
+
+Ltac normalise_post_unit :=
+  match goal with
+  | |- context[post_unit _ _ _ ?L] =>
+      change L with (inv_of_modifies ModSomething L)
   end.
 
 
@@ -701,10 +708,6 @@ Ltac context_destruct_if_inversion :=
       destruct X eqn: Hcond; inversion H
     end.
 
-Ltac split_and := repeat match goal with
-| |- ?A /\ ?B => split
-end.
-
 (*
 Lemma Zeq_dec_eqb_intro:
   forall a b,
@@ -722,5 +725,8 @@ Proof.
   unfold zeq in H.
   Locate Z.eq_dec.
 Qed. *)
+
+
+#[global] Notation dcons := (DList.DCons (F:= fun x => x -> Inv)).
 
 Close Scope Z_scope.

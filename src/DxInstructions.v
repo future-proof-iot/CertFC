@@ -58,7 +58,7 @@ Definition get_src32 (x: nat8) (ins: int64_t): M valu32_t :=
       returnM src32.
 
 Definition get_opcode_ins (ins: int64_t): M nat8 :=
-  returnM (int64_to_opcode ins).
+  returnM (get_opcode ins).
 
 Definition get_opcode_alu64 (op: nat8): M opcode_alu64 :=
   returnM (byte_to_opcode_alu64 op).
@@ -518,14 +518,17 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
   | S fuel0 =>
     do len  <-- eval_ins_len;
     do pc   <-- eval_pc;
-      if(andb (Int_leu int32_0 pc) (Int.ltu pc len)) then (**r 0 < pc < len: pc is less than the length of l *)
-        do _ <-- step;
-        do f <-- eval_flag;
-          if flag_eq f BPF_OK then
-            do _ <-- upd_pc_incr;
-              bpf_interpreter_aux fuel0
-          else
-            returnM tt
+      if (Int_leu int32_0 pc) then
+        if (Int.ltu pc len) then (**r 0 < pc < len: pc is less than the length of l *)
+          do _ <-- step;
+          do f <-- eval_flag;
+            if flag_eq f BPF_OK then
+              do _ <-- upd_pc_incr;
+                bpf_interpreter_aux fuel0
+            else
+              returnM tt
+        else
+          upd_flag BPF_ILLEGAL_LEN
       else
         upd_flag BPF_ILLEGAL_LEN
   end.
@@ -533,11 +536,13 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
 Definition bpf_interpreter (fuel: nat): M val64_t :=
   do mrs      <-- eval_mrs_regions;
   do bpf_ctx  <-- get_mem_region 0 mrs;
-  do _        <-- upd_reg R1 (start_addr bpf_ctx); (**r let's say the ctx memory region is also be the first one *)
+  do start  <-- get_start_addr bpf_ctx;
+  do _        <-- upd_reg R1 (Val.longofintu start); (**r let's say the ctx memory region is also be the first one *)
   do _        <-- bpf_interpreter_aux fuel;
   do f        <-- eval_flag;
     if flag_eq f BPF_SUCC_RETURN then
-      eval_reg R0
+      do res  <-- eval_reg R0;
+        returnM res
     else
       returnM val64_zero.
 

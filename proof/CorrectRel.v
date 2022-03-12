@@ -6,19 +6,9 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 Import ListNotations.
 
-From bpf.proof Require Import CommonLib MatchState.
+From bpf.proof Require Import Clightlogic CommonLib MatchState.
 
 Open Scope Z_scope.
-
-Definition stateM_correct  (stb mrs ins: block) (st:unit) (v: val) (st:State.state) (m: Memory.Mem.mem) :=
-    v = Vptr stb Ptrofs.zero /\ match_state stb mrs ins st m.
-
-Definition modified_block (v:val) (defalut_blk: block): block :=
-  match v with
-  | Vptr b _ => b
-  | _ => defalut_blk
-  end.
-
 
 Definition int64_correct (x:int64) (v: val) :=
   Vlong x = v.
@@ -29,23 +19,16 @@ Definition val64_correct (x:val) (v: val) :=
 Definition val32_correct (x:val) (v: val) :=
   x = v /\ exists vi, x = Vint vi.
 
-Definition val_ptr_correct (stb mrs ins: block) (x:val) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+Definition val_ptr_correct {S:special_blocks} (x:val) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   x = v /\
-  match_state stb mrs ins st m.
+  match_state  st m.
+
 
 Definition int32_correct (x: int) (v: val) :=
   Vint x = v.
 
 Definition nat_correct (x: nat) (v: val) :=
-  Vint (Int.repr (Z.of_nat x)) = v.
-
-Definition nat_correct_mrs_num (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  Vint (Int.repr (Z.of_nat x)) = v /\  0 <= Z.of_nat x <= Z.of_nat (mrs_num st).
-
-Definition nat_correct_overflow (x: nat) (v: val) :=
-  Vint (Int.repr (Z.of_nat x)) = v /\
-    (* Avoid overflow *)
-    0 <= Z.of_nat x <= Int.max_unsigned.
+  Vint (Int.repr (Z.of_nat x)) = v /\ Z.of_nat x <= Int.max_unsigned.
 
 Definition reg_correct (r: reg) (v: val) :=
     v = Vint (Int.repr (id_of_reg r)).
@@ -224,28 +207,17 @@ Definition opcode_step_correct (op: opcode) (v: val) :=
 
 Close Scope nat_scope.
 
-(*
-Definition MyListType_correct (b:block) (len: nat) (l: MyListType) (v: val) (stm:State.state) (m: Memory.Mem.mem) :=
-  v = Vptr b Ptrofs.zero /\
-    forall pc, 0 <= Z.of_nat pc < Z.of_nat len ->
-    exists vl,
-        List.nth_error l  pc = Some vl /\
-        Mem.loadv Mint64 m (Vptr b (Ptrofs.repr (8 * (Z.of_nat pc)))) = Some (Vlong vl)
-.
 
-Definition pc_correct (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
-  Vint (Int.repr (Z.of_nat x)) = v. (* /\  0 <= Z.of_nat x <= Z.of_nat (ins_len st).*) (**r the number of input instructions should be less than Ptrofs.max_unsigned *) *)
-
-Definition mr_correct (stb mrs ins: block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+Definition mr_correct {S:special_blocks} (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   List.In mr (bpf_mrs st) /\
-  match_region stb mrs ins mr v st m /\
-  match_state stb mrs ins st m.
+  match_region st_blk mrs_blk ins_blk mr v st m /\
+  match_state  st m.
 
-Definition mrs_correct (stb_blk mrs_blk ins_blk: block) (mrs: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+Definition mrs_correct (S: special_blocks) (mrs: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   v = Vptr mrs_blk Ptrofs.zero /\
   mrs = (bpf_mrs st) /\
-  match_regions stb_blk mrs_blk ins_blk st m /\
-  match_state stb_blk mrs_blk ins_blk st m.
+  match_regions st_blk mrs_blk ins_blk st m /\
+  match_state  st m.
 
  (*
 Definition mrs_correct (x: nat) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
@@ -268,6 +240,11 @@ Definition match_chunk (x : memory_chunk) (b: val) :=
 
 Definition flag_correct (f: bpf_flag) (v: val) :=
   v = Vint (int_of_flag f).
+
+Definition is_state_handle {S: special_blocks} (v: val) := v = Vptr st_blk Ptrofs.zero.
+
+Definition stateless {A: Type} (f : A -> val -> Prop) := fun x => StateLess (f x).
+Definition statefull {A: Type} (f : A -> val -> State.state -> mem -> Prop) := fun x => StateFull (f x).
 
 Definition perm_correct (p: permission) (n: val): Prop :=
   match p with

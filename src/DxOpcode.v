@@ -273,13 +273,13 @@ Definition int64ToopcodeSymbolType :=
 Instance CINT : CType nat := mkCType _ (cType nat8CompilableType).
 Instance COP : CType opcode := mkCType _ (cType opcodeCompilableType).
 Instance CINT64 : CType int64_t := mkCType _ (cType int64CompilableType).
-
+(*
 Definition Const_int64_to_opcode :=
   ltac: (mkprimitive int64_to_opcode
                 (fun es => match es with
                            | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U64_0xff C_U64) C_U8)
                            | _       => Err PrimitiveEncodingFailed
-                           end)).
+                           end)). *)
 
 
 Definition Const_byte_to_opcode :=
@@ -391,6 +391,6 @@ Module Exports.
   Definition Const_byte_to_opcode_mem_ld_reg              := Const_byte_to_opcode_mem_ld_reg.
   Definition Const_byte_to_opcode_mem_st_imm              := Const_byte_to_opcode_mem_st_imm.
   Definition Const_byte_to_opcode_mem_st_reg              := Const_byte_to_opcode_mem_st_reg.
-  Definition Const_byte_to_opcode                         := Const_byte_to_opcode.
-  Definition Const_int64_to_opcode                        := Const_int64_to_opcode.
+  Definition Const_byte_to_opcode                         := Const_byte_to_opcode. (*
+  Definition Const_int64_to_opcode                        := Const_int64_to_opcode. *)
 End Exports.

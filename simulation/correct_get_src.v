@@ -18,7 +18,7 @@ get_src
 Open Scope Z_scope.
 
 Section Get_src.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -34,14 +34,14 @@ Section Get_src.
   Definition fn: Clight.function := f_get_src.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless int64_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (int64_correct x))
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => reg_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (reg_correct x).
 
-  Instance correct_function3_get_src : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function_get_src : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -56,13 +56,13 @@ Section Get_src.
 
     get_invariant _ins.
 
-    unfold stateless, int64_correct in c0.
+    unfold eval_inv, int64_correct in c0.
     subst.
     unfold z_to_reg, Regs.get_src in Hsrc.
     simpl in c.
     exists (Vint (Int.repr (Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 65535)) (Int64.repr 12))))), m, Events.E0.
 
-    repeat split; unfold step2.
+    split_and; auto;unfold step2.
     -
       repeat forward_star.
     -
@@ -122,4 +122,4 @@ Section Get_src.
 End Get_src.
 Close Scope Z_scope.
 
-Existing Instance correct_function3_get_src.
+Existing Instance correct_function_get_src.

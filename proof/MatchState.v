@@ -92,12 +92,15 @@ Definition match_ins (ins_blk: block) (st: State.state) (m:mem) :=
   Z.of_nat (List.length (ins st)) * 8 <= Ptrofs.max_signed /\
   match_list_ins m ins_blk (ins st).
 
+
+Class special_blocks : Type :=
+  { st_blk : block;
+    mrs_blk  : block;
+    ins_blk  : block }.
+
 Section S.
 
-  (* [state_blk] is the memory block for the monadic state *)
-  Variable state_blk : block.
-  Variable mrs_blk  : block.
-  Variable ins_blk  : block.
+  Context {Blocks : special_blocks}.
 
   Definition match_registers  (rmap:regmap) (bl_reg:block) (ofs : ptrofs) (m : mem) : Prop:=
     forall (r:reg),
@@ -123,23 +126,23 @@ Definition state_struct_def: Ctypes.composite_definition :=
 
   Record match_state  (st: State.state) (m: mem) : Prop :=
     {
-      munchange: Mem.unchanged_on (fun b _ => b <> state_blk /\ b <> mrs_blk /\ b <> ins_blk) (bpf_m st) m; (**r (bpf_m st) = m - {state_blk, mrs_blk, ins_blk} *)
-      mpc      : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
-      mflags   : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
-      mregs    : match_registers (regs_st st) state_blk (Ptrofs.repr 8) m;
-      mins_len : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ Z.of_nat (ins_len st) >= 0;
-      mins     : Mem.loadv AST.Mptr m (Vptr state_blk (Ptrofs.repr 100)) = Some (Vptr ins_blk (Ptrofs.repr 0)) /\ match_ins ins_blk st m;
-      mmrs_num : Mem.loadv AST.Mint32 m (Vptr state_blk (Ptrofs.repr 104)) = Some (Vint  (Int.repr (Z.of_nat (mrs_num st)))) /\
+      munchange: Mem.unchanged_on (fun b _ => b <> st_blk /\ b <> mrs_blk /\ b <> ins_blk) (bpf_m st) m; (**r (bpf_m st) = m - {state_blk, mrs_blk, ins_blk} *)
+      mpc      : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
+      mflags   : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
+      mregs    : match_registers (regs_st st) st_blk (Ptrofs.repr 8) m;
+      mins_len : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ Z.of_nat (ins_len st) >= 0;
+      mins     : Mem.loadv AST.Mptr m (Vptr st_blk (Ptrofs.repr 100)) = Some (Vptr ins_blk (Ptrofs.repr 0)) /\ match_ins ins_blk st m;
+      mmrs_num : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 104)) = Some (Vint  (Int.repr (Z.of_nat (mrs_num st)))) /\
                  (Z.of_nat(mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)
-      mem_regs : Mem.loadv AST.Mptr m (Vptr state_blk (Ptrofs.repr 108)) = Some (Vptr mrs_blk (Ptrofs.repr 0)) /\ match_regions state_blk mrs_blk ins_blk st m;
-      mperm    : Mem.range_perm m state_blk 0 (size_of_state st) Cur Freeable /\
+      mem_regs : Mem.loadv AST.Mptr m (Vptr st_blk (Ptrofs.repr 108)) = Some (Vptr mrs_blk (Ptrofs.repr 0)) /\ match_regions st_blk mrs_blk ins_blk st m;
+      mperm    : Mem.range_perm m st_blk 0 (size_of_state st) Cur Freeable /\
                  Mem.range_perm m mrs_blk   0 (Z.of_nat (mrs_num st)) Cur Freeable /\
                  Mem.range_perm m ins_blk   0 (Z.of_nat (ins_len st)) Cur Readable; (**r we also need to say `mrs/ins_blk` *)
-      minvalid : (~Mem.valid_block (bpf_m st) state_blk /\
+      minvalid : (~Mem.valid_block (bpf_m st) st_blk /\
                   ~Mem.valid_block (bpf_m st) mrs_blk /\
                   ~Mem.valid_block (bpf_m st) ins_blk) /\
-                 (mrs_blk <> state_blk /\ mrs_blk <> ins_blk /\ ins_blk <> state_blk) /\
-                 (forall b, b <> state_blk /\ b <> mrs_blk /\ b <> ins_blk ->
+                 (mrs_blk <> st_blk /\ mrs_blk <> ins_blk /\ ins_blk <> st_blk) /\
+                 (forall b, b <> st_blk /\ b <> mrs_blk /\ b <> ins_blk ->
                   Mem.valid_block m b -> Mem.valid_block (bpf_m st) b);
     }.
 
@@ -161,8 +164,8 @@ Qed.
 
 (** Permission Lemmas: upd_pc *)
 Lemma upd_pc_write_access:
-  forall m0 st_blk mrs_blk ins_blk st
-    (Hst: match_state st_blk mrs_blk ins_blk st m0),
+  forall m0 {bl:special_blocks} st
+    (Hst: match_state  st m0),
     Mem.valid_access m0 Mint32 st_blk 0 Writable.
 Proof.
   intros; unfold Mem.valid_access; destruct Hst; clear - mem_regs0 mperm0; simpl in mem_regs0.
@@ -179,13 +182,13 @@ Proof.
 Qed.
 
 Lemma upd_pc_store:
-  forall m0 st_blk mrs_blk ins_blk pc st
-    (Hst: match_state st_blk mrs_blk ins_blk st m0),
+  forall m0 {S: special_blocks} pc st
+    (Hst: match_state  st m0),
     exists m1,
     Mem.store AST.Mint32 m0 st_blk 0 (Vint pc) = Some m1.
 Proof.
   intros.
-  apply (upd_pc_write_access _ _ _) in Hst.
+  apply upd_pc_write_access  in Hst.
   apply (Mem.valid_access_store _ _ _ _ (Vint pc)) in Hst.
   destruct Hst as (m2 & Hstore).
   exists m2; assumption.
@@ -193,8 +196,8 @@ Qed.
 
 (** Permission Lemmas: upd_flags *)
 Lemma upd_flags_write_access:
-  forall m0 st_blk mrs_blk ins_blk st
-    (Hst: match_state st_blk mrs_blk ins_blk st m0),
+  forall m0 {S:special_blocks} st
+    (Hst: match_state  st m0),
     Mem.valid_access m0 Mint32 st_blk 4 Writable.
 Proof.
   intros; unfold Mem.valid_access; destruct Hst; clear - mperm0; simpl in mperm0.
@@ -210,8 +213,8 @@ Proof.
 Qed.
 
 Lemma upd_flags_store:
-  forall m0 st_blk mrs_blk ins_blk st v
-    (Hst: match_state st_blk mrs_blk ins_blk st m0),
+  forall m0 {S: special_blocks} st v
+    (Hst: match_state  st m0),
     exists m1,
     Mem.store AST.Mint32 m0 st_blk 4 (Vint v) = Some m1.
 Proof.
@@ -224,8 +227,8 @@ Qed.
 
 (** Permission Lemmas: upd_regs *)
 Lemma upd_regs_write_access:
-  forall m0 st_blk mrs_blk ins_blk st r
-    (Hst: match_state st_blk mrs_blk ins_blk st m0),
+  forall m0 {S: special_blocks} st r
+    (Hst: match_state  st m0),
     Mem.valid_access m0 Mint64 st_blk (8 + (8 * (id_of_reg r))) Writable.
 Proof.
   intros; unfold Mem.valid_access; destruct Hst; clear - mperm0; simpl in mperm0.
@@ -250,13 +253,13 @@ Proof.
 Qed.
 
 Lemma upd_regs_store:
-  forall m0 st_blk mrs_blk ins_blk st r v
-    (Hst: match_state st_blk mrs_blk ins_blk st m0),
+  forall m0 {S: special_blocks} st r v
+    (Hst: match_state  st m0),
     exists m1,
     Mem.store AST.Mint64 m0 st_blk (8 + (8 * (id_of_reg r))) (Vlong v) = Some m1.
 Proof.
   intros.
-  apply (upd_regs_write_access _ _ _ _ _ r) in Hst.
+  apply upd_regs_write_access with (r:=r) in Hst.
   apply (Mem.valid_access_store _ _ _ _ (Vlong v)) in Hst.
   destruct Hst as (m2 & Hstore).
   exists m2; assumption.
@@ -266,22 +269,22 @@ Qed.
 
 (** TODO: nothing to do because we never update memory_regions, it should be done before running the interpter *)
 
-Definition match_region (state_blk mrs_blk ins_blk : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+Definition match_region (st_blk mrs_blk ins_blk : block) (mr: memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   exists o, v = Vptr mrs_blk o /\
-              match_region_at_ofs mr state_blk mrs_blk ins_blk o m.
+              match_region_at_ofs mr st_blk mrs_blk ins_blk o m.
 
 (*
-Definition match_region_list (state_blk mrs_blk ins_blk: block) (mrl: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
+Definition match_region_list (st_blk mrs_blk ins_blk: block) (mrl: list memory_region) (v: val) (st: State.state) (m:Memory.Mem.mem) :=
   v = Vptr mrs_blk Ptrofs.zero /\
   mrl = (bpf_mrs st) /\
   List.length mrl = (mrs_num st) /\ (**r those two are from the match_state relation *)
-  match_list_region m state_blk mrs_blk ins_blk mrl. *)
+  match_list_region m st_blk mrs_blk ins_blk mrl. *)
 
 Lemma same_memory_match_region :
-  forall state_blk mrs_blk ins_blk st st' m m' mr v
-         (UMOD : unmodifies_effect nil m m' st st'),
-    match_region state_blk mrs_blk ins_blk mr v st m ->
-    match_region state_blk mrs_blk ins_blk mr v st' m'.
+  forall st_blk mrs_blk ins_blk st st' m m' mr v
+         (UMOD : unmodifies_effect ModNothing m m' st st'),
+    match_region st_blk mrs_blk ins_blk mr v st m ->
+    match_region st_blk mrs_blk ins_blk mr v st' m'.
 Proof.
   intros.
   unfold match_region in *.
@@ -550,8 +553,8 @@ Proof.
 Qed.
 
 Lemma upd_unchanged_on:
-  forall st m0 m1 st_blk mrs_blk ins_blk chunk ofs vl
-  (Hst    : match_state st_blk mrs_blk ins_blk st m0)
+  forall st m0 m1 {S:special_blocks} chunk ofs vl
+  (Hst    : match_state  st m0)
   (Hstore : Mem.store chunk m0 st_blk ofs vl = Some m1),
     Mem.unchanged_on (fun b _ => b <> st_blk /\ b <> mrs_blk /\ b <> ins_blk) m0 m1.
 Proof.
@@ -633,11 +636,11 @@ Proof.
 Qed.
 
 Lemma upd_reg_preserves_match_state:
-  forall st0 st1 m0 m1 st_blk mrs_blk ins_blk r vl
-  (Hst    : match_state st_blk mrs_blk ins_blk st0 m0)
+  forall st0 st1 m0 m1 {S:special_blocks} r vl
+  (Hst    : match_state  st0 m0)
   (Hst1   : State.upd_reg r (Vlong vl) st0 = st1)
   (Hstore : Mem.store AST.Mint64 m0 st_blk (8 + 8 * id_of_reg r) (Vlong vl) = Some m1),
-    match_state st_blk mrs_blk ins_blk st1 m1.
+    match_state  st1 m1.
 Proof.
   intros.
   subst.
@@ -791,11 +794,11 @@ Qed.
 
 
 Lemma upd_pc_preserves_match_state:
-  forall st0 st1 m0 m1 st_blk mrs_blk ins_blk pc
-  (Hst    : match_state st_blk mrs_blk ins_blk st0 m0)
+  forall st0 st1 m0 m1 {S:special_blocks} pc
+  (Hst    : match_state  st0 m0)
   (Hst1   : State.upd_pc pc st0 = st1)
   (Hstore : Mem.store AST.Mint32 m0 st_blk 0 (Vint pc) = Some m1),
-    match_state st_blk mrs_blk ins_blk st1 m1.
+    match_state  st1 m1.
 Proof.
   intros.
   subst.
@@ -933,11 +936,11 @@ Proof.
 Qed.
 
 Lemma upd_flag_preserves_match_state:
-  forall st0 st1 m0 m1 st_blk mrs_blk ins_blk flag
-  (Hst    : match_state st_blk mrs_blk ins_blk st0 m0)
+  forall st0 st1 m0 m1 {S: special_blocks} flag
+  (Hst    : match_state  st0 m0)
   (Hst1   : State.upd_flag flag st0 = st1)
   (Hstore : Mem.store AST.Mint32 m0 st_blk 4 (Vint (int_of_flag flag)) = Some m1),
-    match_state st_blk mrs_blk ins_blk st1 m1.
+    match_state  st1 m1.
 Proof.
   intros.
   subst.
@@ -1073,8 +1076,8 @@ Proof.
 Qed.
 
 Lemma match_state_implies_valid_pointer:
-  forall state_block mrs_block ins_block st m b ofs
-    (Hmatch : match_state state_block mrs_block ins_block st m)
+  forall  {S:special_blocks} st m b ofs
+    (Hmatch : match_state  st m)
     (Hvalid : Mem.valid_pointer (bpf_m st) b ofs = true),
       Mem.valid_pointer m b ofs = true.
 Proof.
@@ -1091,8 +1094,8 @@ Proof.
 Qed.
 
 Lemma match_state_implies_loadv_equal:
-  forall state_block mrs_block ins_block st m chunk b ofs v
-    (Hmatch : match_state state_block mrs_block ins_block st m)
+  forall {S: special_blocks} st m chunk b ofs v
+    (Hmatch : match_state  st m)
     (Hload: Mem.load chunk (bpf_m st) b ofs = Some v),
       Mem.load chunk m b ofs = Some v.
 Proof.
@@ -1269,13 +1272,13 @@ Proof.
 Qed.
 
 Lemma store_reg_preserive_match_state:
-  forall state_block mrs_block ins_block st1 st2 m1 chunk b ofs addr m
-    (Hst: match_state state_block mrs_block ins_block st1 m1)
+  forall {S:special_blocks} st1 st2 m1 chunk b ofs addr m
+    (Hst: match_state  st1 m1)
     (Hstore: Mem.store chunk (bpf_m st1) b ofs addr = Some m)
     (Hupd_st: upd_mem m st1 = st2),
       exists m2,
         Mem.store chunk m1 b ofs addr = Some m2 /\
-        match_state state_block mrs_block ins_block st2 m2.
+        match_state  st2 m2.
 Proof.
   intros.
   assert (Hvalid_blk': Mem.valid_block (bpf_m st1) b). {
@@ -1292,7 +1295,7 @@ Proof.
     eapply Mem.valid_block_unchanged_on; eauto.
   }
 
-  assert (Hinvalid: b <> state_block /\ b <> mrs_block /\ b <> ins_block). {
+  assert (Hinvalid: b <> st_blk /\ b <> mrs_blk /\ b <> ins_blk). {
     destruct Hst as (_, _, _, _, _, _, _, _, _, Hinvalid).
     destruct Hinvalid as ((Hinvalid0 & Hinvalid1 & Hinvalid2) & _ & _).
     split.

@@ -16,7 +16,7 @@ get_opcode_ins
 *)
 
 Section Get_opcode_ins.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -32,14 +32,14 @@ Section Get_opcode_ins.
   Definition fn: Clight.function := f_get_opcode_ins.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless int64_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (int64_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => opcode_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (opcode_correct x).
 
-  Instance correct_function3_get_opcode_ins : forall a, correct_function3 p args res f fn nil true match_arg_list match_res a.
+  Instance correct_function_get_opcode_ins : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -49,82 +49,76 @@ Section Get_opcode_ins.
     repeat intro.
     get_invariant _ins.
 
-    unfold stateless, int64_correct in c0.
+    unfold eval_inv, int64_correct in c0.
     subst.
 
     eexists. exists m, Events.E0.
-    unfold int64_to_opcode.
-    repeat split; unfold step2.
+    unfold match_res, opcode_correct, Regs.get_opcode.
+
+    unfold Int64.and.
+    change (Int64.unsigned (Int64.repr 255)) with 255%Z.
+    assert (Hc_le: (0 <= Z.land (Int64.unsigned c) 255 <= 255)%Z). {
+      assert (Heq: (Int64.unsigned c) = Z.of_nat (Z.to_nat(Int64.unsigned c))). {
+        rewrite Z2Nat.id.
+        reflexivity.
+        assert (Hrange: (0 <= Int64.unsigned c < Int64.modulus)%Z) by apply Int64.unsigned_range.
+        lia.
+      }
+      rewrite Heq; clear.
+      change 255%Z with (Z.of_nat (Z.to_nat 255%Z)) at 1 2.
+      rewrite LemmaNat.land_land.
+      split.
+      lia.
+      assert (H: (Nat.land (Z.to_nat (Int64.unsigned c)) (Z.to_nat 255)) <= 255%nat). {
+        rewrite Nat.land_comm.
+        rewrite LemmaNat.land_bound.
+        lia.
+      }
+      lia.
+    }
+    rewrite Int64.unsigned_repr; [ | change Int64.max_unsigned with 18446744073709551615%Z; lia].
+
+    rewrite Z2Nat.id; [| lia].
+
+    split; unfold step2.
     -
       forward_star.
-      rewrite Z2Nat.id.
       simpl.
       rewrite Int.zero_ext_idem; [| lia].
       rewrite Int.zero_ext_and; [| lia].
       change (two_p 8 - 1)%Z with 255%Z.
+
+      unfold Int64.and.
+      change (Int64.unsigned (Int64.repr 255)) with 255%Z.
+      rewrite Int64.unsigned_repr; [ | change Int64.max_unsigned with 18446744073709551615%Z; lia].
+
       unfold Int.and.
-      forward_star.
-      rewrite Z.land_nonneg.
-      right; lia.
-    -
-      assert (Hc_le: (0 <= Int64.unsigned (Int64.and c (Int64.repr 255)) <= 255)%Z). {
-        rewrite Int64.and_commut.
-        split.
-        assert (Hrange: (0 <= Int64.unsigned (Int64.and (Int64.repr 255) c) < Int64.modulus)%Z) by apply Int64.unsigned_range.
-        lia.
-        apply Int64.and_le.
-      }
-      remember (Int64.unsigned (Int64.and c (Int64.repr 255))) as n.
       rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
-      rewrite <- Z2Nat.id with (n:=n); [| lia].
-      change 255%Z with (Z.of_nat (Z.to_nat 255%Z)).
-      rewrite LemmaNat.land_land.
-      rewrite Nat2Z.id.
-      assert (Hc_leZ: 0 <= Z.to_nat n <= 255) by lia.
-      change (Z.to_nat 255%Z) with 255.
-      rewrite Nat.land_comm.
-      rewrite LemmaNat.land_bound.
-      lia.
-    - constructor.
-      simpl.
-      assert (Hc_le: (0 <= Int64.unsigned (Int64.and c (Int64.repr 255)) <= 255)%Z). {
-        rewrite Int64.and_commut.
-        split.
-        assert (Hrange: (0 <= Int64.unsigned (Int64.and (Int64.repr 255) c) < Int64.modulus)%Z) by apply Int64.unsigned_range.
+      change (Int.unsigned (Int.repr 255)) with 255%Z.
+      rewrite <- Z.land_assoc.
+      rewrite Z.land_diag.
+
+      unfold step2; forward_star.
+    - split.
+      + unfold eval_inv.
+        split; [reflexivity|].
         lia.
-        apply Int64.and_le.
-      }
-      remember (Int64.unsigned (Int64.and c (Int64.repr 255))) as n.
-      rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
-      rewrite Z2Nat.id.
-      + assert (Hpre: (0 <= 8 < Int.zwordsize)%Z) by (change Int.zwordsize with 32%Z; lia).
-        assert (Hz_land: (0 <= Z.land n 255 <= 255)%Z). {
-          split.
-          rewrite Z.land_nonneg.
-          right; lia.
-          rewrite <- Z2Nat.id with (n:=n); [| lia].
-          change 255%Z with (Z.of_nat (Z.to_nat 255%Z)) at 1.
-          rewrite LemmaNat.land_land.
-          assert (Hc_leZ: 0 <= Z.to_nat n <= 255) by lia.
-          change (Z.to_nat 255%Z) with 255.
-          rewrite Nat.land_comm.
-          assert (Hc_leN: Nat.land 255 (Z.to_nat n) <= 255) by
-          (rewrite LemmaNat.land_bound; lia).
-          lia.
-        }
-        rewrite Int.zero_ext_and.
-        change (two_p 8 - 1)%Z with 255%Z.
-        unfold Int.and.
-        change (Int.unsigned (Int.repr 255)) with 255%Z.
-        rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
-        rewrite <- Z.land_assoc.
-        rewrite Z.land_diag.
-        reflexivity.
-        lia.
-      + rewrite Z.land_nonneg.
-        right; lia.
-Qed.
+      + split.
+        * constructor.
+          simpl.
+          rewrite Int.zero_ext_and; [| lia].
+          change (two_p 8 - 1)%Z with 255%Z.
+
+          unfold Int.and.
+          rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
+          change (Int.unsigned (Int.repr 255)) with 255%Z.
+          rewrite <- Z.land_assoc.
+          rewrite Z.land_diag.
+          reflexivity.
+        * split; [auto|].
+          apply unmodifies_effect_refl.
+  Qed.
 
 End Get_opcode_ins.
 
-Existing Instance correct_function3_get_opcode_ins.
+Existing Instance correct_function_get_opcode_ins.

@@ -514,6 +514,7 @@ Proof.
           simpl in H.
           lia.
         }
+      + lia.
   - destruct H; subst; reflexivity.
 Qed.
 

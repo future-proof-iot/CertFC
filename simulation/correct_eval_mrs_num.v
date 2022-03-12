@@ -21,6 +21,7 @@ eval_mrs_num = fun st : State.state => Some (eval_mem_num st, st)
 *)
 
 Section Eval_mrs_num.
+  Context {S : special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -32,22 +33,18 @@ Section Eval_mrs_num.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := eval_mrs_num.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_mrs_num.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    (DList.DCons (stateM_correct state_block mrs_block ins_block)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    (dcons (fun _ => StateLess is_state_handle)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun re v st m => nat_correct re v /\ re = (mrs_num st) /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> Inv := fun re => StateFull (fun v st m => nat_correct re v /\ re = (mrs_num st)).
 
-  Instance correct_function3_eval_mrs_num : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
+  Instance correct_function_eval_mrs_num : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -56,17 +53,15 @@ Section Eval_mrs_num.
     unfold f.
     repeat intro.
     get_invariant _st.
+    unfold eval_inv, is_state_handle in c.
+    subst.
 
-    unfold stateM_correct in c.
-    destruct c as (Hv_eq & Hst).
-    subst v.
-
-    assert (Hst' := Hst).
-    destruct Hst'. clear - Hst p0 mmrs_num.
+    assert (Hst' := MS).
+    destruct Hst'. clear - MS p0 mmrs_num mem_regs.
 
     eexists. exists m, Events.E0.
 
-    split.
+    split_and.
     {
       repeat forward_star.
       rewrite Ptrofs.add_zero_l.
@@ -80,19 +75,21 @@ Section Eval_mrs_num.
     }
     split.
     {
-      unfold match_res.
+      unfold match_res, nat_correct, eval_mem_num.
       split.
-      - unfold nat_correct, eval_mem_num.
-        reflexivity.
-      - split.
-        unfold eval_mem_num.
-        reflexivity.
-        assumption.
+      reflexivity.
+      unfold match_regions in mem_regs.
+      destruct mem_regs as (_ & Hlen & Hrange & _).
+      rewrite Hlen in Hrange.
+      change Int.max_unsigned with Ptrofs.max_unsigned.
+      lia.
     }
-
-    split; [simpl; constructor; reflexivity | split; reflexivity].
+    unfold eval_mem_num. reflexivity.
+    constructor. reflexivity.
+    auto.
+    apply unmodifies_effect_refl.
   Qed.
 
 End Eval_mrs_num.
 
-Existing Instance correct_function3_eval_mrs_num.
+Existing Instance correct_function_eval_mrs_num.

@@ -266,11 +266,11 @@ Definition byte_to_opcode (op: nat): opcode :=
     | _    => op_BPF_ILLEGAL_INS
     end.
 
+(*
 Definition int64_to_opcode (ins: int64): nat :=
   Z.to_nat (Z.land (Int.unsigned (Int.repr
     (Int64.unsigned (Int64.and ins (Int64.repr 0xff)))
     )) 0xff).
-(*
 Int64.unsigned (Int64.and ins (Int64.repr 0xff))). *)
 
 (******************** Dx related *******************)

@@ -20,7 +20,7 @@ check_mem
 *)
 
 Section Check_mem.
-
+  Context {S:special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -32,25 +32,23 @@ Section Check_mem.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := check_mem.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_check_mem.
 
+
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (stateless perm_correct)
-        (DList.DCons (stateless match_chunk)
-          (DList.DCons (stateless val32_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons (fun _ => StateLess is_state_handle)
+      (dcons (stateless perm_correct)
+        (dcons (stateless match_chunk)
+          (dcons (stateless val32_correct)
             (DList.DNil _)))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val_ptr_correct state_block mrs_block ins_block x v st m.
+  Definition match_res : res -> Inv := stateless eq.
 
-  Instance correct_function3_check_mem : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
+  Instance correct_function_check_mem : forall a, correct_function p args res f fn ModNothing  false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -58,7 +56,7 @@ Section Check_mem.
     unfold INV.
     unfold f, app.
     unfold check_mem.
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := true).
 
@@ -66,14 +64,6 @@ Section Check_mem.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      intuition. subst m' st'. assumption.
-    }
 
     reflexivity.
     reflexivity.
@@ -83,8 +73,9 @@ Section Check_mem.
     reflexivity.
     reflexivity.
 
-    unfold INV; intro H.
-    correct_Forall.
+    intros.
+    change (match_temp_env INV le st m) in H.
+    unfold INV in H.
     get_invariant _chunk.
     exists (v::nil).
     split.
@@ -94,46 +85,26 @@ Section Check_mem.
     intuition eauto.
 
     intros.
-    eapply correct_statement_if_body; [prove_in_inv | destruct x ]. 2:{ (**r if-else branch *)
-      unfold correct_body.
-      instantiate (1 := nil).
-      intros.
-      unfold returnM.
-      intros.
-      exists (Vint (Int.repr 0)), m0, Events.E0.
-      split.
-      {
-        forward_star.
-        forward_star.
-      }
-      split.
-      {
-        unfold match_res, val_ptr_correct, Vnullptr, Int.zero; simpl.
-        get_invariant _st. Locate stateM_correct.
-        unfold stateM_correct in c2.
-        destruct c2 as (_ & Hst).
-        split; [reflexivity| assumption].
-      }
-      split;[ constructor; reflexivity | split; reflexivity].
+    eapply correct_statement_if_body; [prove_in_inv | destruct x ].
+    2:{ (**r if-else branch *)
+      eapply correct_body_Sreturn_Some.
+      intros MS MT.
+      eexists ; split_and.
+      - reflexivity.
+      - reflexivity.
+      - reflexivity.
+      - simpl ; auto.
+        intro. constructor. reflexivity.
     }
     (**r if-then branch *)
 
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := false).
     my_reflex.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
     reflexivity.
     reflexivity.
     reflexivity.
@@ -142,33 +113,25 @@ Section Check_mem.
     reflexivity.
     reflexivity.
 
-    unfold INV; intro H.
+    unfold INV; intro H. simpl in H.
     correct_Forall.
     get_invariant _st.
+    unfold eval_inv in *.
     exists (v::nil).
-    split.
+    split_and.
     unfold map_opt,exec_expr.
     rewrite p0; reflexivity.
     simpl; intros.
-    intuition eauto.
-
+    tauto.
+    -
     intros.
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := false).
     my_reflex.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
     reflexivity.
     reflexivity.
     reflexivity.
@@ -178,32 +141,24 @@ Section Check_mem.
     reflexivity.
 
     unfold INV; intro H.
-    correct_Forall.
+    correct_Forall. simpl in H.
     get_invariant _st.
-    exists (v::nil).
+    unfold eval_inv,stateless, is_state_handle in *.
+    subst.
+    exists (Vptr st_blk Ptrofs.zero::nil).
     split.
     unfold map_opt, exec_expr.
     rewrite p0; reflexivity.
     simpl;intros.
-    intuition eauto.
-
+    unfold is_state_handle. split ; auto.
     intros.
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := false).
     my_reflex.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
     reflexivity.
     reflexivity.
     reflexivity.
@@ -213,7 +168,7 @@ Section Check_mem.
     reflexivity.
 
     unfold INV; intro H.
-    correct_Forall.
+    correct_Forall. simpl in H.
     get_invariant _st.
     get_invariant _mem_reg_num.
     get_invariant _perm.
@@ -226,15 +181,12 @@ Section Check_mem.
     rewrite p0, p1, p2, p3, p4, p5; reflexivity.
     simpl;intros.
     unfold correct_eval_mrs_num.match_res in c3.
-    destruct c3 as (Hc_eq & Hx_eq & _).
+    destruct c3 as (Hc_eq & _).
     unfold correct_eval_mrs_regions.match_res in c7.
-    unfold nat_correct_mrs_num.
     intuition eauto.
-    lia.
-    lia.
 
     intros.
-    eapply correct_statement_seq_body with (modifies1:=nil);eauto.
+    eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
     unfold typeof.
     change_app_for_statement.
     eapply correct_statement_call with (has_cast:=true).
@@ -243,15 +195,6 @@ Section Check_mem.
     reflexivity.
     intros.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
     reflexivity.
     reflexivity.
     reflexivity.
@@ -261,68 +204,55 @@ Section Check_mem.
     reflexivity.
 
     unfold INV; intro H.
-    correct_Forall.
+    correct_Forall. simpl in H.
     get_invariant _check_mem__1.
     exists (v::nil).
     split.
     unfold map_opt, exec_expr.
     rewrite p0; reflexivity.
     simpl;intros.
-    unfold val_ptr_correct.
-    unfold correct_check_mem_aux.match_res, val_ptr_correct in c2.
-    intuition eauto.
-
+    unfold eval_inv,correct_check_mem_aux.match_res,stateless in c2.
+    tauto.
     intros.
     
     eapply correct_statement_if_body_expr. intro EXPR.
     destruct x2.
     2:{
-       destruct (exec_expr (globalenv p) empty_env le4 m4
-          (Etempvar _check_mem__1 (Clightdefs.tptr Clightdefs.tuchar))) eqn:CHK.
-      - eapply correct_body_Sreturn_Some with (v:=v).
-        intros.
-        split. rewrite CHK. auto.
-        split.
-        get_invariant _check_mem__1.
-        unfold exec_expr in CHK. assert (v0 = v) by congruence. subst.
-        unfold correct_check_mem_aux.match_res, val_ptr_correct in c2.
-        destruct c2 as (Hv_eq & _); subst.
-        unfold match_res. unfold val_ptr_correct.
-        split; auto. unfold INV in *.
-        get_invariant _st.
-        unfold stateM_correct in c2. destruct c2; auto.
-        reflexivity.
-        left. reflexivity.
-     - repeat intro.
+      eapply correct_body_Sreturn_Some.
+      intros MS MT.
+      simpl in MT.
       get_invariant _check_mem__1.
-      unfold exec_expr in CHK. congruence.
-     }
+      exists v.
+      split_and;auto.
+      simpl.
+      apply Cop.cast_val_casted;auto.
+      }
 
     eapply correct_body_Sreturn_Some; eauto.
-    intros.
-    split.
-    unfold exec_expr; simpl.
+    intros MS MT.
+    eexists.
+    split_and.
     reflexivity.
-    split.
-    unfold match_res, val_ptr_correct, Vnullptr, Int.zero; simpl.
-    get_invariant _st.
-    unfold stateM_correct in c2.
-    destruct c2 as (_ & Hst).
-    split; [reflexivity| assumption].
-    all: try reflexivity.
-    right; reflexivity.
-    intros.
+    reflexivity.
+    reflexivity.
+    simpl.
+    intro ; constructor; reflexivity.
+    reflexivity.
+    intros MS MT.
+    simpl in MT.
     get_invariant _is_null.
     unfold exec_expr.
-    unfold correct_cmp_ptr32_nullM.match_res, match_bool in c2.
+    unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool,stateless in c2.
     rewrite p0.
     rewrite c2.
     unfold Val.of_bool.
     destruct x2; reflexivity.
-    instantiate (1:=nil).
     reflexivity.
-Qed.
+    reflexivity.
+    -  reflexivity.
+    - reflexivity.
+  Qed.
 
 End Check_mem.
 
-Existing Instance correct_function3_check_mem.
+Existing Instance correct_function_check_mem.

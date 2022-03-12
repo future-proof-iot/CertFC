@@ -18,7 +18,7 @@ load_mem
  *)
 
 Section Load_mem.
-
+  Context {S:special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -30,24 +30,20 @@ Section Load_mem.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.load_mem.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_load_mem.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (stateless match_chunk)
-         (DList.DCons (val_ptr_correct state_block mrs_block ins_block)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess is_state_handle)
+          (dcons (fun ck => StateLess (match_chunk ck))
+         (dcons (fun x => StateLess (eq x))
             (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> Inv := fun x => StateLess (val64_correct x).
 
-  Instance correct_function3_load_mem : forall a, correct_function3 p args res f fn [] false match_arg_list match_res a.
+  Instance correct_function_load_mem : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
 Proof.
   correct_function_from_body args.
   correct_body.
@@ -56,11 +52,9 @@ Proof.
   get_invariant _st.
   get_invariant _chunk.
   get_invariant _addr.
-  unfold stateM_correct in c1.
-  unfold stateless, match_chunk in c2.
-  unfold val_ptr_correct in c3.
-  destruct c1 as (Hptr & Hmatch).
-  destruct c3 as (c3 & _).
+  unfold eval_inv, is_state_handle in c1.
+  unfold eval_inv, match_chunk in c2.
+  unfold eval_inv in c3.
   subst.
 
   unfold rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z in p1.
@@ -81,8 +75,8 @@ Proof.
     all: rewrite <- Hv_eq in *; destruct Val.eq; [constructor|].
     all: intros; eexists; exists m, Events.E0.
     + (**r v = Vint i0 *)
-      split.
-      forward_star.
+      split_and.
+      * forward_star.
       change (Int.unsigned (Int.repr 1)) with 1%Z.
       simpl.
       unfold step2.
@@ -96,9 +90,11 @@ Proof.
       reflexivity.
       simpl.
       forward_star.
-      split; [split; [split; [reflexivity |] | assumption] |].
-      eexists; reflexivity.
-      split; [constructor | split; reflexivity].
+      * simpl. split_and; auto.
+        eexists ; reflexivity.
+      * constructor.
+      * auto.
+      * apply unmodifies_effect_refl.
     + (**r v = Vlong i0: it should be impossible *)
       apply Mem.load_type in Hload.
       rewrite Hv_eq in Hload.
@@ -108,8 +104,8 @@ Proof.
     destruct v eqn: Hv_eq; try constructor.
     all: rewrite <- Hv_eq in *; destruct Val.eq; [constructor|].
     all: intros; eexists; exists m, Events.E0.
-    + split.
-      forward_star.
+    split_and; auto.
+    + forward_star.
       change (Int.unsigned (Int.repr 2)) with 2%Z.
       simpl.
       unfold step2.
@@ -123,10 +119,10 @@ Proof.
       reflexivity.
       simpl.
       forward_star.
-      split; [split; [split; [reflexivity |] | assumption] |].
-      eexists; reflexivity.
-      split; [constructor | split; reflexivity].
-    + apply Mem.load_type in Hload.
+    + simpl. split ; eauto.
+    + constructor.
+    + apply unmodifies_effect_refl.
+    +  apply Mem.load_type in Hload.
       rewrite Hv_eq in Hload.
       inversion Hload.
   - (**r c = Mint32 *)
@@ -134,8 +130,8 @@ Proof.
     destruct v eqn: Hv_eq; try constructor.
     all: rewrite <- Hv_eq in *; destruct Val.eq; [constructor|].
     all: intros; eexists; exists m, Events.E0.
-    + split.
-      forward_star.
+    split_and; auto.
+    + forward_star.
       change (Int.unsigned (Int.repr 4)) with 4%Z.
       simpl.
       unfold step2.
@@ -149,9 +145,9 @@ Proof.
       reflexivity.
       simpl.
       forward_star.
-      split; [split; [split; [reflexivity |] | assumption] |].
-      eexists; reflexivity.
-      split; [constructor | split; reflexivity].
+    + simpl. split ; eauto.
+    + constructor.
+    + apply unmodifies_effect_refl.
     + apply Mem.load_type in Hload.
       rewrite Hv_eq in Hload.
       inversion Hload.
@@ -162,8 +158,8 @@ Proof.
     all: try (apply Mem.load_type in Hload as Hload1; rewrite Hv_eq in Hload1; inversion Hload1).
     all: intros; eexists; exists m, Events.E0.
     + intuition congruence.
-    + split.
-      forward_star.
+    + split_and.
+      * forward_star.
       change (Int.unsigned (Int.repr 8)) with 8%Z.
       simpl.
       unfold step2.
@@ -177,14 +173,14 @@ Proof.
       reflexivity.
       simpl.
       forward_star.
-      rewrite Hv_eq.
-      split; [split; [split; [reflexivity |] | assumption] |].
-      eexists; reflexivity.
-      split; [constructor | split; reflexivity].
+      * simpl. split ; eauto.
+      * rewrite Hv_eq. constructor.
+      * auto.
+      * apply unmodifies_effect_refl.
       Unshelve.
       all: assumption.
 Qed.
 
 End Load_mem.
 
-Existing Instance correct_function3_load_mem.
+Existing Instance correct_function_load_mem.

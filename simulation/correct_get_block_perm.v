@@ -20,7 +20,7 @@ get_block_perm
 *)
 
 Section Get_block_perm.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -32,22 +32,18 @@ Section Get_block_perm.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := get_block_perm.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_block_perm.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (match_region state_block mrs_block ins_block)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (statefull (match_region st_blk mrs_blk ins_blk))
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => perm_correct x v.
+  Definition match_res : res -> Inv := stateless perm_correct.
 
-  Instance correct_function3_get_block_perm : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function_get_block_perm : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -70,7 +66,7 @@ Section Get_block_perm.
       *)
     exists (Vint vperm), m, Events.E0.
 
-    repeat split; unfold step2.
+    split_and; unfold step2.
     -
       repeat forward_star.
       unfold align, Ctypes.alignof; simpl.
@@ -79,13 +75,13 @@ Section Get_block_perm.
 
       Transparent Archi.ptr64.
       reflexivity.
-    - unfold match_res. unfold correct_perm in Hinj. unfold perm_correct. 
+    - unfold eval_inv,match_res. simpl. unfold correct_perm in Hinj. unfold perm_correct.
       destruct (block_perm c); rewrite Hinj; reflexivity.
-    - simpl.
-      constructor.
-      reflexivity.
+    - constructor. reflexivity.
+    - auto.
+    - apply unmodifies_effect_refl.
   Qed.
 
 End Get_block_perm.
 
-Existing Instance correct_function3_get_block_perm.
+Existing Instance correct_function_get_block_perm.

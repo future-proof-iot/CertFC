@@ -17,7 +17,7 @@ upd_reg
 
 
 Section Upd_reg.
-
+  Context {S : special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -29,26 +29,24 @@ Section Upd_reg.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.upd_reg.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_reg.
 
-  Definition modifies : list block := [state_block]. (* of the C code *)
+  Definition modifies  := ModSomething. (* of the C code *)
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (stateless reg_correct)
-        (DList.DCons (stateless val64_correct)
+
+
+Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess (is_state_handle))
+      (dcons (fun x => StateLess (reg_correct x))
+        (dcons (fun x => StateLess (val64_correct x))
           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
+  Definition match_res : res -> Inv := fun _  => StateLess (fun v => v = Vundef).
 
-  Instance correct_function3_upd_reg : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
+  Instance correct_function_upd_reg : forall a, correct_function p args res f fn modifies false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -57,15 +55,13 @@ Section Upd_reg.
     get_invariant _st.
     get_invariant _i.
     get_invariant _v.
-    unfold stateM_correct in c1.
-    unfold stateless, reg_correct in c2.
-    unfold stateless, val64_correct in c3.
-    destruct c1 as (Hv_eq & Hst).
+    unfold eval_inv,is_state_handle in c1.
+    unfold eval_inv, reg_correct in c2.
+    unfold eval_inv, val64_correct in c3.
     destruct c3 as (Hc_eq & (vl & Hvl_eq)).
     subst.
-
     simpl in c.
-    apply (upd_regs_store m _ _ _ _ c vl) in Hst as Hstore.
+    apply (upd_regs_store m _ c vl) in MS as Hstore.
     destruct Hstore as (m1 & Hstore).
 
     (**according to the type:
@@ -87,23 +83,16 @@ Section Upd_reg.
       }
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
-    - split.
-      split.
-      eapply upd_reg_preserves_match_state.
-      apply Hst.
-      reflexivity.
-      apply Hstore.
-      reflexivity.
-      split.
-
-      + intros.
-        simpl.
-        constructor.
-      + unfold unmodifies_effect, modifies, In.
-
-        eapply Mem.store_unchanged_on; eauto.
+    - split_and.
+      + simpl. reflexivity.
+      + constructor.
+      + eapply upd_reg_preserves_match_state.
+        apply MS.
+        reflexivity.
+        apply Hstore.
+      + simpl; auto.
 Qed.
 
 End Upd_reg.
 
-Existing Instance correct_function3_upd_reg.
+Existing Instance correct_function_upd_reg.

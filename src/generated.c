@@ -947,14 +947,19 @@ void bpf_interpreter_aux(unsigned int fuel)
     fuel0 = fuel - 1U;
     len$442 = eval_ins_len();
     pc$444 = eval_pc();
-    if (0U <= pc$444 && pc$444 < len$442) {
-      step();
-      f = eval_flag();
-      if (f == 0) {
-        upd_pc_incr();
-        bpf_interpreter_aux(fuel0);
-        return;
+    if (0U <= pc$444) {
+      if (pc$444 < len$442) {
+        step();
+        f = eval_flag();
+        if (f == 0) {
+          upd_pc_incr();
+          bpf_interpreter_aux(fuel0);
+          return;
+        } else {
+          return;
+        }
       } else {
+        upd_flag(-5);
         return;
       }
     } else {
@@ -968,14 +973,18 @@ unsigned long long bpf_interpreter(unsigned int fuel$448)
 {
   struct memory_region *mrs$450;
   struct memory_region *bpf_ctx;
-  int f$454;
+  unsigned int start$454;
+  int f$456;
+  unsigned long long res$458;
   mrs$450 = eval_mrs_regions();
   bpf_ctx = get_mem_region(0U, mrs$450);
-  upd_reg(1U, (*bpf_ctx).start_addr);
+  start$454 = get_start_addr(bpf_ctx);
+  upd_reg(1U, (unsigned long long) start$454);
   bpf_interpreter_aux(fuel$448);
-  f$454 = eval_flag();
-  if (f$454 == 1) {
-    return eval_reg(0U);
+  f$456 = eval_flag();
+  if (f$456 == 1) {
+    res$458 = eval_reg(0U);
+    return res$458;
   } else {
     return 0LLU;
   }

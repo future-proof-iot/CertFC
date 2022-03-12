@@ -20,7 +20,7 @@ fun x y : valu32_t => returnM (Val.sub x y)
 *)
 
 Section Get_sub.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -36,15 +36,15 @@ Section Get_sub.
   Definition fn: Clight.function := f_get_sub.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless val32_correct)
-       (DList.DCons (stateless val32_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (stateless val32_correct)
+       (dcons (stateless val32_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val32_correct x v.
+  Definition match_res : res -> Inv := stateless val32_correct.
 
-  Instance correct_function3_get_sub : forall a, correct_function3 p args res f fn (nil) true match_arg_list match_res a.
+  Instance correct_function_get_sub : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -67,16 +67,17 @@ Section Get_sub.
       *)
     exists (Val.sub (Vint vi) (Vint vj)), m, Events.E0.
 
-    repeat split; unfold step2.
+  split_and; unfold step2;auto.
     -
       repeat forward_star.
     - simpl.
-      eexists; reflexivity.
+      unfold val32_correct. eauto.
     - simpl.
       constructor.
       reflexivity.
+    - apply unmodifies_effect_refl.
   Qed.
 
 End Get_sub.
 
-Existing Instance correct_function3_get_sub.
+Existing Instance correct_function_get_sub.

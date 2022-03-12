@@ -16,7 +16,7 @@ upd_pc_incr
  *)
 
 Section Upd_pc_incr.
-
+  Context{S:special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -28,25 +28,24 @@ Section Upd_pc_incr.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := Monad.upd_pc_incr.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_pc_incr.
 
-  Definition modifies : list block := [state_block]. (* of the C code *)
+  Definition modifies  := ModSomething. (* of the C code *)
   (* [match_mem] related the Coq monadic state and the C memory *)
+  (*Definition match_mem : stateM -> val -> Memory.Mem.mem -> Prop := fun stM v m => match_meminj_state state_block inject_id stM m.*)
+
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DNil _).
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons  (fun (x:unit) => StateLess (is_state_handle))
+                             (DList.DNil _).
+
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun _ v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
+  Definition match_res : res -> Inv := fun _  => StateLess (fun v => v = Vundef).
 
-  Lemma correct_function3_upd_pc_incr : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
+  Lemma correct_function_upd_pc_incr : forall a, correct_function p args res f fn modifies false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -56,13 +55,10 @@ Section Upd_pc_incr.
     destruct p0.
     intros.
     unfold INV in H.
-    get_invariant _st.
-    unfold stateM_correct in c.
-    destruct c as (Hv_eq & Hst).
-    subst.
+    get_invariant _st. unfold eval_inv,is_state_handle in c. subst.
 
     (** we need to get the proof of `upd_pc_incr` load/store permission *)
-    apply (upd_pc_store _ _ _ _ (Int.add (pc_loc st) (Int.repr 1)) _) in Hst as Hstore.
+    apply (upd_pc_store  _ (Int.add (pc_loc st) (Int.repr 1)) _) in MS as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** pc \in [ (state_block,0), (state_block,8) ) *)
 
@@ -78,25 +74,20 @@ Section Upd_pc_incr.
       repeat forward_star.
 
       rewrite Ptrofs.add_zero.
-      destruct Hst as (_ , Hpc, _, _, _, _, _, _, _, _).
+      destruct MS as (_ , Hpc, _, _, _, _, _, _, _, _).
       fold Ptrofs.zero in Hpc.
       rewrite Hpc; reflexivity.
       reflexivity.
       reflexivity.
-    - split.
-      split.
+    - split_and; auto.
+      constructor.
       eapply upd_pc_preserves_match_state; eauto.
       unfold upd_pc_incr in Hupd_pc.
       context_destruct_if_inversion.
       unfold State.upd_pc, State.upd_pc_incr.
       reflexivity.
-      reflexivity.
-
-      split; [simpl;constructor |].
-
-      eapply Mem.store_unchanged_on; eauto.
 Qed.
 
 End Upd_pc_incr.
 
-Existing Instance correct_function3_upd_pc_incr.
+Existing Instance correct_function_upd_pc_incr.

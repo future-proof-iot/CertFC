@@ -36,11 +36,12 @@ all:
 	@$(MAKE) clightmodel
 	@$(MAKE) clightlogic
 	@$(MAKE) simulation
+	@$(MAKE) equivalence
 
 COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
 COQEMONADIC =  $(addprefix monadicmodel/, Opcode.v rBPFInterpreter.v)
 COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxNat.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
-COQEQUIV =  $(addprefix equivalence/, switch.v equivalence1.v equivalence2.v)
+COQEQUIV =  $(addprefix equivalence/, equivalence1.v equivalence2.v)
 COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v IsolationLemma.v Isolation.v)
 COQCOMM = $(addprefix comm/, Flag.v LemmaNat.v List64.v rBPFAST.v rBPFMemType.v rBPFValues.v MemRegion.v Regs.v State.v Monad.v)
 
@@ -124,7 +125,8 @@ clightmodel:
 
 PROOF = $(addprefix simulation/, correct_eval_pc.v correct_upd_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_num.v correct_eval_mrs_regions.v correct_load_mem.v correct_store_mem_reg.v correct_store_mem_imm.v correct_eval_ins_len.v correct_eval_ins.v correct_cmp_ptr32_nullM.v correct_get_dst.v correct_get_src.v correct_get_mem_region.v correct__bpf_get_call.v correct_exec_function.v correct_reg64_to_reg32.v correct_get_offset.v correct_get_immediate.v correct_eval_immediate.v correct_get_src64.v correct_get_src32.v correct_get_opcode_ins.v correct_get_opcode_alu64.v correct_get_opcode_alu32.v correct_get_opcode_branch.v correct_get_opcode_mem_ld_imm.v correct_get_opcode_mem_ld_reg.v correct_get_opcode_mem_st_imm.v correct_get_opcode_mem_st_reg.v correct_get_opcode.v correct_get_add.v correct_get_sub.v correct_get_addr_ofs.v correct_get_start_addr.v correct_get_block_size.v correct_get_block_perm.v correct_is_well_chunk_bool.v correct_check_mem_aux2.v correct_check_mem_aux.v correct_check_mem.v correct_step_opcode_alu64.v correct_step_opcode_alu32.v correct_step_opcode_branch.v correct_step_opcode_mem_ld_imm.v correct_step_opcode_mem_ld_reg.v correct_step_opcode_mem_st_reg.v correct_step_opcode_mem_st_imm.v correct_step.v correct_bpf_interpreter_aux.v correct_bpf_interpreter.v)
 
-# TBC: step_opcode_mem_st_imm step_opcode_mem_st_reg step bpf_interpreter_aux bpf_interpreter
+# TBC: store_mem_imm store_mem_reg step_opcode_mem_st_imm step_opcode_mem_st_reg step bpf_interpreter_aux bpf_interpreter
+# useless: correct_get_block_ptr.v 
 
 CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v Clightlogic.v CommonLib.v CommonLemma.v MatchState.v CorrectRel.v CommonLemmaNat.v)
 
@@ -164,8 +166,6 @@ gitpush:
 	cp proof/*.md $(GITDIR)/proof
 	cp repatch/*.c $(GITDIR)/repatch
 	cp Makefile $(GITDIR)
-	cp Makefile.config $(GITDIR)
-	cp _CoqProject $(GITDIR)
 	cp compcertcprinter-cmx-args $(GITDIR)
 	cp *.md $(GITDIR)
 
@@ -191,8 +191,6 @@ gitpull:
 	cp $(GITDIR)/proof/*.md ./proof
 	cp $(GITDIR)/repatch/*.c ./repatch
 	cp $(GITDIR)/Makefile .
-	cp $(GITDIR)/Makefile.config .
-	cp $(GITDIR)/_CoqProject .
 	cp $(GITDIR)/compcertcprinter-cmx-args .
 	cp $(GITDIR)/*.md .
 

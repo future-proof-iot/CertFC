@@ -18,7 +18,7 @@ get_opcode_mem_ld_imm
 Open Scope nat_scope.
 
 Section Get_opcode_mem_ld_imm.
-
+  Context {S: special_blocks} .
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -34,14 +34,14 @@ Section Get_opcode_mem_ld_imm.
   Definition fn: Clight.function := f_get_opcode_mem_ld_imm.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
-    (DList.DCons (stateless opcode_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+    (dcons (fun x => StateLess (opcode_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => opcode_mem_ld_imm_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (opcode_mem_ld_imm_correct x).
 
-  Instance correct_function3_get_opcode_mem_ld_imm : forall a, correct_function3 p args res f fn nil true match_arg_list match_res a.
+  Instance correct_function_get_opcode_mem_ld_imm : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -57,7 +57,7 @@ Section Get_opcode_mem_ld_imm.
 
     eexists. exists m, Events.E0.
     unfold byte_to_opcode_mem_ld_imm.
-    repeat split; unfold step2.
+    split_and; unfold step2.
     -
       forward_star.
       simpl.
@@ -65,17 +65,10 @@ Section Get_opcode_mem_ld_imm.
       rewrite Int.zero_ext_and; [| lia].
       change (two_p 8 - 1)%Z with 255%Z.
       rewrite Int.and_assoc.
-      rewrite Int.and_idem. (*
-      unfold Int.and.
-      assert (Hle: (0 <= Z.of_nat c <= 255)%Z) by lia.
-      rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
-      change (Int.unsigned (Int.repr 255)) with (Z.of_nat (Z.to_nat 255%Z)).
-      Search Z.land.
-      reflexivity.
-      lia. *)
+      rewrite Int.and_idem.
       forward_star.
     -
-      unfold match_res, opcode_mem_ld_imm_correct.
+      unfold eval_inv, match_res, opcode_mem_ld_imm_correct.
       rewrite Nat_land_0xff; auto.
       destruct (c =? 24) eqn: Hc_eq;
       [rewrite Nat.eqb_eq in Hc_eq | rewrite Nat.eqb_neq in Hc_eq].
@@ -106,10 +99,12 @@ Section Get_opcode_mem_ld_imm.
       rewrite Int.and_idem.
       reflexivity.
       lia.
-Qed.
+    - auto.
+    - apply unmodifies_effect_refl.
+  Qed.
 
 End Get_opcode_mem_ld_imm.
 
 Close Scope nat_scope.
 
-Existing Instance correct_function3_get_opcode_mem_ld_imm.
+Existing Instance correct_function_get_opcode_mem_ld_imm.

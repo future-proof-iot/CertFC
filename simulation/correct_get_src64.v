@@ -20,7 +20,7 @@ get_src64
 Open Scope Z_scope.
 
 Section Get_src64.
-
+  Context {S: special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -32,24 +32,21 @@ Section Get_src64.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := get_src64.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_src64.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (stateless opcode_correct)
-        (DList.DCons (stateless int64_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess is_state_handle)
+      (dcons (fun x => StateLess (opcode_correct x))
+        (dcons (fun x => StateLess (int64_correct x))
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v.
+  Definition match_res : res -> Inv := fun x  => StateLess (val64_correct x).
 
-  Instance correct_function3_get_src64 : forall a, correct_function3 p args res f fn (nil) false match_arg_list match_res a.
+  Instance correct_function_get_src64 : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -60,22 +57,13 @@ Section Get_src64.
 
     eapply correct_statement_if_body_expr. intro EXPR.
     destruct Int.eq eqn: Heq.
-    - eapply correct_statement_seq_body with (modifies1:=nil).
+    - eapply correct_statement_seq_body with (modifies1:=ModNothing).
       change_app_for_statement.
       eapply correct_statement_call with (has_cast := false).
       my_reflex.
       reflexivity.
       reflexivity.
       typeclasses eauto.
-      { unfold INV.
-        unfold var_inv_preserve.
-        intros.
-        unfold match_temp_env in *.
-        rewrite Forall_fold_right in *.
-        simpl in *.
-        intuition. subst m' st'. assumption.
-      }
-
       reflexivity.
       reflexivity.
       reflexivity.
@@ -95,22 +83,13 @@ Section Get_src64.
       tauto.
 
       intros.
-      eapply correct_statement_seq_body with (modifies1:=nil).
+      eapply correct_statement_seq_body with (modifies1:=ModNothing).
       change_app_for_statement.
       eapply correct_statement_call with (has_cast := false).
       my_reflex.
       reflexivity.
       reflexivity.
       typeclasses eauto.
-      { unfold INV.
-        unfold var_inv_preserve.
-        intros.
-        unfold match_temp_env in *.
-        rewrite Forall_fold_right in *.
-        simpl in *.
-        intuition. subst m' st'. assumption.
-      }
-
       reflexivity.
       reflexivity.
       reflexivity.
@@ -129,39 +108,33 @@ Section Get_src64.
       intros; simpl.
       unfold correct_get_immediate.match_res in c1.
       tauto.
-
       intros.
-      instantiate (1 := nil).
       eapply correct_body_Sreturn_Some; eauto.
       intros.
       get_invariant _imm64.
       unfold correct_eval_immediate.match_res, val64_correct in c1.
+      {
       destruct c1 as (Hv_eq & vl & Hvl_eq).
       subst.
-      split.
+      eexists.
+      split_and.
+      +
       unfold exec_expr, empty_env.
       rewrite p0. reflexivity.
-      split.
-      unfold match_res, val64_correct; simpl.
-      split; [reflexivity | eexists; reflexivity].
+      + unfold eval_inv. simpl.
+      unfold val64_correct; simpl. eauto.
+      + reflexivity.
+      + simpl. auto.
+      }
       reflexivity.
-      instantiate (1 := nil).
-      all: reflexivity.
-    - eapply correct_statement_seq_body with (modifies1:=nil).
+      reflexivity.
+    - eapply correct_statement_seq_body with (modifies1:=ModNothing).
       change_app_for_statement.
       eapply correct_statement_call with (has_cast := false).
       my_reflex.
       reflexivity.
       reflexivity.
       typeclasses eauto.
-      { unfold INV.
-        unfold var_inv_preserve.
-        intros.
-        unfold match_temp_env in *.
-        rewrite Forall_fold_right in *.
-        simpl in *.
-        intuition. subst m' st'. assumption.
-      }
 
       reflexivity.
       reflexivity.
@@ -175,29 +148,22 @@ Section Get_src64.
       correct_Forall.
       get_invariant _ins.
       exists (v::nil).
-      split.
-      unfold map_opt, exec_expr. rewrite p0.
+      split_and.
+      { unfold map_opt, exec_expr. rewrite p0.
       reflexivity.
-      intros; simpl.
+      }
+      { intros; simpl.
       unfold int64_correct.
       tauto.
-
+      }
       intros.
-      eapply correct_statement_seq_body with (modifies1:=nil).
+      eapply correct_statement_seq_body with (modifies1:=ModNothing).
       change_app_for_statement.
       eapply correct_statement_call with (has_cast := false).
       my_reflex.
       reflexivity.
       reflexivity.
       typeclasses eauto.
-      { unfold INV.
-        unfold var_inv_preserve.
-        intros.
-        unfold match_temp_env in *.
-        rewrite Forall_fold_right in *.
-        simpl in *.
-        intuition. subst m' st'. assumption.
-      }
 
       reflexivity.
       reflexivity.
@@ -209,6 +175,7 @@ Section Get_src64.
 
       intros.
       correct_Forall.
+      simpl in H.
       get_invariant _st.
       get_invariant _src.
       exists (v::v0::nil).
@@ -216,49 +183,43 @@ Section Get_src64.
       unfold map_opt, exec_expr. rewrite p0, p1.
       reflexivity.
       intros; simpl.
-      instantiate (1 := ins_block).
-      instantiate (1 := mrs_block).
-      instantiate (1 := state_block).
       unfold correct_get_src.match_res in c2.
-      unfold stateless.
+      unfold eval_inv in *.
       tauto.
 
       intros.
-      instantiate (1 := nil).
+      instantiate (1 := ModNothing).
       eapply correct_body_Sreturn_Some; eauto.
       intros.
       get_invariant _src64.
-      unfold correct_eval_reg.match_res, val64_correct in c1.
+      unfold eval_inv, correct_eval_reg.match_res, val64_correct in c1.
       destruct c1 as (Hv_eq & vl & Hvl_eq).
       subst.
-      split.
-      unfold exec_expr, empty_env.
-      rewrite p0; reflexivity.
-      split.
-      unfold match_res, val64_correct; simpl.
-      split; [reflexivity | eexists; reflexivity].
+      eexists.
+      split_and.
+      { unfold exec_expr, empty_env.
+        rewrite p0; reflexivity.
+      }
+      { unfold eval_inv. simpl.
+      unfold val64_correct; simpl; eauto.
+      }
       reflexivity.
-      instantiate (1 := nil).
-      all: reflexivity.
+      simpl ; auto.
+      reflexivity.
+      reflexivity.
     - reflexivity.
-    - intro.
+    - intros MS MT.
       get_invariant _x.
       unfold exec_expr.
       rewrite p0.
       simpl.
-      unfold stateless, opcode_correct in c1.
+      unfold eval_inv, opcode_correct in c1.
       destruct c1 as (Hv_eq & Hc_le); subst.
       unfold Cop.sem_and, Cop.sem_cmp, Cop.sem_binarith, Cop.sem_cast; simpl.
-      reflexivity. (*
-      unfold Int.eq, Int.and.
-      assert (Hz: 0 <= Z.of_nat c <= 255) by lia.
-      rewrite Int.unsigned_repr with (z:= Z.of_nat c); [| change Int.max_unsigned with 4294967295; lia].
-      change (Int.unsigned (Int.repr 0)) with 0.
-      change (Int.unsigned (Int.repr 8)) with 8. *)
-      (**r I don't want to prove Z.land (Z.of_nat c) 8 = Z.of_nat(Nat.land c 8), so I modify the definition of `rBPFInterpreter.v/get_src64` *)
+      reflexivity.
   Qed.
 
 End Get_src64.
 Close Scope Z_scope.
 
-Existing Instance correct_function3_get_src64.
+Existing Instance correct_function_get_src64.

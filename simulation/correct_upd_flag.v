@@ -9,14 +9,8 @@ From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma Comm
 From bpf.clight Require Import interpreter.
 
 
-(**
-Check upd_flag.
-upd_flag
-     : DxFlag.bpf_flag -> M unit
-*)
-
 Section Upd_flag.
-
+  Context {S :special_blocks}.
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -35,18 +29,18 @@ Section Upd_flag.
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_upd_flag.
 
-  Definition modifies : list block := [state_block]. (* of the C code *)
+  Definition modifies  := ModSomething. (* of the C code *)
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-                (DList.DCons (stateless flag_correct)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+   dcons (fun x =>  StateLess (is_state_handle))
+                (dcons (fun x => (StateLess (flag_correct x)))
                              (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
+  Definition match_res : res -> Inv := fun x => StateLess (fun v => v = Vundef).
 
-  Instance correct_function3_upd_flag : forall a, correct_function3 p args res f fn modifies false match_arg_list match_res a.
+  Instance correct_function_upd_flag : forall a, correct_function p args res f fn modifies false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -54,17 +48,16 @@ Section Upd_flag.
     unfold INV in H.
     get_invariant _st.
     get_invariant _f.
-    unfold stateM_correct in c0.
-    unfold stateless, flag_correct in c1.
-    destruct c0 as (Hv_eq & Hst).
+    unfold eval_inv, is_state_handle in c0.
+    unfold eval_inv, flag_correct in c1.
     subst.
 
     simpl in c.
-    assert (Hst2 := Hst).
-    apply (upd_flags_store _ _ _ _ _ (int_of_flag c)) in Hst2 as Hstore.
+    assert (Hst2 := MS).
+    apply (upd_flags_store  _ _ (int_of_flag c)) in Hst2 as Hstore.
     destruct Hstore as (m1 & Hstore).
     (** we need to get the value of flag in the memory *)
-    set (Hst' := Hst).
+    set (Hst' := MS).
     destruct Hst' as (_, _ , Hflag, _, _, _, _, _, _, _).
     unfold Mem.loadv in Hflag.
     
@@ -76,26 +69,17 @@ Section Upd_flag.
       *)
     exists Vundef, m1, Events.E0.
 
-    split; unfold step2.
+    split_and; unfold step2.
     - repeat forward_star.
-    - split.
-      split.
-      eapply upd_flag_preserves_match_state.
-      apply Hst.
+    - simpl. reflexivity.
+    - constructor.
+    -
+      eapply upd_flag_preserves_match_state. eauto.
       reflexivity.
       apply Hstore.
-      reflexivity.
-      split.
-
-      simpl.
-      constructor.
-
-      unfold unmodifies_effect.
-      simpl.
-
-      eapply Mem.store_unchanged_on; eauto.
+    - exact I.
   Qed.
 
 End Upd_flag.
 
-Existing  Instance correct_function3_upd_flag.
+Existing  Instance correct_function_upd_flag.

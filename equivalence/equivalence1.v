@@ -1,756 +1,563 @@
 (**r: equivalence between bpf.model (with formal syntax + semantics) and bpf.src (for dx) *)
 
-From Coq Require Import Logic.FunctionalExtensionality ZArith Lia.
+From Coq Require Import Logic.FunctionalExtensionality ZArith Lia List.
+Import ListNotations.
 From compcert Require Import Integers Values Memory Memdata.
 
 From bpf.comm Require Import State Monad LemmaNat.
-From bpf.src Require Import DxInstructions.
 
 From bpf.model Require Import Semantics.
-From bpf.monadicmodel Require Import Opcode.
+From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 
-From bpf.equivalence Require Import switch.
+(*
+From bpf.equivalence Require Import switch decode_if. *)
 
 Open Scope Z_scope.
 
-Ltac unfold_monad :=
-  match goal with
-  | |- _ =>
-    unfold bindM, returnM
-  end.
-
-Ltac unfold_dx_type :=
-  match goal with
-  | |- _ =>
-    unfold DxMonad.bindM, DxMonad.upd_reg, DxMonad.eval_flag, DxMonad.eval_reg, DxMonad.returnM, DxMonad.eval_ins_len, DxMonad.eval_pc, DxMonad.upd_pc_incr, DxMonad.upd_flag, DxMonad.eval_ins;
-    unfold int64_to_opcode;
-    unfold DxIntegers.sint32_t, DxIntegers.int64_t, DxNat.nat8, DxValues.val64_t, DxValues.valu32_t, DxValues.vals32_t;
-  unfold decodeM;
-  unfold_monad
-  end.
-
-Ltac unfold_dx_name :=
-  match goal with
-  | |- _ =>
-    unfold DxNat.nat8_zero, DxNat.nat8_0x08, DxNat.nat8_0x07, DxIntegers.int64_0xff, DxIntegers.int64_32, DxNat.nat8_0xf0, DxIntegers.int64_64, DxValues.val32_64, DxIntegers.int64_48, DxNat.nat8_0xff, DxValues.val64_zero, Regs.val64_zero, DxIntegers.int32_0, DxIntegers.int32_64
-  end.
-
-Ltac unfold_dx :=
-  match goal with
-  | |- _ =>
-    unfold get_opcode_ins, get_opcode, byte_to_opcode;
-    unfold_dx_name; unfold_dx_type
-  end.
-
-Lemma Int64_unsigned_ge_0:
-  forall n,
-    0 <= Int64.unsigned n.
+Lemma Hrepr_eq: forall (a b:Z), (0 <= a <= 255)%Z -> (0 <= b <= 255)%Z ->
+  Int.repr a = Int.repr b <-> a = b.
 Proof.
   intros.
-  assert (H: 0 <= Int64.unsigned n < Int64.modulus) by apply Int64.unsigned_range.
-  lia.
+  split; intro.
+  Transparent Int.repr.
+  unfold Int.repr in *.
+  inversion H1.
+  rewrite ! Int.Z_mod_modulus_eq in H3.
+  change Int.modulus with 4294967296%Z in H3.
+  rewrite ! Z.mod_small in H3.
+  all: try lia.
+
+  rewrite H1; reflexivity.
 Qed.
+
+
+Lemma Hrepr_neq: forall (a b:Z), (0 <= a <= 255)%Z -> (0 <= b <= 255)%Z ->
+  Int.repr a <> Int.repr b <-> a <> b.
+Proof.
+  intros.
+  split; intro.
+  intro.
+  apply H1.
+  rewrite H2; reflexivity.
+  intro.
+  apply H1.
+  Transparent Int.repr.
+  unfold Int.repr in *.
+  inversion H2.
+  rewrite ! Int.Z_mod_modulus_eq in H4.
+  change Int.modulus with 4294967296%Z in H4.
+  rewrite ! Z.mod_small in H4.
+  all: lia.
+Qed.
+
 
 Open Scope nat_scope.
 
-Ltac compute_land :=
-  match goal with
-  | |- context[match Nat.land ?X ?Y with | _ => _ end] =>
-      let x := eval compute in (Nat.land X Y) in
-      replace (Nat.land X Y) with x by reflexivity;
-      try rewrite Nat.eqb_refl
-  | |- context[if (?Z =? Nat.land ?X ?Y) then ?TT else ?FF] =>
-      let x := (eval compute in (Z =? Nat.land X Y)) in
-        match x with
-        | true => TT
-        | false => FF
-        end
-  end.
-
-Ltac compute_if :=
-  match goal with
-  | |- context[(if ?X then _ else _) = (if ?X then _ else _)] =>
-    destruct (X); [| reflexivity]
-  | |- context[(if ?X then _ else _) ] =>
-    destruct (X); [| reflexivity]
-  end.
-
-Ltac Hopcode_solve HOP OP NAME :=
-  match goal with
-  | |- _ =>
-    destruct (HOP =? OP) eqn: Hins;[apply Nat.eqb_eq in Hins; unfold_dx; rewrite Hins; repeat compute_land; simpl;
-        try compute_if | apply Nat.eqb_neq in Hins];
-  rename Hins into NAME
-  end.
-
-Ltac change_int_zero :=
-  match goal with
-  | |- context [if Int.eq Int.zero ?X then _ else _] =>
-    change X with Int.zero;
-    rewrite Int.eq_true
-  end.
-
-Ltac Hopcode_solve_imm HOP OP VALOP NAME :=
-  let Hins := fresh "Hins" in
-  match goal with
-  | |- _ =>
-    destruct (HOP =? OP) eqn: Hins;[apply Nat.eqb_eq in Hins; unfold_dx; rewrite Hins;
-    try(
-        repeat compute_land; simpl;
-        unfold State.upd_reg, upd_reg;
-        change_int_zero;
-        destruct (VALOP _ _); try reflexivity) | apply Nat.eqb_neq in Hins];
-  rename Hins into NAME
-  end.
-
-Ltac change_int_8 :=
-  match goal with
-  | |- context [if Int.eq Int.zero ?X then _ else _] =>
-    change X with (Int.repr 8);
-    change (Int.eq Int.zero (Int.repr 8)) with false;
-    simpl
-  end.
-
-Ltac Hopcode_solve_reg HOP OP VALOP NAME :=
-  let Hins := fresh "Hins" in
-  match goal with
-  | |- _ =>
-    destruct (HOP =? OP) eqn: Hins;[apply Nat.eqb_eq in Hins; unfold_dx; rewrite Hins;
-    try(
-        repeat compute_land; simpl;
-        unfold State.upd_reg, upd_reg;
-        change_int_8;
-        destruct (VALOP _ _); try reflexivity) | apply Nat.eqb_neq in Hins];
-  rename Hins into NAME
-  end.
-
-Ltac Hopcode_solve_jump HOP OP NAME :=
-  match goal with
-  | |- _ =>
-    Hopcode_solve HOP OP NAME;
-    [ unfold DxMonad.upd_pc, DxIntegers.int64_32, DxIntegers.int64_48;
-  reflexivity | idtac]
-  end.
-
-Ltac Hopcode_solve_alu32_imm HOP OP NAME :=
-  match goal with
-  | |- _ =>
-    Hopcode_solve HOP OP NAME; 
-    [ change_int_zero;
-      try unfold rBPFValues.sint32_to_vint;
-      unfold upd_reg;
-      destruct Val.longofintu; try reflexivity | idtac]
-  end.
-
-Ltac Hopcode_solve_alu32_reg HOP OP NAME :=
-  match goal with
-  | |- _ =>
-    Hopcode_solve HOP OP NAME;
-    [ change_int_8;
-      try unfold rBPFValues.sint32_to_vint;
-      unfold upd_reg;
-      destruct Val.longofintu; try reflexivity | idtac]
-  end.
-
-
-Ltac Hopcode_simpl :=
-  match goal with
-  | H :  ?X <> ?X |- _ =>
-    exfalso; apply H; reflexivity
-  | |- _ => repeat compute_land; unfold eval_ins_len; reflexivity
-  end.
-
-Lemma opcode_le_255_Z :
-  forall st,
-   (0 <= Int64.unsigned
-                  (Int64.and (Int64.repr 255) (State.eval_ins (State.eval_pc st) st)) <= 255)%Z.
+Lemma equivalence_between_check_mem:
+  forall st p ck v,
+    Semantics.check_mem p ck v st =rBPFInterpreter.check_mem p ck v st.
 Proof.
   intros.
-  split.
-  - assert (H64_unsigned: forall i, (0 <= Int64.unsigned i <= Int64.max_unsigned)%Z). {
-      apply Int64.unsigned_range_2.
-    }
-    specialize (H64_unsigned (Int64.and (Int64.repr 255%Z) (State.eval_ins (State.eval_pc st) st))).
-    lia.
-  -
-    assert (Ht: ((Int64.unsigned (Int64.repr 255)) = 255)%Z).
-    rewrite <- Int64.unsigned_repr; [reflexivity | idtac].
-    unfold Int64.max_unsigned, Int64.modulus, Int64.wordsize, Wordsize_64.wordsize.
-    simpl; lia.
-    rewrite <- Ht.
-    apply Int64.and_le.
+  unfold Semantics.check_mem, check_mem.
+  unfold Semantics.is_well_chunk_bool, is_well_chunk_bool.
+  unfold bindM, returnM.
+  destruct ck; try reflexivity.
 Qed.
 
-Lemma opcode_le_255 :
-  forall st,
-    (Z.to_nat (Int64.unsigned
-                  (Int64.and (State.eval_ins (State.eval_pc st) st) (Int64.repr 255))))%Z <= 255.
-Proof.
-  intros.
-  rewrite Int64.and_commut.
-  assert (H255: Z.to_nat 255%Z = 255). { reflexivity. }
-  rewrite <- H255; clear H255.
-  (*assert (H0: Z.to_nat 0%Z = 0). { reflexivity. }
-  rewrite <- H0. *)
-  assert (H : (0 <= Int64.unsigned
-                  (Int64.and (Int64.repr 255) (State.eval_ins (State.eval_pc st) st)) <= 255)%Z). { apply opcode_le_255_Z. }
-  destruct H.
-  apply Z2Nat.inj_le; try lia.
-Qed.
 
-Lemma equivalence_between_formal_and_dx_step:
-  (*forall st, st = returnS -> *)
-  Semantics.step = DxInstructions.step.
+Lemma equivalence_between_Semantics_and_rBPFInterpreter:
+  Semantics.step = rBPFInterpreter.step.
 Proof.
-  unfold Semantics.step, DxInstructions.step.
-  unfold_dx.
+  unfold Semantics.step, rBPFInterpreter.step.
+  unfold bindM, returnM.
   apply functional_extensionality.
+
   intros.
-  unfold eval_pc.
-  unfold eval_ins.
-  unfold Decode.decode.
-  compute_if.
-  unfold get_dst, DxMonad.int64_to_dst_reg, int64_to_dst_reg.
-  unfold Regs.int64_to_dst_reg', Regs.int64_to_src_reg'. TBC.
-  destruct Regs.z_to_reg eqn: Hdst; [].
-  rewrite switch_if_same.
-  unfold get_instruction_if, Decode.get_instruction, Regs.get_opcode.
-  remember (Z.to_nat
-      (Int64.unsigned
-         (Int64.and (State.eval_ins (State.eval_pc x) x) (Int64.repr 255)))) as Hopcode.
-  unfold DxInstructions.get_immediate, Regs.get_immediate, eval_immediate, step_alu_binary_operation, eval_src, eval_reg, get_dst, get_src64, get_src32, step_opcode_alu64, step_opcode_alu32, get_opcode_alu64, get_opcode_alu32, byte_to_opcode_alu64, byte_to_opcode_alu32, rBPFValues.val64_divlu, rBPFValues.val64_modlu, rBPFValues.val32_divu, rBPFValues.val32_modu, step_opcode_mem_ld_reg, step_load_x_operation, get_opcode_mem_ld_reg, byte_to_opcode_mem_ld_reg, step_opcode_mem_ld_imm, get_opcode_mem_ld_imm, byte_to_opcode_mem_ld_imm, Regs.get_offset, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, Regs.get_offset, State.upd_reg, upd_reg, DxMonad.exec_function; unfold_dx.
+  destruct eval_pc; [|reflexivity].
+  destruct p.
+  destruct eval_ins; [|reflexivity].
+  destruct p.
+  unfold decodeM, Decode.decode.
 
+  unfold get_opcode_ins,get_opcode, Regs.get_opcode, byte_to_opcode, get_dst, int64_to_dst_reg.
+  unfold eval_reg, get_src64.
 
-  assert (Hopcode_range: Hopcode <= 255). {
-    rewrite HeqHopcode.
-    apply opcode_le_255.
-  }
-  assert (Heq: Nat.land
-      (Z.to_nat
-         (Z.land
-            (Int.unsigned
-               (Int.repr
-                  (Int64.unsigned
-                     (Int64.and (State.eval_ins (State.eval_pc x) x)
-                        (Int64.repr 255))))) 255)) 7 = Nat.land Hopcode 7). {
-    rewrite HeqHopcode.
+  unfold bindM, returnM.
+
+  destruct Regs.int64_to_dst_reg'; [| reflexivity].
+
+  remember (Z.to_nat (Int64.unsigned (Int64.and i0 (Int64.repr 255)))) as ins.
+  assert (Hins_255: ins <= 255). {
+    rewrite Heqins.
     unfold Int64.and.
-    change (Int64.unsigned (Int64.repr 255)) with (Z.of_nat 255).
-    change 255%Z with (Z.of_nat 255).
-    assert (H : Int64.unsigned (State.eval_ins (State.eval_pc x) x) = Z.of_nat (Z.to_nat (Int64.unsigned (State.eval_ins (State.eval_pc x) x)))) by (rewrite Z2Nat.id; [reflexivity | apply Int64_unsigned_ge_0]).
-    rewrite H; rewrite land_land; clear H.
-    assert (H: 0<= (Nat.land
-                        (Z.to_nat
-                           (Int64.unsigned
-                              (State.eval_ins (State.eval_pc x) x)))
-                        255) <= 255). {
-      split; [lia | rewrite Nat.land_comm; rewrite land_bound; lia].
+
+    assert (Heq: (Int64.unsigned i0) = Z.of_nat (Z.to_nat(Int64.unsigned i0))). {
+      rewrite Z2Nat.id.
+      reflexivity.
+      assert (Hrange: (0 <= Int64.unsigned i0 < Int64.modulus)%Z) by apply Int64.unsigned_range.
+      lia.
     }
-    rewrite Int64.unsigned_repr; [| change Int64.max_unsigned with 18446744073709551615%Z; lia].
+    rewrite Heq; clear.
+    change (Int64.unsigned (Int64.repr 255)) with (Z.of_nat (Z.to_nat 255%Z)) at 1.
+    rewrite LemmaNat.land_land.
+    assert (H: (Nat.land (Z.to_nat (Int64.unsigned i0)) (Z.to_nat 255)) <= 255%nat). {
+      rewrite Nat.land_comm.
+      rewrite LemmaNat.land_bound.
+      lia.
+    }
+    rewrite Int64.unsigned_repr; [ | change Int64.max_unsigned with 18446744073709551615%Z; lia].
+    lia.
+  }
+
+  assert (Heq_int_iff: Int.eq Int.zero (Int.and (Int.repr (Z.of_nat ins)) (Int.repr 8)) = (0 =? Nat.land ins  8)). {
+    assert (Hrange: Nat.land ins 8 <= 8).
+    rewrite Nat.land_comm.
+    rewrite land_bound. lia.
+    unfold Int.and, Int.zero.
     rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
+    change (Int.unsigned (Int.repr 8)) with (Z.of_nat (Z.to_nat 8%Z)).
     rewrite land_land.
-    rewrite <- Nat.land_assoc.
-    rewrite Nat.land_diag.
+    change (Z.to_nat 8%Z) with 8.
+    destruct (0 =? Nat.land ins 8) eqn: Heq; [rewrite Nat.eqb_eq in Heq | rewrite Nat.eqb_neq in Heq].
+    rewrite Syntax.Int_eq_true.
+    apply Hrepr_eq. all: try lia.
+
+    rewrite Syntax.Int_eq_false.
+    apply Hrepr_neq. all: try lia.
+  }
+
+Ltac or_simpl Hand :=
+  match goal with
+  | H: ?X = Nat.land ?Y ?Z |- ?W = ?Y \/ _ =>
+    destruct (W =? Y) eqn: Hand; [rewrite Nat.eqb_eq in Hand; left; assumption | rewrite Nat.eqb_neq in Hand; right ]
+  end.
+
+Ltac nat_land_compute :=
+  match goal with
+  | |- context [Nat.land ?X ?Y] =>
+    let res := eval compute in (Nat.land X Y) in
+      change (Nat.land X Y) with res; simpl
+  end.
+
+Ltac destruct_match :=
+  match goal with
+  | |- ?X = ?X => reflexivity
+  | |- context[match match ?X with | _ => _ end with | _ => _ end] =>
+    destruct X; [ try reflexivity; try destruct_match | reflexivity]
+  | |- context[match match ?X with | _ => _ end with | _ => _ end] =>
+    destruct X; try reflexivity; try destruct_match
+  end.
+
+
+Ltac nat_land_computeH :=
+  match goal with
+  | H: 0 <> Nat.land ?X ?Y |- _ =>
+    let res := eval compute in (Nat.land X Y) in
+      change (Nat.land X Y) with res in H; exfalso; apply H; reflexivity
+  end.
+
+  unfold reg64_to_reg32, State.eval_reg, get_src32, get_immediate, get_src, rBPFValues.sint32_to_vint, Regs.get_immediate, rBPFValues.int64_to_sint32, int64_to_src_reg, eval_reg, reg64_to_reg32, bindM, returnM.
+  unfold Decode.get_instruction_alu32_imm, Decode.get_instruction_alu32_reg.
+  unfold step_opcode_alu32, get_opcode_alu32, byte_to_opcode_alu32, step_alu_binary_operation,eval_reg32, eval_src32, eval_reg, upd_reg, rBPFValues.val_intuoflongu, rBPFValues.val32_divu, rBPFValues.val32_modu, State.eval_reg, bindM, returnM.
+    rewrite Heq_int_iff. clear Heqins Heq_int_iff.
+    remember (Int.repr (Int64.unsigned (Int64.shru i0 (Int64.repr 32)))) as imm.
+
+  destruct (Nat.land ins 7 =? 0) eqn: Hland0; [rewrite Nat.eqb_eq in Hland0; rewrite Hland0 | rewrite Nat.eqb_neq in Hland0].
+  {
+    rewrite nat_land_7_eq in Hland0; [| lia].
+    destruct Hland0 as (m & Hins_eq).
+    rewrite Hins_eq in *.
+    unfold Decode.get_instruction_ld, step_opcode_mem_ld_imm, eval_ins_len, get_opcode_mem_ld_imm, byte_to_opcode_mem_ld_imm, eval_ins, get_immediate, upd_pc_incr,
+      bindM, returnM.
+    rewrite ! Nat.add_0_l in *.
+    do 32 (destruct m; [nat_land_compute; try reflexivity | ]).
+    destruct m; [nat_land_compute; try reflexivity | ].
+    lia.
+  }
+
+  destruct (Nat.land ins 7 =? 1) eqn: Hland1; [rewrite Nat.eqb_eq in Hland1; rewrite Hland1 | rewrite Nat.eqb_neq in Hland1].
+  {
+    rewrite nat_land_7_eq in Hland1; [| lia].
+    destruct Hland1 as (m & Hins_eq).
+    rewrite Hins_eq in *.
+    destruct Regs.int64_to_src_reg'; [| reflexivity].
+    unfold Decode.get_instruction_ldx, get_offset, get_addr_ofs, step_opcode_mem_ld_reg, get_opcode_mem_ld_reg, byte_to_opcode_mem_ld_reg,
+      bindM, returnM.
+      do 33 (destruct m; [nat_land_compute; try reflexivity | ]).
+      lia.
+  }
+
+  destruct (Nat.land ins 7 =? 2) eqn: Hland2; [rewrite Nat.eqb_eq in Hland2; rewrite Hland2 | rewrite Nat.eqb_neq in Hland2].
+  {
+    rewrite nat_land_7_eq in Hland2; [| lia].
+    destruct Hland2 as (m & Hins_eq).
+    rewrite Hins_eq in *.
+    unfold Decode.get_instruction_st, get_offset, get_addr_ofs, step_opcode_mem_st_imm, get_opcode_mem_st_imm, byte_to_opcode_mem_st_imm,
+      bindM, returnM.
+      do 33 (destruct m; [nat_land_compute; try reflexivity | ]).
+      lia.
+  }
+
+  destruct (Nat.land ins 7 =? 3) eqn: Hland3; [rewrite Nat.eqb_eq in Hland3; rewrite Hland3 | rewrite Nat.eqb_neq in Hland3].
+  {
+    rewrite nat_land_7_eq in Hland3; [| lia].
+    destruct Hland3 as (m & Hins_eq).
+    rewrite Hins_eq in *.
+    destruct Regs.int64_to_src_reg'; [| reflexivity].
+    unfold Decode.get_instruction_stx, Regs.get_offset, get_offset, get_addr_ofs, step_opcode_mem_st_reg, get_opcode_mem_st_reg, byte_to_opcode_mem_st_reg,
+      bindM, returnM.
+      do 33 (destruct m; [nat_land_compute; try reflexivity | ]).
+      lia.
+  }
+
+  destruct (Nat.land ins 7 =? 4) eqn: Hland4; [rewrite Nat.eqb_eq in Hland4; rewrite Hland4 | rewrite Nat.eqb_neq in Hland4].
+  {
+    rewrite nat_land_7_eq in Hland4; [| lia].
+    destruct Hland4 as (m & Hins_eq).
+    rewrite Hins_eq in *.
+
+    destruct (0 =? Nat.land (4 + 8 * m) 8) eqn: Hand8; [rewrite Nat.eqb_eq in Hand8 | rewrite Nat.eqb_neq in Hand8].
+    - destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct negb; [| reflexivity]. destruct Val.divu; try reflexivity. destruct Val.longofintu; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct negb; [| reflexivity]. destruct Val.modu; try reflexivity. destruct Val.longofintu; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.longofintu; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct Int.ltu; [| reflexivity]. destruct Val.longofint; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      lia.
+    - destruct Regs.int64_to_src_reg'; [| reflexivity].
+
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct rBPFValues.comp_ne_32; [| reflexivity]. destruct Val.divu; try reflexivity. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct rBPFValues.comp_ne_32; [| reflexivity]. destruct Val.modu; try reflexivity. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.longofintu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct rBPFValues.compu_lt_32; [| reflexivity]. destruct Val.longofint; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      lia.
+  }
+
+Ltac destruct_if_reflexivity :=
+  match goal with
+  | |- ?X = ?X => reflexivity
+  | |- context[(if ?X then _ else _) ] =>
+    destruct X; try reflexivity
+  end.
+
+  destruct (Nat.land ins 7 =? 5) eqn: Hland5; [rewrite Nat.eqb_eq in Hland5; rewrite Hland5 | rewrite Nat.eqb_neq in Hland5].
+  {
+    rewrite nat_land_7_eq in Hland5; [| lia].
+    destruct Hland5 as (m & Hins_eq).
+    rewrite Hins_eq in *.
+    unfold Decode.get_instruction_branch_imm, Regs.get_offset, Decode.get_instruction_branch_reg, get_offset, eval_immediate, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, upd_pc, Regs.get_offset, upd_flag,
+      bindM, returnM.
+
+    destruct (0 =? Nat.land (5 + 8 * m) 8) eqn: Hand8; [rewrite Nat.eqb_eq in Hand8 | rewrite Nat.eqb_neq in Hand8].
+    - destruct m; [nat_land_compute; destruct_if_reflexivity | ].
+      destruct m; [nat_land_compute; destruct_if_reflexivity | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute | ]. destruct _bpf_get_call; try reflexivity.
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
+      destruct m; [inversion Hand8 | ].
+      lia.
+    - destruct Regs.int64_to_src_reg'; [| reflexivity].
+
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      lia.
+  }
+
+  destruct (Nat.land ins 7 =? 6) eqn: Hland6; [rewrite Nat.eqb_eq in Hland6; rewrite Hland6 | rewrite Nat.eqb_neq in Hland6].
+  {
+    rewrite nat_land_7_eq in Hland6; [| lia].
+    destruct Hland6 as (m & Hins_eq).
+    rewrite Hins_eq in *.
     reflexivity.
   }
-  rewrite Heq; clear Heq.
-  assert (Heq: Z.to_nat
-                   (Z.land
-                      (Int.unsigned
-                         (Int.repr
-                            (Int64.unsigned
-                               (Int64.and
-                                  (State.eval_ins (State.eval_pc x) x)
-                                  (Int64.repr 255))))) 255) = Hopcode). {
-    rewrite HeqHopcode.
-    unfold Int64.and.
-    change (Int64.unsigned (Int64.repr 255)) with (Z.of_nat 255).
-    change 255%Z with (Z.of_nat 255).
-    assert (H : Int64.unsigned (State.eval_ins (State.eval_pc x) x) = Z.of_nat (Z.to_nat (Int64.unsigned (State.eval_ins (State.eval_pc x) x)))) by (rewrite Z2Nat.id; [reflexivity | apply Int64_unsigned_ge_0]).
-    rewrite H; rewrite land_land; clear H.
-    assert (H: 0<= (Nat.land
-                        (Z.to_nat
-                           (Int64.unsigned
-                              (State.eval_ins (State.eval_pc x) x)))
-                        255) <= 255). {
-      split; [lia | rewrite Nat.land_comm; rewrite land_bound; lia].
-    }
-    rewrite Int64.unsigned_repr; [| change Int64.max_unsigned with 18446744073709551615%Z; lia].
-    rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
-    rewrite land_land.
-    rewrite <- Nat.land_assoc.
-    rewrite Nat.land_diag.
-    reflexivity.
+
+  destruct (Nat.land ins 7 =? 7) eqn: Hland7; [rewrite Nat.eqb_eq in Hland7; rewrite Hland7 | rewrite Nat.eqb_neq in Hland7].
+  {
+    rewrite nat_land_7_eq in Hland7; [| lia].
+    destruct Hland7 as (m & Hins_eq).
+    rewrite Hins_eq in *.
+    unfold Decode.get_instruction_alu64_imm, Decode.get_instruction_alu64_reg, eval_immediate, step_opcode_alu64, get_opcode_alu64, byte_to_opcode_alu64, upd_reg, rBPFValues.val64_divlu, rBPFValues.val64_modlu,
+      bindM, returnM.
+
+    destruct (0 =? Nat.land (7 + 8 * m) 8) eqn: Hand8; [rewrite Nat.eqb_eq in Hand8 | rewrite Nat.eqb_neq in Hand8].
+    - destruct m; [nat_land_compute; destruct Val.addl; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.subl; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.mull; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct_if_reflexivity. destruct Val.divlu; try reflexivity. destruct v; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.orl; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.andl; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct_if_reflexivity. destruct Val.shll; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct_if_reflexivity. destruct Val.shrlu; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.negl; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct_if_reflexivity. destruct Val.modlu; try reflexivity. destruct v; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m; [nat_land_compute; destruct Val.xorl; try reflexivity |].
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. destruct_if_reflexivity. destruct Val.shrl; try reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [inversion Hand8 | ].
+      lia.
+    - destruct Regs.int64_to_src_reg'; [| reflexivity].
+
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.addl; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.subl; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.mull; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. unfold State.eval_reg, Regs.val64_zero; destruct_if_reflexivity. destruct Val.divlu; try reflexivity. destruct v; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.orl; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.andl; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. unfold State.eval_reg, rBPFValues.val_intuoflongu; destruct_if_reflexivity. destruct Val.shll; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute.  unfold State.eval_reg, rBPFValues.val_intuoflongu; destruct_if_reflexivity. destruct Val.shrlu; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. unfold State.eval_reg, Regs.val64_zero; destruct_if_reflexivity. destruct Val.modlu; try reflexivity. destruct v; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. destruct Val.xorl; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. unfold State.eval_reg. destruct Regs.eval_regmap; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. unfold State.eval_reg, rBPFValues.val_intuoflongu; destruct_if_reflexivity. destruct Val.shrl; try reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      destruct m.
+      { nat_land_compute. reflexivity. }
+      destruct m; [nat_land_computeH |].
+      lia.
   }
-  rewrite Heq; clear Heq.
-  clear HeqHopcode.
 
-  (**r ADD64i *)
-  Hopcode_solve_imm Hopcode 0x07 Val.addl Hadd64i.
+  exfalso.
 
-  (**r Add64r *)
-  Hopcode_solve_reg Hopcode 0x0f Val.addl Hadd64r.
+  remember (Nat.land ins 7) as Hand7.
+  assert (Hand7_le: Hand7 <= 7). {
+    rewrite HeqHand7.
+    rewrite Nat.land_comm.
+    rewrite land_bound.
+    lia.
+  }
 
-  (**r SUB64i *)
-  Hopcode_solve_imm Hopcode 0x17 Val.subl Hsub64i.
-
-  (**r SUB64r *)
-
-  Hopcode_solve_reg Hopcode 0x1f Val.subl Hsub64r.
-
-  (**r mul64i *)
-  Hopcode_solve_imm Hopcode 0x27 Val.mull Hmul64i.
-
-
-  (**r Hmul64r *)
-
-  Hopcode_solve_reg Hopcode 0x2f Val.mull Hmul64r.
-
-  (**r Hdiv64i *)
-  Hopcode_solve Hopcode 0x37 Hdiv64i.
-
-  change_int_zero.
-  unfold rBPFValues.compl_ne, DxValues.Val_ulongofslong.
-  destruct (negb _); [| reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.divlu _ _); try reflexivity.
-  destruct v; try reflexivity.
-
-  (**r Hdiv64r *)
-  Hopcode_solve Hopcode 0x3f Hdiv64r.
-  change_int_8.
-  destruct (rBPFValues.compl_ne); [| reflexivity].
-  unfold upd_reg.
-  destruct (Val.divlu _ _); try reflexivity.
-  destruct v; try reflexivity.
-
-  (**r Hor64i *)
-  Hopcode_solve_imm Hopcode 0x47 Val.orl Hor64i.
-
-  (**r Hor64r *)
-  Hopcode_solve_reg Hopcode 0x4f Val.orl Hor64r.
-
-  (**r Hand64i *)
-  Hopcode_solve_imm Hopcode 0x57 Val.andl Hand64i.
-
-  (**r Hand64r *)
-  Hopcode_solve_reg Hopcode 0x5f Val.andl Hand64r.
-
-  (**r Hlsh64i *)
-  Hopcode_solve Hopcode 0x67 Hlsh64i.
-
-  change_int_zero.
-  unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu, DxValues.Val_ulongofslong.
-  destruct (Int.ltu _ _); [ |reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.shll _ _); try reflexivity.
-
-  (**r Hlsh64r *)
-  Hopcode_solve Hopcode 0x6f Hlsh64r.
-  change_int_8.
-  destruct (rBPFValues.compu_lt_32 _ _); [ |reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.shll _ _); try reflexivity.
-
-  (**r Hrsh64i *)
-  Hopcode_solve Hopcode 0x77 Hrsh64i.
-  change_int_zero.
-  unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu, DxValues.Val_ulongofslong.
-  destruct (Int.ltu _ _); [ |reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.shrlu _ _); try reflexivity.
-
-  (**r Hrsh64r *)
-  Hopcode_solve Hopcode 0x7f Hrsh64r.
-  change_int_8.
-  destruct (rBPFValues.compu_lt_32 _ _); [ |reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.shrlu _ _); try reflexivity.
-
-  (**r Hneg64 *)
-  Hopcode_solve_imm Hopcode 0x87 Val.negl Hneg64.
-  repeat compute_land; simpl.
-
-  unfold upd_reg;
-  destruct (Val.negl _); try reflexivity.
-
-  (**r Hmod64i *)
-
-  Hopcode_solve Hopcode 0x97 Hmod64i.
-  change_int_zero.
-  unfold rBPFValues.compl_ne, DxValues.Val_ulongofslong.
-  destruct (negb _); [| reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.modlu _ _); try reflexivity.
-  destruct v; try reflexivity.
-
-  (**r Hmod64r *)
-  Hopcode_solve Hopcode 0x9f Hmod64r.
-  change_int_8.
-  destruct (rBPFValues.compl_ne _ _); [| reflexivity].
-  unfold upd_reg.
-  destruct (Val.modlu _ _); try reflexivity.
-  destruct v; try reflexivity.
-
-  (**r Hxor64i *)
-  Hopcode_solve_imm Hopcode 0xa7 Val.xorl Hxor64i.
-
-  (**r Hor64r *)
-  Hopcode_solve_reg Hopcode 0xaf Val.xorl Hxor64r.
-
-  (**r Hmov64i *)
-  Hopcode_solve Hopcode 0xb7 Hmov64i.
-  change_int_zero.
-  reflexivity.
-
-
-  (**r Hmov64r *)
-  Hopcode_solve Hopcode 0xbf Hmov64r.
-  change_int_8.
-  unfold upd_reg.
-  destruct (State.eval_reg _ _); try reflexivity.
-
-  (**r Harsh64i *)
-  Hopcode_solve Hopcode 0xc7 Harsh64i.
-  change_int_zero.
-  unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu, DxValues.Val_ulongofslong.
-  destruct (Int.ltu _ _); [ |reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.shrl _ _); try reflexivity.
-
-  (**r Harsh64r *)
-  Hopcode_solve Hopcode 0xcf Harsh64r.
-  change_int_8.
-  destruct (rBPFValues.compu_lt_32 _ _); [ |reflexivity].
-
-  unfold upd_reg.
-  destruct (Val.shrl _ _); try reflexivity.
-
-(*ALU32*)
-
-  (**r Hadd32i *)
-  Hopcode_solve_alu32_imm Hopcode 0x04 Hadd32i.
-
-  (**r Hadd32r *)
-  Hopcode_solve_alu32_reg Hopcode 0x0c Hadd32r.
-
-  (**r Hsub32i *)
-  Hopcode_solve_alu32_imm Hopcode 0x14 Hsub32i.
-
-  (**r Hsub32r *)
-  Hopcode_solve_alu32_reg Hopcode 0x1c Hsub32r.
-
-  (**r Hmul32i *)
-  Hopcode_solve_alu32_imm Hopcode 0x24 Hmul32i.
-
-  (**r Hmul32r *)
-  Hopcode_solve_alu32_reg Hopcode 0x2c Hmul32r.
-
-  (**r Hdiv32i *)
-  Hopcode_solve Hopcode 0x34 Hdiv32i.
-
-  change_int_zero.
-  unfold rBPFValues.comp_ne_32, rBPFValues.sint32_to_vint, DxValues.val32_zero.
-  unfold DxIntegers.int32_0.
-  destruct negb; try reflexivity.
-  destruct Val.divu; try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hdiv32r *)
-  Hopcode_solve Hopcode 0x3c Hdiv32r.
-
-  change_int_8.
-  unfold DxIntegers.int32_0.
-  destruct rBPFValues.comp_ne_32; try reflexivity.
-  destruct Val.divu; try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hor32i *)
-  Hopcode_solve_alu32_imm Hopcode 0x44 Hor32i.
-
-  (**r Hor32r *)
-  Hopcode_solve_alu32_reg Hopcode 0x4c Hor32r.
-
-  (**r Hand32i *)
-  Hopcode_solve_alu32_imm Hopcode 0x54 Hand32i.
-
-  (**r Hand32r *)
-  Hopcode_solve_alu32_reg Hopcode 0x5c Hand32r.
-
-  (**r Hlsh32i *)
-  Hopcode_solve Hopcode 0x64 Hlsh32i.
-  change_int_zero.
-  unfold rBPFValues.compu_lt_32, rBPFValues.sint32_to_vint, DxValues.val32_32.
-  unfold DxIntegers.int32_32.
-  destruct (Int.ltu _ _); try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hlsh32r *)
-  Hopcode_solve Hopcode 0x6c Hlsh32r.
-  change_int_8.
-  unfold DxValues.val32_32, DxIntegers.int32_32.
-  destruct rBPFValues.compu_lt_32; try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hrsh32i *)
-  Hopcode_solve Hopcode 0x74 Hrsh32i.
-  change_int_zero.
-  unfold rBPFValues.compu_lt_32, rBPFValues.sint32_to_vint, DxValues.val32_32.
-  unfold DxIntegers.int32_32.
-  destruct (Int.ltu _ _); try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hrsh32r *)
-  Hopcode_solve Hopcode 0x7c Hrsh32r.
-  change_int_8.
-  unfold DxValues.val32_32, DxIntegers.int32_32.
-  destruct rBPFValues.compu_lt_32; try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hneg32 *)
-  Hopcode_solve_alu32_imm Hopcode 0x84 Hneg32.
-
-  (**r Hmod32i *)
-  Hopcode_solve Hopcode 0x94 Hmod32i.
-  change_int_zero.
-  unfold rBPFValues.comp_ne_32, rBPFValues.sint32_to_vint, DxValues.val32_zero.
-  unfold DxIntegers.int32_0.
-  destruct negb; try reflexivity.
-  destruct Val.modu; try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hmod32r *)
-  Hopcode_solve Hopcode 0x9c Hmod32r.
-  change_int_8.
-  unfold DxIntegers.int32_0.
-  destruct rBPFValues.comp_ne_32; try reflexivity.
-  destruct Val.modu; try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofintu; try reflexivity.
-
-  (**r Hxor32i *)
-  Hopcode_solve_alu32_imm Hopcode 0xa4 Hxor32i.
-
-  (**r Hxor32r *)
-  Hopcode_solve_alu32_reg Hopcode 0xac Hxor32r.
-
-  (**r Hmov32i *)
-  Hopcode_solve Hopcode 0xb4 Hmov32i.
-  change_int_zero.
-  reflexivity.
-
-  (**r Hmov32r *)
-  Hopcode_solve Hopcode 0xbc Hmov32r.
-  change_int_8.
-  unfold upd_reg.
-  destruct Val.longofintu; reflexivity.
-
-  (**r Harsh32i *)
-  Hopcode_solve Hopcode 0xc4 Harsh32i.
-  change_int_zero.
-  unfold Val.longofint, rBPFValues.val_intuoflongu, rBPFValues.sint32_to_vint.
-  unfold rBPFValues.compu_lt_32, Regs.get_immediate, DxValues.val32_32.
-  unfold DxIntegers.int32_32.
-  destruct (Int.ltu _ _); try reflexivity.
-  unfold upd_reg.
-  destruct Val.shr; try reflexivity.
-
-  (**r Harsh32r *)
-  Hopcode_solve Hopcode 0xcc Harsh32r.
-  change_int_8.
-  unfold DxValues.val32_32, DxIntegers.int32_32.
-  destruct rBPFValues.compu_lt_32; try reflexivity.
-  unfold upd_reg.
-  destruct Val.longofint; try reflexivity.
-
-  (**r HLDDW *)
-  Hopcode_solve Hopcode 0x18 HLDDW.
-  reflexivity.
-
-  (**r Hldx32 *)
-  Hopcode_solve Hopcode 0x61 Hldx32.
-
-  reflexivity.
-
-
-  (**r Hldx16 *)
-  Hopcode_solve Hopcode 0x69 Hldx16.
-
-  reflexivity.
-
-  (**r Hldx8 *)
-  Hopcode_solve Hopcode 0x71 Hldx8.
-
-  reflexivity.
-
-  (**r Hldx64 *)
-  Hopcode_solve Hopcode 0x79 Hldx64.
-
-  reflexivity.
-
-  (**r Hstx32 *)
-  Hopcode_solve Hopcode 0x62 Hstx32.
-
-  reflexivity.
-
-  (**r Hstx16 *)
-  Hopcode_solve Hopcode 0x6a Hstx16.
-
-  reflexivity.
-
-  (**r Hstx8 *)
-  Hopcode_solve Hopcode 0x72 Hstx8.
-
-  reflexivity.
-
-  (**r Hstx64 *)
-  Hopcode_solve Hopcode 0x7a Hstx64.
-
-  reflexivity.
-
-  (**r Hst32 *)
-  Hopcode_solve Hopcode 0x63 Hst32.
-
-  reflexivity.
-
-  (**r Hst16 *)
-  Hopcode_solve Hopcode 0x6b Hst16.
-
-  reflexivity.
-
-  (**r Hst8 *)
-  Hopcode_solve Hopcode 0x73 Hst8.
-
-  reflexivity.
-
-  (**r Hst64 *)
-  Hopcode_solve Hopcode 0x7b Hst64.
-
-  reflexivity.
-
-  (**r Hja *)
-  Hopcode_solve_jump Hopcode 0x05 Hja.
-
-  (**r Heqi *)
-  Hopcode_solve_jump Hopcode 0x15 Heqi.
-
-  (**r Heqr *)
-  Hopcode_solve_jump Hopcode 0x1d Heqr.
-
-  (**r Hgti *)
-  Hopcode_solve_jump Hopcode 0x25 Hgti.
-
-  (**r Hgtr *)
-  Hopcode_solve_jump Hopcode 0x2d Hgtr.
-
-  (**r Hgei *)
-  Hopcode_solve_jump Hopcode 0x35 Hgei.
-
-  (**r Hger *)
-  Hopcode_solve_jump Hopcode 0x3d Hger.
-
-  (**r Hlti *)
-  Hopcode_solve_jump Hopcode 0xa5 Hlti.
-
-  (**r Hltr *)
-  Hopcode_solve_jump Hopcode 0xad Hltr.
-
-  (**r Hlei *)
-  Hopcode_solve_jump Hopcode 0xb5 Hlei.
-
-  (**r Hler *)
-  Hopcode_solve_jump Hopcode 0xbd Hler.
-
-  (**r Hseti *)
-  Hopcode_solve_jump Hopcode 0x45 Hseti.
-
-  (**r Hsetr *)
-  Hopcode_solve_jump Hopcode 0x4d Hsetr.
-
-  (**r Hnei *)
-  Hopcode_solve_jump Hopcode 0x55 Hnei.
-
-  (**r Hner *)
-  Hopcode_solve_jump Hopcode 0x5d Hner.
-
-  (**r Hsgti *)
-  Hopcode_solve_jump Hopcode 0x65 Hsgti.
-
-  (**r Hsgtr *)
-  Hopcode_solve_jump Hopcode 0x6d Hsgtr.
-
-  (**r Hsgei *)
-  Hopcode_solve_jump Hopcode 0x75 Hsgei.
-
-  (**r Hsger *)
-  Hopcode_solve_jump Hopcode 0x7d Hsger.
-
-  (**r Hslti *)
-  Hopcode_solve_jump Hopcode 0xc5 Hslti.
-
-  (**r Hsltr *)
-  Hopcode_solve_jump Hopcode 0xcd Hsltr.
-
-  (**r Hslei *)
-  Hopcode_solve_jump Hopcode 0xd5 Hslei.
-
-  (**r Hsler *)
-  Hopcode_solve_jump Hopcode 0xdd Hsler.
-
-  (**r Hcall *)
-  unfold rBPFValues.int64_to_sint32, rBPFValues.val_intsoflongu.
-  Hopcode_solve Hopcode 0x85 Hcall.
-  change_int_zero.
-  unfold Regs.get_immediate, rBPFValues.int64_to_sint32.
-  reflexivity.
-
-  (**r Hret *)
-  Hopcode_solve_jump Hopcode 0x95 Hret.
-  (**now all we need to proof is the `BPF_ILLEGAL_INS` *)
-
-  do 5 (destruct Hopcode; [Hopcode_simpl | apply le_S_n in Hopcode_range]).
-  do 150 (destruct Hopcode; [Hopcode_simpl | apply le_S_n in Hopcode_range]).
-  do 100 (destruct Hopcode; [Hopcode_simpl | apply le_S_n in Hopcode_range]).
-  clear - Hopcode_range.
-  destruct Hopcode.
-  - Hopcode_simpl.
-  - exfalso.
-    apply Nat.nle_succ_0 in Hopcode_range; assumption.
+  lia.
 Qed.
+
+
+Close Scope nat_scope.
 
 Lemma equivalence_between_formal_and_dx_aux:
   forall f,
-    Semantics.bpf_interpreter_aux f = DxInstructions.bpf_interpreter_aux f.
+    Semantics.bpf_interpreter_aux f = rBPFInterpreter.bpf_interpreter_aux f.
 Proof.
-  unfold Semantics.bpf_interpreter_aux, DxInstructions.bpf_interpreter_aux.
-  unfold DxMonad.bindM, DxMonad.upd_reg, DxMonad.eval_flag, DxMonad.eval_reg, DxMonad.returnM, DxMonad.eval_ins_len, DxMonad.eval_pc, DxMonad.upd_pc_incr, DxMonad.upd_flag.
-  unfold DxIntegers.sint32_t.
-  unfold DxIntegers.int32_0.
-  rewrite equivalence_between_formal_and_dx_step.
+  unfold Semantics.bpf_interpreter_aux, rBPFInterpreter.bpf_interpreter_aux.
+  rewrite equivalence_between_Semantics_and_rBPFInterpreter.
   reflexivity.
 Qed.
 
 Theorem equivalence_between_formal_and_dx:
   forall f,
-    Semantics.bpf_interpreter f = DxInstructions.bpf_interpreter f.
+    Semantics.bpf_interpreter f = rBPFInterpreter.bpf_interpreter f.
 Proof.
   intros.
-  unfold Semantics.bpf_interpreter, DxInstructions.bpf_interpreter.
-  unfold DxMonad.bindM, DxMonad.upd_reg, DxMonad.eval_flag, DxMonad.eval_reg, DxMonad.returnM.
+  unfold Semantics.bpf_interpreter, rBPFInterpreter.bpf_interpreter.
   rewrite equivalence_between_formal_and_dx_aux.
   reflexivity.
 Qed.

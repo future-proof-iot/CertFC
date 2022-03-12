@@ -21,6 +21,7 @@ rBPFInterpreter.step
 Open Scope Z_scope.
 
 Section Step.
+  Context {S: special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -33,22 +34,16 @@ Section Step.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := rBPFInterpreter.step.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
-  Variable modifies : list block. (* of the C code *)
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_step.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    (DList.DCons (stateM_correct state_block mrs_block ins_block)
+  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    (dcons (fun _ => StateLess is_state_handle)
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef.
+  Definition match_res : res -> Inv := fun x => StateLess (eq Vundef).
 
 Ltac correct_forward L :=
   match goal with
@@ -58,7 +53,7 @@ Ltac correct_forward L :=
                            (Scall _ _ _)
                            (Sset ?V ?T))
                         ?R)
-                     _ _ _ _ _ _  =>
+                     _ _ _ _ _ _ _ =>
       eapply L;
       [ change_app_for_statement ;
         let b := match T with
@@ -69,11 +64,11 @@ Ltac correct_forward L :=
       |]
   | |- @correct_body _ _ (match  ?x with true => _ | false => _ end) _
                      (Sifthenelse _ _ _)
-                     _ _ _ _ _ _  =>
+                     _ _ _ _ _ _ _ =>
       eapply correct_statement_if_body; [prove_in_inv | destruct x ]
   end.
 
-  Instance correct_function3_step: forall a, correct_function3 p args res f fn (state_block::modifies) false match_arg_list match_res a.
+  Instance correct_function_step: forall a, correct_function p args res f fn ModSomething false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -86,16 +81,6 @@ Ltac correct_forward L :=
     reflexivity.
     reflexivity.
     typeclasses eauto.
-
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
 
     reflexivity.
     reflexivity.
@@ -112,7 +97,7 @@ Ltac correct_forward L :=
     split.
     unfold map_opt, exec_expr. rewrite p0; reflexivity.
     intros; simpl.
-    intuition eauto.
+    eauto.
 
     intros.
     (** goal: correct_body _ _ (bindM (eval_ins _) ... *)
@@ -121,16 +106,6 @@ Ltac correct_forward L :=
     reflexivity.
     reflexivity.
     typeclasses eauto.
-
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
 
     reflexivity.
     reflexivity.
@@ -148,9 +123,7 @@ Ltac correct_forward L :=
     split.
     unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
     intros; simpl.
-    unfold correct_eval_pc.match_res in c0.
-    unfold stateless.
-    intuition eauto.
+    eauto.
 
     intros.
     (** goal: correct_body _ _ (bindM (get_opcode_ins _) ... *)
@@ -159,16 +132,6 @@ Ltac correct_forward L :=
     reflexivity.
     reflexivity.
     typeclasses eauto.
-
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
 
     reflexivity.
     reflexivity.
@@ -185,9 +148,7 @@ Ltac correct_forward L :=
     split.
     unfold map_opt, exec_expr. rewrite p0; reflexivity.
     intros; simpl.
-    unfold correct_eval_ins.match_res in c.
-    unfold stateless.
-    intuition eauto.
+    eauto.
 
     intros.
     (** goal: correct_body _ _ (bindM (get_opcode _) ... *)
@@ -196,16 +157,6 @@ Ltac correct_forward L :=
     reflexivity.
     reflexivity.
     typeclasses eauto.
-
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
 
     reflexivity.
     reflexivity.
@@ -222,9 +173,7 @@ Ltac correct_forward L :=
     split.
     unfold map_opt, exec_expr. rewrite p0; reflexivity.
     intros; simpl.
-    unfold correct_get_opcode_ins.match_res in c.
-    unfold stateless.
-    intuition eauto.
+    eauto.
 
     intros.
     (** goal: correct_body _ _ (bindM (get_dst _) ... *)
@@ -233,16 +182,6 @@ Ltac correct_forward L :=
     reflexivity.
     reflexivity.
     typeclasses eauto.
-
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H; subst.
-      intuition.
-    }
 
     reflexivity.
     reflexivity.
@@ -259,9 +198,7 @@ Ltac correct_forward L :=
     split.
     unfold map_opt, exec_expr. rewrite p0; reflexivity.
     intros; simpl.
-    unfold correct_eval_ins.match_res in c.
-    unfold stateless.
-    intuition eauto.
+    eauto.
 
     intros.
     (** goal: correct_body _ _
@@ -283,16 +220,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -309,9 +236,7 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_get_dst.match_res in c0.
-        unfold stateless.
-        intuition eauto.
+        eauto.
         intros.
 
         (** goal: correct_body _ _ (bindM (get_src64 _) ... *)
@@ -320,16 +245,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -348,10 +263,7 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1,p2; reflexivity.
         intros; simpl.
-        unfold correct_get_opcode_ins.match_res in c0.
-        unfold correct_eval_ins.match_res in c1.
-        unfold stateless.
-        intuition eauto.
+        eauto.
         intros.
 
         assert (Heq:
@@ -397,39 +309,10 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        eapply correct_function_modifies_more with (mods' := [state_block]).
-        revert a.
         typeclasses eauto.
-        unfold incl.
-        intros.
-        unfold In in *.
-        intuition.
-        unfold correct_step_opcode_alu64.match_res. intuition.
-        { instantiate (1:= ins_block).
-          instantiate (1 := mrs_block).
-          unfold var_inv_preserve.
-          unfold match_temp_env.
-          intros.
-          unfold correct_step_opcode_alu64.match_res in H0.
-          inversion H1; subst; clear H1.
-          inversion H5; subst; clear H5.
-          inversion H6; subst; clear H6.
-          inversion H7; subst; clear H7.
-          inversion H8; subst; clear H8.
-          inversion H9; subst; clear H9.
-          inversion H10; subst; clear H10.
-          inversion H11; subst; clear H11.
-          repeat constructor;auto.
 
-          revert H10. (**r moves the hypotheses  to the goal *)
-          unfold match_elt,fst.
-          destruct (Maps.PTree.get _ _); try congruence.
-          unfold snd.
-          intro HH ; destruct HH ; split; auto.
-          unfold stateM_correct in *.
-          tauto.
-        }
+        unfold correct_step_opcode_alu64.match_res. intuition.
+
         reflexivity.
         reflexivity.
         reflexivity.
@@ -449,21 +332,15 @@ Ltac correct_forward L :=
         split.
         reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c0.
-        unfold correct_get_src64.match_res in c1.
-        unfold correct_get_dst.match_res in c2.
-        unfold correct_get_opcode_ins.match_res in c3.
-        unfold stateless.
-        intuition.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         eapply correct_body_Sreturn_None.
-        unfold match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+
+        unfold eval_inv, match_res.
+        reflexivity.
         reflexivity.
       + reflexivity.
       + intros.
@@ -471,7 +348,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. f_equal.
         unfold correct_get_opcode.match_res in c.
-        unfold opcode_step_correct in c.
+        unfold eval_inv, opcode_step_correct in c.
         assumption.
       + compute. intuition congruence.
 
@@ -489,16 +366,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -515,8 +382,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_get_dst.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -526,16 +391,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -552,8 +407,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -563,16 +416,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -591,9 +434,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1,p2; reflexivity.
         intros; simpl.
-        unfold correct_get_opcode_ins.match_res in c0.
-        unfold correct_eval_ins.match_res in c1.
-        unfold stateless.
         intuition eauto.
 
         intros.
@@ -630,40 +470,9 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        eapply correct_function_modifies_more with (mods' := [state_block]).
-        revert a.
         typeclasses eauto.
-        unfold incl.
-        intros.
-        unfold In in *.
-        intuition.
         unfold correct_step_opcode_alu32.match_res. intuition.
-        { instantiate (1:= ins_block).
-          instantiate (1 := mrs_block).
-          unfold var_inv_preserve.
-          unfold match_temp_env.
-          intros.
-          unfold correct_step_opcode_alu32.match_res in H0.
-          inversion H1; subst; clear H1.
-          inversion H5; subst; clear H5.
-          inversion H6; subst; clear H6.
-          inversion H7; subst; clear H7.
-          inversion H8; subst; clear H8.
-          inversion H9; subst; clear H9.
-          inversion H10; subst; clear H10.
-          inversion H11; subst; clear H11.
-          inversion H12; subst; clear H12.
-          repeat constructor;auto.
 
-          revert H11. (**r moves the hypotheses  to the goal *)
-          unfold match_elt,fst.
-          destruct (Maps.PTree.get _ _); try congruence.
-          unfold snd.
-          intro HH ; destruct HH ; split; auto.
-          unfold stateM_correct in *.
-          tauto.
-        }
         reflexivity.
         reflexivity.
         reflexivity.
@@ -683,21 +492,15 @@ Ltac correct_forward L :=
         split.
         reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c0.
-        unfold correct_get_src32.match_res in c1.
-        unfold correct_get_dst.match_res in c2.
-        unfold correct_get_opcode_ins.match_res in c3.
-        unfold stateless.
-        intuition.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         eapply correct_body_Sreturn_None.
         unfold match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+        unfold eval_inv.
+        reflexivity.
         reflexivity.
       + reflexivity.
       + intros.
@@ -705,7 +508,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. f_equal.
         unfold correct_get_opcode.match_res in c.
-        unfold opcode_step_correct in c.
+        unfold eval_inv, opcode_step_correct in c.
         assumption.
       + compute. intuition congruence.
 
@@ -723,16 +526,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -749,8 +542,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_get_dst.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -760,16 +551,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -786,8 +567,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -797,16 +576,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -825,9 +594,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1,p2; reflexivity.
         intros; simpl.
-        unfold correct_get_opcode_ins.match_res in c0.
-        unfold correct_eval_ins.match_res in c1.
-        unfold stateless.
         intuition eauto.
 
         intros.
@@ -878,40 +644,9 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        eapply correct_function_modifies_more with (mods' := [state_block]).
-        revert a.
         typeclasses eauto.
-        unfold incl.
-        intros.
-        unfold In in *.
-        intuition.
         unfold correct_step_opcode_branch.match_res. intuition.
-        { instantiate (1:= ins_block).
-          instantiate (1 := mrs_block).
-          unfold var_inv_preserve.
-          unfold match_temp_env.
-          intros.
-          unfold correct_step_opcode_branch.match_res in H0.
-          inversion H1; subst; clear H1.
-          inversion H5; subst; clear H5.
-          inversion H6; subst; clear H6.
-          inversion H7; subst; clear H7.
-          inversion H8; subst; clear H8.
-          inversion H9; subst; clear H9.
-          inversion H10; subst; clear H10.
-          inversion H11; subst; clear H11.
-          inversion H12; subst; clear H12.
-          repeat constructor;auto.
 
-          revert H11. (**r moves the hypotheses  to the goal *)
-          unfold match_elt,fst.
-          destruct (Maps.PTree.get _ _); try congruence.
-          unfold snd.
-          intro HH ; destruct HH ; split; auto.
-          unfold stateM_correct in *.
-          tauto.
-        }
         reflexivity.
         reflexivity.
         reflexivity.
@@ -930,27 +665,20 @@ Ltac correct_forward L :=
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3, p4, p5.
         split.
-        unfold correct_get_offset.match_res, int32_correct in c3.
+        unfold eval_inv, correct_get_offset.match_res, int32_correct in c3.
         rewrite <- c3.
         simpl.
         reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c0.
-        unfold correct_get_src64.match_res in c1.
-        unfold correct_eval_pc.match_res in c2.
-        unfold correct_get_offset.match_res in c3.
-        unfold correct_get_opcode_ins.match_res in c4.
-        unfold stateless, int32_correct in *.
-        intuition.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         eapply correct_body_Sreturn_None.
         unfold match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+        unfold eval_inv.
+        reflexivity.
         reflexivity.
       + reflexivity.
       + intros.
@@ -958,7 +686,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. f_equal.
         unfold correct_get_opcode.match_res in c.
-        unfold opcode_step_correct in c.
+        unfold eval_inv, opcode_step_correct in c.
         assumption.
       + compute. intuition congruence.
 
@@ -976,16 +704,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1001,8 +719,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1035,38 +751,9 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        eapply correct_function_modifies_more with (mods' := [state_block]).
-        revert a.
         typeclasses eauto.
-        unfold incl.
-        intros.
-        unfold In in *.
-        intuition.
         unfold correct_step_opcode_mem_ld_imm.match_res. intuition.
-        { instantiate (1:= ins_block).
-          instantiate (1 := mrs_block).
-          unfold var_inv_preserve.
-          unfold match_temp_env.
-          intros.
-          unfold correct_step_opcode_mem_ld_imm.match_res in H0.
-          inversion H1; subst; clear H1.
-          inversion H5; subst; clear H5.
-          inversion H6; subst; clear H6.
-          inversion H7; subst; clear H7.
-          inversion H8; subst; clear H8.
-          inversion H9; subst; clear H9.
-          inversion H10; subst; clear H10.
-          repeat constructor;auto.
 
-          revert H9. (**r moves the hypotheses  to the goal *)
-          unfold match_elt,fst.
-          destruct (Maps.PTree.get _ _); try congruence.
-          unfold snd.
-          intro HH ; destruct HH ; split; auto.
-          unfold stateM_correct in *.
-          tauto.
-        }
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1086,21 +773,15 @@ Ltac correct_forward L :=
         split.
         reflexivity.
         intros; simpl.
-        unfold correct_get_immediate.match_res in c0.
-        unfold correct_eval_pc.match_res in c1.
-        unfold correct_get_dst.match_res in c2.
-        unfold correct_get_opcode_ins.match_res in c3.
-        unfold stateless.
-        intuition.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         eapply correct_body_Sreturn_None.
         unfold match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+        unfold eval_inv.
+        reflexivity.
         reflexivity.
       + reflexivity.
       + intros.
@@ -1108,7 +789,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. f_equal.
         unfold correct_get_opcode.match_res in c.
-        unfold opcode_step_correct in c.
+        unfold eval_inv, opcode_step_correct in c.
         assumption.
       + compute. intuition congruence.
 
@@ -1126,16 +807,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1151,8 +822,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1162,16 +831,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1189,8 +848,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_get_src.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1200,16 +857,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1226,8 +873,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1237,16 +882,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1264,9 +899,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c.
-        unfold correct_get_offset.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1297,41 +929,9 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        eapply correct_function_modifies_more with (mods' := [state_block]).
-        revert a.
         typeclasses eauto.
-        unfold incl.
-        intros.
-        unfold In in *.
-        intuition.
         unfold correct_step_opcode_mem_ld_reg.match_res. intuition.
-        { instantiate (1:= ins_block).
-          instantiate (1 := mrs_block).
-          unfold var_inv_preserve.
-          unfold match_temp_env.
-          intros.
-          unfold correct_step_opcode_mem_ld_reg.match_res in H0.
-          inversion H1; subst; clear H1.
-          inversion H5; subst; clear H5.
-          inversion H6; subst; clear H6.
-          inversion H7; subst; clear H7.
-          inversion H8; subst; clear H8.
-          inversion H9; subst; clear H9.
-          inversion H10; subst; clear H10.
-          inversion H11; subst; clear H11.
-          inversion H12; subst; clear H12.
-          inversion H13; subst; clear H13.
-          repeat constructor;auto.
 
-          revert H12. (**r moves the hypotheses  to the goal *)
-          unfold match_elt,fst.
-          destruct (Maps.PTree.get _ _); try congruence.
-          unfold snd.
-          intro HH ; destruct HH ; split; auto.
-          unfold stateM_correct in *.
-          tauto.
-        }
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1351,21 +951,15 @@ Ltac correct_forward L :=
         split.
         reflexivity.
         intros; simpl.
-        unfold correct_get_addr_ofs.match_res in c0.
-        unfold correct_eval_pc.match_res in c1.
-        unfold correct_get_dst.match_res in c2.
-        unfold correct_get_opcode_ins.match_res in c3.
-        unfold stateless.
-        intuition.
+        intuition eauto.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         eapply correct_body_Sreturn_None.
         unfold match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+        unfold eval_inv.
+        reflexivity.
         reflexivity.
       + reflexivity.
       + intros.
@@ -1373,7 +967,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. f_equal.
         unfold correct_get_opcode.match_res in c.
-        unfold opcode_step_correct in c.
+        unfold eval_inv, opcode_step_correct in c.
         assumption.
       + compute. intuition congruence.
 
@@ -1391,16 +985,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1417,8 +1001,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_get_dst.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1429,16 +1011,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1454,8 +1026,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1466,16 +1036,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1491,8 +1051,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1502,16 +1060,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1529,9 +1077,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c.
-        unfold correct_get_offset.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1560,19 +1105,9 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        instantiate (3:= false).
-        instantiate (2:= (DList.DCons (stateM_correct state_block mrs_block ins_block)
-    (DList.DCons (stateless val32_correct)
-      (DList.DCons (stateless val32_correct)
-        (DList.DCons (stateless int32_correct)
-          (DList.DCons (stateless reg_correct)
-            (DList.DCons (stateless opcode_correct)
-                  (DList.DNil _)))))))).
-        instantiate (1:= (fun x v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef)).
-        admit.
-        admit.
-        admit.
+        typeclasses eauto.
+        unfold correct_step_opcode_mem_st_imm.match_res. intuition.
+
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1587,22 +1122,13 @@ Ltac correct_forward L :=
         get_invariant _pc.
         get_invariant _dst.
         get_invariant _op.
-        exists (v ::v0::v1::v2 ::v3 :: v4:: nil).
-        unfold map_opt, exec_expr.
-        rewrite p0, p1, p2, p3, p4, p5.
+        exists (v::v0::v1::v2::v3::v4::nil).
         split.
-        reflexivity.
+        unfold map_opt, exec_expr. rewrite p0,p1,p2,p3,p4,p5; reflexivity.
         intros; simpl.
-        unfold correct_get_immediate.match_res in c0.
-        unfold correct_get_addr_ofs.match_res in c1.
-        unfold correct_eval_pc.match_res in c2.
-        unfold correct_get_dst.match_res in c3.
-        unfold correct_get_opcode_ins.match_res in c4.
-        unfold stateless.
-        unfold rBPFValues.sint32_to_vint.
-        unfold int32_correct in c0.
-        unfold val32_correct.
-        unfold val32_correct in c1.
+        unfold correct_get_immediate.match_res, int32_correct in c0.
+        intuition eauto.
+        unfold stateless, val32_correct, rBPFValues.sint32_to_vint.
         intuition eauto.
         intros.
 
@@ -1610,9 +1136,8 @@ Ltac correct_forward L :=
         eapply correct_body_Sreturn_None.
         unfold match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+        unfold eval_inv.
+        reflexivity.
         reflexivity.
       + reflexivity.
       + intros.
@@ -1620,7 +1145,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. f_equal.
         unfold correct_get_opcode.match_res in c.
-        unfold opcode_step_correct in c.
+        unfold eval_inv, opcode_step_correct in c.
         assumption.
       + compute. intuition congruence.
 
@@ -1638,16 +1163,6 @@ Ltac correct_forward L :=
         reflexivity.
         typeclasses eauto.
 
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
-
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1664,8 +1179,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_get_dst.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1675,16 +1188,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1701,8 +1204,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1712,16 +1213,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1739,8 +1230,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_get_src.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1750,16 +1239,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1776,8 +1255,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0; reflexivity.
         intros; simpl.
-        unfold correct_eval_ins.match_res in c.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1787,16 +1264,6 @@ Ltac correct_forward L :=
         reflexivity.
         reflexivity.
         typeclasses eauto.
-
-        { unfold INV.
-          unfold var_inv_preserve.
-          intros.
-          unfold match_temp_env in *.
-          rewrite Forall_fold_right in *.
-          simpl in *.
-          destruct H; subst.
-          intuition.
-        }
 
         reflexivity.
         reflexivity.
@@ -1814,9 +1281,6 @@ Ltac correct_forward L :=
         split.
         unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c.
-        unfold correct_get_offset.match_res in c0.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1845,19 +1309,9 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        instantiate (3:= false).
-        instantiate (2:= (DList.DCons (stateM_correct state_block mrs_block ins_block)
-    (DList.DCons (stateless val64_correct)
-      (DList.DCons (stateless val32_correct)
-        (DList.DCons (stateless int32_correct)
-          (DList.DCons (stateless reg_correct)
-            (DList.DCons (stateless opcode_correct)
-                (DList.DNil _)))))))).
-        instantiate (1:= (fun x v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef)).
-        admit.
-        admit.
-        admit.
+        typeclasses eauto.
+        unfold correct_step_opcode_mem_st_reg.match_res. intuition.
+
         reflexivity.
         reflexivity.
         reflexivity.
@@ -1878,12 +1332,6 @@ Ltac correct_forward L :=
         split.
         reflexivity.
         intros; simpl.
-        unfold correct_eval_reg.match_res in c0.
-        unfold correct_get_addr_ofs.match_res in c1.
-        unfold correct_eval_pc.match_res in c2.
-        unfold correct_get_dst.match_res in c3.
-        unfold correct_get_opcode_ins.match_res in c4.
-        unfold stateless.
         intuition eauto.
         intros.
 
@@ -1891,9 +1339,7 @@ Ltac correct_forward L :=
         eapply correct_body_Sreturn_None.
         unfold match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+        unfold eval_inv; auto.
         reflexivity.
       + reflexivity.
       + intros.
@@ -1901,7 +1347,7 @@ Ltac correct_forward L :=
         unfold exec_expr.
         rewrite p0. f_equal.
         unfold correct_get_opcode.match_res in c.
-        unfold opcode_step_correct in c.
+        unfold eval_inv, opcode_step_correct in c.
         assumption.
       + compute. intuition congruence.
     - (**r op_BPF_ILLEGAL_INS *)
@@ -1909,7 +1355,7 @@ Ltac correct_forward L :=
       + reflexivity.
       + intros.
         assert (Hillegal_ins: exists n i,
-          correct_get_opcode.match_res op_BPF_ILLEGAL_INS n st4 m4 /\
+          eval_inv (correct_get_opcode.match_res op_BPF_ILLEGAL_INS) n st4 m4 /\
           n = Vint (Int.repr (Z.of_nat i)) /\
           (i <> 0x00 /\ i <> 0x01 /\ i <> 0x02 /\ i <> 0x03 /\ i <> 0x04 /\ i <> 0x05 /\ i <> 0x07)%nat /\
           (i <= 255)%nat /\
@@ -1959,37 +1405,9 @@ Ltac correct_forward L :=
         my_reflex.
         reflexivity.
         reflexivity.
-        intros.
-        eapply correct_function_modifies_more with (mods' := [state_block]).
-        revert a.
         typeclasses eauto.
-        unfold incl.
-        intros.
-        unfold In in *.
-        intuition.
         unfold correct_upd_flag.match_res. tauto.
-        { instantiate (1:= ins_block).
-          instantiate (1 := mrs_block).
-          unfold var_inv_preserve.
-          unfold match_temp_env.
-          intros.
-          unfold correct_upd_flag.match_res in H1.
-          inversion H2; subst; clear H2.
-          inversion H6; subst; clear H6.
-          inversion H7; subst; clear H7.
-          inversion H8; subst; clear H8.
-          inversion H9; subst; clear H9.
-          inversion H10; subst; clear H10.
-          repeat constructor;auto.
 
-          revert H9. (**r moves the hypotheses  to the goal *)
-          unfold match_elt,fst.
-          destruct (Maps.PTree.get _ _); try congruence.
-          unfold snd.
-          intro HH ; destruct HH ; split; auto.
-          unfold stateM_correct in *.
-          tauto.
-        }
         reflexivity.
         reflexivity.
         reflexivity.
@@ -2015,14 +1433,12 @@ Ltac correct_forward L :=
         eapply correct_body_Sreturn_None.
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
-        get_invariant _st.
-        unfold stateM_correct in c.
-        destruct c as (_ & c); auto.
+        unfold eval_inv; auto.
         reflexivity.
-Admitted.
+Qed.
 
 End Step.
 
 Close Scope Z_scope.
 
-Existing Instance correct_function3_step.
+Existing Instance correct_function_step.

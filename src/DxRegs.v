@@ -3,7 +3,7 @@ From compcert.common Require Values Memory.
 From compcert.lib Require Import Integers.
 
 From dx Require Import ResultMonad IR.
-From dx.Type Require Bool Nat.
+From dx.Type Require Import Bool Nat.
 
 From bpf.comm Require Import Regs.
 From bpf.src Require Import IdentDef CoqIntegers DxIntegers DxValues. (* GenMatchable.*)
@@ -70,6 +70,18 @@ Definition Const_int64_to_src_reg :=
                            | _       => Err PrimitiveEncodingFailed
                            end).
 *)
+
+Definition int64TonatSymbolType :=
+  MkCompilableSymbolType [int64CompilableType] (Some natCompilableType).
+
+Definition Const_int64_to_opcode :=
+  MkPrimitive int64TonatSymbolType
+                get_opcode
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast (Csyntax.Ebinop Cop.Oand e1 C_U64_0xff C_U64) C_U8)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 
 Definition Const_int64_to_offset :=
   MkPrimitive int64Tosint32SymbolType
@@ -141,6 +153,7 @@ Module Exports.
   Definition Const_R10              := Const_R10. (*
   Definition Const_int64_to_dst_reg := Const_int64_to_dst_reg.
   Definition Const_int64_to_src_reg := Const_int64_to_src_reg. *)
+  Definition Const_int64_to_opcode  := Const_int64_to_opcode.
   Definition Const_int64_to_offset  := Const_int64_to_offset.
   Definition Const_int64_to_immediate := Const_int64_to_immediate.
   Definition regmapCompilableType   := regmapCompilableType.

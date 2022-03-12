@@ -1,7 +1,6 @@
 From bpf.comm Require Import MemRegion State Monad.
 From bpf.monadicmodel Require Import rBPFInterpreter.
-From dx.Type Require Import Bool.
-From dx Require Import IR.
+
 From Coq Require Import List ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
 From compcert Require Import Coqlib.
@@ -21,6 +20,7 @@ bpf_interpreter
 *)
 
 Section Bpf_interpreter.
+  Context {S: special_blocks}.
 
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
@@ -33,25 +33,19 @@ Section Bpf_interpreter.
   (* [f] is a Coq Monadic function with the right type *)
   Definition f : arrow_type args (M res) := bpf_interpreter.
 
-  Variable state_block: block. (**r a block storing all rbpf state information? *)
-  Variable mrs_block: block.
-  Variable ins_block: block.
-
-  Variable modifies : list block. (* of the C code *)
-
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_bpf_interpreter.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) ((unit:Type) ::args) :=
-    DList.DCons (stateM_correct state_block mrs_block ins_block)
-      (DList.DCons (stateless nat_correct_overflow)
-            (DList.DNil _)).
+  Definition match_arg_list :DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
+    (dcons (fun _ => StateLess is_state_handle)
+      (dcons (stateless nat_correct)
+                    (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> val -> State.state -> Memory.Mem.mem -> Prop := fun x v st m => val64_correct x v /\ match_state state_block mrs_block ins_block st m.
+  Definition match_res : res -> Inv := fun x => StateLess (val64_correct x).
 
-  Instance correct_function3_bpf_interpreter : forall a, correct_function3 p args res f fn (state_block::modifies) false match_arg_list match_res a.
+  Instance correct_function_bpf_interpreter : forall a, correct_function p args res f fn ModSomething false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -59,8 +53,7 @@ Section Bpf_interpreter.
     unfold INV.
     unfold f, app.
     unfold bpf_interpreter.
-
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := false).
 
@@ -68,14 +61,6 @@ Section Bpf_interpreter.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      intuition. subst m' st'. assumption.
-    }
 
     reflexivity.
     reflexivity.
@@ -95,7 +80,9 @@ Section Bpf_interpreter.
     intuition eauto.
     intros.
 
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    instantiate (1:= ModSomething). (**r TODO: right? *)
+
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := false).
 
@@ -103,15 +90,6 @@ Section Bpf_interpreter.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H as (Hm_eq & Hst_eq); subst.
-      intuition.
-    }
 
     reflexivity.
     reflexivity.
@@ -131,71 +109,106 @@ Section Bpf_interpreter.
     unfold correct_eval_mrs_regions.match_res in c0.
     unfold stateless, nat_correct.
     intuition eauto.
+    change Int.max_unsigned with 4294967295%Z.
+    lia.
     intros.
 
-    eapply correct_statement_seq_body with (modifies1:=[state_block]).
+    instantiate (1:= ModSomething). (**r TODO: right? *)
+
+    eapply correct_statement_seq_body with (modifies1:=ModSomething).
     change_app_for_statement.
-    instantiate (3:= (fun _ v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef)).
-    instantiate (2:= _upd_reg).
-    instantiate (1:= (Ctypes.Tfunction
-           (Ctypes.Tcons
-              (Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr))
-              (Ctypes.Tcons Clightdefs.tuint
-                 (Ctypes.Tcons Clightdefs.tulong Ctypes.Tnil))) Clightdefs.tvoid
-           cc_default)).
-    admit. (*
+    eapply correct_statement_call with (has_cast := false).
+    my_reflex.
+    reflexivity.
+    reflexivity.
+    apply correct_function_strengthen.
+    typeclasses eauto.
+
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    prove_in_inv.
+    prove_in_inv.
+    reflexivity.
+    reflexivity.
+
+    unfold INV; intro H.
+    correct_Forall.
+    get_invariant _bpf_ctx.
+    exists (v::nil).
+    split.
+    unfold map_opt, exec_expr. rewrite p0; reflexivity.
+    intros; simpl.
+    unfold eval_inv, correct_get_mem_region.match_res, mr_correct in c0.
+    intuition eauto.
+    intros.
+
+    instantiate (1:= ModSomething). (**r TODO: right? *)
+    simpl.
+
+    eapply correct_statement_seq_body_unit.
+    simpl.
+
+    change_app_for_statement.
+    normalise_post_unit.
+
     eapply correct_statement_call_none.
-
     my_reflex.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H as (Hm_eq & Hst_eq); subst.
-      intuition.
-    }
+    unfold correct_upd_reg.match_res. intuition.
 
     reflexivity.
     reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
+    reflexivity. (**r TODO: should we support `upd_reg(```( *bpf_ctx).start_addr)```;` in vc_casted? *)
     reflexivity.
     reflexivity.
 
     unfold INV; intro H.
     correct_Forall.
-    get_invariant _mrs.
-    exists ((Vint (Int.repr 0))::v::nil).
+    get_invariant _st.
+    get_invariant _start.
+    unfold correct_get_start_addr.match_res, val32_correct in c1.
+    destruct c1 as (c1 & vi & Hvi_eq).
+    subst.
+    exists (v::(Vint (Int.repr 1))::(Vlong (Int64.repr (Int.unsigned vi)))::nil).
     split.
-    unfold map_opt, exec_expr. rewrite p0; reflexivity.
+    unfold map_opt, exec_expr. rewrite p0,p1.
+    simpl.
+    reflexivity.
     intros; simpl.
-    unfold correct_eval_mrs_regions.match_res in c0.
-    unfold stateless, nat_correct.
-    intuition eauto. *)
-
+    unfold val64_correct, stateless, reg_correct.
+    intuition eauto.
     intros.
 
-    eapply correct_statement_seq_body with (modifies1:=(state_block::modifies)).
+    eapply correct_statement_seq_body_unit.
     change_app_for_statement.
-    instantiate (3:= (fun x v st m => match_state state_block mrs_block ins_block st m /\ v = Vundef)).
-    instantiate (2:= _bpf_interpreter_aux).
-    instantiate (1:= (Ctypes.Tfunction
-           (Ctypes.Tcons
-              (Clightdefs.tptr (Ctypes.Tstruct _bpf_state Ctypes.noattr))
-              (Ctypes.Tcons Clightdefs.tuint Ctypes.Tnil)) Clightdefs.tvoid
-           cc_default)).
-    admit. (*
-    eapply correct_statement_call_none. *)
+    eapply correct_statement_call_none.
+    my_reflex.
+    reflexivity.
+    reflexivity.
+    typeclasses eauto.
+    unfold correct_bpf_interpreter_aux.match_res. intuition.
 
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    reflexivity.
+
+    unfold INV; intro H.
+    correct_Forall.
+    get_invariant _st.
+    get_invariant _fuel.
+    exists (v::v0::nil).
+    split.
+    unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
+    intros; simpl.
+    intuition eauto.
     intros.
 
-    eapply correct_statement_seq_body with (modifies1:=nil).
+    eapply correct_statement_seq_body with (modifies1:=ModNothing).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := false).
 
@@ -203,15 +216,6 @@ Section Bpf_interpreter.
     reflexivity.
     reflexivity.
     typeclasses eauto.
-    { unfold INV.
-      unfold var_inv_preserve.
-      intros.
-      unfold match_temp_env in *.
-      rewrite Forall_fold_right in *.
-      simpl in *.
-      destruct H as (Hm_eq & Hst_eq); subst.
-      intuition.
-    }
 
     reflexivity.
     reflexivity.
@@ -222,7 +226,7 @@ Section Bpf_interpreter.
     reflexivity.
 
     unfold INV; intro H.
-    correct_Forall.
+    correct_Forall. simpl in H.
     get_invariant _st.
     exists (v::nil).
     split.
@@ -230,14 +234,12 @@ Section Bpf_interpreter.
     intros; simpl.
     intuition eauto.
     intros.
+
+    instantiate (1:= ModSomething). (**r TODO: right? *)
 
     eapply correct_statement_if_body_expr. intro EXPR.
     destruct Flag.flag_eq eqn: Hflag.
-    {
-      unfold match_res. admit. (*
-      eapply correct_statement_seq_body with (modifies1:=nil).
-      (**r ?M4958 v' v st' m' <> match_res (State.eval_reg Regs.R0 st4) v st4 m' *)
-      eapply correct_body_call_ret with (has_cast := false).
+    { eapply correct_statement_seq_body with (modifies1:=ModNothing).
       change_app_for_statement.
       eapply correct_statement_call with (has_cast := false).
 
@@ -245,15 +247,6 @@ Section Bpf_interpreter.
       reflexivity.
       reflexivity.
       typeclasses eauto.
-      { unfold INV.
-        unfold var_inv_preserve.
-        intros.
-        unfold match_temp_env in *.
-        rewrite Forall_fold_right in *.
-        simpl in *.
-        destruct H as (Hm_eq & Hst_eq); subst.
-        intuition.
-      }
 
       reflexivity.
       reflexivity.
@@ -264,42 +257,65 @@ Section Bpf_interpreter.
       reflexivity.
 
       unfold INV; intro H.
-      correct_Forall.
+      correct_Forall. simpl in H.
       get_invariant _st.
-      exists (v::nil).
+      exists (v:: (Vint (Int.repr 0))::nil).
       split.
       unfold map_opt, exec_expr. rewrite p0; reflexivity.
       intros; simpl.
+      unfold stateless, reg_correct.
       intuition eauto.
-      intros. *)
+      intros.
+
+      instantiate (1:= ModSomething). (**r TODO: right? *)
+
+      (*
+      change (eval_reg Regs.R0) with
+        ((bindM (eval_reg Regs.R0) (fun res => returnM res))). *)
+      eapply correct_body_Sreturn_Some.
+      intros Hst H.
+      simpl in H.
+      get_invariant _res.
+      unfold eval_inv, correct_eval_reg.match_res, val64_correct in c0.
+      destruct c0 as (c0 & vl & Hvl_eq); subst.
+      exists (Vlong vl).
+      split.
+      unfold exec_expr. rewrite p0. reflexivity.
+
+      split.
+      unfold eval_inv, match_res, val64_correct.
+      intuition eauto.
+      split.
+      reflexivity.
+      intros.
+      constructor.
+      reflexivity.
     }
 
     eapply correct_body_Sreturn_Some; eauto.
     intros.
+    eexists.
     split.
     unfold exec_expr; simpl.
     reflexivity.
     split.
     unfold match_res, val64_correct, Int64.zero; simpl.
-    get_invariant _st.
-    unfold stateM_correct in c0.
-    destruct c0 as (_ & Hst).
     intuition eauto.
-    all: try reflexivity.
+    split.
+    reflexivity.
     intros.
+    constructor.
+    all: try reflexivity.
+    intros. simpl in H0.
     get_invariant _f.
     unfold exec_expr.
-    unfold correct_eval_flag.match_res, flag_correct in c0.
+    unfold eval_inv, correct_eval_flag.match_res, flag_correct in c0.
     rewrite p0.
     rewrite c0.
     unfold Val.of_bool, CommonLib.int_of_flag, CommonLib.Z_of_flag.
-    destruct x3; reflexivity. 
-    admit.
-    (*
-    instantiate (1:=nil).
-    reflexivity. *)
-Admitted.
+    destruct x4; reflexivity.
+Qed.
 
 End Bpf_interpreter.
 
-Existing Instance correct_function3_bpf_interpreter.
+Existing Instance correct_function_bpf_interpreter.
