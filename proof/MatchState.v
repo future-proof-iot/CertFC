@@ -89,7 +89,7 @@ Definition match_list_ins (m:mem) (b: block) (l: list int64) :=
 
 Definition match_ins (ins_blk: block) (st: State.state) (m:mem) :=
   List.length (ins st) = (ins_len st) /\
-  Z.of_nat (List.length (ins st)) * 8 <= Ptrofs.max_signed /\
+  Z.of_nat (List.length (ins st)) * 8 <= Ptrofs.max_unsigned /\
   match_list_ins m ins_blk (ins st).
 
 
@@ -130,7 +130,7 @@ Definition state_struct_def: Ctypes.composite_definition :=
       mpc      : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 0)) = Some (Vint  (pc_loc st));
       mflags   : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 4)) = Some (Vint  (int_of_flag (flag st)));
       mregs    : match_registers (regs_st st) st_blk (Ptrofs.repr 8) m;
-      mins_len : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ Z.of_nat (ins_len st) >= 0;
+      mins_len : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 96)) = Some (Vint  (Int.repr (Z.of_nat (ins_len st)))) /\ Z.of_nat (ins_len st) >= 1;
       mins     : Mem.loadv AST.Mptr m (Vptr st_blk (Ptrofs.repr 100)) = Some (Vptr ins_blk (Ptrofs.repr 0)) /\ match_ins ins_blk st m;
       mmrs_num : Mem.loadv AST.Mint32 m (Vptr st_blk (Ptrofs.repr 104)) = Some (Vint  (Int.repr (Z.of_nat (mrs_num st)))) /\
                  (Z.of_nat(mrs_num st)) >= 1; (**r at least we have the memory region that corresponds to the input paramters of the interpreter *)

@@ -72,7 +72,6 @@ Proof.
   - (**r c = Mint8unsigned *)
     destruct Mem.load eqn: Hload; try constructor.
     destruct v eqn: Hv_eq; try constructor.
-    all: rewrite <- Hv_eq in *; destruct Val.eq; [constructor|].
     all: intros; eexists; exists m, Events.E0.
     + (**r v = Vint i0 *)
       split_and.
@@ -83,6 +82,7 @@ Proof.
       forward_star.
       forward_star.
       unfold Mem.loadv in *.
+      rewrite <- Hv_eq in Hload.
       specialize (Hload_implies v Hload).
       apply Hload_implies.
       rewrite Hv_eq; simpl.
@@ -97,12 +97,10 @@ Proof.
       * apply unmodifies_effect_refl.
     + (**r v = Vlong i0: it should be impossible *)
       apply Mem.load_type in Hload.
-      rewrite Hv_eq in Hload.
       inversion Hload.
   - (**r c = Mint16unsigned *)
     destruct Mem.load eqn: Hload; try constructor.
     destruct v eqn: Hv_eq; try constructor.
-    all: rewrite <- Hv_eq in *; destruct Val.eq; [constructor|].
     all: intros; eexists; exists m, Events.E0.
     split_and; auto.
     + forward_star.
@@ -112,6 +110,7 @@ Proof.
       forward_star.
       forward_star.
       unfold Mem.loadv in *.
+      rewrite <- Hv_eq in Hload.
       specialize (Hload_implies v Hload).
       apply Hload_implies.
       rewrite Hv_eq; simpl.
@@ -123,12 +122,10 @@ Proof.
     + constructor.
     + apply unmodifies_effect_refl.
     +  apply Mem.load_type in Hload.
-      rewrite Hv_eq in Hload.
       inversion Hload.
   - (**r c = Mint32 *)
     destruct Mem.load eqn: Hload; try constructor.
     destruct v eqn: Hv_eq; try constructor.
-    all: rewrite <- Hv_eq in *; destruct Val.eq; [constructor|].
     all: intros; eexists; exists m, Events.E0.
     split_and; auto.
     + forward_star.
@@ -138,6 +135,7 @@ Proof.
       forward_star.
       forward_star.
       unfold Mem.loadv in *.
+      rewrite <- Hv_eq in Hload.
       specialize (Hload_implies v Hload).
       apply Hload_implies.
       rewrite Hv_eq; simpl.
@@ -149,15 +147,14 @@ Proof.
     + constructor.
     + apply unmodifies_effect_refl.
     + apply Mem.load_type in Hload.
-      rewrite Hv_eq in Hload.
       inversion Hload.
   - (**r c = Mint64 *)
     destruct Mem.load eqn: Hload; try constructor.
     destruct v eqn: Hv_eq.
-    all: rewrite <- Hv_eq in *; destruct Val.eq eqn: Heq; [constructor|].
+    constructor.
+    all: rewrite <- Hv_eq in Hload.
     all: try (apply Mem.load_type in Hload as Hload1; rewrite Hv_eq in Hload1; inversion Hload1).
     all: intros; eexists; exists m, Events.E0.
-    + intuition congruence.
     + split_and.
       * forward_star.
       change (Int.unsigned (Int.repr 8)) with 8%Z.

@@ -18,14 +18,13 @@ Definition bindM {A B: Type} (x: M A) (f: A -> M B) : M B :=
 Definition eval_pc: M int := fun st => Some (eval_pc st, st).
 
 Definition upd_pc (p: int): M unit := fun st =>
-  if andb (Int.cmpu Cle Int.zero p) (Int.cmpu Clt p (Int.repr (Z.of_nat (ins_len st)))) then
+  if Int.cmpu Clt p (Int.repr (Z.of_nat (ins_len st))) then
     Some (tt, upd_pc p st)
   else (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
     None.
 
 Definition upd_pc_incr: M unit := fun st =>
-  if andb (Int.cmpu Cle Int.zero (Int.add (pc_loc st) Int.one))
-          (Int.cmpu Clt (Int.add (pc_loc st) Int.one) (Int.repr (Z.of_nat (ins_len st)))) then
+  if (Int.cmpu Clt (Int.add (pc_loc st) Int.one) (Int.repr (Z.of_nat (ins_len st)))) then
     Some (tt, upd_pc_incr st)
   else (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
     None.
@@ -50,7 +49,11 @@ Definition eval_mem : M Mem.mem := fun st => Some (eval_mem st, st).
 
 Definition load_mem (chunk: memory_chunk) (ptr: val): M val := fun st => 
   match load_mem chunk ptr st with
-  | Some res => if Val.eq res Vundef then None else Some (res, st)
+  | Some res =>
+    match res with
+    | Vundef => None
+    | _ => Some (res, st)
+    end
   | None => None
   end.
 
@@ -69,16 +72,15 @@ Definition store_mem_reg (ptr: val) (chunk: memory_chunk) (v: val) : M unit := f
 Definition eval_ins_len : M int := fun st => Some (eval_ins_len st, st).
 
 Definition eval_ins (idx: int) : M int64 := fun st =>
-  if andb (Int.cmpu Cle Int.zero idx)
-          (Int.cmpu Clt idx (Int.repr (Z.of_nat (ins_len st)))) then
+  if (Int.cmpu Clt idx (Int.repr (Z.of_nat (ins_len st)))) then
     Some (eval_ins idx st, st)
-  else (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
+  else (**r TODO: if bpf verifier / verifier-invariant guarantees upd_pc*, we should infer it *)
     None.
 
 Definition cmp_ptr32_nullM (v: val): M bool := fun st =>
   match cmp_ptr32_null (State.eval_mem st) v with
   | Some res => Some (res, st)
-  | None     => None (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
+  | None     => None (**r TODO: we should infer this *)
   end.
 
 Definition int64_to_dst_reg (ins: int64): M reg := fun st =>
@@ -97,7 +99,7 @@ Definition get_mem_region (n:nat) (mrs: MyMemRegionsType): M memory_region := fu
   if (Nat.ltb n (mrs_num st)) then
     match List.nth_error mrs n with
     | Some mr => Some (mr, st)
-    | None => None
+    | None => None (**r TODO: we should infer this *)
     end
   else
     None.
@@ -118,7 +120,8 @@ Axiom lemma_bpf_get_call :
   forall i st1,
     exists ptr,
       _bpf_get_call (Vint i) st1 = Some (ptr, st1) /\
-      (ptr = Vnullptr \/ (exists b ofs, ptr = Vptr b ofs)).
+      (ptr = Vnullptr \/ (exists b ofs, ptr = Vptr b ofs /\ ((Mem.valid_pointer (bpf_m st1) b (Ptrofs.unsigned ofs)
+        || Mem.valid_pointer (bpf_m st1) b (Ptrofs.unsigned ofs - 1)) = true)%bool)).
 Axiom lemma_exec_function0 :
   forall b ofs st1,
       exists v st2, exec_function (Vptr b ofs) st1 = Some (Vint v, st2) /\ cmp_ptr32_null (State.eval_mem st1) (Vptr b ofs) = Some false.

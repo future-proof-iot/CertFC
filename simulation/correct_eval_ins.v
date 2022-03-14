@@ -78,29 +78,39 @@ Section Eval_ins.
       unfold Ptrofs.mul.
       unfold Ptrofs.of_intu, Ptrofs.of_int.
       change (Ptrofs.unsigned (Ptrofs.repr 8)) with 8%Z.
-      change Ptrofs.max_signed with 2147483647%Z in Hle.
+      change Ptrofs.max_unsigned with 4294967295%Z in Hle.
       unfold eval_ins in Heval_ins.
       context_destruct_if_inversion.
       unfold Int.cmp in Hcond.
       simpl in c.
-      rewrite Bool.andb_true_iff in Hcond.
-      destruct Hcond as (Hlow & Hhigh).
-      apply Cle_Zle_unsigned in Hlow.
-      apply Clt_Zlt_unsigned in Hhigh.
-      change (Int.unsigned Int.zero) with 0%Z in Hlow.
-      rewrite Int.unsigned_repr in Hhigh. 2:{
+      apply Clt_Zlt_unsigned in Hcond.
+      rewrite Int.unsigned_repr in Hcond. 2:{
         change Int.max_unsigned with 4294967295%Z.
         lia.
       }
-      rewrite Ptrofs.unsigned_repr with (z:= (Int.unsigned c)); [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
-      rewrite Ptrofs.unsigned_repr; [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
+      rewrite Ptrofs.unsigned_repr with (z:= (Int.unsigned c)); [| change Ptrofs.max_unsigned with 4294967295%Z].
+      2:{
+        split; [| lia].
+        apply Z.ge_le. apply Int_unsigned_ge_zero.
+      }
+      rewrite Ptrofs.unsigned_repr; [| change Ptrofs.max_unsigned with 4294967295%Z].
+      2:{
+        split; [ |lia].
+        assert (Hge': (Int.unsigned c >= 0)%Z) by (apply Int_unsigned_ge_zero).
+        lia.
+      }
       rewrite Hlen in Hmatch.
       assert (Hnat: (0 <= Z.to_nat (Int.unsigned c) < ins_len st)%nat) by lia.
       specialize (Hmatch _ Hnat); clear Hnat.
       unfold Mem.loadv in Hmatch.
-      assert (Hnat: Z.of_nat (Z.to_nat (Int.unsigned c)) = Int.unsigned c). { apply Z2Nat.id. lia. }
+      assert (Hnat: Z.of_nat (Z.to_nat (Int.unsigned c)) = Int.unsigned c). { apply Z2Nat.id.  apply Z.ge_le. apply Int_unsigned_ge_zero. }
       rewrite Hnat in Hmatch; clear Hnat.
-      rewrite Ptrofs.unsigned_repr in Hmatch; [| change Ptrofs.max_unsigned with 4294967295%Z; lia].
+      rewrite Ptrofs.unsigned_repr in Hmatch; [| change Ptrofs.max_unsigned with 4294967295%Z].
+      2:{
+        split; [ |lia].
+        assert (Hge': (Int.unsigned c >= 0)%Z) by (apply Int_unsigned_ge_zero).
+        lia.
+      }
       subst.
       apply Hmatch.
       unfold Cop.sem_cast, typeof; simpl.

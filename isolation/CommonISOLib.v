@@ -79,27 +79,33 @@ Proof.
   destruct Hrange as [Ha Hb]; assumption.
 Qed.
 
-Lemma Cle_implies_Zle:
+Lemma Cle_Zle_iff:
   forall lo ofs,
-    negb (Int.ltu ofs lo) = true ->
-      Int.unsigned lo <= Int.unsigned ofs.
+    negb (Int.ltu ofs lo) = true <-> Int.unsigned lo <= Int.unsigned ofs.
 Proof.
-  intros.
-  rewrite negb_true_iff in H.
-  unfold Int.ltu in H.
-  destruct (zlt _ _) in H; try inversion H.
-  lia.
+  split; intros.
+  - rewrite negb_true_iff in H.
+    unfold Int.ltu in H.
+    destruct (zlt _ _) in H; try inversion H.
+    lia.
+  - rewrite negb_true_iff.
+    unfold Int.ltu.
+    apply zlt_false.
+    lia.
 Qed.
 
-Lemma Clt_implies_Zlt:
+Lemma Clt_Zlt_iff:
   forall ofs hi,
-    Int.ltu ofs hi = true ->
+    Int.ltu ofs hi = true <->
       Int.unsigned ofs < Int.unsigned hi.
 Proof.
-  intros.
-  unfold Int.ltu in H.
-  destruct (zlt _ _) in H; try inversion H.
-  lia.
+  split; intros.
+  - unfold Int.ltu in H.
+    destruct (zlt _ _) in H; try inversion H.
+    lia.
+  - unfold Int.ltu.
+    apply zlt_true.
+    assumption.
 Qed.
 
 Lemma Int64_unsigned_size_chunk_ge_0:

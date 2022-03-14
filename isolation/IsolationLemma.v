@@ -2,7 +2,7 @@ From compcert Require Import Integers Values Memory AST.
 From bpf.comm Require Import State Monad.
 From bpf.comm Require Import MemRegion rBPFMemType rBPFAST rBPFValues.
 From bpf.model Require Import Syntax Semantics.
-From bpf.isolation Require Import CommonISOLib AlignChunk RegsInv MemInv.
+From bpf.isolation Require Import CommonISOLib AlignChunk RegsInv MemInv VerifierInv.
 
 From Coq Require Import ZArith List Lia.
 Import ListNotations.
@@ -88,7 +88,7 @@ Lemma mem_inv_check_mem_aux2P_valid_pointer:
 Proof.
   intros.
   unfold memory_inv in Hmem.
-  destruct Hmem as (Hlen & Hdisjoint & Hinv_mem).
+  destruct Hmem as (Hlen_low & Hlen & Hdisjoint & Hinv_mem).
   eapply In_inv_memory_regions in Hinv_mem; eauto.
   unfold inv_memory_region in Hinv_mem.
   destruct Hinv_mem as (b & Hptr & Hvalid & His_byte & (start & size & Hstart & Hsize & Hperm & Hrange_perm)).
@@ -124,8 +124,8 @@ Proof.
     split; [ assumption|];
     destruct Hcond as ((Hcond & Hcond0 & _) & _);
     unfold Int.add in Hcond;
-    apply Clt_implies_Zlt in Hcond;
-    apply Cle_implies_Zle in Hcond0.
+    apply Clt_Zlt_iff in Hcond;
+    apply Cle_Zle_iff in Hcond0.
 Ltac change_const :=
   let I := fresh "I" in
     repeat match goal with
@@ -162,6 +162,7 @@ Fixpoint check_mem_auxP (st: state) (num: nat) (perm: permission) (chunk: memory
 
 Lemma check_mem_auxM_P:
   forall n perm chunk addr st
+    (Hlt: (n <= mrs_num st)%nat)
     (Hperm: perm_order perm Readable)
     (Hmem_inv : memory_inv st),
     check_mem_aux n perm chunk (Vint addr) (bpf_mrs st) st = Some (check_mem_auxP st n perm chunk (Vint addr) (bpf_mrs st), st).
@@ -171,6 +172,18 @@ Proof.
   intros.
   induction n.
   reflexivity.
+  assert (Hlt': (n < mrs_num st)%nat) by lia.
+  assert (Hlt'': (n <= mrs_num st)%nat) by lia.
+  specialize (IHn Hlt''); clear Hlt''.
+  rewrite <- Nat.ltb_lt in Hlt'.
+  rewrite Hlt'.
+  rewrite Nat.ltb_lt in Hlt'.
+  set (Hmem_inv' := Hmem_inv).
+  unfold memory_inv in Hmem_inv'.
+  destruct Hmem_inv' as (_ & Hlen & _ & _).
+  rewrite <- Hlen in Hlt'.
+  apply nth_error_nth' with (d:= default_memory_region) in Hlt'.
+  rewrite Hlt'.
   rewrite check_mem_aux2M_P.
   unfold cmp_ptr32_nullM, State.eval_mem.
 
@@ -222,6 +235,12 @@ Proof.
   }
 
   destruct Hcmp as (res & Hcmp).
+  assert (Heq: MyMemRegionsIndexnat (bpf_mrs st) n = nth n (bpf_mrs st) default_memory_region). {
+    unfold MyMemRegionsIndexnat, Memory_regions.index_nat.
+    rewrite Hlt'.
+    reflexivity.
+  }
+  rewrite <- Heq; clear Heq.
   rewrite Hcmp.
   destruct res; [ | reflexivity].
   unfold cmp_ptr32_nullM, State.eval_mem in IHn.
@@ -295,7 +314,7 @@ Proof.
       rewrite Hcheck_mem_auxP in Hcmp.
       assert (Hcheck_mem_auxP' := Hcheck_mem_auxP).
       assert (Hmem' := Hmem).
-      destruct Hmem' as (Hlen & Hdisjoint & Hmem').
+      destruct Hmem' as (_ & Hlen & Hdisjoint & Hmem').
       unfold MyMemRegionsIndexnat, Memory_regions.index_nat in Hcheck_mem_auxP, Hcheck_mem_auxP'.
       unfold check_mem_aux2P in Hcheck_mem_auxP.
       destruct v; try inversion Hcmp;
@@ -447,13 +466,40 @@ Proof.
   assumption.
 Qed.
 
+Lemma mem_inv_check_mem_valid_pointer:
+  forall st perm chunk addr v
+    (Hperm: perm_order perm Readable)
+    (Hmem : memory_inv st)
+    (Hcheck_memP: check_memP perm chunk (Vint addr) st = v),
+      (exists b ofs, v = Vptr b ofs /\ (Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs) || Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs - 1) = true)%bool)
+        \/ v = Vnullptr.
+Proof.
+  unfold check_memP; intros.
+  unfold is_well_chunk_boolP in Hcheck_memP.
+  unfold cmp_ptr32_null in Hcheck_memP.
+  unfold Val.cmpu_bool in Hcheck_memP.
+  unfold State.eval_mem_regions in Hcheck_memP.
+  remember (check_mem_auxP st (eval_mem_num st) perm chunk (Vint addr) (bpf_mrs st)) as res.
+  symmetry in Heqres.
+  eapply mem_inv_check_mem_auxP_valid_pointer with (perm:= perm) (addr := addr) in Heqres; eauto.
+  change Vnullptr with (Vint (Int.zero)) in *.
+  simpl in *.
+  destruct chunk; try (right; symmetry; assumption).
+  all: destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; rewrite Hptr in *.
+  all: rewrite Int.eq_true in Hcheck_memP; try rewrite Bool.andb_true_l in Hcheck_memP.
+  all: try (right; symmetry; assumption).
+  all: left; exists b, ofs.
+  all: rewrite Hvalid in Hcheck_memP.
+  all: auto.
+Qed.
 
 Lemma step_preserving_inv_alu:
-  forall st1 st2 a b r s
+  forall st1 st2 a b r s t
     (Hreg : register_inv st1)
     (Hmem : memory_inv st1)
-    (Hsem : step_alu_binary_operation a b r s st1 = Some (tt, st2)),
-      register_inv st2 /\ memory_inv st2.
+    (Hver : verifier_inv st1)
+    (Hsem : step_alu_binary_operation a b r s st1 = Some (t, st2)),
+      register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
 Proof.
   unfold step_alu_binary_operation; unfold_monad; intros.
   apply reg_inv_eval_reg with (r := r) in Hreg as Heval_reg;
@@ -464,55 +510,66 @@ Proof.
     destruct Heval_reg as (src0 & Heval_reg);
     rewrite Heval_reg in Hsem; clear Heval_reg; simpl in Hsem).
   all: destruct b; inversion Hsem; clear Hsem;
-      [ split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto] |
-        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto] |
-        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto] |
+      [ split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]] |
+        split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]] |
+        split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]] |
+
         split; (destruct negb eqn: Hnegb; [rewrite Bool.negb_true_iff in Hnegb; rewrite Hnegb in H0; simpl in H0; inversion H0 | rewrite Bool.negb_false_iff in Hnegb; inversion H0]);
         [ eapply reg_inv_upd_reg; eauto |
           eapply reg_inv_upd_flag; eauto |
-          eapply mem_inv_upd_reg; eauto |
-          eapply mem_inv_upd_flag; eauto] |
-        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto] |
-        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto] |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption] |
+          split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]] |
+        split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]] |
+        split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]] |
         split; destruct Int.ltu eqn: Hltu; simpl in H0; inversion H0; clear H0;
         [ eapply reg_inv_upd_reg; eauto |
           eapply reg_inv_upd_flag; eauto |
-          eapply mem_inv_upd_reg; eauto |
-          eapply mem_inv_upd_flag; eauto] |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption] |
+          split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]] |
         split; destruct Int.ltu eqn: Hltu; simpl in H0; inversion H0; clear H0;
         [ eapply reg_inv_upd_reg; eauto |
           eapply reg_inv_upd_flag; eauto |
-          eapply mem_inv_upd_reg; eauto |
-          eapply mem_inv_upd_flag; eauto ] |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption] |
+          split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]] |
         split; (destruct negb eqn: Hnegb; [rewrite Bool.negb_true_iff in Hnegb; rewrite Hnegb in H0; simpl in H0; inversion H0 | rewrite Bool.negb_false_iff in Hnegb; inversion H0]);
         [ eapply reg_inv_upd_reg; eauto |
           eapply reg_inv_upd_flag; eauto |
-          eapply mem_inv_upd_reg; eauto |
-          eapply mem_inv_upd_flag; eauto] |
-        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto] |
-        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto] |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption] |
+          split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]] |
+        split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]] |
+        split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]] |
         split; destruct Int.ltu eqn: Hltu; simpl in H0; inversion H0; clear H0;
         [ eapply reg_inv_upd_reg; eauto |
           eapply reg_inv_upd_flag; eauto|
-          eapply mem_inv_upd_reg; eauto |
-          eapply mem_inv_upd_flag; eauto]].
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption] |
+          split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]]].
 Qed.
 
 Lemma step_preserving_inv_branch:
-  forall st1 st2 c r s o
+  forall st1 st2 c r s o t
     (Hreg : register_inv st1)
     (Hmem : memory_inv st1)
+    (Hver : verifier_inv st1)
     (Hsem : match step_branch_cond c r s st1 with
        | Some (x', st') =>
            (if x'
             then
              fun st : state =>
-             Some
-               (tt, State.upd_pc (Integers.Int.add (State.eval_pc st1) o) st)
+             if Int.cmpu Clt (Int.add (State.eval_pc st1) o)
+                 (Int.repr (Z.of_nat (ins_len st)))
+             then Some (tt, State.upd_pc (Int.add (State.eval_pc st1) o) st)
+             else None
             else fun st : state => Some (tt, st)) st'
        | None => None
-       end = Some (tt, st2)),
-      register_inv st2 /\ memory_inv st2.
+       end = Some (t, st2)),
+      register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
 Proof.
   unfold step_branch_cond; unfold_monad; intros.
   apply reg_inv_eval_reg with (r := r) in Hreg as Heval_reg;
@@ -536,7 +593,12 @@ Proof.
          | SEt => negb (Int64.eq (Int64.and src src0) Int64.zero)
          | Ne => negb (Int64.eq src src0)
          end); inversion Hsem; clear Hsem.
-    + split; [eapply reg_inv_upd_pc; eauto | eapply mem_inv_upd_pc; eauto].
+    + match goal with
+      | H : (if ?X then _ else _) = _ |- _ =>
+        destruct X; inversion H
+      end.
+      split; [eapply reg_inv_upd_pc; eauto |
+        split; [eapply mem_inv_upd_pc; eauto | unfold verifier_inv in *; simpl; assumption]].
     + subst; intuition.
   - (**r inr i *)
     destruct (match c with
@@ -557,16 +619,22 @@ Proof.
                   Int64.zero)
          | Ne => negb (Int64.eq src (Int64.repr (Int.signed i)))
          end); inversion Hsem; clear Hsem.
-    + split; [eapply reg_inv_upd_pc; eauto | eapply mem_inv_upd_pc; eauto].
+    + match goal with
+      | H : (if ?X then _ else _) = _ |- _ =>
+        destruct X; inversion H
+      end.
+      split; [eapply reg_inv_upd_pc; eauto |
+        split; [eapply mem_inv_upd_pc; eauto | unfold verifier_inv in *; simpl; assumption]].
     + subst; intuition.
 Qed.
 
 Lemma step_preserving_inv_ld:
-  forall st1 st2 m r r0 o
+  forall st1 st2 m r r0 o t
     (Hreg_inv : register_inv st1)
     (Hmem_inv : memory_inv st1)
-    (Hsem : step_load_x_operation m r r0 o st1 = Some (tt, st2)),
-      register_inv st2 /\ memory_inv st2.
+    (Hver : verifier_inv st1)
+    (Hsem : step_load_x_operation m r r0 o st1 = Some (t, st2)),
+      register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
 Proof.
   unfold step_load_x_operation; unfold_monad; intros.
   apply reg_inv_eval_reg with (r := r0) in Hreg_inv as Heval_reg;
@@ -586,20 +654,22 @@ Proof.
   unfold cmp_ptr32_nullM in Hsem.
   destruct cmp_ptr32_null; inversion Hsem; clear Hsem.
   destruct b; inversion H0; subst.
-  - split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+  - split; [eapply reg_inv_upd_flag; eauto |
+      split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
   - unfold load_mem in H1.
     destruct State.load_mem in H1; inversion H1.
-    destruct Val.eq in H1; inversion H1.
-    destruct v in H3; inversion H3.
-    split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto].
+    destruct v in H1; inversion H1.
+    split; [eapply reg_inv_upd_reg; eauto |
+      split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]].
 Qed.
 
 Lemma step_preserving_inv_st:
-  forall st1 st2 m r s o
+  forall st1 st2 m r s o t
     (Hreg_inv : register_inv st1)
     (Hmem_inv : memory_inv st1)
-    (Hsem : step_store_operation m r s o st1 = Some (tt, st2)),
-      register_inv st2 /\ memory_inv st2.
+    (Hver : verifier_inv st1)
+    (Hsem : step_store_operation m r s o st1 = Some (t, st2)),
+      register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
 Proof.
   unfold step_store_operation; unfold_monad; intros.
   apply reg_inv_eval_reg with (r := r) in Hreg_inv as Heval_reg;
@@ -620,7 +690,8 @@ Proof.
   (destruct cmp_ptr32_null eqn: Hptr; [| inversion Hsem]).
   - (**r inl r *)
     destruct b; inversion Hsem; subst.
-    + split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+    + split; [eapply reg_inv_upd_flag; eauto |
+        split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
     + clear H0.
       (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
       assert (Hwell_chunk: is_well_chunk m). {
@@ -636,11 +707,17 @@ Proof.
       unfold store_mem_reg in Hsem.
       destruct State.store_mem_reg eqn: Hstore; [| inversion Hsem].
       inversion Hsem; subst.
-      split; [eapply reg_inv_store_reg; eauto | eapply mem_inv_store_reg; eauto].
+      split; [eapply reg_inv_store_reg; eauto |
+        split; [eapply mem_inv_store_reg; eauto | unfold verifier_inv in *; simpl]].
+      unfold State.store_mem_reg in Hstore.
+      destruct m; try inversion Hstore.
+      all: destruct Mem.storev in Hstore; inversion Hstore.
+      all: simpl; assumption.
 
   - (**r inr i *)
     destruct b; inversion Hsem; subst.
-    + split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+    + split; [eapply reg_inv_upd_flag; eauto |
+        split; [ eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
     +
       (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
       assert (Hwell_chunk: is_well_chunk m). {
@@ -653,7 +730,12 @@ Proof.
       unfold rBPFValues.sint32_to_vint, store_mem_imm in Hsem.
       destruct State.store_mem_imm eqn: Hstore; [| inversion Hsem].
       inversion Hsem; subst.
-      split; [eapply reg_inv_store_imm; eauto | eapply mem_inv_store_imm; eauto].
+      split; [eapply reg_inv_store_imm; eauto |
+        split; [eapply mem_inv_store_imm; eauto | unfold verifier_inv in *; simpl]].
+      unfold State.store_mem_imm in Hstore.
+      destruct m; try inversion Hstore.
+      all: destruct Mem.storev in Hstore; inversion Hstore.
+      all: simpl; assumption.
 Qed.
 
 Lemma check_mem_load:
@@ -717,7 +799,7 @@ Proof.
   }
 
   apply nth_error_In in Hnth.
-  destruct Hmem_inv as (Hlen & Hdisjoint & Hmem_inv).
+  destruct Hmem_inv as (_ & Hlen & Hdisjoint & Hmem_inv).
   (**r now we get the evidence `In mr (bpf_mrs st1)`, and reuse the lemma `In_inv_memory_regions` *)
   apply In_inv_memory_regions with (m:=bpf_m st1) (mr := m) in Hmem_inv; [| intuition].
   assert (Hmem_inv' := Hmem_inv).
@@ -815,7 +897,7 @@ Proof.
 
   apply nth_error_In in Hnth.
   assert (Hmem_inv' := Hmem_inv).
-  destruct Hmem_inv' as (Hlen & Hdisjoint & Hmem_inv').
+  destruct Hmem_inv' as (_ & Hlen & Hdisjoint & Hmem_inv').
   (**r now we get the evidence `In mr (bpf_mrs st1)`, and reuse the lemma `In_inv_memory_regions` *)
   apply In_inv_memory_regions with (m:=bpf_m st1) (mr := m) in Hmem_inv'; [| intuition].
 
@@ -857,36 +939,9 @@ Proof.
   destruct v; inversion Hvlong_vint.
 
   - apply mem_inv_store_imm with (st1 := st1) (st2:= upd_mem m2 st1) (addr:= Vptr b0 ofs) (i:= i) in Hwell_chunk'; auto.
-  unfold State.store_mem_imm, vint_to_vint_or_vlong.
-  assert (Heq: match chunk with
-| Mint8unsigned | Mint16unsigned | Mint32 | Mint64 =>
-    match
-      Mem.storev chunk (bpf_m st1) (Vptr b0 ofs)
-        match chunk with
-        | Mint8unsigned | Mint16unsigned | Mint32 => Vint i
-        | Mint64 => Vlong (Int64.repr (Int.unsigned i))
-        | _ => Vundef
-        end
-    with
-    | Some m => Some (upd_mem m st1)
-    | None => None
-    end
-| _ => None
-end = match
-      Mem.storev chunk (bpf_m st1) (Vptr b0 ofs)
-        match chunk with
-        | Mint8unsigned | Mint16unsigned | Mint32 => Vint i
-        | Mint64 => Vlong (Int64.repr (Int.unsigned i))
-        | _ => Vundef
-        end
-    with
-    | Some m => Some (upd_mem m st1)
-    | None => None
-    end). {
-      destruct chunk; try inversion Hwell_chunk'; try reflexivity.
-    }
-    rewrite Heq; clear Heq.
-    unfold Mem.storev.
+    rewrite mem_inv_store_imm_well_chunk; [| rewrite well_chunk_iff; assumption].
+    unfold vint_to_vint_or_vlong.
+
     unfold vlong_or_vint_to_vint_or_vlong, vint_to_vint_or_vlong in Hstore.
     rewrite Hstore.
     reflexivity.

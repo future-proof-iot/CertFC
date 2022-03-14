@@ -940,6 +940,8 @@ void bpf_interpreter_aux(unsigned int fuel)
   unsigned int len$442;
   unsigned int pc$444;
   int f;
+  unsigned int len0;
+  unsigned int pc0;
   if (fuel == 0U) {
     upd_flag(-5);
     return;
@@ -947,19 +949,21 @@ void bpf_interpreter_aux(unsigned int fuel)
     fuel0 = fuel - 1U;
     len$442 = eval_ins_len();
     pc$444 = eval_pc();
-    if (0U <= pc$444) {
-      if (pc$444 < len$442) {
-        step();
-        f = eval_flag();
-        if (f == 0) {
+    if (pc$444 < len$442) {
+      step();
+      f = eval_flag();
+      if (f == 0) {
+        len0 = eval_ins_len();
+        pc0 = eval_pc();
+        if (pc0 + 1U < len0) {
           upd_pc_incr();
           bpf_interpreter_aux(fuel0);
           return;
         } else {
+          upd_flag(-5);
           return;
         }
       } else {
-        upd_flag(-5);
         return;
       }
     } else {
@@ -969,22 +973,22 @@ void bpf_interpreter_aux(unsigned int fuel)
   }
 }
 
-unsigned long long bpf_interpreter(unsigned int fuel$448)
+unsigned long long bpf_interpreter(unsigned int fuel$452)
 {
-  struct memory_region *mrs$450;
+  struct memory_region *mrs$454;
   struct memory_region *bpf_ctx;
-  unsigned int start$454;
-  int f$456;
-  unsigned long long res$458;
-  mrs$450 = eval_mrs_regions();
-  bpf_ctx = get_mem_region(0U, mrs$450);
-  start$454 = get_start_addr(bpf_ctx);
-  upd_reg(1U, (unsigned long long) start$454);
-  bpf_interpreter_aux(fuel$448);
-  f$456 = eval_flag();
-  if (f$456 == 1) {
-    res$458 = eval_reg(0U);
-    return res$458;
+  unsigned int start$458;
+  int f$460;
+  unsigned long long res$462;
+  mrs$454 = eval_mrs_regions();
+  bpf_ctx = get_mem_region(0U, mrs$454);
+  start$458 = get_start_addr(bpf_ctx);
+  upd_reg(1U, (unsigned long long) start$458);
+  bpf_interpreter_aux(fuel$452);
+  f$460 = eval_flag();
+  if (f$460 == 1) {
+    res$462 = eval_reg(0U);
+    return res$462;
   } else {
     return 0LLU;
   }

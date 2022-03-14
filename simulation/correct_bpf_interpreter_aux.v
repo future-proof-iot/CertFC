@@ -53,17 +53,19 @@ Lemma bpf_interpreter_aux_eq: forall n,
     else
         bindM eval_ins_len (fun len => 
           (bindM eval_pc (fun pc =>
-            if (Int_leu Int.zero pc) then
-              if (Int.ltu pc len) then
-              (bindM rBPFInterpreter.step (fun _ =>
-                (bindM eval_flag (fun f =>
-                  if flag_eq f BPF_OK then
-                    (bindM upd_pc_incr (fun _ =>
-                      bpf_interpreter_aux (Nat.pred n)))
-                  else
-                    returnM tt))))
-              else
-                bindM (upd_flag BPF_ILLEGAL_LEN) (fun _ : unit => returnM tt)
+            if (Int.ltu pc len) then
+            (bindM rBPFInterpreter.step (fun _ =>
+              (bindM eval_flag (fun f =>
+                if flag_eq f BPF_OK then
+                  bindM eval_ins_len (fun len0 => 
+                    (bindM eval_pc (fun pc0 =>
+                    if (Int.ltu (Int.add pc0 Int.one) len0) then
+                      (bindM upd_pc_incr (fun _ =>
+                        bpf_interpreter_aux (Nat.pred n)))
+                    else
+                      bindM (upd_flag BPF_ILLEGAL_LEN) (fun _ : unit => returnM tt))))
+                else
+                  returnM tt))))
             else
               bindM (upd_flag BPF_ILLEGAL_LEN) (fun _ : unit => returnM tt)))).
 Proof.
@@ -260,25 +262,84 @@ Qed.
     intuition eauto.
     intros.
 
-    unfold Int_leu.
     eapply correct_statement_if_body_expr. intro EXPR0.
+    destruct (Int.ltu x0 x) eqn: Hcond1.
     {
-      destruct (negb (Int.ltu _ _)) eqn: Hcond0.
-      - eapply correct_statement_if_body_expr. intro EXPR1.
-        destruct (Int.ltu x0 x) eqn: Hcond1.
-        * eapply correct_statement_seq_body_unit.
+      eapply correct_statement_seq_body_unit.
+      change_app_for_statement.
+      normalise_post_unit.
+      eapply correct_statement_call_none.
+      my_reflex.
+      reflexivity.
+      reflexivity.
+      typeclasses eauto.
+      unfold correct_step.match_res. intuition.
+
+      reflexivity.
+      reflexivity.
+      reflexivity.
+      reflexivity.
+      reflexivity.
+
+      unfold INV; intro H.
+      correct_Forall. simpl in H.
+      get_invariant _st.
+      exists (v::nil).
+      split.
+      unfold map_opt, exec_expr.
+      rewrite p0; reflexivity.
+      simpl;intros.
+      intuition eauto.
+      intros.
+
+      eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
+      change_app_for_statement.
+      eapply correct_statement_call with (has_cast:=false).
+      my_reflex.
+      reflexivity.
+      reflexivity.
+      typeclasses eauto.
+
+      reflexivity.
+      reflexivity.
+      reflexivity.
+      prove_in_inv.
+      prove_in_inv.
+      reflexivity.
+      reflexivity.
+
+      unfold INV; intro H.
+      correct_Forall. simpl in H.
+      get_invariant _st.
+      exists (v::nil).
+      split.
+      unfold map_opt, exec_expr.
+      rewrite p0; reflexivity.
+      simpl;intros.
+      intuition eauto.
+      intros.
+
+      instantiate (1:= ModSomething). (**r TODO: right? *)
+
+      eapply correct_statement_if_body_expr. intro EXPR2.
+      {
+        destruct (flag_eq _ _) eqn: Hcond3.
+        - (**r correct_body _ _ (bindM (eval_ins_len _ _) ... *)
+          eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
           change_app_for_statement.
-          normalise_post_unit.
-          eapply correct_statement_call_none.
+          
+          eapply correct_statement_call with (has_cast:=false).
           my_reflex.
           reflexivity.
           reflexivity.
+          intros.
           typeclasses eauto.
-          unfold correct_step.match_res. intuition.
 
           reflexivity.
           reflexivity.
           reflexivity.
+          prove_in_inv.
+          prove_in_inv.
           reflexivity.
           reflexivity.
 
@@ -293,12 +354,15 @@ Qed.
           intuition eauto.
           intros.
 
+          (**r correct_body _ _ (bindM (eval_pc _ _) ... *)
           eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
+          unfold typeof.
           change_app_for_statement.
           eapply correct_statement_call with (has_cast:=false).
           my_reflex.
           reflexivity.
           reflexivity.
+          intros.
           typeclasses eauto.
 
           reflexivity.
@@ -320,13 +384,12 @@ Qed.
           intuition eauto.
           intros.
 
-          instantiate (1:= ModSomething). (**r TODO: right? *)
 
-          eapply correct_statement_if_body_expr. intro EXPR2.
-          {
-            destruct (flag_eq _ _) eqn: Hcond3.
-            - eapply correct_statement_seq_body_unit.
+          eapply correct_statement_if_body_expr. intro EXPR3.
+          + destruct (Int.ltu (Int.add x4 Int.one) x3) eqn: Hcond4.
+            * eapply correct_statement_seq_body_unit.
               change_app_for_statement.
+              normalise_post_unit.
               eapply correct_statement_call_none.
               my_reflex.
               reflexivity.
@@ -351,128 +414,120 @@ Qed.
               intuition eauto.
               intros.
 
-              assert (Heq: bpf_interpreter_aux c = bindM (bpf_interpreter_aux c) (fun _ : unit => returnM tt)). {
-                clear.
-                unfold bindM, returnM.
-                induction c.
-                simpl. unfold upd_flag; reflexivity.
-                simpl.
-                unfold bpf_interpreter_aux.
-                unfold bindM.
-                apply Coq.Logic.FunctionalExtensionality.functional_extensionality; intro.
-                destruct eval_ins_len; [| reflexivity].
-                destruct p0.
-                destruct eval_pc; [| reflexivity].
-                destruct p0.
-                destruct Int_leu; [| reflexivity].
-                destruct Int.ltu; [| reflexivity].
-                destruct rBPFInterpreter.step; [| reflexivity].
-                destruct p0.
-                destruct eval_flag; [| reflexivity].
-                destruct p0.
-                destruct flag_eq; [| reflexivity].
-                destruct upd_pc_incr; [| reflexivity].
-                destruct p0.
-                unfold bpf_interpreter_aux in IHc.
-                unfold bindM in IHc.
-                rewrite IHc.
+          assert (Heq: bpf_interpreter_aux c = bindM (bpf_interpreter_aux c) (fun _ : unit => returnM tt)). {
+            clear.
+            unfold bindM, returnM.
+            induction c.
+            simpl. unfold upd_flag; reflexivity.
+            simpl.
+            unfold bpf_interpreter_aux.
+            unfold bindM.
+            apply Coq.Logic.FunctionalExtensionality.functional_extensionality; intro.
+            destruct eval_ins_len; [| reflexivity].
+            destruct p0.
+            destruct eval_pc; [| reflexivity].
+            destruct p0.
+            destruct Int.ltu; [| reflexivity].
+            destruct rBPFInterpreter.step; [| reflexivity].
+            destruct p0.
+            destruct eval_flag; [| reflexivity].
+            destruct p0.
+            destruct flag_eq; [| reflexivity].
+            destruct eval_ins_len; [| reflexivity].
+            destruct p0.
+            destruct eval_pc; [| reflexivity].
+            destruct p0.
+            destruct Int.ltu; [| reflexivity].
+            destruct upd_pc_incr; [| reflexivity].
+            destruct p0.
+            unfold bpf_interpreter_aux in IHc.
+            unfold bindM in IHc.
+            rewrite IHc.
 
-                destruct ((fix bpf_interpreter_aux (fuel : nat) : M unit :=
-     match fuel with
-     | 0%nat => upd_flag BPF_ILLEGAL_LEN
-     | Datatypes.S fuel0 =>
-         fun st : State.state =>
-         match eval_ins_len st with
-         | Some (x', st') =>
-             match eval_pc st' with
-             | Some (x'0, st'0) =>
-                 (if Int_leu Int.zero x'0
-                  then
-                   if Int.ltu x'0 x'
-                   then
-                    fun st0 : State.state =>
-                    match rBPFInterpreter.step st0 with
-                    | Some (_, st'1) =>
-                        match eval_flag st'1 with
-                        | Some (x'2, st'2) =>
-                            (if flag_eq x'2 BPF_OK
-                             then
-                              fun st1 : State.state =>
-                              match upd_pc_incr st1 with
-                              | Some (_, st'3) => bpf_interpreter_aux fuel0 st'3
-                              | None => None
-                              end
-                             else returnM tt) st'2
-                        | None => None
-                        end
-                    | None => None
-                    end
-                   else upd_flag BPF_ILLEGAL_LEN
-                  else upd_flag BPF_ILLEGAL_LEN) st'0
+            destruct (fix bpf_interpreter_aux (fuel : nat) : M unit :=
+         match fuel with
+         | 0%nat => upd_flag BPF_ILLEGAL_LEN
+         | Datatypes.S fuel0 =>
+             fun st : State.state =>
+             match eval_ins_len st with
+             | Some (x', st') =>
+                 match eval_pc st' with
+                 | Some (x'0, st'0) =>
+                     (if Int.ltu x'0 x'
+                      then
+                       fun st0 : State.state =>
+                       match rBPFInterpreter.step st0 with
+                       | Some (_, st'1) =>
+                           match eval_flag st'1 with
+                           | Some (x'2, st'2) =>
+                               (if flag_eq x'2 BPF_OK
+                                then
+                                 fun st1 : State.state =>
+                                 match eval_ins_len st1 with
+                                 | Some (x'3, st'3) =>
+                                     match eval_pc st'3 with
+                                     | Some (x'4, st'4) =>
+                                         (if Int.ltu (Int.add x'4 Int.one) x'3
+                                          then
+                                           fun st2 : State.state =>
+                                           match upd_pc_incr st2 with
+                                           | Some (_, st'5) =>
+                                               bpf_interpreter_aux fuel0 st'5
+                                           | None => None
+                                           end
+                                          else upd_flag BPF_ILLEGAL_LEN) st'4
+                                     | None => None
+                                     end
+                                 | None => None
+                                 end
+                                else returnM tt) st'2
+                           | None => None
+                           end
+                       | None => None
+                       end
+                      else upd_flag BPF_ILLEGAL_LEN) st'0
+                 | None => None
+                 end
              | None => None
              end
-         | None => None
-         end
-     end)); try reflexivity.
-                destruct p0.
-                auto.
-              }
-              rewrite Heq; clear Heq.
-              eapply correct_statement_seq_body_unit.
-              change_app_for_statement.
-              eapply correct_statement_call_none.
-              my_reflex.
-              reflexivity.
-              reflexivity.
-              intros.
-              typeclasses eauto.
-              unfold match_res. intuition.
-
-              reflexivity.
-              reflexivity.
-              reflexivity.
-              reflexivity.
-              reflexivity.
-
-              unfold INV; intro H.
-              correct_Forall. simpl in H.
-              get_invariant _st.
-              get_invariant _fuel0.
-              exists (v::v0::nil).
-              split.
-              unfold map_opt, exec_expr.
-              rewrite p0, p1; reflexivity.
-              intros; simpl.
-              intuition eauto.
-
-              intros.
-              eapply correct_body_Sreturn_None.
-              unfold INV; intros Hst H.
-              unfold eval_inv.
-              unfold match_res.
-              reflexivity.
-              reflexivity.
-            - eapply correct_body_Sreturn_None.
-              unfold INV; intros Hst H.
-              unfold eval_inv.
-              unfold match_res.
-              reflexivity.
-              reflexivity.
+         end); try reflexivity.
+            destruct p0.
+            auto.
             }
+            rewrite Heq; clear Heq.
+            eapply correct_statement_seq_body_unit.
+            change_app_for_statement.
+            eapply correct_statement_call_none.
+            my_reflex.
+            reflexivity.
+            reflexivity.
+            intros.
+            typeclasses eauto.
+            unfold match_res. intuition.
 
             reflexivity.
-            unfold INV; intros Hst H. simpl in H.
-            get_invariant _f.
-            unfold exec_expr.
-            rewrite p0.
-            unfold eval_inv, correct_eval_flag.match_res, flag_correct in c0.
-            rewrite c0.
-            unfold Cop.sem_binary_operation.
-            unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
-            unfold flag_eq, CommonLib.int_of_flag.
-            unfold Val.of_bool, Vtrue, Vfalse.
-            destruct x2 eqn: Heq_x2; simpl; try reflexivity.
+            reflexivity.
+            reflexivity.
+            reflexivity.
+            reflexivity.
 
+            unfold INV; intro H.
+            correct_Forall. simpl in H.
+            get_invariant _st.
+            get_invariant _fuel0.
+            exists (v::v0::nil).
+            split.
+            unfold map_opt, exec_expr.
+            rewrite p0, p1; reflexivity.
+            intros; simpl.
+            intuition eauto.
+
+            intros.
+            eapply correct_body_Sreturn_None.
+            unfold INV; intros Hst H.
+            unfold eval_inv.
+            unfold match_res.
+            reflexivity.
             reflexivity.
           * eapply correct_statement_seq_body_unit.
             change_app_for_statement.
@@ -507,67 +562,92 @@ Qed.
             unfold match_res.
             reflexivity.
             reflexivity.
-          * reflexivity.
-          * unfold INV; intros Hst H. simpl in H.
-            get_invariant _pc.
-            get_invariant _len.
-            unfold exec_expr. rewrite p0, p1.
-            unfold eval_inv, correct_eval_pc.match_res, int32_correct in c0.
-            unfold eval_inv, correct_eval_ins_len.match_res, int32_correct in c1.
-            subst.
-            simpl.
-            unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
-            reflexivity.
-      - eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-
-        unfold INV; intro H.
-        correct_Forall. simpl in H.
-        get_invariant _st.
-        exists (v::(Vint (Int.neg (Int.repr 5))) :: nil).
-        split.
-        unfold map_opt, exec_expr.
-        rewrite p0; reflexivity.
-        simpl;intros.
-        unfold stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
-        intuition eauto.
-        intros.
-
-        eapply correct_body_Sreturn_None.
+        + reflexivity.
+        + unfold INV; intros Hst H. simpl in H.
+          get_invariant _pc0.
+          get_invariant _len0.
+          unfold exec_expr. rewrite p0, p1.
+          unfold eval_inv, correct_eval_pc.match_res, int32_correct in c0.
+          unfold eval_inv, correct_eval_ins_len.match_res, int32_correct in c1.
+          subst.
+          simpl.
+          unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+          reflexivity.
+        + reflexivity.
+      - eapply correct_body_Sreturn_None.
         unfold INV; intros Hst H.
-        unfold eval_inv, match_res.
+        unfold eval_inv.
+        unfold match_res.
         reflexivity.
         reflexivity.
       }
-
       reflexivity.
-      unfold INV; intros Hst H.
-      get_invariant _pc.
-      unfold exec_expr. rewrite p0.
-      unfold eval_inv, correct_eval_pc.match_res, int32_correct in c0.
-      subst.
-      simpl.
+
+      unfold INV; intros Hst H. simpl in H.
+      get_invariant _f.
+      unfold exec_expr.
+      rewrite p0.
+      unfold eval_inv, correct_eval_flag.match_res, flag_correct in c0.
+      rewrite c0.
+      unfold Cop.sem_binary_operation.
       unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
-      unfold Int.zero.
-      reflexivity.
-      reflexivity.
-  +
-    reflexivity.
-  + intros Hst H.
+      unfold flag_eq, CommonLib.int_of_flag.
+      unfold Val.of_bool, Vtrue, Vfalse.
+      destruct x2 eqn: Heq_x2; simpl; try reflexivity.
 
-    unfold INV in H.
+      reflexivity.
+    }
+
+    eapply correct_statement_seq_body_unit.
+    change_app_for_statement.
+    eapply correct_statement_call_none.
+    my_reflex.
+    reflexivity.
+    reflexivity.
+    typeclasses eauto.
+    unfold correct_upd_flag.match_res. intuition.
+
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    reflexivity.
+    reflexivity.
+
+    unfold INV; intro H.
+    correct_Forall. simpl in H.
+    get_invariant _st.
+    exists (v::(Vint (Int.neg (Int.repr 5))) :: nil).
+    split.
+    unfold map_opt, exec_expr.
+    rewrite p0; reflexivity.
+    simpl;intros.
+    unfold stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+    intuition eauto.
+    intros.
+
+    eapply correct_body_Sreturn_None.
+    unfold INV; intros Hst H.
+    unfold eval_inv.
+    unfold match_res.
+    reflexivity.
+    reflexivity.
+
+    reflexivity.
+    unfold INV; intros Hst H. simpl in H.
+    get_invariant _pc.
+    get_invariant _len.
+    unfold exec_expr. rewrite p0, p1.
+    unfold eval_inv, correct_eval_pc.match_res, int32_correct in c0.
+    unfold eval_inv, correct_eval_ins_len.match_res, int32_correct in c1.
+    subst.
+    simpl.
+    unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+    reflexivity.
+
+    reflexivity.
+    reflexivity.
+
+    unfold INV; intros Hst H.
     get_invariant _fuel.
     unfold stateless, nat_correct in c0.
     destruct c0 as (Hv_eq & Hrange).

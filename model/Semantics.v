@@ -359,17 +359,19 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
   | S fuel0 =>
     do len  <- eval_ins_len;
     do pc <- eval_pc;
-      if(Int_leu Int.zero pc) then
-        if (Int.ltu pc len) then (**r 0 < pc < len: pc is less than the length of l *)
-          do _ <- step;
-          do f <- eval_flag;
-            if flag_eq f BPF_OK then
-              do _ <- upd_pc_incr;
-                bpf_interpreter_aux fuel0
-            else
-              returnM tt
-        else
-          upd_flag BPF_ILLEGAL_LEN
+      if (Int.ltu pc len) then (**r pc < len: pc is less than the length of l *)
+        do _ <- step;
+        do f <- eval_flag;
+          if flag_eq f BPF_OK then
+            do len0 <- eval_ins_len;
+            do pc0 <- eval_pc; (**r step may modify pc: lddw *)
+              if (Int.ltu (Int.add pc0 Int.one) len0) then (**r pc + 1 < len *)
+                do _ <- upd_pc_incr;
+                  bpf_interpreter_aux fuel0
+              else
+                upd_flag BPF_ILLEGAL_LEN
+          else
+            returnM tt
       else
         upd_flag BPF_ILLEGAL_LEN
   end.

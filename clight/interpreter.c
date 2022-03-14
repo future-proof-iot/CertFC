@@ -941,6 +941,8 @@ static __attribute__((always_inline)) inline void bpf_interpreter_aux(struct bpf
   unsigned int len;
   unsigned int pc;
   int f;
+  unsigned int len0;
+  unsigned int pc0;
   if (fuel == 0U) {
     upd_flag(st, -5);
     return;
@@ -948,19 +950,21 @@ static __attribute__((always_inline)) inline void bpf_interpreter_aux(struct bpf
     fuel0 = fuel - 1U;
     len = eval_ins_len(st);
     pc = eval_pc(st);
-    if (0U <= pc) {
-      if (pc < len) {
-        step(st); //print_bpf_state(st);
-        f = eval_flag(st);
-        if (f == 0) {
+    if (pc < len) {
+      step(st); //print_bpf_state(st);
+      f = eval_flag(st);
+      if (f == 0) {
+        len0 = eval_ins_len(st);
+        pc0 = eval_pc(st);
+        if (pc0 + 1U < len0) {
           upd_pc_incr(st);
           bpf_interpreter_aux(st, fuel0);
           return;
         } else {
+          upd_flag(st, -5);
           return;
         }
       } else {
-        upd_flag(st, -5);
         return;
       }
     } else {

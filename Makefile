@@ -36,13 +36,14 @@ all:
 	@$(MAKE) clightmodel
 	@$(MAKE) clightlogic
 	@$(MAKE) simulation
+	@$(MAKE) isolation
 	@$(MAKE) equivalence
 
 COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
 COQEMONADIC =  $(addprefix monadicmodel/, Opcode.v rBPFInterpreter.v)
 COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxNat.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
 COQEQUIV =  $(addprefix equivalence/, equivalence1.v equivalence2.v)
-COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v IsolationLemma.v Isolation.v)
+COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v VerifierInv.v IsolationLemma.v Isolation.v)
 COQCOMM = $(addprefix comm/, Flag.v LemmaNat.v List64.v rBPFAST.v rBPFMemType.v rBPFValues.v MemRegion.v Regs.v State.v Monad.v)
 
 #COQCOMM = $(wildcard comm/*.v)

@@ -142,6 +142,7 @@ Definition _ins_len : ident := $"ins_len".
 Definition _is_null : ident := $"is_null".
 Definition _is_well_chunk_bool : ident := $"is_well_chunk_bool".
 Definition _len : ident := $"len".
+Definition _len0 : ident := $"len0".
 Definition _lo_ofs : ident := $"lo_ofs".
 Definition _load_mem : ident := $"load_mem".
 Definition _main : ident := $"main".
@@ -164,6 +165,7 @@ Definition _opcode_jmp : ident := $"opcode_jmp".
 Definition _opcode_ld : ident := $"opcode_ld".
 Definition _opcode_st : ident := $"opcode_st".
 Definition _pc : ident := $"pc".
+Definition _pc0 : ident := $"pc0".
 Definition _perm : ident := $"perm".
 Definition _ptr : ident := $"ptr".
 Definition _reg64_to_reg32 : ident := $"reg64_to_reg32".
@@ -3293,8 +3295,9 @@ Definition f_bpf_interpreter_aux := {|
                 (_fuel, tuint) :: nil);
   fn_vars := nil;
   fn_temps := ((_fuel0, tuint) :: (_len, tuint) :: (_pc, tuint) ::
-               (_f, tint) :: (_t'3, tint) :: (_t'2, tuint) :: (_t'1, tint) ::
-               nil);
+               (_f, tint) :: (_len0, tuint) :: (_pc0, tuint) ::
+               (_t'5, tuint) :: (_t'4, tint) :: (_t'3, tint) ::
+               (_t'2, tuint) :: (_t'1, tint) :: nil);
   fn_body :=
 (Sifthenelse (Ebinop Oeq (Etempvar _fuel tuint)
                (Econst_int (Int.repr 0) tuint) tint)
@@ -3326,55 +3329,79 @@ Definition f_bpf_interpreter_aux := {|
                              tuint cc_default))
             ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
           (Sset _pc (Etempvar _t'2 tuint)))
-        (Sifthenelse (Ebinop Ole (Econst_int (Int.repr 0) tuint)
-                       (Etempvar _pc tuint) tint)
-          (Sifthenelse (Ebinop Olt (Etempvar _pc tuint) (Etempvar _len tuint)
-                         tint)
+        (Sifthenelse (Ebinop Olt (Etempvar _pc tuint) (Etempvar _len tuint)
+                       tint)
+          (Ssequence
+            (Scall None
+              (Evar _step (Tfunction
+                            (Tcons (tptr (Tstruct _bpf_state noattr)) Tnil)
+                            tvoid cc_default))
+              ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
             (Ssequence
-              (Scall None
-                (Evar _step (Tfunction
-                              (Tcons (tptr (Tstruct _bpf_state noattr)) Tnil)
-                              tvoid cc_default))
-                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
               (Ssequence
+                (Scall (Some _t'3)
+                  (Evar _eval_flag (Tfunction
+                                     (Tcons
+                                       (tptr (Tstruct _bpf_state noattr))
+                                       Tnil) tint cc_default))
+                  ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) :: nil))
+                (Sset _f (Etempvar _t'3 tint)))
+              (Sifthenelse (Ebinop Oeq (Etempvar _f tint)
+                             (Econst_int (Int.repr 0) tint) tint)
                 (Ssequence
-                  (Scall (Some _t'3)
-                    (Evar _eval_flag (Tfunction
-                                       (Tcons
-                                         (tptr (Tstruct _bpf_state noattr))
-                                         Tnil) tint cc_default))
-                    ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                     nil))
-                  (Sset _f (Etempvar _t'3 tint)))
-                (Sifthenelse (Ebinop Oeq (Etempvar _f tint)
-                               (Econst_int (Int.repr 0) tint) tint)
                   (Ssequence
-                    (Scall None
-                      (Evar _upd_pc_incr (Tfunction
-                                           (Tcons
-                                             (tptr (Tstruct _bpf_state noattr))
-                                             Tnil) tvoid cc_default))
+                    (Scall (Some _t'4)
+                      (Evar _eval_ins_len (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              Tnil) tint cc_default))
                       ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                        nil))
+                    (Sset _len0 (Etempvar _t'4 tint)))
+                  (Ssequence
                     (Ssequence
-                      (Scall None
-                        (Evar _bpf_interpreter_aux (Tfunction
-                                                     (Tcons
-                                                       (tptr (Tstruct _bpf_state noattr))
-                                                       (Tcons tuint Tnil))
-                                                     tvoid cc_default))
+                      (Scall (Some _t'5)
+                        (Evar _eval_pc (Tfunction
+                                         (Tcons
+                                           (tptr (Tstruct _bpf_state noattr))
+                                           Tnil) tuint cc_default))
                         ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                         (Etempvar _fuel0 tuint) :: nil))
-                      (Sreturn None)))
-                  (Sreturn None))))
-            (Ssequence
-              (Scall None
-                (Evar _upd_flag (Tfunction
-                                  (Tcons (tptr (Tstruct _bpf_state noattr))
-                                    (Tcons tint Tnil)) tvoid cc_default))
-                ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-                 (Eunop Oneg (Econst_int (Int.repr 5) tint) tint) :: nil))
-              (Sreturn None)))
+                         nil))
+                      (Sset _pc0 (Etempvar _t'5 tuint)))
+                    (Sifthenelse (Ebinop Olt
+                                   (Ebinop Oadd (Etempvar _pc0 tuint)
+                                     (Econst_int (Int.repr 1) tuint) tuint)
+                                   (Etempvar _len0 tuint) tint)
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_pc_incr (Tfunction
+                                               (Tcons
+                                                 (tptr (Tstruct _bpf_state noattr))
+                                                 Tnil) tvoid cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           nil))
+                        (Ssequence
+                          (Scall None
+                            (Evar _bpf_interpreter_aux (Tfunction
+                                                         (Tcons
+                                                           (tptr (Tstruct _bpf_state noattr))
+                                                           (Tcons tuint Tnil))
+                                                         tvoid cc_default))
+                            ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                             (Etempvar _fuel0 tuint) :: nil))
+                          (Sreturn None)))
+                      (Ssequence
+                        (Scall None
+                          (Evar _upd_flag (Tfunction
+                                            (Tcons
+                                              (tptr (Tstruct _bpf_state noattr))
+                                              (Tcons tint Tnil)) tvoid
+                                            cc_default))
+                          ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
+                           (Eunop Oneg (Econst_int (Int.repr 5) tint) tint) ::
+                           nil))
+                        (Sreturn None)))))
+                (Sreturn None))))
           (Ssequence
             (Scall None
               (Evar _upd_flag (Tfunction

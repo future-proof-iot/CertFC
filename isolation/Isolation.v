@@ -1,7 +1,7 @@
-From compcert Require Import Integers Values.
+From compcert Require Import Integers Values AST Memory Memtype.
 From bpf.comm Require Import State Monad.
 From bpf.model Require Import Syntax Semantics.
-From bpf.isolation Require Import CommonISOLib AlignChunk RegsInv MemInv IsolationLemma.
+From bpf.isolation Require Import CommonISOLib AlignChunk RegsInv MemInv VerifierInv IsolationLemma.
 
 From Coq Require Import ZArith Lia.
 
@@ -10,50 +10,71 @@ Open Scope Z_scope.
 Axiom call_inv: forall st1 st2 b ofs res
   (Hreg : register_inv st1)
   (Hmem : memory_inv st1)
+  (Hver: verifier_inv st1)
   (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
-    register_inv st2 /\ memory_inv st2.
+    register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
 
 Theorem step_preserving_inv:
-  forall st1 st2
+  forall st1 st2 t
     (Hreg: register_inv st1)
     (Hmem: memory_inv st1)
-    (Hsem: step st1 = Some (tt, st2)),
-       register_inv st2 /\ memory_inv st2.
+    (Hver: verifier_inv st1)
+    (Hsem: step st1 = Some (t, st2)),
+       register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
 Proof.
   unfold step.
   unfold_monad.
   intros.
-  destruct (Decode.decode _) in Hsem.
+  match goal with
+  | H: match (if ?X then _ else _) with | _ => _ end = Some _ |- _ =>
+    destruct X; [| inversion H]
+  end.
+  destruct (Decode.decode _) in Hsem; [| inversion Hsem].
+  destruct i in Hsem.
   - (* BPF_NEG *)
     apply reg_inv_eval_reg with (r:= r) in Hreg as Heval_reg.
     destruct Heval_reg as (vl & Heval_reg).
     destruct a; rewrite Heval_reg in Hsem; simpl in Hsem.
-    + split.
-      inversion Hsem.
+    + inversion Hsem.
+      split.
       eapply reg_inv_upd_reg; eauto.
+      split.
       eapply mem_inv_upd_reg; eauto.
-      inversion Hsem.
-      reflexivity.
-    + split.
-      inversion Hsem.
+      unfold verifier_inv in *.
+      simpl; assumption.
+    + inversion Hsem.
+      split.
       eapply reg_inv_upd_reg; eauto.
+      split.
       eapply mem_inv_upd_reg; eauto.
-      inversion Hsem.
-      reflexivity.
+      unfold verifier_inv in *.
+      simpl; assumption.
   - (* BPF_BINARY *)
     eapply step_preserving_inv_alu; eauto.
   - (* BPF_JA *)
-    inversion Hsem; clear Hsem.
-    split; [eapply reg_inv_upd_pc; eauto | eapply mem_inv_upd_pc; eauto].
+    match goal with
+    | H : (if ?X then _ else _) = _ |- _ =>
+      destruct X; inversion H
+    end.
+    split; [eapply reg_inv_upd_pc; eauto |
+      split; [eapply mem_inv_upd_pc; eauto | unfold verifier_inv in *; simpl; assumption]].
   - (* BPF_JUMP *)
     eapply step_preserving_inv_branch; eauto.
   - (* BPF_LDDW *)
-    destruct Int.lt; simpl in Hsem.
+    destruct Int.ltu; simpl in Hsem.
+    match goal with
+    | H: match (if ?X then _ else _) with | _ => _ end = _ |- _ =>
+      destruct X; [| inversion H]
+    end.
     change Int64.iwordsize' with (Int.repr 64) in Hsem.
     unfold Int.ltu in Hsem.
     change (Int.unsigned (Int.repr 32)) with 32 in Hsem.
     change (Int.unsigned (Int.repr 64)) with 64 in Hsem.
     simpl in Hsem.
+    match goal with
+    | H: match (if ?X then _ else _) with | _ => _ end = _ |- _ =>
+      destruct X; [| inversion H]
+    end.
 
     inversion Hsem; clear Hsem.
     + split.
@@ -68,6 +89,7 @@ Proof.
                                (Int.add (State.eval_pc st1) Int.one) st1))))
                    (Int.repr 32)))) st1)); auto.
       eapply reg_inv_upd_reg; eauto.
+      split.
       apply mem_inv_upd_pc_incr with (st1:= (State.upd_reg r
           (Vlong
              (Int64.or (Int64.repr (Int.signed i))
@@ -78,7 +100,9 @@ Proof.
                             (State.eval_ins
                                (Int.add (State.eval_pc st1) Int.one) st1))))
                    (Int.repr 32)))) st1)); auto.
-    + inversion Hsem; split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+      unfold verifier_inv in *; simpl; assumption.
+    + inversion Hsem; split; [eapply reg_inv_upd_flag; eauto |
+        split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
   - (* BPF_LDX *)
     eapply step_preserving_inv_ld; eauto.
   - (* BPF_ST *)
@@ -86,20 +110,23 @@ Proof.
   - (* BPF_CALL *)
     assert (Hget_call: forall i, exists ptr,
       _bpf_get_call (Vint i) st1 = Some (ptr, st1) /\
-      (ptr = Vnullptr \/ (exists b ofs, ptr = Vptr b ofs))). {
+      (ptr = Vnullptr \/ (exists b ofs, ptr = Vptr b ofs /\ ((Mem.valid_pointer (bpf_m st1) b (Ptrofs.unsigned ofs)
+        || Mem.valid_pointer (bpf_m st1) b (Ptrofs.unsigned ofs - 1)) = true)%bool))). {
       intro.
       apply lemma_bpf_get_call.
     }
     specialize (Hget_call (Int.repr (Int64.unsigned (Int64.repr (Int.signed i))))).
     destruct Hget_call as (ptr & Hget_call & Hres).
     rewrite Hget_call in Hsem.
-    destruct Hres as [Hnull | (b & ofs & Hptr)]; unfold cmp_ptr32_nullM, rBPFValues.cmp_ptr32_null in Hsem; subst.
+    destruct Hres as [Hnull | (b & ofs & Hptr & Hvalid)]; unfold cmp_ptr32_nullM, rBPFValues.cmp_ptr32_null in Hsem; subst.
     + simpl in Hsem.
       rewrite Int.eq_true in Hsem.
-      inversion Hsem; split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+      inversion Hsem; split; [eapply reg_inv_upd_flag; eauto |
+        split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
     + destruct Val.cmpu_bool eqn:cmp; [| inversion Hsem].
       destruct b0.
-      * inversion Hsem; split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+      * inversion Hsem; split; [eapply reg_inv_upd_flag; eauto |
+          split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
       * assert (Hexec: forall b ofs st1,
       exists v st2, exec_function (Vptr b ofs) st1 = Some (Vint v, st2) /\ rBPFValues.cmp_ptr32_null (State.eval_mem st1) (Vptr b ofs) = Some false). {
           apply lemma_exec_function0.
@@ -109,346 +136,1126 @@ Proof.
         rewrite Hexec in Hsem.
         apply call_inv in Hexec; auto.
         destruct res; inversion Hsem.
-        destruct Hexec as (Hreg_st & Hmem_st).
-        split; [eapply reg_inv_upd_reg; eauto | eapply mem_inv_upd_reg; eauto].
+        destruct Hexec as (Hreg_st & Hmem_st & Hver_st).
+        split; [eapply reg_inv_upd_reg; eauto |
+          split; [eapply mem_inv_upd_reg; eauto | unfold verifier_inv in *; simpl; assumption]].
   - (* BPF_RET *)
     inversion Hsem.
-    split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+    split; [eapply reg_inv_upd_flag; eauto |
+      split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
   - (* BPF_ERR *)
     inversion Hsem.
-    split; [eapply reg_inv_upd_flag; eauto | eapply mem_inv_upd_flag; eauto].
+    split; [eapply reg_inv_upd_flag; eauto |
+      split; [ eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
 Qed.
 
-Theorem inv_avoid_undef:
+Theorem inv_avoid_step_undef:
   forall st
+    (Hpc: Int.cmpu Clt (State.eval_pc st) (Int.repr (Z.of_nat (ins_len st)))%bool = true)
     (Hreg: register_inv st)
-    (Hmem: memory_inv st),
+    (Hmem: memory_inv st)
+    (Hver: verifier_inv st),
       step st <> None.
 Proof.
   intros.
   unfold step.
   unfold_monad.
-  destruct ( Decode.decode _).
-  - (* BPF_NEG *)
-    apply reg_inv_eval_reg with (r:= r) in Hreg as Heval_reg.
-    destruct Heval_reg as (vl & Heval_reg).
-    destruct a; rewrite Heval_reg; simpl; intro H ; inversion H.
-  - (* BPF_BINARY *)
-    unfold step_alu_binary_operation.
-    unfold_monad.
-    apply reg_inv_eval_reg with (r:= r) in Hreg as Heval_reg.
-    destruct Heval_reg as (vl & Heval_reg).
-    destruct a; rewrite Heval_reg; simpl; clear Heval_reg.
-    + destruct s.
-      apply reg_inv_eval_reg with (r:= r0) in Hreg as Heval_reg.
-      destruct Heval_reg as (vl0 & Heval_reg).
-      rewrite Heval_reg; simpl; clear Heval_reg.
-      destruct b; intro H; inversion H.
-      all: try (destruct negb eqn: Hnegb; [rewrite Bool.negb_true_iff in Hnegb; rewrite Hnegb in H1; simpl in H1; inversion H1 | rewrite Bool.negb_false_iff in Hnegb; inversion H1]).
-      all: try (clear H; destruct Int.ltu eqn: Hltu;
-       unfold Val.longofintu in H1; inversion H1).
+  (**r if-false is impossible because of the interpreter *)
+  rewrite Hpc.
+  unfold verifier_inv, verifier_inv' in Hver.
+  destruct Hver as (Hlen & Hwell_list_range & Hwell_ins).
+  unfold well_list_range in Hwell_list_range.
 
-      destruct b; intro H; inversion H.
-      all: try (destruct negb eqn: Hnegb; [rewrite Bool.negb_true_iff in Hnegb; rewrite Hnegb in H1; simpl in H1; inversion H1 | rewrite Bool.negb_false_iff in Hnegb; inversion H1]).
-      all: try (clear H; destruct Int.ltu eqn: Hltu;
-       unfold Val.longofintu in H1; inversion H1).
-    + destruct s.
-      apply reg_inv_eval_reg with (r:= r0) in Hreg as Heval_reg.
-      destruct Heval_reg as (vl0 & Heval_reg).
-      rewrite Heval_reg; simpl; clear Heval_reg.
-      destruct b; intro H; inversion H.
-      all: try (destruct negb eqn: Hnegb; [rewrite Bool.negb_true_iff in Hnegb; rewrite Hnegb in H1; simpl in H1; inversion H1 | rewrite Bool.negb_false_iff in Hnegb; inversion H1]).
-      all: try (clear H; destruct Int.ltu eqn: Hltu;
-       unfold Val.longofintu in H1; inversion H1).
+  unfold State.eval_pc in Hpc.
+  unfold State.eval_pc.
+  unfold State.eval_ins, List64.MyListIndexs32, List64.MyList.index_s32.
 
-      destruct b; intro H; inversion H.
-      all: try (destruct negb eqn: Hnegb; [rewrite Bool.negb_true_iff in Hnegb; rewrite Hnegb in H1; simpl in H1; inversion H1 | rewrite Bool.negb_false_iff in Hnegb; inversion H1]).
-      all: try (clear H; destruct Int.ltu eqn: Hltu;
-       unfold Val.longofintu in H1; inversion H1).
-  - (* BPF_JA *)
-    intro H; inversion H.
-  - (* BPF_JUMP *)
-    unfold step_branch_cond.
-    unfold_monad.
-    destruct s; destruct_if; intro H; inversion H.
-  - (* BPF_LDDW *)
-    destruct_if; intro H; inversion H.
-  - (* BPF_LDX *)
-    unfold step_load_x_operation.
-    unfold_monad.
-    unfold Val.addl.
+  remember (Z.to_nat (Int.unsigned (pc_loc st))) as pc.
+  rewrite Hlen in *.
 
-    apply reg_inv_eval_reg with (r:= r0) in Hreg as Heval_reg.
-    destruct Heval_reg as (vl & Heval_reg).
-    rewrite Heval_reg; clear Heval_reg.
-    unfold rBPFValues.sint32_to_vint.
-
-    unfold rBPFValues.val_intuoflongu, Val.longofint.
-    remember (Int.repr (Int64.unsigned (Int64.add vl (Int64.repr (Int.signed o))))) as addr.
-    assert (Hcheck_mem: exists ret, check_mem Memtype.Readable m (Vint addr) st = Some (ret, st)). {
-      rewrite check_memM_P; auto.
-      eexists; reflexivity.
-      constructor.
+  assert (Hpc_range: (pc < List.length (ins st))%nat). {
+    rewrite Heqpc.
+    clear - Hpc Hwell_list_range.
+    unfold Int.cmpu in Hpc.
+    apply Clt_Zlt_iff in Hpc.
+    rewrite Int.unsigned_repr in Hpc.
+    assert (Hpc_z: (Z.to_nat (Int.unsigned (pc_loc st)) < Z.to_nat (Z.of_nat (length (ins st))))%nat). {
+      apply Z2Nat.inj_lt; auto.
+      apply Int_unsigned_ge_0.
+      lia.
     }
-    destruct Hcheck_mem as (ret & Hcheck_mem);
-    rewrite Hcheck_mem.
-    unfold cmp_ptr32_nullM.
-    assert (Hcheck_mem' := Hcheck_mem).
-    rewrite check_memM_P in Hcheck_mem; auto.
-    2:{ constructor. }
-    inversion Hcheck_mem.
-    rewrite H0.
-    unfold check_memP in H0.
-    unfold State.eval_mem.
+    rewrite Nat2Z.id in Hpc_z.
+    assumption.
+    change Int.max_unsigned with Ptrofs.max_unsigned.
+    lia.
+  }
 
-    destruct is_well_chunk_boolP eqn: Hwell_chunk_bool.
-    2:{
-      subst.
-      unfold rBPFValues.cmp_ptr32_null; simpl.
-      rewrite Int.eq_true.
-      intro H; inversion H.
-    }
-    remember (check_mem_auxP st (eval_mem_num st) Memtype.Readable m 
-            (Vint addr) (State.eval_mem_regions st)) as res.
-    symmetry in Heqres.
-    eapply mem_inv_check_mem_auxP_valid_pointer in Heqres; eauto.
-    2:{ constructor. }
-    destruct Heqres as [ (b & ofs & Hptr & Hvalid) | Hnull]; subst.
-    2:{ unfold rBPFValues.cmp_ptr32_null; simpl.
-        rewrite Int.eq_true.
-        change Vnullptr with (Vint Int.zero); simpl.
-        rewrite Int.eq_true.
-        intro H; inversion H.
-    }
-    unfold rBPFValues.cmp_ptr32_null; simpl.
-    rewrite Int.eq_true, Hvalid; simpl.
-    rewrite Hvalid.
-    unfold State.load_mem.
-    (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
-    assert (Hwell_chunk: is_well_chunk m). {
-      unfold is_well_chunk_boolP in Hwell_chunk_bool.
-      unfold is_well_chunk.
-      destruct m; try inversion Hwell_chunk_bool.
-      all: constructor.
-    }
-    unfold State._to_vlong, Regs.val64_zero.
-    unfold rBPFValues.cmp_ptr32_null in *; simpl in Hcheck_mem.
-    rewrite Int.eq_true, Hvalid in Hcheck_mem; simpl in Hcheck_mem.
-    inversion Hcheck_mem.
+  specialize (Hwell_ins pc Hpc_range).
 
-    assert (Hneq: match
-  Val.cmpu_bool (Memory.Mem.valid_pointer (bpf_m st)) Ceq Vnullptr (Vptr b ofs)
-with
-| Some false => Vptr b ofs
-| _ => Vnullptr
-end <> Vnullptr). {
-      change Vnullptr with (Vint Int.zero); simpl.
-      rewrite Int.eq_true, Hvalid; simpl.
-      intro H; inversion H.
-    }
+  apply List.nth_error_nth' with (d:=Int64.zero) in Hpc_range.
+  rewrite Hpc_range in *.
 
-    rewrite H0.
-    destruct m.
-    all: try (intro H; inversion H).
-    all: eapply check_mem_load in Hmem; eauto.
-    all: destruct Hmem as (res & Hmem & Hvlong_vint); clear H.
-    all: unfold load_mem, State.load_mem, Memory.Mem.loadv in H2.
-    all: simpl in Hmem; rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem.
-    all: rewrite Hmem in H2.
-    all: unfold is_vlong_or_vint in Hvlong_vint.
-    all: destruct res; try inversion Hvlong_vint; inversion H2.
-    unfold Memory.Mem.loadv in Hmem.
-    eapply Memory.Mem.load_type in Hmem; eauto.
-  - (* BPF_ST *)
-    unfold step_store_operation.
-    unfold_monad.
-    unfold Val.addl.
+  unfold Decode.decode.
 
-    destruct s.
-    +
-      apply reg_inv_eval_reg with (r:= r) in Hreg as Heval_reg.
-      destruct Heval_reg as (vl & Heval_reg).
-      rewrite Heval_reg; clear Heval_reg.
+  unfold well_jump in Hwell_ins.
+  destruct Hwell_ins as (Hdst & Hsrc & Hlddw & Hjmp).
 
-      apply reg_inv_eval_reg with (r:= r0) in Hreg as Heval_reg.
-      destruct Heval_reg as (vl0 & Heval_reg).
-      rewrite Heval_reg; clear Heval_reg.
-      unfold rBPFValues.sint32_to_vint.
+  apply verifier_inv_dst_reg in Hdst.
+  apply verifier_inv_src_reg in Hsrc.
+  destruct Hdst as (dst & Hdst).
+  destruct Hsrc as (src & Hsrc).
+  rewrite Hdst, Hsrc.
 
+  remember (Nat.land (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) 7) as Hand.
 
+  clear HeqHand.
+  destruct Hand.
+  { (**LD_IMM *)
+    unfold Decode.get_instruction_ld.
+    unfold well_lddw, is_lddw in Hlddw.
+    rewrite opcode_and_255.
 
-      unfold rBPFValues.val_intuoflongu, Val.longofint.
-      remember (Int.repr (Int64.unsigned (Int64.add vl (Int64.repr (Int.signed o))))) as addr.
-      assert (Hcheck_mem: exists ret, check_mem Memtype.Writable m (Vint addr) st = Some (ret, st)). {
-        rewrite check_memM_P; auto.
-        eexists; reflexivity.
-        constructor.
-      }
-      destruct Hcheck_mem as (ret & Hcheck_mem);
-      rewrite Hcheck_mem.
-      unfold cmp_ptr32_nullM.
-      assert (Hcheck_mem' := Hcheck_mem).
-      rewrite check_memM_P in Hcheck_mem; auto.
-      2:{ constructor. }
-      inversion Hcheck_mem.
-      rewrite H0.
-      unfold check_memP in H0.
-      unfold State.eval_mem.
-
-      destruct is_well_chunk_boolP eqn: Hwell_chunk_bool.
-      2:{
-        subst.
-        unfold rBPFValues.cmp_ptr32_null; simpl.
-        rewrite Int.eq_true.
-        intro H; inversion H.
-      }
-      remember (check_mem_auxP st (eval_mem_num st) Memtype.Writable m 
-              (Vint addr) (State.eval_mem_regions st)) as res.
-      symmetry in Heqres.
-      eapply mem_inv_check_mem_auxP_valid_pointer in Heqres; eauto.
-      2:{ constructor. }
-      destruct Heqres as [ (b & ofs & Hptr & Hvalid) | Hnull]; subst.
-      2:{ unfold rBPFValues.cmp_ptr32_null; simpl.
-          rewrite Int.eq_true.
-          change Vnullptr with (Vint Int.zero); simpl.
-          rewrite Int.eq_true.
-          intro H; inversion H.
-      }
-      unfold rBPFValues.cmp_ptr32_null; simpl.
-      rewrite Int.eq_true, Hvalid; simpl.
-      rewrite Hvalid.
-      unfold store_mem_reg, State.store_mem_reg.
-      (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
-      assert (Hwell_chunk: is_well_chunk m). {
-        unfold is_well_chunk_boolP in Hwell_chunk_bool.
-        unfold is_well_chunk.
-        destruct m; try inversion Hwell_chunk_bool.
-        all: constructor.
-      }
-      unfold store_mem_reg, State.store_mem_reg, State.vlong_to_vint_or_vlong, State._to_vlong, Regs.val64_zero.
-      unfold rBPFValues.cmp_ptr32_null in *; simpl in Hcheck_mem.
-      rewrite Int.eq_true, Hvalid in Hcheck_mem; simpl in Hcheck_mem.
-      inversion Hcheck_mem.
-      rewrite H0.
-      assert (Hneq: match
-  Val.cmpu_bool (Memory.Mem.valid_pointer (bpf_m st)) Ceq Vnullptr (Vptr b ofs)
-with
-| Some false => Vptr b ofs
-| _ => Vnullptr
-end <> Vnullptr). {
-      change Vnullptr with (Vint Int.zero); simpl.
-      rewrite Int.eq_true, Hvalid; simpl.
-      intro H; inversion H.
-    }
-
-      destruct m; try inversion Hwell_chunk.
-      all: eapply check_mem_store with (v := Vlong vl0) in Hmem; eauto.
-      all: unfold Val.cmpu_bool in Hmem; change Vnullptr with (Vint Int.zero) in Hmem; simpl in Hmem.
-      all: rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem.
-      all: simpl; destruct Hmem as (m & Hstore & Hinv); unfold vlong_or_vint_to_vint_or_vlong, vlong_to_vint_or_vlong in Hstore; rewrite Hstore.
-      all: intro H; inversion H.
-    +
-      apply reg_inv_eval_reg with (r:= r) in Hreg as Heval_reg.
-      destruct Heval_reg as (vl & Heval_reg).
-      rewrite Heval_reg; clear Heval_reg.
-      unfold rBPFValues.sint32_to_vint.
-
-      unfold rBPFValues.val_intuoflongu, Val.longofint.
-      remember (Int.repr (Int64.unsigned (Int64.add vl (Int64.repr (Int.signed o))))) as addr.
-      assert (Hcheck_mem: exists ret, check_mem Memtype.Writable m (Vint addr) st = Some (ret, st)). {
-        rewrite check_memM_P; auto.
-        eexists; reflexivity.
-        constructor.
-      }
-      destruct Hcheck_mem as (ret & Hcheck_mem);
-      rewrite Hcheck_mem.
-      unfold cmp_ptr32_nullM.
-      assert (Hcheck_mem' := Hcheck_mem).
-      rewrite check_memM_P in Hcheck_mem; auto.
-      2:{ constructor. }
-      inversion Hcheck_mem.
-      rewrite H0.
-      unfold check_memP in H0.
-      unfold State.eval_mem.
-
-      destruct is_well_chunk_boolP eqn: Hwell_chunk_bool.
-      2:{
-        subst.
-        unfold rBPFValues.cmp_ptr32_null; simpl.
-        rewrite Int.eq_true.
-        intro H; inversion H.
-      }
-      remember (check_mem_auxP st (eval_mem_num st) Memtype.Writable m 
-              (Vint addr) (State.eval_mem_regions st)) as res.
-      symmetry in Heqres.
-      eapply mem_inv_check_mem_auxP_valid_pointer in Heqres; eauto.
-      2:{ constructor. }
-      destruct Heqres as [ (b & ofs & Hptr & Hvalid) | Hnull]; subst.
-      2:{ unfold rBPFValues.cmp_ptr32_null; simpl.
-          rewrite Int.eq_true.
-          change Vnullptr with (Vint Int.zero); simpl.
-          rewrite Int.eq_true.
-          intro H; inversion H.
-      }
-      unfold rBPFValues.cmp_ptr32_null; simpl.
-      rewrite Int.eq_true, Hvalid; simpl.
-      rewrite Hvalid.
-      unfold store_mem_reg, State.store_mem_reg.
-      (**r from the fact Hptr and Hcheck_mem, we know Hwell_chunk *)
-      assert (Hwell_chunk: is_well_chunk m). {
-        unfold is_well_chunk_boolP in Hwell_chunk_bool.
-        unfold is_well_chunk.
-        destruct m; try inversion Hwell_chunk_bool.
-        all: constructor.
-      }
-      unfold store_mem_imm, State.store_mem_imm, vint_to_vint_or_vlong, State._to_vlong, Regs.val64_zero.
-      unfold rBPFValues.cmp_ptr32_null in *; simpl in Hcheck_mem.
-      rewrite Int.eq_true, Hvalid in Hcheck_mem; simpl in Hcheck_mem.
-      inversion Hcheck_mem.
-      rewrite H0.
-      assert (Hneq: match
-  Val.cmpu_bool (Memory.Mem.valid_pointer (bpf_m st)) Ceq Vnullptr (Vptr b ofs)
-with
-| Some false => Vptr b ofs
-| _ => Vnullptr
-end <> Vnullptr). {
-      change Vnullptr with (Vint Int.zero); simpl.
-      rewrite Int.eq_true, Hvalid; simpl.
-      intro H; inversion H.
-    }
-
-      destruct m; try inversion Hwell_chunk.
-      all: eapply check_mem_store with (v := Vint i) in Hmem; eauto.
-      all: unfold Val.cmpu_bool in Hmem; change Vnullptr with (Vint Int.zero) in Hmem; simpl in Hmem.
-      all: rewrite Int.eq_true, Hvalid in Hmem; simpl in Hmem.
-      all: simpl; destruct Hmem as (m & Hstore & Hinv); unfold vlong_or_vint_to_vint_or_vlong, vint_to_vint_or_vlong in Hstore; rewrite Hstore.
-      all: intro H; inversion H.
-  - (* BPF_CALL *)
-    assert (Hget_call: forall i, exists ptr,
-      _bpf_get_call (Vint i) st = Some (ptr, st) /\
-      (ptr = Vnullptr \/ (exists b ofs, ptr = Vptr b ofs))). {
-      intro.
-      apply lemma_bpf_get_call.
-    }
-    specialize (Hget_call (Int.repr (Int64.unsigned (Int64.repr (Int.signed i))))).
-    destruct Hget_call as (ptr & Hget_call & Hres).
-    rewrite Hget_call.
-    unfold cmp_ptr32_nullM.
-    destruct Hres as [Hnull | (b & ofs & Hptr)]; subst.
-    + simpl.
-      rewrite Int.eq_true.
-      intro H; inversion H.
-    + assert (Hexec: forall b ofs st1,
-      exists v st2, exec_function (Vptr b ofs) st1 = Some (Vint v, st2) /\ rBPFValues.cmp_ptr32_null (State.eval_mem st1) (Vptr b ofs) = Some false). {
-          apply lemma_exec_function0.
-        }
-        specialize (Hexec b ofs st).
-        destruct Hexec as (res & st1 & Hexec & Hvalid).
-        rewrite Hvalid, Hexec.
+    remember (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) as Hand24.
+    do 24 (destruct Hand24; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand24.
+    - destruct Int.ltu.
+      + 
+        rewrite Heqpc in Hlddw.
+        rewrite Z2Nat.id in Hlddw; [| apply Int_unsigned_ge_0].
+        rewrite Int.repr_unsigned in Hlddw.
+        rewrite <- Hlen in Hlddw.
+        rewrite Hlddw.
         simpl.
-        intro H; inversion H.
-  - (* BPF_RET *)
-    intro H; inversion H.
-  - (* BPF_ERR *)
-    intro H; inversion H.
+        change (Int64.iwordsize') with (Int.repr 64).
+        change (Int.ltu (Int.repr 32) (Int.repr 64)) with true.
+        simpl.
+        unfold Int.cmpu in Hlddw.
+        rewrite Hlddw.
+        simpl.
+        intro Hfalse; inversion Hfalse.
+      + intro Hfalse; inversion Hfalse.
+    - intro Hfalse; inversion Hfalse.
+  }
+
+  destruct Hand.
+  { (**r LD_REG *)
+    unfold Decode.get_instruction_ldx.
+    rewrite opcode_and_255.
+
+    remember (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) as Hand.
+    unfold step_load_x_operation.
+    unfold eval_mem, eval_mem_regions, eval_reg, get_addr_ofs.
+    unfold bindM, returnM.
+    unfold rBPFValues.val_intuoflongu, rBPFValues.sint32_to_vint.
+    unfold Val.longofint.
+    eapply reg_inv_eval_reg in Hreg.
+    destruct Hreg as (i & Hreg).
+    do 97 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P in Hmem as Hcheck_mem; [| constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember ((check_memP Readable Mint32
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st)) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          eapply check_mem_load in Hcheck_mem; eauto.
+          unfold load_mem, State.load_mem.
+          destruct Hcheck_mem as (res & Hcheck_mem & His_long).
+          rewrite Hcheck_mem.
+          unfold is_vlong_or_vint in His_long.
+          unfold _to_vlong.
+          destruct res; inversion His_long.
+          unfold upd_reg.
+          intro Hfalse; inversion Hfalse.
+
+          unfold upd_reg.
+          intro Hfalse; inversion Hfalse.
+          simpl. constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P in Hmem as Hcheck_mem; [| constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember ((check_memP Readable Mint16unsigned
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st)) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          eapply check_mem_load in Hcheck_mem; eauto.
+          unfold load_mem, State.load_mem.
+          destruct Hcheck_mem as (res & Hcheck_mem & His_long).
+          rewrite Hcheck_mem.
+          unfold is_vlong_or_vint in His_long.
+          unfold _to_vlong.
+          destruct res; inversion His_long.
+          unfold upd_reg.
+          intro Hfalse; inversion Hfalse.
+
+          unfold upd_reg.
+          intro Hfalse; inversion Hfalse.
+          simpl. constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P in Hmem as Hcheck_mem; [| constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember ((check_memP Readable Mint8unsigned
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st)) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          eapply check_mem_load in Hcheck_mem; eauto.
+          unfold load_mem, State.load_mem.
+          destruct Hcheck_mem as (res & Hcheck_mem & His_long).
+          rewrite Hcheck_mem.
+          unfold is_vlong_or_vint in His_long.
+          unfold _to_vlong.
+          destruct res; inversion His_long.
+          unfold upd_reg.
+          intro Hfalse; inversion Hfalse.
+
+          unfold upd_reg.
+          intro Hfalse; inversion Hfalse.
+          simpl. constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P in Hmem as Hcheck_mem; [| constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember ((check_memP Readable Mint64
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st)) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          eapply check_mem_load in Hcheck_mem; eauto.
+          unfold load_mem, State.load_mem.
+          destruct Hcheck_mem as (res & Hcheck_mem & His_long).
+          rewrite Hcheck_mem.
+          unfold Mem.loadv in Hcheck_mem.
+          apply Mem.load_type in Hcheck_mem.
+          unfold Val.has_type in Hcheck_mem; simpl in Hcheck_mem.
+          destruct res; inversion His_long; inversion Hcheck_mem.
+          unfold upd_reg.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    intro Hfalse; inversion Hfalse.
+  }
+
+  destruct Hand.
+  { (**r ST_IMM *)
+    unfold Decode.get_instruction_st, bindM, returnM.
+    rewrite opcode_and_255.
+
+    unfold step_store_operation.
+    unfold eval_mem, eval_mem_regions, eval_reg, get_addr_ofs.
+    unfold bindM, returnM.
+    unfold rBPFValues.val_intuoflongu, Val.longofint, rBPFValues.sint32_to_vint.
+
+    eapply reg_inv_eval_reg in Hreg.
+    destruct Hreg as (i & Hreg).
+
+    remember (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) as Hand.
+    do 98 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint32
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          remember (Regs.get_immediate
+                 (List.nth (Z.to_nat (Int.unsigned (pc_loc st))) (ins st) Int64.zero)) as imm.
+          eapply check_mem_store with (v:= Vint imm) in Hcheck_mem; eauto.
+          unfold store_mem_imm, State.store_mem_imm.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint16unsigned
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          remember (Regs.get_immediate
+                 (List.nth (Z.to_nat (Int.unsigned (pc_loc st))) (ins st) Int64.zero)) as imm.
+          eapply check_mem_store with (v:= Vint imm) in Hcheck_mem; eauto.
+          unfold store_mem_imm, State.store_mem_imm.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint8unsigned
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          remember (Regs.get_immediate
+                 (List.nth (Z.to_nat (Int.unsigned (pc_loc st))) (ins st) Int64.zero)) as imm.
+          eapply check_mem_store with (v:= Vint imm) in Hcheck_mem; eauto.
+          unfold store_mem_imm, State.store_mem_imm.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint64
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add i
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          remember (Regs.get_immediate
+                 (List.nth (Z.to_nat (Int.unsigned (pc_loc st))) (ins st) Int64.zero)) as imm.
+          eapply check_mem_store with (v:= Vint imm) in Hcheck_mem; eauto.
+          unfold store_mem_imm, State.store_mem_imm.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    intro Hfalse; inversion Hfalse.
+  }
+
+  destruct Hand.
+  { (**r ST_REG *)
+    unfold Decode.get_instruction_stx, bindM, returnM.
+    rewrite opcode_and_255.
+
+    unfold step_store_operation.
+    unfold eval_mem, eval_mem_regions, eval_reg, get_addr_ofs.
+    unfold bindM, returnM.
+    unfold rBPFValues.val_intuoflongu, Val.longofint, rBPFValues.sint32_to_vint.
+
+    eapply reg_inv_eval_reg with (r:= dst) in Hreg as Hreg_dst.
+    eapply reg_inv_eval_reg with (r:= src) in Hreg as Hreg_src.
+    destruct Hreg_dst as (r_dst & Hreg_dst).
+    destruct Hreg_src as (r_src & Hreg_src).
+
+    remember (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) as Hand.
+    do 99 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg_dst.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint32
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add r_dst
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      unfold store_mem_reg, State.store_mem_reg.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          rewrite Hreg_src.
+          eapply check_mem_store with (v:= Vlong r_src) in Hcheck_mem; eauto.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold Mem.storev, vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg_dst.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint16unsigned
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add r_dst
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      unfold store_mem_reg, State.store_mem_reg.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          rewrite Hreg_src.
+          eapply check_mem_store with (v:= Vlong r_src) in Hcheck_mem; eauto.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold Mem.storev, vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg_dst.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint8unsigned
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add r_dst
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      unfold store_mem_reg, State.store_mem_reg.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          rewrite Hreg_src.
+          eapply check_mem_store with (v:= Vlong r_src) in Hcheck_mem; eauto.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold Mem.storev, vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    do 7 (destruct Hand; [intro Hfalse; inversion Hfalse |]).
+    destruct Hand.
+    {
+      rewrite Hreg_dst.
+      simpl.
+      eapply check_memM_P with (perm := Writable) in Hmem as Hcheck_mem; [|constructor].
+      rewrite Hcheck_mem.
+      unfold cmp_ptr32_nullM, bindM, returnM.
+
+      remember (check_memP Writable Mint64
+         (Vint
+            (Int.repr
+               (Int64.unsigned
+                  (Int64.add r_dst
+                     (Int64.repr
+                        (Int.signed (Regs.get_offset (List.nth pc (ins st) Int64.zero))))))))
+         st) as res.
+      symmetry in Heqres.
+      unfold State.eval_mem.
+      unfold store_mem_reg, State.store_mem_reg.
+      eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+        + simpl.
+          rewrite Hvalid.
+          rewrite Int.eq_true.
+          simpl.
+          rewrite Hreg_src.
+          eapply check_mem_store with (v:= Vlong r_src) in Hcheck_mem; eauto.
+          destruct Hcheck_mem as (res & Hcheck_mem & Hmem').
+          unfold Mem.storev, vlong_or_vint_to_vint_or_vlong in Hcheck_mem.
+          rewrite Hcheck_mem.
+          intro Hfalse; inversion Hfalse.
+
+          simpl. constructor.
+          unfold is_vlong_or_vint; constructor.
+          intro Hfalse; inversion Hfalse.
+        + unfold rBPFValues.cmp_ptr32_null.
+          unfold Val.cmpu_bool.
+          change Vnullptr with (Vint Int.zero); simpl.
+          rewrite Int.eq_true.
+          intro Hfalse; inversion Hfalse.
+      - constructor.
+    }
+    intro Hfalse; inversion Hfalse.
+  }
+
+  destruct Hand.
+  { (**r ALU32 *)
+    remember (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) as Hand.
+    match goal with
+    | |- context[if ?X then _ else _] =>
+      destruct X
+    end.
+    - (**r ALU32_IMM *)
+      remember (Regs.get_immediate (List.nth pc (ins st) Int64.zero)) as imm.
+      unfold Decode.get_instruction_alu32_imm.
+
+      unfold step_alu_binary_operation, eval_reg32, eval_src32, bindM, returnM.
+      unfold eval_reg.
+      unfold rBPFValues.sint32_to_vint, rBPFValues.val_intuoflongu, Val.longofintu.
+
+      eapply reg_inv_eval_reg in Hreg.
+      destruct Hreg as (i & Hreg).
+      do 52 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg; simpl;
+        destruct Int.eq; simpl; intro Hfalse; inversion Hfalse.
+      do 47 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg; simpl.
+        change Int.iwordsize with (Int.repr 32).
+        destruct Int.ltu; simpl; intro Hfalse; inversion Hfalse.
+      do 15 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg; simpl.
+        change Int.iwordsize with (Int.repr 32).
+        destruct Int.ltu; simpl; intro Hfalse; inversion Hfalse.
+      do 31 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg; simpl.
+        destruct Int.eq; simpl; intro Hfalse; inversion Hfalse.
+      do 47 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg; simpl.
+        change Int.iwordsize with (Int.repr 32).
+        destruct Int.ltu; simpl; intro Hfalse; inversion Hfalse.
+      intro Hfalse; inversion Hfalse.
+    - (**r ALU32_REG *)
+      unfold Decode.get_instruction_alu32_reg.
+      unfold step_alu_binary_operation, eval_reg32, eval_src32, eval_reg32, rBPFValues.val_intuoflongu, Val.longofintu, eval_reg, bindM, returnM.
+
+      eapply reg_inv_eval_reg with (r:= dst) in Hreg as Hreg_dst.
+      eapply reg_inv_eval_reg with (r:= src) in Hreg as Hreg_src.
+      destruct Hreg_dst as (r_dst & Hreg_dst).
+      destruct Hreg_src as (r_src & Hreg_src).
+
+      do 60 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl;
+        destruct Int.eq; intro Hfalse; inversion Hfalse.
+      do 47 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        change Int.iwordsize with (Int.repr 32).
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+      do 15 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        change Int.iwordsize with (Int.repr 32).
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+      do 31 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        destruct Int.eq; intro Hfalse; inversion Hfalse.
+      do 31 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_src; simpl.
+        intro Hfalse; inversion Hfalse.
+      do 15 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        change Int.iwordsize with (Int.repr 32).
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+      intro Hfalse; inversion Hfalse.
+  }
+
+  destruct Hand.
+  { (**r Branch *)
+    remember (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) as Hand.
+    match goal with
+    | |- context[if ?X then _ else _] =>
+      destruct X
+    end.
+    - (**r Branch_IMM *)
+      remember (Regs.get_immediate (List.nth pc (ins st) Int64.zero)) as imm.
+      unfold is_jump in Hjmp, HeqHand.
+      unfold Decode.get_instruction_branch_imm.
+      rewrite <- HeqHand in Hjmp.
+      remember (Regs.get_offset (List.nth pc (ins st) Int64.zero)) as ofs.
+      rewrite Heqpc in Hjmp.
+      rewrite Z2Nat.id in Hjmp; [| apply Int_unsigned_ge_0].
+      rewrite Int.repr_unsigned in Hjmp.
+      rewrite <- Hlen in Hjmp.
+      (*
+      unfold step_alu_binary_operation, eval_reg32, eval_src32, bindM, returnM.
+      unfold eval_reg.
+      unfold rBPFValues.sint32_to_vint, rBPFValues.val_intuoflongu, Val.longofintu. *)
+      unfold step_branch_cond, eval_reg, eval_src, Val.longofint, rBPFValues.sint32_to_vint, rBPFValues.compl_eq, bindM, returnM.
+
+Ltac destruct_if_jmp Hjmp :=
+  match goal with
+  | |- (if ?X then _ else _) _ <> None =>
+    destruct X; [rewrite Hjmp |]; intro Hfalse; inversion Hfalse
+  | |- Some _ <> None =>
+      intro Hfalse; inversion Hfalse
+  end.
+      eapply reg_inv_eval_reg in Hreg.
+      destruct Hreg as (i & Hreg).
+      do 21 (destruct Hand; [try (rewrite Hjmp); intro Hfalse; inversion Hfalse |]).
+      unfold Int.cmpu in Hjmp.
+      do 64 (destruct Hand; [try (rewrite Hreg; simpl); destruct_if_jmp Hjmp |]).
+      do 48 (destruct Hand; [try (rewrite Hreg; simpl); destruct_if_jmp Hjmp |]).
+      destruct Hand.
+      assert (Heq: forall (i : int) (st1 : state),
+  exists ptr : val,
+    _bpf_get_call (Vint i) st1 = Some (ptr, st1) /\
+    (ptr = Vnullptr \/ (exists (b : block) (ofs : ptrofs), ptr = Vptr b ofs /\ ((Mem.valid_pointer (bpf_m st1) b (Ptrofs.unsigned ofs)
+        || Mem.valid_pointer (bpf_m st1) b (Ptrofs.unsigned ofs - 1)) = true)%bool))) by (apply lemma_bpf_get_call).
+      specialize (Heq (Int.repr (Int64.unsigned (Int64.repr (Int.signed imm)))) st).
+      destruct Heq as (ptr & Heq & Hptr).
+      rewrite Heq.
+      unfold cmp_ptr32_nullM, rBPFValues.cmp_ptr32_null.
+      destruct Hptr as [Hptr| (b & ofs' & Hptr & Hvalid)]; subst.
+      { simpl.
+        rewrite Int.eq_true; simpl.
+        intro Hfalse; inversion Hfalse.
+      }
+      { simpl.
+        unfold State.eval_mem.
+        rewrite Int.eq_true, Hvalid; simpl. clear Heq.
+        assert (Heq: forall (b : block) (ofs : ptrofs) (st1 : state),
+  exists (v : int) (st2 : state),
+    exec_function (Vptr b ofs) st1 = Some (Vint v, st2) /\
+    rBPFValues.cmp_ptr32_null (State.eval_mem st1) (Vptr b ofs) = Some false) by (apply lemma_exec_function0).
+        specialize (Heq b ofs' st).
+        destruct Heq as (v & st2 & Heq & _).
+        rewrite Heq.
+        simpl.
+        intro Hfalse; inversion Hfalse.
+      }
+
+      do 48 (destruct Hand; [try (rewrite Hreg; simpl); destruct_if_jmp Hjmp |]).
+      do 32 (destruct Hand; [try (rewrite Hreg; simpl); destruct_if_jmp Hjmp |]).
+      intro Hfalse; inversion Hfalse.
+    - (**r Branch_REG *)
+      unfold Decode.get_instruction_branch_reg.
+      unfold is_jump in Hjmp, HeqHand.
+      rewrite <- HeqHand in Hjmp.
+      remember (Regs.get_offset (List.nth pc (ins st) Int64.zero)) as ofs.
+      rewrite Heqpc in Hjmp.
+      rewrite Z2Nat.id in Hjmp; [| apply Int_unsigned_ge_0].
+      rewrite Int.repr_unsigned in Hjmp.
+      rewrite <- Hlen in Hjmp.
+
+      unfold step_branch_cond, eval_src, eval_reg, Val.longofint, rBPFValues.sint32_to_vint, rBPFValues.compl_eq, bindM, returnM.
+
+      eapply reg_inv_eval_reg with (r:= dst) in Hreg as Hreg_dst.
+      eapply reg_inv_eval_reg with (r:= src) in Hreg as Hreg_src.
+      destruct Hreg_dst as (r_dst & Hreg_dst).
+      destruct Hreg_src as (r_src & Hreg_src).
+
+      unfold Int.cmpu in Hjmp.
+      do 30 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); destruct_if_jmp Hjmp |]).
+      do 192 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); destruct_if_jmp Hjmp |]).
+      intro Hfalse; inversion Hfalse.
+  }
+
+
+  destruct Hand.
+  { (**r ILL_INS *)
+    intro Hfalse; inversion Hfalse.
+  }
+
+  destruct Hand.
+  { (**r ALU64 *)
+    remember (Regs.get_opcode (List.nth pc (ins st) Int64.zero)) as Hand.
+    match goal with
+    | |- context[if ?X then _ else _] =>
+      destruct X
+    end.
+    - (**r ALU64_IMM *)
+      remember (Regs.get_immediate (List.nth pc (ins st) Int64.zero)) as imm.
+      unfold Decode.get_instruction_alu64_imm.
+
+      unfold step_alu_binary_operation, eval_src, eval_reg, upd_reg, bindM, Val.longofint, rBPFValues.sint32_to_vint, returnM.
+
+      eapply reg_inv_eval_reg in Hreg.
+      destruct Hreg as (i & Hreg).
+      do 55 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg; simpl.
+        destruct Int64.eq; intro Hfalse; inversion Hfalse.
+      do 47 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu.
+        rewrite Hreg; simpl.
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+      do 15 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu.
+        rewrite Hreg; simpl.
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+      do 31 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        unfold rBPFValues.compl_ne.
+        rewrite Hreg; simpl.
+        destruct Int64.eq; intro Hfalse; inversion Hfalse.
+      do 47 (destruct Hand; [try (rewrite Hreg; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        unfold rBPFValues.compu_lt_32, rBPFValues.val_intuoflongu.
+        rewrite Hreg; simpl.
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+      intro Hfalse; inversion Hfalse.
+    - (**r ALU64_REG *)
+      unfold Decode.get_instruction_alu64_reg.
+
+      unfold step_alu_binary_operation, eval_src, eval_reg, upd_reg, rBPFValues.val_intuoflongu, Val.longofintu, eval_reg, bindM, returnM.
+
+      eapply reg_inv_eval_reg with (r:= dst) in Hreg as Hreg_dst.
+      eapply reg_inv_eval_reg with (r:= src) in Hreg as Hreg_src.
+      destruct Hreg_dst as (r_dst & Hreg_dst).
+      destruct Hreg_src as (r_src & Hreg_src).
+
+      do 63 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        destruct Int64.eq; intro Hfalse; inversion Hfalse.
+
+      do 47 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+
+      do 15 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+
+      do 31 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        destruct Int64.eq; intro Hfalse; inversion Hfalse.
+
+      do 31 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_src; simpl.
+        intro Hfalse; inversion Hfalse.
+      do 15 (destruct Hand; [try (rewrite Hreg_dst, Hreg_src; simpl); intro Hfalse; inversion Hfalse |]).
+      destruct Hand.
+        rewrite Hreg_dst, Hreg_src; simpl.
+        destruct Int.ltu; intro Hfalse; inversion Hfalse.
+
+      intro Hfalse; inversion Hfalse.
+  }
+  intro Hfalse; inversion Hfalse.
+Qed.
+
+Theorem bpf_interpreter_aux_preserving_inv:
+  forall fuel st1 st2 t
+    (Hreg: register_inv st1)
+    (Hmem: memory_inv st1)
+    (Hver: verifier_inv st1)
+    (Hsem: bpf_interpreter_aux fuel st1 = Some (t, st2)),
+       register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
+Proof.
+  induction fuel; intros.
+  - simpl in Hsem.
+    inversion Hsem; split; [eapply reg_inv_upd_flag; eauto |
+        split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
+  - simpl in Hsem.
+    unfold eval_ins_len, eval_pc, eval_flag, upd_pc_incr, bindM, returnM in Hsem.
+    destruct Int.ltu.
+    + destruct step eqn: Hstep; [| inversion Hsem].
+      destruct p.
+      destruct Flag.flag_eq.
+      * destruct Int.ltu.
+        {
+          eapply step_preserving_inv in Hstep; eauto.
+          destruct Hstep as (Hreg_s & Hmem_s & Hver_s).
+          assert (Hinv: register_inv (State.upd_pc_incr s) /\ memory_inv (State.upd_pc_incr s) /\ verifier_inv (State.upd_pc_incr s)). {
+            split; [eapply reg_inv_upd_pc_incr; eauto |
+          split; [eapply mem_inv_upd_pc_incr; eauto | unfold verifier_inv in *; simpl; assumption]].
+          }
+          destruct Int.cmpu; [| inversion Hsem].
+          destruct Hinv as (Hreg_s' & Hmem_s' & Hver_s').
+          specialize (IHfuel (State.upd_pc_incr s) st2 t Hreg_s' Hmem_s' Hver_s' Hsem).
+          congruence.
+        }
+        {
+          eapply step_preserving_inv in Hstep; eauto.
+          destruct Hstep as (Hreg_s & Hmem_s & Hver_s).
+          assert (Hinv: register_inv (State.upd_pc_incr s) /\ memory_inv (State.upd_pc_incr s) /\ verifier_inv (State.upd_pc_incr s)). {
+            split; [eapply reg_inv_upd_pc_incr; eauto |
+          split; [eapply mem_inv_upd_pc_incr; eauto | unfold verifier_inv in *; simpl; assumption]].
+          }
+          inversion Hsem.
+          clear - Hreg_s Hmem_s Hver_s.
+
+          split; [eapply reg_inv_upd_flag; eauto |
+          split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
+        }
+
+      * inversion Hsem. subst.
+        eapply step_preserving_inv in Hstep; eauto.
+    + inversion Hsem; split; [eapply reg_inv_upd_flag; eauto |
+        split; [eapply mem_inv_upd_flag; eauto | unfold verifier_inv in *; simpl; assumption]].
+Qed.
+
+Theorem bpf_interpreter_preserving_inv:
+  forall fuel st1 st2 t
+    (Hreg: register_inv st1)
+    (Hmem: memory_inv st1)
+    (Hver: verifier_inv st1)
+    (Hsem: bpf_interpreter fuel st1 = Some (t, st2)),
+       register_inv st2 /\ memory_inv st2 /\ verifier_inv st2.
+Proof.
+  intros.
+  unfold bpf_interpreter in Hsem.
+  unfold eval_mem_regions, get_mem_region, get_start_addr, upd_reg, eval_flag, eval_reg, bindM, returnM in Hsem.
+  destruct (0 <? mrs_num st1)%nat; [| inversion Hsem].
+  destruct List.nth_error; [| inversion Hsem].
+  destruct Val.longofintu; inversion Hsem.
+  destruct bpf_interpreter_aux eqn: Haux; [| inversion Hsem].
+  destruct p.
+  eapply bpf_interpreter_aux_preserving_inv in Haux; eauto.
+  - destruct Flag.flag_eq.
+    + inversion H0.
+      subst.
+      auto.
+    + inversion H0.
+      subst.
+      auto.
+  - destruct Flag.flag_eq.
+    + eapply reg_inv_upd_reg; eauto.
+    + eapply reg_inv_upd_reg; eauto.
+Qed.
+
+Theorem inv_avoid_bpf_interpreter_aux_undef:
+  forall f st
+    (Hreg: register_inv st)
+    (Hmem: memory_inv st)
+    (Hver: verifier_inv st),
+      bpf_interpreter_aux f st <> None.
+Proof.
+  induction f.
+  intros.
+  - simpl.
+    unfold upd_flag.
+    intro Hfalse; inversion Hfalse.
+  - simpl.
+    intros.
+    unfold eval_ins_len, eval_pc, eval_flag, upd_pc_incr, upd_flag, bindM, returnM.
+    unfold State.eval_pc, State.eval_ins_len.
+
+    destruct Int.ltu eqn: Hltu.
+    + eapply inv_avoid_step_undef in Hreg as Hstep; eauto.
+      destruct step eqn: H.
+      * destruct p.
+        destruct Flag.flag_eq; [| intro Hfalse; inversion Hfalse].
+        destruct (Int.ltu (Int.add (pc_loc s) Int.one) (Int.repr (Z.of_nat (ins_len s)))) eqn: Hltu'.
+        unfold Int.cmpu.
+        rewrite Hltu'.
+        eapply step_preserving_inv in H; eauto.
+        clear - IHf H.
+        remember (State.upd_pc_incr s) as st1.
+        assert (Hupd_inv: register_inv st1 /\ memory_inv st1 /\ verifier_inv st1). {
+          destruct H as (Hreg & Hmem & Hver).
+          subst.
+          split; [eapply reg_inv_upd_pc_incr; eauto |
+            split; [eapply mem_inv_upd_pc_incr; eauto | unfold verifier_inv in *; simpl; assumption]].
+        }
+        destruct Hupd_inv as (Hreg & Hmem & Hver).
+        apply IHf; auto.
+        intro Hfalse; inversion Hfalse.
+      * assumption.
+    + intro Hfalse; inversion Hfalse.
+Qed.
+
+Theorem inv_avoid_bpf_interpreter_undef:
+  forall st f
+    (Hreg: register_inv st)
+    (Hmem: memory_inv st)
+    (Hver: verifier_inv st),
+      bpf_interpreter f st <> None.
+Proof.
+  intros.
+  unfold bpf_interpreter.
+  unfold eval_mem_regions, get_mem_region, get_start_addr, upd_reg, eval_flag, eval_reg, bindM, returnM.
+  set (Hmem' := Hmem).
+  unfold memory_inv in Hmem'.
+  destruct Hmem' as (Hlen_low & Hlen & _ & Hinv_memory_regions).
+  assert (Hlt: Nat.ltb 0 (mrs_num st) = true). {
+    rewrite Nat.ltb_lt.
+    lia.
+  }
+  rewrite Hlt. clear Hlt.
+  unfold State.eval_mem_regions.
+  assert (Hlt: (0 < length (bpf_mrs st))%nat). {
+    rewrite Hlen.
+    lia.
+  }
+  set (Hneq := Hlt).
+  rewrite <- List.nth_error_Some in Hneq.
+  erewrite List.nth_error_nth' with (d:= MemRegion.default_memory_region); [| assumption].
+
+  apply List.nth_In with (d:= MemRegion.default_memory_region) in Hlt.
+  eapply In_inv_memory_regions in Hlt; eauto.
+  remember (List.nth 0 (bpf_mrs st) MemRegion.default_memory_region) as mr.
+  unfold inv_memory_region in Hlt.
+  destruct Hlt as (b & _ & _ & _ & (base & len & Hstart & _)).
+  rewrite Hstart.
+  simpl.
+
+  remember (State.upd_reg Regs.R1 (Vlong (Int64.repr (Int.unsigned base))) st) as st1.
+  assert (Hinv: register_inv st1 /\ memory_inv st1 /\ verifier_inv st1). {
+    subst.
+    split.
+    eapply reg_inv_upd_reg; eauto.
+    split.
+    eapply mem_inv_upd_reg; eauto.
+    unfold verifier_inv in *; unfold State.upd_reg; simpl.
+    assumption.
+  }
+  clear - Hinv.
+  destruct Hinv as (Hreg & Hmem & Hver).
+
+  eapply inv_avoid_bpf_interpreter_aux_undef in Hmem; eauto.
+
+  destruct (bpf_interpreter_aux f st1) eqn: Haux.
+  destruct p.
+  destruct Flag.flag_eq; intro Hfalse; inversion Hfalse.
+  intro.
+  apply Hmem.
+  apply Haux.
 Qed.

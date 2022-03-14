@@ -940,6 +940,8 @@ void bpf_interpreter_aux(unsigned int fuel)
   unsigned int len;
   unsigned int pc;
   int f;
+  unsigned int len0;
+  unsigned int pc0;
   if (fuel == 0U) {
     upd_flag(-5);
     return;
@@ -947,19 +949,21 @@ void bpf_interpreter_aux(unsigned int fuel)
     fuel0 = fuel - 1U;
     len = eval_ins_len();
     pc = eval_pc();
-    if (0U <= pc) {
-      if (pc < len) {
-        step();
-        f = eval_flag();
-        if (f == 0) {
+    if (pc < len) {
+      step();
+      f = eval_flag();
+      if (f == 0) {
+        len0 = eval_ins_len();
+        pc0 = eval_pc();
+        if (pc0 + 1U < len0) {
           upd_pc_incr();
           bpf_interpreter_aux(fuel0);
           return;
         } else {
+          upd_flag(-5);
           return;
         }
       } else {
-        upd_flag(-5);
         return;
       }
     } else {

@@ -608,15 +608,13 @@ Ltac correct_forward L :=
           destruct (x1 =? 5)%nat; try reflexivity.
           apply Coq.Logic.FunctionalExtensionality.functional_extensionality.
           intros.
-          destruct (Int.cmpu Cle Int.zero (Int.add x x5) &&
-     Int.cmpu Clt (Int.add x x5) (Int.repr (Z.of_nat (ins_len x0))))%bool; try reflexivity.
+          destruct (Int.cmpu Clt (Int.add x x5) (Int.repr (Z.of_nat (ins_len x0))))%bool; try reflexivity.
           Ltac simpl_funcExt := 
           match goal with
           | |- context[if ?X then _ else _] =>
             destruct X; [apply Coq.Logic.FunctionalExtensionality.functional_extensionality; intros | reflexivity]
           end.
-          all: simpl_funcExt; destruct (Int.cmpu Cle Int.zero (Int.add x x5) &&
-     Int.cmpu Clt (Int.add x x5) (Int.repr (Z.of_nat (ins_len x0))))%bool; try reflexivity.
+          all: simpl_funcExt; destruct (Int.cmpu Clt (Int.add x x5) (Int.repr (Z.of_nat (ins_len x0))))%bool; try reflexivity.
           destruct _bpf_get_call; try reflexivity.
           destruct p0.
           destruct cmp_ptr32_nullM; try reflexivity.
