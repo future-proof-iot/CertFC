@@ -416,8 +416,8 @@ Definition nat_to_opcode_store_imm (op: nat): opcode_store_imm :=
 Definition opcode_store_imm_eqb (x y: opcode_store_imm) :=
   match x, y with
   | STW,  STW
-  | STH,  STW
-  | STB,  STW
+  | STH,  STH
+  | STB,  STB
   | STDW, STDW
   | ST_ILLEGAL_INS,  ST_ILLEGAL_INS => true
   | _, _ => false
@@ -442,8 +442,8 @@ Definition nat_to_opcode_store_reg (op: nat): opcode_store_reg :=
 Definition opcode_store_reg_eqb (x y: opcode_store_reg) :=
   match x, y with
   | STXW,  STXW
-  | STXH,  STXW
-  | STXB,  STXW
+  | STXH,  STXH
+  | STXB,  STXB
   | STXDW, STXDW
   | STX_ILLEGAL_INS,  STX_ILLEGAL_INS => true
   | _, _ => false

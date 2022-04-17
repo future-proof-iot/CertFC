@@ -20,38 +20,78 @@ bpf_verifier_opcode_alu32_reg
 *)
 Open Scope Z_scope.
 
-Lemma bpf_verifier_opcode_alu32_reg_match:
-  forall c
-  (Halu : match c with
-     | 12%nat => ADD32_REG
-     | 28%nat => SUB32_REG
-     | 44%nat => MUL32_REG
-     | 60%nat => DIV32_REG
-     | 76%nat => OR32_REG
-     | 92%nat => AND32_REG
-     | 108%nat => LSH32_REG
-     | 124%nat => RSH32_REG
-     | 156%nat => MOD32_REG
-     | 172%nat => XOR32_REG
-     | 188%nat => MOV32_REG
-     | 204%nat => ARSH32_REG
-     | _ => ALU32_REG_ILLEGAL
-     end = ALU32_REG_ILLEGAL),
-      12  <> (Z.of_nat c) /\
-      28  <> (Z.of_nat c) /\
-      44  <> (Z.of_nat c) /\
-      60  <> (Z.of_nat c) /\
-      76  <> (Z.of_nat c) /\
-      92  <> (Z.of_nat c) /\
-      108 <> (Z.of_nat c) /\
-      124 <> (Z.of_nat c) /\
-      156 <> (Z.of_nat c) /\
-      172 <> (Z.of_nat c) /\
-      188 <> (Z.of_nat c) /\
-      204 <> (Z.of_nat c).
+Definition opcode_alu32_reg_if (op: nat) : opcode_alu32_reg :=
+  if Nat.eqb op 12%nat then ADD32_REG
+  else if Nat.eqb op 28%nat then SUB32_REG
+  else if Nat.eqb op 44%nat then MUL32_REG
+  else if Nat.eqb op 60%nat then DIV32_REG
+  else if Nat.eqb op 76%nat then OR32_REG
+  else if Nat.eqb op 92%nat then AND32_REG
+  else if Nat.eqb op 108%nat then LSH32_REG
+  else if Nat.eqb op 124%nat then RSH32_REG
+  else if Nat.eqb op 156%nat then MOD32_REG
+  else if Nat.eqb op 172%nat then XOR32_REG
+  else if Nat.eqb op 188%nat then MOV32_REG
+  else if Nat.eqb op 204%nat then ARSH32_REG
+  else ALU32_REG_ILLEGAL.
+
+Lemma opcode_alu32_reg_eqb_eq : forall a b,
+    opcode_alu32_reg_eqb a b = true -> a = b.
+Proof.
+  destruct a,b ; simpl ;congruence.
+Qed.
+
+Lemma lift_opcode_alu32_reg :
+  forall (E: nat -> opcode_alu32_reg)
+         (F: nat -> opcode_alu32_reg) n,
+    ((fun n => opcode_alu32_reg_eqb (E n) (F n) = true) n) <->
+      (((fun n => opcode_alu32_reg_eqb (E n) (F n)) n) = true).
 Proof.
   intros.
-  do 205 (destruct c; [inversion Halu; split_conj | ]).
+  simpl. reflexivity.
+Qed.
+
+Lemma byte_to_opcode_alu32_reg_if_same:
+  forall (op: nat),
+    (op <= 255)%nat ->
+    nat_to_opcode_alu32_reg op = opcode_alu32_reg_if op.
+Proof.
+  intros.
+  unfold nat_to_opcode_alu32_reg, opcode_alu32_reg_if.
+  apply opcode_alu32_reg_eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern op in P.
+  match goal with
+  | P := ?F op |- _=>
+      apply (Forall_exec_spec F 255)
+  end.
+  vm_compute.
+  reflexivity.
+  assumption.
+Qed.
+
+Lemma bpf_verifier_opcode_alu32_reg_match:
+  forall op
+    (Hop: (op <= 255)%nat)
+    (Halu : nat_to_opcode_alu32_reg op = ALU32_REG_ILLEGAL),
+      12  <> (Z.of_nat op) /\
+      28  <> (Z.of_nat op) /\
+      44  <> (Z.of_nat op) /\
+      60  <> (Z.of_nat op) /\
+      76  <> (Z.of_nat op) /\
+      92  <> (Z.of_nat op) /\
+      108 <> (Z.of_nat op) /\
+      124 <> (Z.of_nat op) /\
+      156 <> (Z.of_nat op) /\
+      172 <> (Z.of_nat op) /\
+      188 <> (Z.of_nat op) /\
+      204 <> (Z.of_nat op).
+Proof.
+  intros.
+  rewrite byte_to_opcode_alu32_reg_if_same in Halu; auto.
+  unfold opcode_alu32_reg_if in Halu.
   change 12  with (Z.of_nat 12%nat).
   change 28  with (Z.of_nat 28%nat).
   change 44  with (Z.of_nat 44%nat).
@@ -64,8 +104,24 @@ Proof.
   change 172 with (Z.of_nat 172%nat).
   change 188 with (Z.of_nat 188%nat).
   change 204 with (Z.of_nat 204%nat).
-  repeat (split; [intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse |]).
-  intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse.
+
+  repeat match goal with
+  | H : (if ?X then _ else _) = _ |- _ /\ _ =>
+    split; [destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+    | destruct X eqn: Hnew; [inversion H| clear Hnew]]
+  | H : (if ?X then _ else _) = _ |- _ =>
+    destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+  end.
 Qed.
 
 Section Bpf_verifier_opcode_alu32_reg.
@@ -1002,8 +1058,7 @@ Ltac correct_forward L :=
 
         unfold select_switch.
         unfold select_switch_case.
-        unfold nat_to_opcode_alu32_reg in Halu.
-        apply bpf_verifier_opcode_alu32_reg_match in Halu.
+        apply bpf_verifier_opcode_alu32_reg_match in Halu; auto.
         destruct Halu as (Hfirst & Halu). eapply Coqlib.zeq_false in Hfirst. rewrite Hfirst; clear Hfirst.
         repeat match goal with
         | H: ?X <> ?Y /\ _ |- context[Coqlib.zeq ?X ?Y] =>

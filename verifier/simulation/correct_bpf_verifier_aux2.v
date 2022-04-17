@@ -439,12 +439,6 @@ Ltac correct_forward L :=
           reflexivity.
           intros; simpl.
           unfold eval_inv in *.
-          split; [assumption|].
-          split; [assumption|].
-          unfold opcode_correct in c4, c5.
-          split. unfold nat_correct.
-          change Int.max_unsigned with 4294967295.
-          intuition lia.
           intuition congruence.
           intros.
 
@@ -494,12 +488,6 @@ Ltac correct_forward L :=
           reflexivity.
           intros; simpl.
           unfold eval_inv in *.
-          split; [assumption|].
-          split; [assumption|].
-          unfold opcode_correct in c4, c5.
-          split. unfold nat_correct.
-          change Int.max_unsigned with 4294967295.
-          intuition lia.
           intuition congruence.
           intros.
 

@@ -37,10 +37,10 @@ all:
 	@$(MAKE) repatch
 	@$(MAKE) clightmodel
 	@$(MAKE) clightlogic
-	@$(MAKE) dxverifier
 	@$(MAKE) simulation
 	@$(MAKE) isolation
 	@$(MAKE) equivalence
+	@$(MAKE) dxverifier
 
 COQVERIFIER =  $(addprefix verifier/, comm/state.v comm/monad.v synthesismodel/opcode_synthesis.v synthesismodel/verifier_synthesis.v dxmodel/Dxopcode.v dxmodel/Dxstate.v dxmodel/Dxmonad.v dxmodel/Dxverifier.v dxmodel/verifier_dx.v dxmodel/verifier_TestMain.v dxmodel/verifier_ExtrMain.v)
 

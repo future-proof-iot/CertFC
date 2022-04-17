@@ -20,30 +20,85 @@ bpf_verifier_opcode_store_reg
 *)
 Open Scope Z_scope.
 
-Lemma bpf_verifier_opcode_store_reg_match:
-  forall c
-  (Hstore : match c with
-    | 99%nat => STXW
-    | 107%nat => STXH
-    | 115%nat => STXB
-    | 123%nat => STXDW
-    | _ => STX_ILLEGAL_INS
-    end = STX_ILLEGAL_INS),
-      99  <> (Z.of_nat c) /\
-      107 <> (Z.of_nat c) /\
-      115 <> (Z.of_nat c) /\
-      123 <> (Z.of_nat c).
+Definition opcode_store_reg_if (op: nat) : opcode_store_reg :=
+  if Nat.eqb op 99%nat then STXW
+  else if Nat.eqb op 107%nat then STXH
+  else if Nat.eqb op 115%nat then STXB
+  else if Nat.eqb op 123%nat then STXDW
+  else STX_ILLEGAL_INS.
+
+Lemma opcode_store_reg_eqb_eq : forall a b,
+    opcode_store_reg_eqb a b = true -> a = b.
+Proof.
+  destruct a,b ; simpl ;congruence.
+Qed.
+
+Lemma lift_opcode_store_reg :
+  forall (E: nat -> opcode_store_reg)
+         (F: nat -> opcode_store_reg) n,
+    ((fun n => opcode_store_reg_eqb (E n) (F n) = true) n) <->
+      (((fun n => opcode_store_reg_eqb (E n) (F n)) n) = true).
 Proof.
   intros.
-  do 124 (destruct c; [inversion Hstore; split_conj | ]).
+  simpl. reflexivity.
+Qed.
+
+Lemma byte_to_opcode_store_reg_if_same:
+  forall (op: nat),
+    (op <= 255)%nat ->
+    nat_to_opcode_store_reg op = opcode_store_reg_if op.
+Proof.
+  intros.
+  unfold nat_to_opcode_store_reg, opcode_store_reg_if.
+  apply opcode_store_reg_eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern op in P.
+  match goal with
+  | P := ?F op |- _=>
+      apply (Forall_exec_spec F 255)
+  end.
+  vm_compute.
+  reflexivity.
+  assumption.
+Qed.
+
+Lemma bpf_verifier_opcode_store_reg_match:
+  forall op
+    (Hop: (op <= 255)%nat)
+    (Halu : nat_to_opcode_store_reg op = STX_ILLEGAL_INS),
+      99  <> (Z.of_nat op) /\
+      107 <> (Z.of_nat op) /\
+      115 <> (Z.of_nat op) /\
+      123 <> (Z.of_nat op).
+Proof.
+  intros.
+  rewrite byte_to_opcode_store_reg_if_same in Halu; auto.
+  unfold opcode_store_reg_if in Halu.
   change 99  with (Z.of_nat 99%nat).
   change 107 with (Z.of_nat 107%nat).
   change 115 with (Z.of_nat 115%nat).
   change 123 with (Z.of_nat 123%nat).
-  repeat (split; [intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse |]).
-  intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse.
-Qed.
 
+  repeat match goal with
+  | H : (if ?X then _ else _) = _ |- _ /\ _ =>
+    split; [destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+    | destruct X eqn: Hnew; [inversion H| clear Hnew]]
+  | H : (if ?X then _ else _) = _ |- _ =>
+    destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+  end.
+Qed.
 
 Section Bpf_verifier_opcode_store_reg.
   Context {S:special_blocks}.
@@ -407,8 +462,7 @@ Ltac correct_forward L :=
 
         unfold select_switch.
         unfold select_switch_case.
-        unfold nat_to_opcode_store_reg in Hstore.
-        apply bpf_verifier_opcode_store_reg_match in Hstore.
+        apply bpf_verifier_opcode_store_reg_match in Hstore; auto.
         destruct Hstore as (Hfirst & Hstore). eapply Coqlib.zeq_false in Hfirst. rewrite Hfirst; clear Hfirst.
         repeat match goal with
         | H: ?X <> ?Y /\ _ |- context[Coqlib.zeq ?X ?Y] =>

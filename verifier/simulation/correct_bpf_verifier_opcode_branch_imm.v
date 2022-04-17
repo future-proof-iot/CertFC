@@ -20,42 +20,82 @@ bpf_verifier_opcode_branch_imm
 *)
 Open Scope Z_scope.
 
-Lemma bpf_verifier_opcode_branch_imm_match:
-  forall c
-    (Hbranch : match c with
-      | 5%nat => JA_IMM
-      | 21%nat => JEQ_IMM
-      | 37%nat => JGT_IMM
-      | 53%nat => JGE_IMM
-      | 69%nat => JSET_IMM
-      | 85%nat => JNE_IMM
-      | 101%nat => JSGT_IMM
-      | 117%nat => JSGE_IMM
-      | 133%nat => CALL_IMM
-      | 149%nat => RET_IMM
-      | 165%nat => JLT_IMM
-      | 181%nat => JLE_IMM
-      | 197%nat => JSLT_IMM
-      | 213%nat => JSLE_IMM
-      | _ => JMP_IMM_ILLEGAL_INS
-      end = JMP_IMM_ILLEGAL_INS),
-        5  <> (Z.of_nat c) /\
-        21  <> (Z.of_nat c) /\
-        37  <> (Z.of_nat c) /\
-        53  <> (Z.of_nat c) /\
-        69  <> (Z.of_nat c) /\
-        85  <> (Z.of_nat c) /\
-        101 <> (Z.of_nat c) /\
-        117 <> (Z.of_nat c) /\
-        133 <> (Z.of_nat c) /\
-        149 <> (Z.of_nat c) /\
-        165 <> (Z.of_nat c) /\
-        181 <> (Z.of_nat c) /\
-        197 <> (Z.of_nat c) /\
-        213 <> (Z.of_nat c).
+Definition opcode_branch_imm_if (op: nat) : opcode_branch_imm :=
+  if Nat.eqb op 5%nat then JA_IMM
+  else if Nat.eqb op 21%nat then JEQ_IMM
+  else if Nat.eqb op 37%nat then JGT_IMM
+  else if Nat.eqb op 53%nat then JGE_IMM
+  else if Nat.eqb op 69%nat then JSET_IMM
+  else if Nat.eqb op 85%nat then JNE_IMM
+  else if Nat.eqb op 101%nat then JSGT_IMM
+  else if Nat.eqb op 117%nat then JSGE_IMM
+  else if Nat.eqb op 133%nat then CALL_IMM
+  else if Nat.eqb op 149%nat then RET_IMM
+  else if Nat.eqb op 165%nat then JLT_IMM
+  else if Nat.eqb op 181%nat then JLE_IMM
+  else if Nat.eqb op 197%nat then JSLT_IMM
+  else if Nat.eqb op 213%nat then JSLE_IMM
+  else JMP_IMM_ILLEGAL_INS.
+
+Lemma opcode_branch_imm_eqb_eq : forall a b,
+    opcode_branch_imm_eqb a b = true -> a = b.
+Proof.
+  destruct a,b ; simpl ;congruence.
+Qed.
+
+Lemma lift_opcode_branch_imm :
+  forall (E: nat -> opcode_branch_imm)
+         (F: nat -> opcode_branch_imm) n,
+    ((fun n => opcode_branch_imm_eqb (E n) (F n) = true) n) <->
+      (((fun n => opcode_branch_imm_eqb (E n) (F n)) n) = true).
 Proof.
   intros.
-  do 214 (destruct c; [inversion Hbranch; split_conj | ]).
+  simpl. reflexivity.
+Qed.
+
+Lemma byte_to_opcode_branch_imm_if_same:
+  forall (op: nat),
+    (op <= 255)%nat ->
+    nat_to_opcode_branch_imm op = opcode_branch_imm_if op.
+Proof.
+  intros.
+  unfold nat_to_opcode_branch_imm, opcode_branch_imm_if.
+  apply opcode_branch_imm_eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern op in P.
+  match goal with
+  | P := ?F op |- _=>
+      apply (Forall_exec_spec F 255)
+  end.
+  vm_compute.
+  reflexivity.
+  assumption.
+Qed.
+
+Lemma bpf_verifier_opcode_branch_imm_match:
+  forall op
+    (Hop: (op <= 255)%nat)
+    (Halu : nat_to_opcode_branch_imm op = JMP_IMM_ILLEGAL_INS),
+        5   <> (Z.of_nat op) /\
+        21  <> (Z.of_nat op) /\
+        37  <> (Z.of_nat op) /\
+        53  <> (Z.of_nat op) /\
+        69  <> (Z.of_nat op) /\
+        85  <> (Z.of_nat op) /\
+        101 <> (Z.of_nat op) /\
+        117 <> (Z.of_nat op) /\
+        133 <> (Z.of_nat op) /\
+        149 <> (Z.of_nat op) /\
+        165 <> (Z.of_nat op) /\
+        181 <> (Z.of_nat op) /\
+        197 <> (Z.of_nat op) /\
+        213 <> (Z.of_nat op).
+Proof.
+  intros.
+  rewrite byte_to_opcode_branch_imm_if_same in Halu; auto.
+  unfold opcode_branch_imm_if in Halu.
   change 5   with (Z.of_nat 5%nat).
   change 21  with (Z.of_nat 21%nat).
   change 37  with (Z.of_nat 37%nat).
@@ -70,8 +110,24 @@ Proof.
   change 181 with (Z.of_nat 181%nat).
   change 197 with (Z.of_nat 197%nat).
   change 213 with (Z.of_nat 213%nat).
-  repeat (split; [intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse |]).
-  intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse.
+
+  repeat match goal with
+  | H : (if ?X then _ else _) = _ |- _ /\ _ =>
+    split; [destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+    | destruct X eqn: Hnew; [inversion H| clear Hnew]]
+  | H : (if ?X then _ else _) = _ |- _ =>
+    destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+  end.
 Qed.
 
 Section Bpf_verifier_opcode_branch_imm.
@@ -96,7 +152,7 @@ Section Bpf_verifier_opcode_branch_imm.
   Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
     dcons (fun x => StateLess _ (nat_correct x))
       (dcons (fun x => StateLess _ (nat_correct x))
-        (dcons (fun x => StateLess _ (nat_correct x))
+        (dcons (fun x => StateLess _ (opcode_correct x))
           (dcons (fun x => StateLess _ (int64_correct x))
             (DList.DNil _)))).
 
@@ -1544,8 +1600,7 @@ Ltac correct_forward L :=
 
         unfold select_switch.
         unfold select_switch_case.
-        unfold nat_to_opcode_branch_imm in Hbranch.
-        apply bpf_verifier_opcode_branch_imm_match in Hbranch.
+        apply bpf_verifier_opcode_branch_imm_match in Hbranch; auto.
         destruct Hbranch as (Hfirst & Hbranch). eapply Coqlib.zeq_false in Hfirst. rewrite Hfirst; clear Hfirst.
         repeat match goal with
         | H: ?X <> ?Y /\ _ |- context[Coqlib.zeq ?X ?Y] =>
