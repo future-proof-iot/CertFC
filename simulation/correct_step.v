@@ -1,15 +1,17 @@
-From bpf.comm Require Import Regs State Monad.
+From bpf.comm Require Import Regs State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLib CommonLemmaNat.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma CommonLib CommonLemmaNat.
 
 From bpf.clight Require Import interpreter.
 
 From bpf.simulation Require Import correct_eval_pc correct_eval_ins correct_get_opcode_ins correct_get_opcode correct_get_dst correct_eval_reg correct_get_src64 correct_step_opcode_alu64 correct_reg64_to_reg32 correct_get_src32 correct_step_opcode_alu32 correct_get_offset correct_step_opcode_branch correct_get_immediate correct_step_opcode_mem_ld_imm correct_get_addr_ofs correct_step_opcode_mem_ld_reg correct_step_opcode_mem_st_imm correct_step_opcode_mem_st_reg correct_upd_flag.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 (**
@@ -32,22 +34,22 @@ Section Step.
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := rBPFInterpreter.step.
+  Definition f : arrow_type args (M State.state res) := rBPFInterpreter.step.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_step.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    (dcons (fun _ => StateLess is_state_handle)
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    (dcons (fun _ => StateLess _ is_state_handle)
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x => StateLess (eq Vundef).
+  Definition match_res : res -> Inv State.state := fun x => StateLess _ (eq Vundef).
 
 Ltac correct_forward L :=
   match goal with
-  | |- @correct_body _ _ (bindM ?F1 ?F2)  _
+  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
                      (Ssequence
                         (Ssequence
                            (Scall _ _ _)
@@ -62,13 +64,13 @@ Ltac correct_forward L :=
                  end in
         eapply correct_statement_call with (has_cast := b)
       |]
-  | |- @correct_body _ _ (match  ?x with true => _ | false => _ end) _
+  | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
                      (Sifthenelse _ _ _)
                      _ _ _ _ _ _ _ =>
       eapply correct_statement_if_body; [prove_in_inv | destruct x ]
   end.
 
-  Instance correct_function_step: forall a, correct_function p args res f fn ModSomething false match_state match_arg_list match_res a.
+  Instance correct_function_step: forall a, correct_function _ p args res f fn ModSomething false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -608,13 +610,16 @@ Ltac correct_forward L :=
           destruct (x1 =? 5)%nat; try reflexivity.
           apply Coq.Logic.FunctionalExtensionality.functional_extensionality.
           intros.
-          destruct (Int.cmpu Clt (Int.add x x5) (Int.repr (Z.of_nat (ins_len x0))))%bool; try reflexivity.
+          match goal with
+          | |- match (if ?X then _ else _) with _ => _ end = _ =>
+            destruct X; try reflexivity
+          end.
           Ltac simpl_funcExt := 
           match goal with
           | |- context[if ?X then _ else _] =>
             destruct X; [apply Coq.Logic.FunctionalExtensionality.functional_extensionality; intros | reflexivity]
           end.
-          all: simpl_funcExt; destruct (Int.cmpu Clt (Int.add x x5) (Int.repr (Z.of_nat (ins_len x0))))%bool; try reflexivity.
+          all: simpl_funcExt; destruct (Int.cmpu Cle (Int.add x x5) (Int.sub (Int.repr (Z.of_nat (ins_len x0))) (Int.repr 2)))%bool; try reflexivity.
           destruct _bpf_get_call; try reflexivity.
           destruct p0.
           destruct cmp_ptr32_nullM; try reflexivity.
@@ -695,6 +700,32 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
+        (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
+        correct_forward correct_statement_seq_body_nil.
+        my_reflex.
+        reflexivity.
+        reflexivity.
+        typeclasses eauto.
+
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        prove_in_inv.
+        prove_in_inv.
+        reflexivity.
+        reflexivity.
+
+        unfold INV; intro H.
+        correct_Forall.
+        get_invariant _st.
+        get_invariant _dst.
+        exists (v::v0::nil).
+        split.
+        unfold map_opt, exec_expr. rewrite p0,p1; reflexivity.
+        intros; simpl.
+        intuition eauto.
+        intros.
+
         (** goal: correct_body _ _ (bindM (get_immediate _) ... *)
         correct_forward correct_statement_seq_body_nil.
         my_reflex.
@@ -721,26 +752,16 @@ Ltac correct_forward L :=
         intros.
 
         assert (Heq:
-              step_opcode_mem_ld_imm x4 x x3 x1 =
-              bindM (step_opcode_mem_ld_imm x4 x x3 x1) (fun _ : unit => returnM tt)). {
+              step_opcode_mem_ld_imm x5 x4 x x3 x1 =
+              bindM (step_opcode_mem_ld_imm x5 x4 x x3 x1) (fun _ : unit => returnM tt)). {
           clear - st6.
           unfold step_opcode_mem_ld_imm, get_opcode_mem_ld_imm.
           unfold bindM, returnM.
           destruct byte_to_opcode_mem_ld_imm; try reflexivity.
           apply Coq.Logic.FunctionalExtensionality.functional_extensionality.
           intros.
-          destruct eval_ins_len; try reflexivity.
-          destruct p0.
-          destruct Int.ltu; try reflexivity.
-          destruct eval_ins; try reflexivity.
-          destruct p0.
-          destruct get_immediate; try reflexivity.
-          destruct p0.
           unfold upd_reg.
           destruct Val.orl; try reflexivity.
-          destruct upd_pc_incr; try reflexivity.
-          destruct p0.
-          reflexivity.
         }
         rewrite Heq; clear Heq.
         eapply correct_statement_seq_body_unit.
@@ -762,12 +783,13 @@ Ltac correct_forward L :=
         correct_Forall.
         get_invariant _st.
         get_invariant _imm.
+        get_invariant _dst64.
         get_invariant _pc.
         get_invariant _dst.
         get_invariant _op.
-        exists (v ::v0::v1::v2 ::v3:: nil).
+        exists (v ::v0::v1::v2::v3::v4:: nil).
         unfold map_opt, exec_expr.
-        rewrite p0, p1, p2, p3, p4.
+        rewrite p0, p1, p2, p3, p4, p5.
         split.
         reflexivity.
         intros; simpl.

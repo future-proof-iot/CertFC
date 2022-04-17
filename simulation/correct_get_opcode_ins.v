@@ -1,12 +1,14 @@
-From bpf.comm Require Import Regs State Monad.
+From bpf.comm Require Import Regs BinrBPF State Monad.
 From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLemmaNat.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma CommonLemmaNat.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (**
 Check get_opcode_ins.
@@ -26,20 +28,20 @@ Section Get_opcode_ins.
   Definition res : Type := (nat:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_opcode_ins.
+  Definition f : arrow_type args (M State.state res) := get_opcode_ins.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_opcode_ins.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-    (dcons (fun x => StateLess (int64_correct x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
+    (dcons (fun x => StateLess _ (int64_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x  => StateLess (opcode_correct x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (opcode_correct x).
 
-  Instance correct_function_get_opcode_ins : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_get_opcode_ins : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -53,7 +55,7 @@ Section Get_opcode_ins.
     subst.
 
     eexists. exists m, Events.E0.
-    unfold match_res, opcode_correct, Regs.get_opcode.
+    unfold match_res, opcode_correct, BinrBPF.get_opcode.
 
     unfold Int64.and.
     change (Int64.unsigned (Int64.repr 255)) with 255%Z.
@@ -69,7 +71,7 @@ Section Get_opcode_ins.
       rewrite LemmaNat.land_land.
       split.
       lia.
-      assert (H: (Nat.land (Z.to_nat (Int64.unsigned c)) (Z.to_nat 255)) <= 255%nat). {
+      assert (H: ((Nat.land (Z.to_nat (Int64.unsigned c)) (Z.to_nat 255)) <= 255)%nat). {
         rewrite Nat.land_comm.
         rewrite LemmaNat.land_bound.
         lia.

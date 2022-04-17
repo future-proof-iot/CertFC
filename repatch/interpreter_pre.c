@@ -114,7 +114,7 @@ static __attribute__((always_inline)) inline void store_mem_imm(struct bpf_state
   //}
 }
 
-static __attribute__((always_inline)) inline int eval_ins_len(struct bpf_state* st)
+static __attribute__((always_inline)) inline unsigned int eval_ins_len(struct bpf_state* st)
 {
   return (*st).ins_len;
 }

@@ -4,7 +4,7 @@ From Coq Require Import Logic.FunctionalExtensionality ZArith Lia List.
 Import ListNotations.
 From compcert Require Import Integers Values Memory Memdata.
 
-From bpf.comm Require Import State Monad LemmaNat.
+From bpf.comm Require Import State Monad LemmaNat rBPFMonadOp.
 
 From bpf.model Require Import Semantics.
 From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
@@ -79,12 +79,12 @@ Proof.
   destruct p.
   unfold decodeM, Decode.decode.
 
-  unfold get_opcode_ins,get_opcode, Regs.get_opcode, byte_to_opcode, get_dst, int64_to_dst_reg.
+  unfold get_opcode_ins,get_opcode, BinrBPF.get_opcode, byte_to_opcode, get_dst, int64_to_dst_reg.
   unfold eval_reg, get_src64.
 
   unfold bindM, returnM.
 
-  destruct Regs.int64_to_dst_reg'; [| reflexivity].
+  destruct BinrBPF.int64_to_dst_reg'; [| reflexivity].
 
   remember (Z.to_nat (Int64.unsigned (Int64.and i0 (Int64.repr 255)))) as ins.
   assert (Hins_255: ins <= 255). {
@@ -156,7 +156,7 @@ Ltac nat_land_computeH :=
       change (Nat.land X Y) with res in H; exfalso; apply H; reflexivity
   end.
 
-  unfold reg64_to_reg32, State.eval_reg, get_src32, get_immediate, get_src, rBPFValues.sint32_to_vint, Regs.get_immediate, rBPFValues.int64_to_sint32, int64_to_src_reg, eval_reg, reg64_to_reg32, bindM, returnM.
+  unfold reg64_to_reg32, State.eval_reg, get_src32, get_immediate, get_src, rBPFValues.sint32_to_vint, BinrBPF.get_immediate, rBPFValues.int64_to_sint32, int64_to_src_reg, eval_reg, reg64_to_reg32, bindM, returnM.
   unfold Decode.get_instruction_alu32_imm, Decode.get_instruction_alu32_reg.
   unfold step_opcode_alu32, get_opcode_alu32, byte_to_opcode_alu32, step_alu_binary_operation,eval_reg32, eval_src32, eval_reg, upd_reg, rBPFValues.val_intuoflongu, rBPFValues.val32_divu, rBPFValues.val32_modu, State.eval_reg, bindM, returnM.
     rewrite Heq_int_iff. clear Heqins Heq_int_iff.
@@ -180,7 +180,7 @@ Ltac nat_land_computeH :=
     rewrite nat_land_7_eq in Hland1; [| lia].
     destruct Hland1 as (m & Hins_eq).
     rewrite Hins_eq in *.
-    destruct Regs.int64_to_src_reg'; [| reflexivity].
+    destruct BinrBPF.int64_to_src_reg'; [| reflexivity].
     unfold Decode.get_instruction_ldx, get_offset, get_addr_ofs, step_opcode_mem_ld_reg, get_opcode_mem_ld_reg, byte_to_opcode_mem_ld_reg,
       bindM, returnM.
       do 33 (destruct m; [nat_land_compute; try reflexivity | ]).
@@ -203,8 +203,8 @@ Ltac nat_land_computeH :=
     rewrite nat_land_7_eq in Hland3; [| lia].
     destruct Hland3 as (m & Hins_eq).
     rewrite Hins_eq in *.
-    destruct Regs.int64_to_src_reg'; [| reflexivity].
-    unfold Decode.get_instruction_stx, Regs.get_offset, get_offset, get_addr_ofs, step_opcode_mem_st_reg, get_opcode_mem_st_reg, byte_to_opcode_mem_st_reg,
+    destruct BinrBPF.int64_to_src_reg'; [| reflexivity].
+    unfold Decode.get_instruction_stx, BinrBPF.get_offset, get_offset, get_addr_ofs, step_opcode_mem_st_reg, get_opcode_mem_st_reg, byte_to_opcode_mem_st_reg,
       bindM, returnM.
       do 33 (destruct m; [nat_land_compute; try reflexivity | ]).
       lia.
@@ -257,7 +257,7 @@ Ltac nat_land_computeH :=
       { nat_land_compute. reflexivity. }
       destruct m; [inversion Hand8 | ].
       lia.
-    - destruct Regs.int64_to_src_reg'; [| reflexivity].
+    - destruct BinrBPF.int64_to_src_reg'; [| reflexivity].
 
       destruct m; [nat_land_computeH |].
       destruct m.
@@ -323,7 +323,7 @@ Ltac destruct_if_reflexivity :=
     rewrite nat_land_7_eq in Hland5; [| lia].
     destruct Hland5 as (m & Hins_eq).
     rewrite Hins_eq in *.
-    unfold Decode.get_instruction_branch_imm, Regs.get_offset, Decode.get_instruction_branch_reg, get_offset, eval_immediate, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, upd_pc, Regs.get_offset, upd_flag,
+    unfold Decode.get_instruction_branch_imm, BinrBPF.get_offset, Decode.get_instruction_branch_reg, get_offset, eval_immediate, step_opcode_branch, get_opcode_branch, byte_to_opcode_branch, upd_pc, BinrBPF.get_offset, upd_flag,
       bindM, returnM.
 
     destruct (0 =? Nat.land (5 + 8 * m) 8) eqn: Hand8; [rewrite Nat.eqb_eq in Hand8 | rewrite Nat.eqb_neq in Hand8].
@@ -360,7 +360,7 @@ Ltac destruct_if_reflexivity :=
       destruct m; [nat_land_compute; unfold State.eval_reg; destruct_if_reflexivity; destruct_if_reflexivity | ].
       destruct m; [inversion Hand8 | ].
       lia.
-    - destruct Regs.int64_to_src_reg'; [| reflexivity].
+    - destruct BinrBPF.int64_to_src_reg'; [| reflexivity].
 
       destruct m; [nat_land_computeH |].
       destruct m.
@@ -473,7 +473,7 @@ Ltac destruct_if_reflexivity :=
       { nat_land_compute. reflexivity. }
       destruct m; [inversion Hand8 | ].
       lia.
-    - destruct Regs.int64_to_src_reg'; [| reflexivity].
+    - destruct BinrBPF.int64_to_src_reg'; [| reflexivity].
 
       destruct m; [nat_land_computeH |].
       destruct m.

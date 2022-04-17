@@ -4,9 +4,11 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (**
 Check get_opcode_mem_ld_imm.
@@ -28,20 +30,20 @@ Section Get_opcode_mem_ld_imm.
   Definition res : Type := (opcode_mem_ld_imm:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_opcode_mem_ld_imm.
+  Definition f : arrow_type args (M State.state res) := get_opcode_mem_ld_imm.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_opcode_mem_ld_imm.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-    (dcons (fun x => StateLess (opcode_correct x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
+    (dcons (fun x => StateLess _ (opcode_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x  => StateLess (opcode_mem_ld_imm_correct x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (opcode_mem_ld_imm_correct x).
 
-  Instance correct_function_get_opcode_mem_ld_imm : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_get_opcode_mem_ld_imm : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -70,21 +72,30 @@ Section Get_opcode_mem_ld_imm.
     -
       unfold eval_inv, match_res, opcode_mem_ld_imm_correct.
       rewrite Nat_land_0xff; auto.
-      destruct (c =? 24) eqn: Hc_eq;
-      [rewrite Nat.eqb_eq in Hc_eq | rewrite Nat.eqb_neq in Hc_eq].
-      + subst.
-        reflexivity.
-      + assert (Hswitch:
+      destruct (c =? 24) eqn: Hc_eq0;
+      [rewrite Nat.eqb_eq in Hc_eq0 | rewrite Nat.eqb_neq in Hc_eq0].
+      subst.
+      reflexivity.
+
+      destruct (c =? 16) eqn: Hc_eq1;
+      [rewrite Nat.eqb_eq in Hc_eq1 | rewrite Nat.eqb_neq in Hc_eq1].
+      subst.
+      reflexivity.
+
+      assert (Hswitch:
           match c with
-          | 24 => op_BPF_LDDW
+          | 16 => op_BPF_LDDW_high
+          | 24 => op_BPF_LDDW_low
           | _ => op_BPF_LDX_IMM_ILLEGAL_INS
           end = op_BPF_LDX_IMM_ILLEGAL_INS). {
-          do 24 (destruct c; [reflexivity |]).
-          destruct c; [exfalso; apply Hc_eq; reflexivity | reflexivity ].
+          do 16 (destruct c; [reflexivity |]).
+          destruct c; [exfalso; apply Hc_eq1; reflexivity | ].
+          do 7 (destruct c; [reflexivity |]).
+          destruct c; [exfalso; apply Hc_eq0; reflexivity | reflexivity ].
         }
         rewrite Hswitch; clear Hswitch.
         exists c.
-        split; [ | split; assumption].
+        split; [ | split; [split |]; assumption].
         unfold Int.and.
         change (Int.unsigned (Int.repr 255)) with (Z.of_nat (Z.to_nat 255%Z)).
         rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].

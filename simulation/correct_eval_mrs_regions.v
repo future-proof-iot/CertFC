@@ -1,12 +1,14 @@
-From bpf.comm Require Import MemRegion State Monad.
+From bpf.comm Require Import MemRegion State Monad rBPFMonadOp.
 From Coq Require Import List Lia.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 Require Import ZArith.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (**
 static struct memory_region *eval_mrs_regions(struct bpf_state* st){
@@ -22,6 +24,7 @@ fun st : stateM => Some (DxState.eval_mem_regions st, st)
 
 Section Eval_mrs_regions.
   Context {S: special_blocks}.
+
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -30,21 +33,21 @@ Section Eval_mrs_regions.
   Definition res : Type := (MyMemRegionsType:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := eval_mrs_regions.
+  Definition f : arrow_type args (M State.state res) := eval_mrs_regions.
 
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_mrs_regions.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    (dcons (fun _ => StateLess is_state_handle)
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    (dcons (fun _ => StateLess _ is_state_handle)
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun re => StateFull (fun v st m => mrs_correct S re v st m).
+  Definition match_res : res -> Inv State.state := fun re => StateFull _ (fun v st m => mrs_correct S re v st m).
 
-  Instance correct_function_eval_mrs_regions : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
+  Instance correct_function_eval_mrs_regions : forall a, correct_function _ p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

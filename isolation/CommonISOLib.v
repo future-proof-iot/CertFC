@@ -3,19 +3,6 @@ From Coq Require Import Lia ZArith.
 
 Open Scope Z_scope.
 
-(*
-Lemma Int64_max_unsigned_eq:
-  Int64.max_unsigned = 18446744073709551615.
-Proof.
-  unfold Int64.max_unsigned, Int64.modulus, Int64.wordsize, Wordsize_64.wordsize; reflexivity.
-Qed.
-
-Lemma Int_max_unsigned_eq:
-  Int.max_unsigned = 4294967295.
-Proof.
-  unfold Int.max_unsigned, Int.modulus, Int.wordsize, Wordsize_32.wordsize; reflexivity.
-Qed.*)
-
 Lemma size_chunk_gt_zero:
   forall chunk, 0 < size_chunk chunk.
 Proof.

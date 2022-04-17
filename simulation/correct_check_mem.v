@@ -7,11 +7,13 @@ From compcert Require Import Integers Values Clight Memory AST.
 From compcert Require Import Coqlib.
 Import ListNotations.
 
-From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState CommonLemma.
+From bpf.clightlogic Require Import clight_exec Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
 
 From bpf.simulation Require Import correct_is_well_chunk_bool correct_eval_mrs_num correct_eval_mrs_regions correct_check_mem_aux correct_cmp_ptr32_nullM.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (**
 Check check_mem.
@@ -30,7 +32,7 @@ Section Check_mem.
   Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := check_mem.
+  Definition f : arrow_type args (M State.state res) := check_mem.
 
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
@@ -38,17 +40,17 @@ Section Check_mem.
 
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    dcons (fun _ => StateLess is_state_handle)
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    dcons (fun _ => StateLess _ is_state_handle)
       (dcons (stateless perm_correct)
         (dcons (stateless match_chunk)
           (dcons (stateless val32_correct)
             (DList.DNil _)))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := stateless eq.
+  Definition match_res : res -> Inv State.state:= stateless eq.
 
-  Instance correct_function_check_mem : forall a, correct_function p args res f fn ModNothing  false match_state match_arg_list match_res a.
+  Instance correct_function_check_mem : forall a, correct_function _ p args res f fn ModNothing  false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

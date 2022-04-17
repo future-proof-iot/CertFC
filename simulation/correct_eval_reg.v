@@ -1,11 +1,13 @@
-From bpf.comm Require Import Regs State Monad.
+From bpf.comm Require Import Regs State Monad rBPFMonadOp.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLib.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma CommonLib.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 Section Eval_reg.
   Context {S: special_blocks}.
@@ -19,21 +21,21 @@ Section Eval_reg.
   Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := Monad.eval_reg.
+  Definition f : arrow_type args (M State.state res) := eval_reg.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_eval_reg.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    dcons  (fun _ => StateLess is_state_handle)
-(dcons  (fun x => (StateLess (reg_correct x)))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    dcons  (fun _ => StateLess _ is_state_handle)
+(dcons  (fun x => (StateLess _ (reg_correct x)))
 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x  => StateLess (val64_correct x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (val64_correct x).
 
-  Instance correct_function_eval_reg : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
+  Instance correct_function_eval_reg : forall a, correct_function _ p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

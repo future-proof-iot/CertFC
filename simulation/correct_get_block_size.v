@@ -7,9 +7,11 @@ From compcert Require Import Integers Values Clight Memory AST.
 From compcert Require Import Coqlib.
 Import ListNotations.
 
-From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState CommonLemma.
+From bpf.clightlogic Require Import clight_exec Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 (**
@@ -29,7 +31,7 @@ Section Get_block_size.
   Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_block_size.
+  Definition f : arrow_type args (M State.state res) := get_block_size.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
   Variable mrs_block: block.
@@ -39,14 +41,14 @@ Section Get_block_size.
   Definition fn: Clight.function := f_get_block_size.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-    (dcons (fun x => StateFull (match_region st_blk mrs_blk ins_blk x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
+    (dcons (fun x => StateFull _ (match_region st_blk mrs_blk ins_blk x))
        (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := stateless val32_correct.
+  Definition match_res : res -> Inv State.state := stateless val32_correct.
 
-  Instance correct_function_get_block_size : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_get_block_size : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

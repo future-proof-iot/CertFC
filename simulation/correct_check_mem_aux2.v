@@ -8,9 +8,11 @@ From compcert Require Import Coqlib Values Clight Memory Integers.
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
+From bpf.clightlogic Require Import Clightlogic clight_exec CommonLemma CorrectRel.
 
-From bpf.simulation Require Import correct_get_sub correct_get_add correct_get_start_addr correct_get_block_size correct_get_block_perm. (**r correct_get_block_ptr *)
+From bpf.simulation Require Import correct_get_sub correct_get_add correct_get_start_addr correct_get_block_size correct_get_block_perm.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 Open Scope Z_scope.
 
@@ -30,7 +32,7 @@ Definition f := check_mem_aux2.
 Definition fn: Clight.function := f_check_mem_aux2.
 
 Definition match_arg  :
-  DList.t (fun x => x -> Inv) args :=
+  DList.t (fun x => x -> Inv State.state) args :=
   dcons
     (statefull (mr_correct ))
     (dcons
@@ -40,9 +42,9 @@ Definition match_arg  :
            (dcons (stateless match_chunk)
                         (DList.DNil _)))).
 
-Definition match_res : res -> Inv := stateless eq.
+Definition match_res : res -> Inv State.state := stateless eq.
 
-Lemma correct_function_check_mem_aux2_correct : forall a, correct_function p args res f fn ModNothing true match_state match_arg match_res a.
+Lemma correct_function_check_mem_aux2_correct : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg match_res a.
 Proof.
   correct_function_from_body args.
   correct_body.
@@ -215,7 +217,7 @@ Ltac destruct_if Hname :=
   2:{
     unfold list_rel_arg,app;
     match goal with
-    |- correct_body _ _ _ _ ?B _ _ ?INV
+    |- correct_body _ _ _ _ _ ?B _ _ ?INV
                  _ _ _ _ =>
       let I := fresh "INV" in
       set (I := INV) ; simpl in I;
@@ -422,7 +424,7 @@ Ltac destruct_if Hname :=
   (**r if-Hcond-then *)
   unfold list_rel_arg,app;
   match goal with
-  |- correct_body _ _ _ _ ?B _ _ ?INV
+  |- correct_body _ _ _ _ _ ?B _ _ ?INV
                _ _ _ _ =>
     let I := fresh "INV" in
     set (I := INV) ; simpl in I;

@@ -1,16 +1,18 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues.
+From bpf.comm Require Import MemRegion Regs BinrBPF State Monad rBPFAST rBPFValues rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values AST Clight Memory Memtype Integers.
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
+From bpf.clightlogic Require Import Clightlogic clight_exec CommonLemma CorrectRel.
 
 From bpf.simulation Require Import correct_check_mem_aux2 correct_get_mem_region correct_cmp_ptr32_nullM.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 Open Scope Z_scope.
 
@@ -34,15 +36,15 @@ Section Check_mem_aux.
   Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := check_mem_aux.
+  Definition f : arrow_type args (M State.state res) := check_mem_aux.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_check_mem_aux.
 
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    dcons (fun x => StateLess is_state_handle)
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess _ is_state_handle)
       (dcons (stateless nat_correct)
         (dcons (stateless perm_correct)
           (dcons (stateless match_chunk)
@@ -51,7 +53,7 @@ Section Check_mem_aux.
                 (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := stateless eq.
+  Definition match_res : res -> Inv State.state:= stateless eq.
 
 Lemma check_mem_aux_eq: forall n p c v l,
   check_mem_aux n p c v l =
@@ -79,7 +81,7 @@ Proof.
 Qed.
 
 
-  Instance correct_function_check_mem_aux : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
+  Instance correct_function_check_mem_aux : forall a, correct_function _ p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     intros.
     unfold args in a.
@@ -127,7 +129,7 @@ Qed.
     rewrite check_mem_aux_eq.
     eapply correct_statement_if_body_expr. intro EXPR.
     simpl.
-    apply correct_statement_seq_set with (match_res1 := StateLess (nat_correct c)).
+    apply correct_statement_seq_set with (match_res1 := StateLess _ (nat_correct c)).
     +
       intros MS H.
       unfold INV in H.
@@ -262,7 +264,7 @@ Qed.
 
     unfold INV; intro H.
     correct_Forall. simpl in H.
-    get_invariant _check_mem.
+    get_invariant _check_mem__1.
     exists (v::nil).
     split.
     unfold map_opt, exec_expr.
@@ -279,7 +281,7 @@ Qed.
       eapply correct_body_Sreturn_Some.
       intros.
       simpl in H0.
-      get_invariant _check_mem.
+      get_invariant _check_mem__1.
       eexists ; split_and.
       -
         unfold exec_expr. rewrite p0. reflexivity.

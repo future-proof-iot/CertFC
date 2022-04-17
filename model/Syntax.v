@@ -1,4 +1,5 @@
 From compcert Require Import Ctypes AST Integers.
+From Coq Require Import ZArith.
 
 From bpf.comm Require Import Regs rBPFAST.
 
@@ -28,6 +29,12 @@ Lemma arch_eqb_false:
 Proof.
   destruct x, y; simpl; intuition congruence.
 Qed.
+
+Definition arch2Z (a: arch) : Z :=
+  match a with
+  | A32 => 32%Z
+  | A64 => 64%Z
+  end.
 
 (** For condition flags *)
 (*Inductive signedness := Signed | Unsigned.*)
@@ -138,6 +145,7 @@ Proof.
   destruct x, y; simpl; intuition congruence.
 Qed.
 
+(**r BPD_LDDW are splitted into BPD_LDDW_low and BPD_LDDW_high *)
 
 Inductive instruction: Type :=
   (**r ALU64/32*)
@@ -148,7 +156,8 @@ Inductive instruction: Type :=
   | BPF_JUMP : cond -> reg -> reg+imm -> off -> instruction
 
   (**r Load *)
-  | BPF_LDDW : reg -> imm -> instruction
+  | BPF_LDDW_low : reg -> imm -> instruction
+  | BPF_LDDW_high : reg -> imm -> instruction
   (**r Load_x *)
   | BPF_LDX  : memory_chunk -> reg -> reg -> off -> instruction
   (**r Store/ Store_x *)
@@ -173,7 +182,8 @@ Definition bpf_instruction_eqb (a b: instruction) : bool :=
   | BPF_BINARY a0 b0 r0 ri0, BPF_BINARY a1 b1 r1 ri1 => arch_eqb a0 a1 && binOp_eqb b0 b1 && reg_eqb r0 r1 && sum_eqb reg_eqb Int.eq ri0 ri1
   | BPF_JA ofs0, BPF_JA ofs1 => Int.eq ofs0 ofs1
   | BPF_JUMP c0 r0 ri0 ofs0, BPF_JUMP c1 r1 ri1 ofs1 => cond_eqb c0 c1 && reg_eqb r0 r1 && sum_eqb reg_eqb Int.eq ri0 ri1  && Int.eq ofs0 ofs1
-  | BPF_LDDW r0 i0, BPF_LDDW r1 i1 => reg_eqb r0 r1 && Int.eq i0 i1
+  | BPF_LDDW_low r0 i0, BPF_LDDW_low r1 i1 => reg_eqb r0 r1 && Int.eq i0 i1
+  | BPF_LDDW_high r0 i0, BPF_LDDW_high r1 i1 => reg_eqb r0 r1 && Int.eq i0 i1
   | BPF_LDX mc0 d0 s0 ofs0, BPF_LDX mc1 d1 s1 ofs1 => chunk_eqb mc0 mc1 && reg_eqb d0 d1 && reg_eqb s0 s1 && Int.eq ofs0 ofs1
   | BPF_ST mc0 r0 ri0 ofs0, BPF_ST mc1 r1 ri1 ofs1 => chunk_eqb mc0 mc1 && reg_eqb r0 r1 && sum_eqb reg_eqb Int.eq ri0 ri1 && Int.eq ofs0 ofs1
   | BPF_CALL i0 , BPF_CALL i1 => Int.eq i0 i1
@@ -245,6 +255,10 @@ Proof.
     apply reg_eqb_true.
     intros. rewrite Int_eq_true.
     tauto.
+  - rewrite! Bool.andb_true_iff.
+    rewrite <- reg_eqb_true.
+    rewrite Int_eq_true.
+    intuition congruence.
   - rewrite! Bool.andb_true_iff.
     rewrite <- reg_eqb_true.
     rewrite Int_eq_true.

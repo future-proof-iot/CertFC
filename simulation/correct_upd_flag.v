@@ -1,16 +1,19 @@
-From bpf.comm Require Import Flag State Monad.
+From bpf.comm Require Import Flag State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLib.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma CommonLib.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 Section Upd_flag.
   Context {S :special_blocks}.
+
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -20,7 +23,7 @@ Section Upd_flag.
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := Monad.upd_flag.
+  Definition f : arrow_type args (M State.state res) := upd_flag.
 
   Variable state_block: block. (**r a block storing all rbpf state information? *)
   Variable mrs_block: block.
@@ -32,15 +35,15 @@ Section Upd_flag.
   Definition modifies  := ModSomething. (* of the C code *)
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-   dcons (fun x =>  StateLess (is_state_handle))
-                (dcons (fun x => (StateLess (flag_correct x)))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+   dcons (fun x =>  StateLess _ (is_state_handle))
+                (dcons (fun x => (StateLess _ (flag_correct x)))
                              (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x => StateLess (fun v => v = Vundef).
+  Definition match_res : res -> Inv State.state := fun x => StateLess _ (fun v => v = Vundef).
 
-  Instance correct_function_upd_flag : forall a, correct_function p args res f fn modifies false match_state match_arg_list match_res a.
+  Instance correct_function_upd_flag : forall a, correct_function _ p args res f fn modifies false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

@@ -150,7 +150,7 @@ const char new_words[][200] = {
 	
 	"static __attribute__((always_inline)) inline unsigned char *check_mem_aux(struct bpf_state* st, ",
 	"return check_mem_aux(st, ",
-	"static __attribute__((always_inline)) inline unsigned char *check_mem(struct bpf_state* st, ",
+	"unsigned char *check_mem(struct bpf_state* st, ",
 	
 	"static __attribute__((always_inline)) inline void step(struct bpf_state* st)",
 	"step(st); //print_bpf_state(st);",

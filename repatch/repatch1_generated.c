@@ -73,7 +73,7 @@ extern void step_opcode_alu32(unsigned int, unsigned int, unsigned int, unsigned
 
 extern void step_opcode_branch(unsigned long long, unsigned long long, unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_ld_imm(int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_ld_imm(int, unsigned long long, unsigned int, unsigned int, unsigned char);
 
 extern void step_opcode_mem_ld_reg(unsigned int, unsigned int, unsigned int, unsigned char);
 
@@ -153,7 +153,7 @@ unsigned long long get_src64(unsigned char x, unsigned long long ins)
   long long imm64;
   unsigned int src;
   unsigned long long src64;
-  if (0U == (x & 8)) {
+  if (0U == (x & 8U)) {
     imm = get_immediate(ins);
     imm64 = eval_immediate(imm);
     return (unsigned long long) imm64;
@@ -170,7 +170,7 @@ unsigned int get_src32(unsigned char x, unsigned long long ins)
   unsigned int src;
   unsigned long long src64;
   unsigned int src32;
-  if (0U == (x & 8)) {
+  if (0U == (x & 8U)) {
     imm = get_immediate(ins);
     return imm;
   } else {
@@ -631,28 +631,17 @@ void step_opcode_branch(unsigned long long dst64, unsigned long long src64, unsi
   }
 }
 
-void step_opcode_mem_ld_imm(int imm, unsigned int pc, unsigned int dst, unsigned char op)
+void step_opcode_mem_ld_imm(int imm, unsigned long long dst64, unsigned int pc, unsigned int dst, unsigned char op)
 {
-  unsigned int len;
   unsigned char opcode_ld;
-  unsigned long long next_ins;
-  int next_imm;
-  len = eval_ins_len();
   opcode_ld = get_opcode_mem_ld_imm(op);
   switch (opcode_ld) {
     case 24:
-      if (pc + 1U < len) {
-        next_ins = eval_ins(pc + 1U);
-        next_imm = get_immediate(next_ins);
-        upd_reg(dst,
-                (unsigned long long) imm
-                  | (unsigned long long) next_imm << 32U);
-        upd_pc_incr();
-        return;
-      } else {
-        upd_flag(-5);
-        return;
-      }
+      upd_reg(dst, (unsigned long long) imm);
+      return;
+    case 16:
+      upd_reg(dst, dst64 | (unsigned long long) imm << 32U);
+      return;
     default:
       upd_flag(-1);
       return;
@@ -863,6 +852,7 @@ void step(void)
   unsigned long long dst64;
   int ofs;
   unsigned long long src64;
+  unsigned long long dst64;
   int imm;
   unsigned int src;
   unsigned long long src64;
@@ -902,8 +892,9 @@ void step(void)
                          (unsigned int) ofs, op);
       return;
     case 0:
+      dst64 = eval_reg(dst);
       imm = get_immediate(ins);
-      step_opcode_mem_ld_imm(imm, pc, dst, op);
+      step_opcode_mem_ld_imm(imm, dst64, pc, dst, op);
       return;
     case 1:
       src = get_src(ins);

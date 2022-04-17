@@ -1,11 +1,11 @@
 From compcert Require Import Integers Values.
-From bpf.comm Require Import Regs State LemmaNat.
+From bpf.comm Require Import Regs BinrBPF State LemmaNat.
 From bpf.model Require Import Semantics.
-From bpf.isolation Require Import AlignChunk CommonISOLib.
+From bpf.isolation Require Import AlignChunk CommonISOLib VerifierOpcode.
+From bpf.verifier.comm Require Import state.
 From Coq Require Import ZArith Lia List.
 Import ListNotations.
 
-Open Scope Z_scope.
 
 Ltac destruct_if_zeqb Hname :=
   match goal with
@@ -16,6 +16,8 @@ Ltac destruct_if_zeqb Hname :=
       rewrite Z.eqb_neq in Hname]
   end.
 
+
+Open Scope nat_scope.
 (**r CertrBPF needs the following two properties guaranteed by an assumed rbpf verifier, we will implement a verified verifier later~
 
 \begin{enumerate}
@@ -29,90 +31,378 @@ Ltac destruct_if_zeqb Hname :=
 
  *)
 
-Definition well_dst (i: int64) : Prop :=
-  0 <= get_dst i <= 10.
+Definition is_well_dst (i: int64) : bool := Int.cmpu Cle (Int.repr (get_dst i)) (Int.repr 10).
 
-Definition well_src (i: int64) : Prop :=
-  0 <= get_src i <= 10.
+Definition is_well_src (i: int64) : bool := Int.cmpu Cle (Int.repr (get_src i)) (Int.repr 10).
 
-Definition well_list_range (l: list int64) : Prop :=
-  (**r (0, Int.max_unsigned/8): at least one instruction, and at most Int.max_unsigned/8 because of memory region *)
-  1 <= Z.of_nat (List.length l) /\
-  Z.of_nat (List.length l) * 8 <= Ptrofs.max_unsigned /\
-  (**r the last instruaction is always exit: to guarantee the next instruction of each instruction is within the bound *)
-  List.nth_error l (List.length l - 1) = Some (Int64.repr 0x95).
+Definition is_well_jump (pc len: nat) (ofs: int) : bool :=
+  Int.cmpu Cle (Int.add (Int.repr (Z.of_nat pc)) ofs) (Int.sub (Int.repr (Z.of_nat len)) (Int.repr 2%Z)).
+(*
+Definition is_well_jump (pc len: nat) (ofs: int) : bool :=
+  Int.cmpu Clt (Int.add (Int.repr (Z.of_nat pc)) ofs) (Int.repr (Z.of_nat len)). *)
 
-(**r how to define valid instruction: according to its opcode? any other more efficient algorithms? *) (*
-Definition valid_instruction () *)
+Definition is_not_div_by_zero (i: int64) : bool :=
+  Int.cmp Cne (BinrBPF.get_immediate i) Int.zero.
 
-Close Scope Z_scope.
+Definition is_not_div_by_zero64 (i: int64) : bool :=
+  Int64.cmp Cne (Int64.repr (Int.signed (BinrBPF.get_immediate i))) Int64.zero.
 
-Open Scope nat_scope.
+Definition is_shift_range (i: int64) (upper: int): bool :=
+  Int.cmpu Clt (BinrBPF.get_immediate i) upper.
 
-Definition is_jump (i: int64) : bool :=
-  match get_opcode i with
-  | 0x05
-  | 0x15 | 0x1d
-  | 0x25 | 0x2d
-  | 0x35 | 0x3d
-  | 0xa5 | 0xad
-  | 0xb5 | 0xbd
-  | 0x45 | 0x4d
-  | 0x55 | 0x5d
-  | 0x65 | 0x6d
-  | 0x75 | 0x7d
-  | 0xc5 | 0xcd
-  | 0xd5 | 0xdd => true
-  | _    => false
+Definition is_shift_range64 (i: int64) (upper: int): bool :=
+  Int.ltu (Int.repr (Int64.unsigned (Int64.repr (Int.signed (BinrBPF.get_immediate i))))) upper.
+
+Definition bpf_verifier_aux2 (pc len op: nat) (ins: int64) : bool :=
+  match nat_to_opcode op with
+  | ALU64  (**r 0xX7 / 0xXf *) =>
+    match nat_to_opcode_alu op with
+    | ALU_DIV => (**r DIV_IMM *) is_well_dst ins && is_not_div_by_zero64 ins
+    | ALU_SHIFT => (**r SHIFT_IMM *) is_well_dst ins && is_shift_range64 ins (Int.repr 64%Z)
+    | ALU_IMM_Normal => (**r ALU_IMM *) is_well_dst ins
+    | ALU_REG_Normal => (**r ALU_REG *) is_well_dst ins && is_well_src ins
+    | ALU_ILLEGAL => false
+    end
+  | ALU32  (**r 0xX4 / 0xXc *) =>
+    match nat_to_opcode_alu op with
+    | ALU_DIV => (**r DIV_IMM *) is_well_dst ins && is_not_div_by_zero ins
+    | ALU_SHIFT => (**r SHIFT_IMM *) is_well_dst ins && is_shift_range ins (Int.repr 32%Z)
+    | ALU_IMM_Normal => (**r ALU_IMM *) is_well_dst ins
+    | ALU_REG_Normal => (**r ALU_REG *) is_well_dst ins && is_well_src ins
+    | ALU_ILLEGAL => false
+    end
+  | Branch (**r 0xX5 / 0xXd *) =>
+    match nat_to_opcode_branch op with
+    | JMP_IMM =>
+      let ofs := get_offset ins in
+        is_well_dst ins && is_well_jump pc len ofs
+    | JMP_REG =>
+      let ofs := get_offset ins in
+        is_well_dst ins && is_well_src ins && is_well_jump pc len ofs
+    | JMP_SP => Int.cmpu Ceq (Int.repr (get_dst ins)) (Int.repr 0)
+    | JMP_ILLEGAL => false
+    end
+  | LD_IMM (**r 0xX8 *) =>
+    match nat_to_opcode_load_imm op with
+    | LD_IMM_Normal  => is_well_dst ins
+    | LD_IMM_ILLEGAL => false
+    end
+  | LD_REG (**r 0xX1/0xX9 *) =>
+    match nat_to_opcode_load_reg op with
+    | LD_REG_Normal  => is_well_dst ins && is_well_src ins
+    | LD_REG_ILLEGAL => false
+    end
+  | ST_IMM (**r 0xX2/0xXa *) =>
+    match nat_to_opcode_store_imm op with
+    | ST_IMM_Normal  => is_well_dst ins
+    | ST_IMM_ILLEGAL => false
+    end
+  | ST_REG (**r 0xX3/0xXb *)  =>
+    match nat_to_opcode_store_reg op with
+    | ST_REG_Normal  => is_well_dst ins && is_well_src ins
+    | ST_REG_ILLEGAL => false
+    end
+  | ILLEGAL => false
   end.
 
-Definition is_lddw (i: int64) : bool :=
-  match get_opcode i with
-  | 0x18 => true
-  | _    => false
-  end.
-
-Definition well_jump (i: int64) (pc len: nat) : Prop :=
-  if is_jump i then
-    let imm := Regs.get_offset i in
-    let pc'  :=Int.add (Int.repr (Z.of_nat pc)) imm in
-      Int.cmpu Clt pc' (Int.repr (Z.of_nat len)) = true
-  else
-    True.
-
-Definition well_lddw (i: int64) (pc len: nat) : Prop :=
-  if is_lddw i then
-    Int.cmpu Clt (Int.add (Int.repr (Z.of_nat pc)) Int.one) (Int.repr (Z.of_nat len)) = true
-  else
-    True.
-
-Definition verifier_inv' (l: list int64): Prop :=
-  well_list_range l /\
-  forall i, i < List.length l ->
-    match List.nth_error l i with
-    | Some ins =>
-        well_dst ins /\ well_src ins /\
-        well_lddw ins i (List.length l) /\
-        well_jump ins i (List.length l)
-    | None => False
+Fixpoint bpf_verifier_aux (pc len: nat) (st: state.state): bool :=
+    match pc with
+    | O => true
+    | S n =>
+      let i := List64.MyListIndexs32 (ins st) (Int.repr (Z.of_nat n)) in
+      let op := get_opcode i in
+        if (bpf_verifier_aux2 n len op i) then
+            bpf_verifier_aux n len st
+          else
+            false
     end.
+(*
+Fixpoint bpf_verifier_aux_rev (pc len: nat) (st: state.state): bool :=
+    match pc with
+    | O => true
+    | S n =>
+      let i := List64.MyListIndexs32 (ins st) (Int.repr (Z.of_nat (len - 1 - n))) in
+      let op := get_opcode i in
+        if (bpf_verifier_aux2 (len - 1 - n) len op i) then
+            bpf_verifier_aux_rev n len st
+          else
+            false
+    end.
+*)
+Definition bpf_verifier (st: state.state): bool :=
+  let len := ins_len st in
+  (**r (0, Int.max_unsigned/8): at least one instruction, and at most Int.max_unsigned/8 because of memory region *)
+    if negb (Int.ltu (Int.repr (Z.of_nat len)) Int.one) then
+      if negb
+       (Int.ltu (Int.divu (Int.repr Int.max_unsigned) (Int.repr 8))
+          (Int.repr (Z.of_nat len))) then
+        if bpf_verifier_aux len len st then
+          let i := List64.MyListIndexs32 (ins st) (Int.repr (Z.of_nat  (len - 1))) in
+            Int64.eq i (Int64.repr 0x95)
+        else
+          false
+      else
+        false
+    else
+      false.
 
-Definition verifier_inv (st: state): Prop :=
-  (ins_len st) = (List.length (ins st))  /\
-  verifier_inv' (ins st).
+Lemma sub_lt:
+  forall a b,
+    b < a ->
+    a - 1 - b < a.
+Proof.
+  intros.
+  assert (1+b <= a) by lia.
+  rewrite <- Nat.sub_add_distr.
+  apply Nat.sub_lt.
+  assumption.
+  lia.
+Qed.
+
+Lemma bpf_verifier_aux_implies:
+  forall st pc op ins k
+    (Hst: bpf_verifier_aux k (ins_len st) st = true)
+    (Hlen: List.length (state.ins st) = ins_len st)
+    (Hpc: pc < k)
+    (Hop: op = get_opcode ins)
+    (Hins: ins = List64.MyListIndexs32 (state.ins st) (Int.repr (Z.of_nat pc))),
+      bpf_verifier_aux2 pc (ins_len st) op ins = true.
+Proof.
+  unfold List64.MyListIndexs32, List64.MyList.index_s32.
+  intros.
+
+  induction k.
+  - lia.
+  - assert (Hpc_eq: pc = k \/ pc < k) by lia.
+    destruct Hpc_eq as [Hpc_eq | Hpc_lt].
+    + simpl in Hst.
+      unfold List64.MyListIndexs32, List64.MyList.index_s32 in Hst.
+      rewrite Hpc_eq in *.
+      rewrite <- Hins in *.
+      match goal with
+      | H: (if ?X then _ else _) = _ |- _ =>
+        destruct X eqn: Haux2;[ | inversion H]
+      end.
+      rewrite Hop.
+      assumption.
+    + apply IHk; auto.
+      simpl in Hst.
+      match goal with
+      | H: (if ?X then _ else _) = _ |- _ =>
+        destruct X eqn: Haux2;[ | inversion H]
+      end.
+      assumption.
+Qed.
+
+(*
+Lemma is_well_jump_ind:
+  forall k len ofs,
+    is_well_jump k len ofs = true ->
+      is_well_jump 0 len ofs = true.
+Proof.
+  unfold is_well_jump; intros.
+  destruct k.
+  - assumption.
+  - unfold Int.cmpu in *.
+    rewrite Clt_Zlt_iff in *.
+    
+Qed. *)
+
+Lemma bpf_verifier_aux_implies':
+  forall st pc op ins k
+    (Hst: bpf_verifier_aux k (ins_len st) st = true)
+    (Hlen: List.length (state.ins st) = ins_len st)
+    (Hpc: pc < k)
+    (Hop: op = get_opcode ins)
+    (Hins: ins = List64.MyListIndexs32 (state.ins st) (Int.repr (Z.of_nat (k-1-pc)))),
+      bpf_verifier_aux2 (k-1-pc) (ins_len st) op ins = true.
+Proof.
+  intros.
+  assert (H: k-1-pc < k). {
+    eapply sub_lt; eauto.
+  }
+  eapply bpf_verifier_aux_implies; eauto.
+Qed.
+
+
+Lemma bpf_verifier_aux_implies_bpf_verifier_aux:
+  forall st pc k
+    (Hst: bpf_verifier_aux k (ins_len st) st = true)
+    (Hlen: List.length (state.ins st) = ins_len st)
+    (Hpc: pc < k),
+      bpf_verifier_aux pc (ins_len st) st = true.
+Proof.
+  intros.
+  induction k.
+  - lia.
+  - assert (Hpc_eq: pc = k \/ pc < k) by lia.
+    destruct Hpc_eq as [Hpc_eq | Hpc_lt].
+    + simpl in Hst.
+      unfold List64.MyListIndexs32, List64.MyList.index_s32 in Hst.
+      rewrite Hpc_eq in *.
+      match goal with
+      | H: (if ?X then _ else _) = _ |- _ =>
+        destruct X eqn: Haux2;[ | inversion H]
+      end.
+      assumption.
+    + apply IHk; auto.
+      simpl in Hst.
+      match goal with
+      | H: (if ?X then _ else _) = _ |- _ =>
+        destruct X eqn: Haux2;[ | inversion H]
+      end.
+      assumption.
+Qed.
+
+
+Lemma bpf_verifier_aux_implies_bpf_verifier_aux':
+  forall st pc k
+    (Hst: bpf_verifier_aux k (ins_len st) st = true)
+    (Hlen: List.length (state.ins st) = ins_len st)
+    (Hpc: pc < k),
+      bpf_verifier_aux (k-1-pc) (ins_len st) st = true.
+Proof.
+  intros.
+  assert (H: k-1-pc < k). {
+    eapply sub_lt; eauto.
+  }
+  eapply bpf_verifier_aux_implies_bpf_verifier_aux; eauto.
+Qed.
+
+Lemma bpf_verifier_implies:
+  forall st pc op ins
+    (Hst: bpf_verifier st = true)
+    (Hlen: List.length (state.ins st) = ins_len st)
+    (Hpc: pc < ins_len st)
+    (Hop: op = get_opcode ins)
+    (Hins: ins = List64.MyListIndexs32 (state.ins st) (Int.repr (Z.of_nat pc))),
+      bpf_verifier_aux2 pc (ins_len st) op ins = true.
+Proof.
+  unfold bpf_verifier, List64.MyListIndexs32, List64.MyList.index_s32.
+  intros.
+  match goal with
+  | H: (if ?X then _ else _) = _ |- _ =>
+    destruct X eqn: Hlen_low;[ | inversion H]
+  end.
+  match goal with
+  | H: (if ?X then _ else _) = _ |- _ =>
+    destruct X eqn: Hlen_high;[ | inversion H]
+  end.
+  match goal with
+  | H: (if ?X then _ else _) = _ |- _ =>
+    destruct X eqn: Haux;[ | inversion H]
+  end.
+  eapply bpf_verifier_aux_implies; eauto.
+Qed.
+
+(*
+Lemma bpf_verifier_aux_rev_iff:
+  forall st k,
+    bpf_verifier_aux k (ins_len st) st = bpf_verifier_aux_rev k (ins_len st) st.
+Proof.
+  intros.
+  induction k.
+  - simpl. reflexivity.
+  - simpl.
+
+    destruct bpf_verifier_aux eqn: Hst; rewrite <-IHk.
+    + symmetry in IHk.
+      
+    + destruct bpf_verifier_aux2; destruct bpf_verifier_aux2; reflexivity.
+      
+
+    rewrite Nat.sub_0_r.
+    rewrite Nat.sub_diag.
+  Search List.rev.
+Qed. *)
+
 
 Close Scope nat_scope.
 
-Lemma verifier_inv_dst_reg:
+Lemma verifier_inv_dst_zero:
   forall ins,
-    well_dst ins ->
-    exists r,
-      Regs.int64_to_dst_reg' ins = Some r.
+    Int.cmpu Ceq (Int.repr (get_dst ins))
+              (Int.repr 0) = true ->
+      BinrBPF.int64_to_dst_reg' ins = Some R0.
 Proof.
-  unfold well_dst, Regs.int64_to_dst_reg'; intros.
-  unfold z_to_reg.
+  unfold BinrBPF.int64_to_dst_reg', z_to_reg; intros.
   remember (get_dst ins) as i.
-  clear Heqi.
+  unfold get_dst in Heqi.
+  rewrite <- Int64.and_shru in Heqi.
+  change (Int64.shru (Int64.repr 4095) (Int64.repr 8)) with (Int64.repr 15) in Heqi.
+  rewrite Int64.and_commut in Heqi.
+  assert (Hi_le: (0 <= Int64.unsigned
+         (Int64.and (Int64.repr 15)
+            (Int64.shru ins (Int64.repr 8))) <= (Int64.unsigned (Int64.repr 15)))%Z). {
+    split;[ | apply Int64.and_le].
+    apply Int64_unsigned_ge_0.
+  }
+  change (Int64.unsigned (Int64.repr 15)) with 15%Z in Hi_le.
+  assert (Hi: (0 <= i <= 15)%Z) by lia.
+  clear Heqi Hi_le.
+  unfold Int.cmpu in H.
+Ltac destruct_if_zeq Hname H :=
+  match goal with
+  | |- context [(if ?X then _ else _) = Some _] =>
+    destruct X eqn: Hname;
+    [ rewrite Z.eqb_eq in Hname; rewrite Hname in H; inversion H |
+      rewrite Z.eqb_neq in Hname]
+  end.
+  destruct_if_zeqb Heq0.
+  destruct_if_zeq Heq1 H.
+  destruct_if_zeq Heq2 H.
+  destruct_if_zeq Heq3 H.
+  destruct_if_zeq Heq4 H.
+  destruct_if_zeq Heq5 H.
+  destruct_if_zeq Heq6 H.
+  destruct_if_zeq Heq7 H.
+  destruct_if_zeq Heq8 H.
+  destruct_if_zeq Heq9 H.
+  destruct_if_zeq Heq10 H.
+  destruct (i =? 11)%Z eqn: H11; 
+  [ rewrite Z.eqb_eq in H11; rewrite H11 in H; inversion H |
+      rewrite Z.eqb_neq in H11].
+  destruct (i =? 12)%Z eqn: H12; 
+  [ rewrite Z.eqb_eq in H12; rewrite H12 in H; inversion H |
+      rewrite Z.eqb_neq in H12].
+  destruct (i =? 13)%Z eqn: H13; 
+  [ rewrite Z.eqb_eq in H13; rewrite H13 in H; inversion H |
+      rewrite Z.eqb_neq in H13].
+  destruct (i =? 14)%Z eqn: H14; 
+  [ rewrite Z.eqb_eq in H14; rewrite H14 in H; inversion H |
+      rewrite Z.eqb_neq in H14].
+  destruct (i =? 15)%Z eqn: H15; 
+  [ rewrite Z.eqb_eq in H15; rewrite H15 in H; inversion H |
+      rewrite Z.eqb_neq in H15].
+  lia.
+Qed.
+
+
+Lemma verifier_inv_is_well_dst:
+  forall ins,
+    is_well_dst ins = true ->
+    exists r,
+      BinrBPF.int64_to_dst_reg' ins = Some r.
+Proof.
+  unfold is_well_dst, BinrBPF.int64_to_dst_reg', z_to_reg; intros.
+  remember (get_dst ins) as i.
+  unfold get_dst in Heqi.
+  rewrite <- Int64.and_shru in Heqi.
+  change (Int64.shru (Int64.repr 4095) (Int64.repr 8)) with (Int64.repr 15) in Heqi.
+  rewrite Int64.and_commut in Heqi.
+  assert (Hi_le: (0 <= Int64.unsigned
+         (Int64.and (Int64.repr 15)
+            (Int64.shru ins (Int64.repr 8))) <= (Int64.unsigned (Int64.repr 15)))%Z). {
+    split;[ | apply Int64.and_le].
+    apply Int64_unsigned_ge_0.
+  }
+  change (Int64.unsigned (Int64.repr 15)) with 15%Z in Hi_le.
+  assert (Hi: (0 <= i <= 15)%Z) by lia.
+  clear Heqi Hi_le.
+  unfold Int.cmpu in H.
+  rewrite Cle_Zle_iff in H.
+  change (Int.unsigned (Int.repr 10)) with 10%Z in H.
+  rewrite Int.unsigned_repr in H; [| change Int.max_unsigned with 4294967295%Z; lia].
   destruct_if_zeqb Heq0.
   destruct_if_zeqb Heq1.
   destruct_if_zeqb Heq2.
@@ -128,13 +418,53 @@ Proof.
 Qed.
 
 
+Lemma verifier_inv_is_well_src:
+  forall ins,
+    is_well_src ins = true ->
+    exists r,
+      BinrBPF.int64_to_src_reg' ins = Some r.
+Proof.
+  unfold is_well_src, BinrBPF.int64_to_src_reg', z_to_reg; intros.
+  remember (get_src ins) as i.
+  unfold get_src in Heqi.
+  rewrite <- Int64.and_shru in Heqi.
+  change (Int64.shru (Int64.repr 65535) (Int64.repr 12)) with (Int64.repr 15) in Heqi.
+  rewrite Int64.and_commut in Heqi.
+  assert (Hi_le: (0 <= Int64.unsigned
+         (Int64.and (Int64.repr 15)
+            (Int64.shru ins (Int64.repr 12))) <= (Int64.unsigned (Int64.repr 15)))%Z). {
+    split;[ | apply Int64.and_le].
+    apply Int64_unsigned_ge_0.
+  }
+  change (Int64.unsigned (Int64.repr 15)) with 15%Z in Hi_le.
+  assert (Hi: (0 <= i <= 15)%Z) by lia.
+  clear Heqi Hi_le.
+  unfold Int.cmpu in H.
+  rewrite Cle_Zle_iff in H.
+  change (Int.unsigned (Int.repr 10)) with 10%Z in H.
+  rewrite Int.unsigned_repr in H; [| change Int.max_unsigned with 4294967295%Z; lia].
+  destruct_if_zeqb Heq0.
+  destruct_if_zeqb Heq1.
+  destruct_if_zeqb Heq2.
+  destruct_if_zeqb Heq3.
+  destruct_if_zeqb Heq4.
+  destruct_if_zeqb Heq5.
+  destruct_if_zeqb Heq6.
+  destruct_if_zeqb Heq7.
+  destruct_if_zeqb Heq8.
+  destruct_if_zeqb Heq9.
+  destruct_if_zeqb Heq10.
+  lia.
+Qed.
+
+(*
 Lemma verifier_inv_src_reg :
   forall ins,
     well_src ins ->
     exists r,
-      Regs.int64_to_src_reg' ins = Some r.
+      BinrBPF.int64_to_src_reg' ins = Some r.
 Proof.
-  unfold well_src, Regs.int64_to_src_reg'; intros.
+  unfold well_src, BinrBPF.int64_to_src_reg'; intros.
   unfold z_to_reg.
   remember (get_src ins) as i.
   clear Heqi.
@@ -151,7 +481,7 @@ Proof.
   destruct_if_zeqb Heq10.
   lia.
 Qed.
-
+*)
 Lemma opcode_and_255:
   forall ins,
     Nat.land (get_opcode ins) 255 = get_opcode ins.

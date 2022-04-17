@@ -4,11 +4,13 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
 
 From bpf.simulation Require Import correct_get_immediate correct_eval_immediate correct_get_src correct_eval_reg.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (**
 Check get_src64.
@@ -21,6 +23,7 @@ Open Scope Z_scope.
 
 Section Get_src64.
   Context {S: special_blocks}.
+
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -30,23 +33,23 @@ Section Get_src64.
   Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_src64.
+  Definition f : arrow_type args (M State.state res) := get_src64.
 
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_src64.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    dcons (fun x => StateLess is_state_handle)
-      (dcons (fun x => StateLess (opcode_correct x))
-        (dcons (fun x => StateLess (int64_correct x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv State.state) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess _ is_state_handle)
+      (dcons (fun x => StateLess _ (opcode_correct x))
+        (dcons (fun x => StateLess _ (int64_correct x))
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x  => StateLess (val64_correct x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (val64_correct x).
 
-  Instance correct_function_get_src64 : forall a, correct_function p args res f fn ModNothing false match_state match_arg_list match_res a.
+  Instance correct_function_get_src64 : forall a, correct_function _ p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

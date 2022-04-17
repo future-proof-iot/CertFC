@@ -28,32 +28,67 @@ OCAMLINCS := -I extr # -I src
 all:
 	@echo $@
 	@$(MAKE) comm
+	@$(MAKE) dxcomm
 	@$(MAKE) model
+	@$(MAKE) verifier
 	@$(MAKE) monadicmodel
 	@$(MAKE) compile
 	@$(MAKE) extract
 	@$(MAKE) repatch
 	@$(MAKE) clightmodel
 	@$(MAKE) clightlogic
+	@$(MAKE) dxverifier
 	@$(MAKE) simulation
 	@$(MAKE) isolation
 	@$(MAKE) equivalence
 
-COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
-COQEMONADIC =  $(addprefix monadicmodel/, Opcode.v rBPFInterpreter.v)
-COQSRC =  $(addprefix src/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxNat.v DxAST.v DxFlag.v DxList64.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
-COQEQUIV =  $(addprefix equivalence/, equivalence1.v equivalence2.v)
-COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v VerifierInv.v IsolationLemma.v Isolation.v)
-COQCOMM = $(addprefix comm/, Flag.v LemmaNat.v List64.v rBPFAST.v rBPFMemType.v rBPFValues.v MemRegion.v Regs.v State.v Monad.v)
+COQVERIFIER =  $(addprefix verifier/, comm/state.v comm/monad.v synthesismodel/opcode_synthesis.v synthesismodel/verifier_synthesis.v dxmodel/Dxopcode.v dxmodel/Dxstate.v dxmodel/Dxmonad.v dxmodel/Dxverifier.v dxmodel/verifier_dx.v dxmodel/verifier_TestMain.v dxmodel/verifier_ExtrMain.v)
 
-#COQCOMM = $(wildcard comm/*.v)
-#COQMODEL = $(wildcard model/*.v)
-#COQSRC = $(wildcard src/*.v)
+COQVERIFIERCLIGHT= $(addprefix verifier/, clightmodel/verifier.v)
+
+COQVERIFIERSIMULATION = $(addprefix verifier/simulation/, VerifierSimulation.v VerifierRel.v correct_bpf_verifier_eval_ins.v correct_bpf_verifier_eval_ins_len.v correct_is_dst_R0.v correct_is_well_dst.v correct_is_well_src.v correct_is_well_jump.v correct_is_not_div_by_zero.v correct_is_not_div_by_zero64.v correct_is_shift_range.v correct_is_shift_range64.v correct_bpf_verifier_get_opcode.v correct_bpf_verifier_get_offset.v correct_bpf_verifier_opcode_alu32_imm.v correct_bpf_verifier_opcode_alu32_reg.v correct_bpf_verifier_opcode_alu64_imm.v correct_bpf_verifier_opcode_alu64_reg.v correct_bpf_verifier_opcode_branch_imm.v correct_bpf_verifier_opcode_branch_reg.v correct_bpf_verifier_opcode_load_imm.v correct_bpf_verifier_opcode_load_reg.v correct_bpf_verifier_opcode_store_imm.v correct_bpf_verifier_opcode_store_reg.v correct_bpf_verifier_aux2.v correct_bpf_verifier_aux.v correct_bpf_verifier.v)
+
+COQVERIFIERPROPERTY= $(addprefix verifier/property/, equivalence.v invariant.v)
+
+COQMODEL =  $(addprefix model/, Syntax.v Decode.v Semantics.v)
+
+COQEMONADIC =  $(addprefix monadicmodel/, Opcode.v rBPFInterpreter.v)
+
+COQDXMODEL =  $(addprefix dxmodel/, DxAST.v DxFlag.v DxOpcode.v IdentDef.v DxMemType.v DxMemRegion.v DxRegs.v DxState.v DxMonad.v DxInstructions.v Tests.v TestMain.v ExtrMain.v)
+
+COQEQUIV =  $(addprefix equivalence/, equivalence1.v equivalence2.v)
+
+COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v VerifierOpcode.v VerifierInv.v CheckMem.v StateInv.v IsolationLemma.v Isolation1.v Isolation2.v)
+
+COQCOMM = $(addprefix comm/, Flag.v LemmaNat.v List64.v rBPFAST.v rBPFMemType.v rBPFValues.v MemRegion.v Regs.v BinrBPF.v State.v Monad.v rBPFMonadOp.v)
+
+COQDXCOMM = $(addprefix dxcomm/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxList64.v DxBinrBPF.v DxNat.v)
 
 comm:
 	@echo $@
-#	rm -f comm/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(COQCOMM) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+
+dxcomm:
+	@echo $@
+	$(COQMAKEFILE) -f _CoqProject $(COQDXCOMM) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+
+verifier:
+	@echo $@
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIER) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+	$(CP) verifier_TestMain.ml verifier/dxmodel
+	$(CP) verifier_TestMain.mli verifier/dxmodel
+	
+dxverifier:
+	@echo $@
+	cd verifier && $(MAKE) verifier-all
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERCLIGHT) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERSIMULATION) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	make -f CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERPROPERTY) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 
 model:
@@ -81,11 +116,10 @@ equivalence:
 
 compile:
 	@echo $@
-#	rm -f src/*.vo
-	$(COQMAKEFILE) -f _CoqProject $(COQSRC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQDXMODEL) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
-	$(CP) TestMain.ml src # mv -> cp to avoid when running `make` again, it doesn't find the two files
-	$(CP) TestMain.mli src
+	$(CP) TestMain.ml dxmodel # mv -> cp to avoid when running `make` again, it doesn't find the two files
+	$(CP) TestMain.mli dxmodel
 
 extract:
 	@echo $@
@@ -103,17 +137,17 @@ extract:
 	            }' > compcertsrc-I	
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I src src/TestMain.mli	
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I src -c src/TestMain.ml
+	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I dxmodel dxmodel/TestMain.mli	
+	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I dxmodel -c dxmodel/TestMain.ml
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
-	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx src/TestMain.cmx -o src/main
-	ln -sf $(COMPCERTSRCDIR)/compcert.ini src/compcert.ini
-	cd src && ./main
+	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx dxmodel/TestMain.cmx -o dxmodel/main
+	ln -sf $(COMPCERTSRCDIR)/compcert.ini dxmodel/compcert.ini
+	cd dxmodel && ./main
 
 repatch:
 	@echo $@
-	$(CP) src/generated.c repatch
+	$(CP) dxmodel/generated.c repatch
 	cd repatch && $(CC) -o repatch1 repatch1.c && ./repatch1 && $(CC) -o repatch2 repatch2.c && ./repatch2 && $(CC) -o repatch3 repatch3.c && ./repatch3 && $(CC) -o repatch4 repatch4.c && ./repatch4
 	$(CP) repatch/interpreter.c clight
 
@@ -124,17 +158,16 @@ clightmodel:
 	$(COQMAKEFILE) -f _CoqProject clight/interpreter.v COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
 	make -f CoqMakefile
 
-PROOF = $(addprefix simulation/, correct_eval_pc.v correct_upd_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_num.v correct_eval_mrs_regions.v correct_load_mem.v correct_store_mem_reg.v correct_store_mem_imm.v correct_eval_ins_len.v correct_eval_ins.v correct_cmp_ptr32_nullM.v correct_get_dst.v correct_get_src.v correct_get_mem_region.v correct__bpf_get_call.v correct_exec_function.v correct_reg64_to_reg32.v correct_get_offset.v correct_get_immediate.v correct_eval_immediate.v correct_get_src64.v correct_get_src32.v correct_get_opcode_ins.v correct_get_opcode_alu64.v correct_get_opcode_alu32.v correct_get_opcode_branch.v correct_get_opcode_mem_ld_imm.v correct_get_opcode_mem_ld_reg.v correct_get_opcode_mem_st_imm.v correct_get_opcode_mem_st_reg.v correct_get_opcode.v correct_get_add.v correct_get_sub.v correct_get_addr_ofs.v correct_get_start_addr.v correct_get_block_size.v correct_get_block_perm.v correct_is_well_chunk_bool.v correct_check_mem_aux2.v correct_check_mem_aux.v correct_check_mem.v correct_step_opcode_alu64.v correct_step_opcode_alu32.v correct_step_opcode_branch.v correct_step_opcode_mem_ld_imm.v correct_step_opcode_mem_ld_reg.v correct_step_opcode_mem_st_reg.v correct_step_opcode_mem_st_imm.v correct_step.v correct_bpf_interpreter_aux.v correct_bpf_interpreter.v)
+PROOF = $(addprefix simulation/, MatchState.v InterpreterRel.v correct_eval_pc.v correct_upd_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_num.v correct_eval_mrs_regions.v correct_load_mem.v correct_store_mem_reg.v correct_store_mem_imm.v correct_eval_ins_len.v correct_eval_ins.v correct_cmp_ptr32_nullM.v correct_get_dst.v correct_get_src.v correct_get_mem_region.v correct__bpf_get_call.v correct_exec_function.v correct_reg64_to_reg32.v correct_get_offset.v correct_get_immediate.v correct_eval_immediate.v correct_get_src64.v correct_get_src32.v correct_get_opcode_ins.v correct_get_opcode_alu64.v correct_get_opcode_alu32.v correct_get_opcode_branch.v correct_get_opcode_mem_ld_imm.v correct_get_opcode_mem_ld_reg.v correct_get_opcode_mem_st_imm.v correct_get_opcode_mem_st_reg.v correct_get_opcode.v correct_get_add.v correct_get_sub.v correct_get_addr_ofs.v correct_get_start_addr.v correct_get_block_size.v correct_get_block_perm.v correct_is_well_chunk_bool.v correct_check_mem_aux2.v correct_check_mem_aux.v correct_check_mem.v correct_step_opcode_alu64.v correct_step_opcode_alu32.v correct_step_opcode_branch.v correct_step_opcode_mem_ld_imm.v correct_step_opcode_mem_ld_reg.v correct_step_opcode_mem_st_reg.v correct_step_opcode_mem_st_imm.v correct_step.v correct_bpf_interpreter_aux.v correct_bpf_interpreter.v)
 
 # TBC: store_mem_imm store_mem_reg step_opcode_mem_st_imm step_opcode_mem_st_reg step bpf_interpreter_aux bpf_interpreter
 # useless: correct_get_block_ptr.v 
 
-CLIGHTLOGICDIR =  $(addprefix proof/, clight_exec.v Clightlogic.v CommonLib.v CommonLemma.v MatchState.v CorrectRel.v CommonLemmaNat.v)
+CLIGHTLOGICDIR =  $(addprefix clightlogic/, clight_exec.v Clightlogic.v CommonLib.v CommonLemma.v CorrectRel.v CommonLemmaNat.v)
 
 
 clightlogic:
 	@echo $@
-#	rm -f proof/*.vo
 	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 
@@ -147,35 +180,52 @@ GITDIR=/home/shyuan/GitLab/rbpf-dx
 
 gitpush:
 	@echo $@
-	cp src/*.v $(GITDIR)/src
-	cp src/*.c $(GITDIR)/src
+	cp clight/*.v $(GITDIR)/clight
+	cp clight/*.c $(GITDIR)/clight
+	cp clight/*.h $(GITDIR)/clight
+	cp clightlogic/*.v $(GITDIR)/clightlogic
+	cp clightlogic/*.md $(GITDIR)/clightlogic
 	cp comm/*.v $(GITDIR)/comm
 	cp comm/*.md $(GITDIR)/comm
+	cp dxcomm/*.v $(GITDIR)/dxcomm
+	cp dxmodel/*.v $(GITDIR)/dxmodel
+	cp dxmodel/*.c $(GITDIR)/dxmodel
+	cp equivalence/*.v $(GITDIR)/equivalence
+	cp equivalence/*.md $(GITDIR)/equivalence
 	cp model/*.v $(GITDIR)/model
 	cp model/*.md $(GITDIR)/model
 	cp monadicmodel/*.v $(GITDIR)/monadicmodel
 	cp monadicmodel/*.md $(GITDIR)/monadicmodel
-	cp equivalence/*.v $(GITDIR)/equivalence
-	cp equivalence/*.md $(GITDIR)/equivalence
+	cp repatch/*.c $(GITDIR)/repatch
+	cp simulation/*.v $(GITDIR)/simulation
 	cp isolation/*.v $(GITDIR)/isolation
 	cp isolation/*.md $(GITDIR)/isolation
-	cp simulation/*.v $(GITDIR)/simulation
-	cp clight/*.v $(GITDIR)/clight
-	cp clight/*.c $(GITDIR)/clight
-	cp clight/*.h $(GITDIR)/clight
-	cp proof/*.v $(GITDIR)/proof
-	cp proof/*.md $(GITDIR)/proof
-	cp repatch/*.c $(GITDIR)/repatch
 	cp Makefile $(GITDIR)
 	cp compcertcprinter-cmx-args $(GITDIR)
 	cp *.md $(GITDIR)
+	cp _CoqProject $(GITDIR)
+	cp Makefile.config $(GITDIR)
+	cp verifier/clightmodel/*.h $(GITDIR)/verifier/clightmodel
+	cp verifier/clightmodel/*.c $(GITDIR)/verifier/clightmodel
+	cp verifier/clightmodel/*.v $(GITDIR)/verifier/clightmodel
+	cp verifier/comm/*.v $(GITDIR)/verifier/comm
+	cp verifier/dxmodel/*.v $(GITDIR)/verifier/dxmodel
+	cp verifier/property/*.v $(GITDIR)/verifier/property
+	cp verifier/repatch/*.c $(GITDIR)/verifier/repatch
+	cp verifier/simulation/*.v $(GITDIR)/verifier/simulation
+	cp verifier/synthesismodel/*.v $(GITDIR)/verifier/synthesismodel
+	cp verifier/Makefile $(GITDIR)/verifier
+	cp verifier/Makefile.config $(GITDIR)/verifier
+	cp verifier/compcertcprinter-cmx-args $(GITDIR)/verifier
+	cp verifier/*.md $(GITDIR)/verifier
 
 gitpull:
 	@echo $@
-	cp $(GITDIR)/src/*.v ./src
-	cp $(GITDIR)/src/*.c ./src
+	cp $(GITDIR)/dxmodel/*.v ./dxmodel
+	cp $(GITDIR)/dxmodel/*.c ./dxmodel
 	cp $(GITDIR)/comm/*.v ./comm
 	cp $(GITDIR)/comm/*.md ./comm
+	cp $(GITDIR)/dxcomm/*.v ./dxcomm
 	cp $(GITDIR)/model/*.v ./model
 	cp $(GITDIR)/model/*.md ./model
 	cp $(GITDIR)/monadicmodel/*.v ./monadicmodel
@@ -188,12 +238,25 @@ gitpull:
 	cp $(GITDIR)/clight/*.v ./clight
 	cp $(GITDIR)/clight/*.c ./clight
 	cp $(GITDIR)/clight/*.h ./clight
-	cp $(GITDIR)/proof/*.v ./proof
-	cp $(GITDIR)/proof/*.md ./proof
+	cp $(GITDIR)/clightlogic/*.v ./clightlogic
+	cp $(GITDIR)/clightlogic/*.md ./clightlogic
 	cp $(GITDIR)/repatch/*.c ./repatch
 	cp $(GITDIR)/Makefile .
 	cp $(GITDIR)/compcertcprinter-cmx-args .
 	cp $(GITDIR)/*.md .
+	cp $(GITDIR)/verifier/Makefile ./verifier
+	cp $(GITDIR)/verifier/Makefile.config ./verifier
+	cp $(GITDIR)/verifier/compcertcprinter-cmx-args ./verifier
+	cp $(GITDIR)/verifier/*.md ./verifier
+	cp $(GITDIR)/verifier/clightmodel/*.h ./verifier/clightmodel
+	cp $(GITDIR)/verifier/clightmodel/*.c ./verifier/clightmodel
+	cp $(GITDIR)/verifier/clightmodel/*.v ./verifier/clightmodel
+	cp $(GITDIR)/verifier/comm/*.v ./verifier/comm
+	cp $(GITDIR)/verifier/dxmodel/*.v ./verifier/dxmodel
+	cp $(GITDIR)/verifier/property/*.v ./verifier/property
+	cp $(GITDIR)/verifier/repatch/*.c ./verifier/repatch
+	cp $(GITDIR)/verifier/synthesismodel/*.v ./verifier/synthesismodel
+	cp $(GITDIR)/verifier/simulation/*.v ./verifier/simulation
 
 clean :
 	@echo $@
@@ -208,4 +271,4 @@ clean :
 # We want to keep the .cmi that were built as we go
 .SECONDARY:
 
-.PHONY: all test comm model monadicmodel isolation equivalence compile extract repatch clightmodel proof simulation clean
+.PHONY: all test comm dxcomm verifier dxverifier model monadicmodel isolation equivalence compile extract repatch clightmodel clightlogic simulation clean

@@ -1,8 +1,8 @@
 From Coq Require Import Logic.FunctionalExtensionality ZArith Lia.
 From compcert Require Import Integers Values Memory Memdata.
 
-From bpf.comm Require Import State Monad.
-From bpf.src Require Import DxInstructions.
+From bpf.comm Require Import State Monad rBPFMonadOp.
+From bpf.dxmodel Require Import DxInstructions.
 
 From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 
@@ -16,7 +16,7 @@ Ltac unfold_dx_type :=
   match goal with
   | |- _ =>
     unfold DxMonad.bindM, DxMonad.upd_reg, DxMonad.eval_flag, DxMonad.eval_reg, DxMonad.returnM, DxMonad.eval_ins_len, DxMonad.eval_pc, DxMonad.upd_pc_incr, DxMonad.upd_flag, DxMonad.eval_ins;
-    unfold Regs.get_opcode;
+    unfold BinrBPF.get_opcode;
     unfold DxIntegers.sint32_t, DxIntegers.int64_t, DxNat.nat8, DxValues.val64_t, DxValues.valu32_t, DxValues.vals32_t;
   unfold_monad
   end.

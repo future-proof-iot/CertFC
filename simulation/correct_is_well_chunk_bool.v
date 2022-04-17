@@ -7,9 +7,11 @@ From compcert Require Import Integers Values Clight Memory AST.
 From compcert Require Import Coqlib.
 Import ListNotations.
 
-From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState CommonLemma.
+From bpf.clightlogic Require Import clight_exec Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 Section Is_well_chunk_bool.
   Context {S: special_blocks}.
@@ -35,7 +37,7 @@ Section Is_well_chunk_bool.
         change (seq_of_labeled_statement X) with x
     end.
 
-  Instance correct_function_is_well_chunk_bool2 : forall a, correct_function
+  Instance correct_function_is_well_chunk_bool2 : forall a, correct_function _
       p args res f fn ModNothing true match_state (dcons  (stateless match_chunk) (DList.DNil _)) (stateless match_bool) a.
   Proof.
     correct_function_from_body args.

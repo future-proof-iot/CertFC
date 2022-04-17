@@ -1,16 +1,18 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Flag Regs State Monad rBPFAST rBPFValues.
+From bpf.comm Require Import MemRegion Flag Regs State Monad rBPFAST rBPFValues rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values AST Clight Memory Memtype Integers.
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
+From bpf.clightlogic Require Import Clightlogic clight_exec CommonLemma CorrectRel.
 
 From bpf.simulation Require Import correct_upd_flag correct_eval_ins_len correct_eval_pc correct_eval_flag correct_step correct_upd_pc_incr.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 Open Scope Z_scope.
 
@@ -33,19 +35,19 @@ Section Bpf_interpreter_aux.
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := bpf_interpreter_aux.
+  Definition f : arrow_type args (M State.state res) := bpf_interpreter_aux.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_bpf_interpreter_aux.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list :DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    (dcons (fun _ => StateLess is_state_handle)
+  Definition match_arg_list :DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    (dcons (fun _ => StateLess _ is_state_handle)
       (dcons (stateless nat_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x => StateLess (eq Vundef).
+  Definition match_res : res -> Inv State.state := fun x => StateLess _ (eq Vundef).
 
 Lemma bpf_interpreter_aux_eq: forall n,
   bpf_interpreter_aux n =
@@ -86,7 +88,7 @@ Proof.
 Qed.
 
 
-  Instance correct_function_bpf_interpreter_aux : forall a, correct_function p args res f fn ModSomething false match_state match_arg_list match_res a.
+  Instance correct_function_bpf_interpreter_aux : forall a, correct_function _ p args res f fn ModSomething false match_state match_arg_list match_res a.
   Proof.
     intros.
     unfold args in a.
@@ -444,7 +446,7 @@ Qed.
             unfold bindM in IHc.
             rewrite IHc.
 
-            destruct (fix bpf_interpreter_aux (fuel : nat) : M unit :=
+            destruct (fix bpf_interpreter_aux (fuel : nat) : M _ unit :=
          match fuel with
          | 0%nat => upd_flag BPF_ILLEGAL_LEN
          | Datatypes.S fuel0 =>

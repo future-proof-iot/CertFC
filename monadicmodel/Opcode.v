@@ -169,13 +169,15 @@ Definition byte_to_opcode_branch (op: nat): opcode_branch :=
 
 Inductive opcode_mem_ld_imm: Type :=  (**r 0xX8 *)
   (** Load/Store: 13 *)
-  | op_BPF_LDDW
+  | op_BPF_LDDW_low
+  | op_BPF_LDDW_high
   | op_BPF_LDX_IMM_ILLEGAL_INS.
 
 Definition byte_to_opcode_mem_ld_imm (op: nat): opcode_mem_ld_imm :=
   let opcode_ld := Nat.land op 0xff in (**r masking operation *)
     match opcode_ld with
-    | 0x18 => op_BPF_LDDW
+    | 0x18 => op_BPF_LDDW_low
+    | 0x10 => op_BPF_LDDW_high
     | _    => op_BPF_LDX_IMM_ILLEGAL_INS
     end.
 
@@ -335,7 +337,8 @@ Definition opcode_branch_eqb (o o' : opcode_branch): bool :=
 
 Definition opcode_mem_ld_imm_eqb (o o' : opcode_mem_ld_imm): bool :=
   match o , o' with
-  | op_BPF_LDDW,   op_BPF_LDDW
+  | op_BPF_LDDW_low,   op_BPF_LDDW_low
+  | op_BPF_LDDW_high,   op_BPF_LDDW_high
   | op_BPF_LDX_IMM_ILLEGAL_INS, op_BPF_LDX_IMM_ILLEGAL_INS => true
   | _, _ => false
   end.

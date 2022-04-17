@@ -1,4 +1,4 @@
-From bpf.comm Require Import MemRegion State Monad.
+From bpf.comm Require Import MemRegion State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From dx.Type Require Import Bool.
 From dx Require Import IR.
@@ -7,9 +7,11 @@ From compcert Require Import Integers Values Clight Memory AST.
 From compcert Require Import Coqlib.
 Import ListNotations.
 
-From bpf.proof Require Import clight_exec Clightlogic CorrectRel MatchState CommonLemma.
+From bpf.clightlogic Require Import clight_exec Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 (**
@@ -25,6 +27,7 @@ static __attribute__((always_inline)) inline _Bool cmp_ptr32_nullM(struct bpf_st
 
 Section Cmp_ptr32_nullM.
   Context {S: special_blocks}.
+
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -34,7 +37,7 @@ Section Cmp_ptr32_nullM.
   Definition res : Type := (bool:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := cmp_ptr32_nullM.
+  Definition f : arrow_type args (M State.state res) := cmp_ptr32_nullM.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_cmp_ptr32_nullM.
@@ -43,12 +46,12 @@ Section Cmp_ptr32_nullM.
 (*  Definition match_arg_list : DList.t (fun x => x -> val -> State.state -> Memory.Mem.mem -> Prop) args :=
     DList.DCons (val_ptr_correct state_block mrs_block ins_block)
         (DList.DNil _). *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-    dcons (fun x => StateLess (eq x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
+    dcons (fun x => StateLess _ (eq x))
         (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x  => StateLess (match_bool x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (match_bool x).
 
   Lemma cmpu_valid_pointer : forall m m'
     (VALID : forall blk ofs, Mem.valid_pointer m blk ofs = true ->
@@ -79,7 +82,7 @@ Section Cmp_ptr32_nullM.
   Qed.
 
   
-  Instance correct_function_cmp_ptr32_nullM : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_cmp_ptr32_nullM : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

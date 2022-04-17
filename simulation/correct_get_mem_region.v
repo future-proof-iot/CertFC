@@ -1,14 +1,16 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues.
+From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values Clight Memory Integers.
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
+From bpf.clightlogic Require Import Clightlogic clight_exec CommonLemma CorrectRel.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (*
 Check get_mem_region.
@@ -18,6 +20,7 @@ get_mem_region
 
 Section Get_mem_region.
   Context {S: special_blocks}.
+
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -26,20 +29,20 @@ Section Get_mem_region.
   Definition res : Type := (memory_region:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_mem_region.
+  Definition f : arrow_type args (M State.state res) := get_mem_region.
 
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_mem_region.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-      (dcons (fun x => StateLess (nat_correct x))
-        (dcons (fun x => StateFull (mrs_correct S x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
+      (dcons (fun x => StateLess _ (nat_correct x))
+        (dcons (fun x => StateFull _ (mrs_correct S x))
                 (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun r  => StateFull (mr_correct r).
+  Definition match_res : res -> Inv State.state := fun r  => StateFull _ (mr_correct r).
 
 Lemma memory_region_in_nth_error:
   forall n l
@@ -56,7 +59,7 @@ Proof.
 Qed.
 
 
-  Instance correct_function_get_mem_region : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_get_mem_region : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

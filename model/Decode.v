@@ -1,7 +1,7 @@
 From compcert Require Import Integers Values AST Ctypes.
 From Coq Require Import ZArith.
 
-From bpf.comm Require Import Flag Regs rBPFValues.
+From bpf.comm Require Import Flag Regs BinrBPF rBPFValues.
 From bpf.model Require Import Syntax.
 
 (** Overview:
@@ -86,7 +86,8 @@ Definition get_instruction_alu32_reg (ins: int64) (rd rs: reg) (op: nat): instru
 
 Definition get_instruction_ld (ins: int64) (rd: reg) (i: int) (op: nat): instruction :=
   match Nat.land op 255 with
-  | 0x18 => BPF_LDDW rd i
+  | 0x18 => BPF_LDDW_low rd i
+  | 0x10 => BPF_LDDW_high rd i
   | _    => BPF_ERR
   end.
 
@@ -204,31 +205,3 @@ Definition decode (ins: int64): option instruction :=
     end.
 
 Close Scope nat_scope.
-(*
-Definition well_decode_imm (ins: int64) :=
-  match decode ins with
-  | BPF_BINARY _ _ _ rs | BPF_JUMP _ _ rs _ =>
-    match rs with
-    | inr i => exists vi, i = Vint vi
-    | _ => True
-    end
-  | _ => True
-  end.
-
-Lemma get_immediate_vint:
-  forall ins, get_immediate ins = Vint (Int.repr (Int64.unsigned (Int64.shru ins int64_32))).
-Proof.
-  unfold get_immediate; unfold val_intsoflongu, int64o_vlong.
-  intros; reflexivity.
-Qed.
-
-Lemma decode_imm_vint:
-  forall ins, well_decode_imm ins.
-Proof.
-  unfold well_decode_imm, decode.
-  intros.
-  destruct get_instruction eqn: H1; try (apply I).
-  - destruct s; try (apply I).
-    rewrite get_immediate_vint in H1.
-    
-Qed.*)

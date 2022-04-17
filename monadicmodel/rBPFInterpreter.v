@@ -3,24 +3,24 @@ Import ListNotations.
 
 From compcert Require Import Integers Values AST Memory.
 
-From bpf.comm Require Import MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs State Monad.
+From bpf.comm Require Import MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs BinrBPF State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import Opcode.
 
 Open Scope monad_scope.
 
-Definition get_dst (ins: int64): M reg := int64_to_dst_reg ins.
+Definition get_dst (ins: int64): M state reg := int64_to_dst_reg ins.
 
-Definition reg64_to_reg32 (d: val): M val := returnM (val_intuoflongu d).
+Definition reg64_to_reg32 (d: val): M state val := returnM (val_intuoflongu d).
 
-Definition get_src (ins: int64): M reg := int64_to_src_reg ins.
+Definition get_src (ins: int64): M state reg := int64_to_src_reg ins.
 
-Definition get_offset (ins:int64):M int := returnM (get_offset ins).
+Definition get_offset (ins:int64): M state int := returnM (get_offset ins).
 
-Definition get_immediate (ins:int64):M int := returnM (get_immediate ins).
+Definition get_immediate (ins:int64): M state int := returnM (get_immediate ins).
 
-Definition eval_immediate (ins: int): M val := returnM ((Val.longofint (sint32_to_vint ins))).
+Definition eval_immediate (ins: int): M state val := returnM ((Val.longofint (sint32_to_vint ins))).
 
-Definition get_src64 (x: nat) (ins: int64): M val :=
+Definition get_src64 (x: nat) (ins: int64): M state val :=
   if Int.eq Int.zero (Int.and (Int.repr (Z.of_nat x)) (Int.repr 8)) then
 (*
   if Nat.eqb 0 (Nat.land x 0x08) then *)
@@ -32,7 +32,7 @@ Definition get_src64 (x: nat) (ins: int64): M val :=
     do src64  <- eval_reg src;
       returnM src64.
 
-Definition get_src32 (x: nat) (ins: int64): M val := 
+Definition get_src32 (x: nat) (ins: int64): M state val := 
   if Int.eq Int.zero (Int.and (Int.repr (Z.of_nat x)) (Int.repr 8)) then (*
   if Nat.eqb 0 (Nat.land x 0x08) then *)
     do imm    <- get_immediate ins;
@@ -43,55 +43,55 @@ Definition get_src32 (x: nat) (ins: int64): M val :=
     do src32  <- reg64_to_reg32 src64;
       returnM src32.
 
-Definition get_opcode_ins (ins: int64): M nat :=
+Definition get_opcode_ins (ins: int64): M state nat :=
   returnM (get_opcode ins).
 
-Definition get_opcode_alu64 (op: nat): M opcode_alu64 :=
+Definition get_opcode_alu64 (op: nat): M state opcode_alu64 :=
   returnM (byte_to_opcode_alu64 op).
 
-Definition get_opcode_alu32 (op: nat): M opcode_alu32 :=
+Definition get_opcode_alu32 (op: nat): M state opcode_alu32 :=
   returnM (byte_to_opcode_alu32 op).
 
-Definition get_opcode_branch (op: nat): M opcode_branch :=
+Definition get_opcode_branch (op: nat): M state opcode_branch :=
   returnM (byte_to_opcode_branch op).
 
-Definition get_opcode_mem_ld_imm (op: nat): M opcode_mem_ld_imm :=
+Definition get_opcode_mem_ld_imm (op: nat): M state opcode_mem_ld_imm :=
   returnM (byte_to_opcode_mem_ld_imm op).
 
-Definition get_opcode_mem_ld_reg (op: nat): M opcode_mem_ld_reg :=
+Definition get_opcode_mem_ld_reg (op: nat): M state opcode_mem_ld_reg :=
   returnM (byte_to_opcode_mem_ld_reg op).
 
-Definition get_opcode_mem_st_imm (op: nat): M opcode_mem_st_imm :=
+Definition get_opcode_mem_st_imm (op: nat): M state opcode_mem_st_imm :=
   returnM (byte_to_opcode_mem_st_imm op).
 
-Definition get_opcode_mem_st_reg (op: nat): M opcode_mem_st_reg :=
+Definition get_opcode_mem_st_reg (op: nat): M state opcode_mem_st_reg :=
   returnM (byte_to_opcode_mem_st_reg op).
 
-Definition get_opcode (op: nat): M opcode :=
+Definition get_opcode (op: nat): M state opcode :=
   returnM (byte_to_opcode op).
 
-Definition get_add (x y: val): M val := returnM (Val.add x y).
+Definition get_add (x y: val): M state val := returnM (Val.add x y).
 
-Definition get_sub (x y: val): M val := returnM (Val.sub x y).
+Definition get_sub (x y: val): M state val := returnM (Val.sub x y).
 
-Definition get_addr_ofs (x: val) (ofs: int): M val := returnM (val_intuoflongu (Val.addl x (Val.longofint (sint32_to_vint ofs)))).
+Definition get_addr_ofs (x: val) (ofs: int): M state val := returnM (val_intuoflongu (Val.addl x (Val.longofint (sint32_to_vint ofs)))).
 
 (*
-Definition get_block_ptr (mr: memory_region) : M val := returnM (block_ptr mr).*)
+Definition get_block_ptr (mr: memory_region) : M state val := returnM (block_ptr mr).*)
 
-Definition get_start_addr (mr: memory_region): M val := returnM (start_addr mr).
+Definition get_start_addr (mr: memory_region): M state val := returnM (start_addr mr).
 
-Definition get_block_size (mr: memory_region): M val := returnM (block_size mr).
+Definition get_block_size (mr: memory_region): M state val := returnM (block_size mr).
 
-Definition get_block_perm (mr: memory_region): M permission := returnM (block_perm mr).
+Definition get_block_perm (mr: memory_region): M state permission := returnM (block_perm mr).
 
-Definition is_well_chunk_bool (chunk: memory_chunk) : M bool :=
+Definition is_well_chunk_bool (chunk: memory_chunk) : M state bool :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 => returnM true
   | _ => returnM false
   end.
 
-Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (chunk: memory_chunk): M val := (*
+Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (chunk: memory_chunk): M state val := (*
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then *) (*
       do ptr    <- get_block_ptr mr; (**r Vptr b 0 *) *)
@@ -112,7 +112,7 @@ Definition check_mem_aux2 (mr: memory_region) (perm: permission) (addr: val) (ch
       returnM Vnullptr.*)
 
 
-Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: val) (mrs: MyMemRegionsType) {struct num}: M val :=
+Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr: val) (mrs: MyMemRegionsType) {struct num}: M state val :=
   match num with
   | O => returnM Vnullptr
   | S n =>
@@ -125,7 +125,7 @@ Fixpoint check_mem_aux (num: nat) (perm: permission) (chunk: memory_chunk) (addr
         returnM check_mem
   end.
 
-Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: val): M val :=
+Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: val): M state val :=
   do well_chunk <- is_well_chunk_bool chunk;
     if well_chunk then
       do mem_reg_num <- eval_mrs_num;
@@ -141,7 +141,7 @@ Definition check_mem (perm: permission) (chunk: memory_chunk) (addr: val): M val
 
 
 (**r pc should be u32_t *)
-Definition step_opcode_alu64 (dst64: val) (src64: val) (dst: reg) (op: nat): M unit :=
+Definition step_opcode_alu64 (dst64: val) (src64: val) (dst: reg) (op: nat): M state unit :=
   do opcode_alu64 <- get_opcode_alu64 op;
   match opcode_alu64 with
   | op_BPF_ADD64   => 
@@ -194,7 +194,7 @@ Definition step_opcode_alu64 (dst64: val) (src64: val) (dst: reg) (op: nat): M u
   | op_BPF_ALU64_ILLEGAL_INS => do _ <- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   end.
 
-Definition step_opcode_alu32 (dst32: val) (src32: val) (dst: reg) (op: nat): M unit :=
+Definition step_opcode_alu32 (dst32: val) (src32: val) (dst: reg) (op: nat): M state unit :=
   do opcode_alu32 <- get_opcode_alu32 op;
   match opcode_alu32 with
   | op_BPF_ADD32   =>
@@ -246,7 +246,7 @@ Definition step_opcode_alu32 (dst32: val) (src32: val) (dst: reg) (op: nat): M u
 
 
 (**r ofs should be sint16_t *)
-Definition step_opcode_branch (dst64: val) (src64: val) (pc: int) (ofs: int) (op: nat) : M unit :=
+Definition step_opcode_branch (dst64: val) (src64: val) (pc: int) (ofs: int) (op: nat) : M state unit :=
   do opcode_jmp <- get_opcode_branch op;
   match opcode_jmp with
   | op_BPF_JA       =>
@@ -331,23 +331,18 @@ Definition step_opcode_branch (dst64: val) (src64: val) (pc: int) (ofs: int) (op
       do _ <- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   end.
 
-Definition step_opcode_mem_ld_imm (imm: int) (pc: int) (dst: reg) (op: nat): M unit :=
-  do len  <- eval_ins_len;
+Definition step_opcode_mem_ld_imm (imm: int) (dst64: val) (pc: int) (dst: reg) (op: nat): M state unit :=
   do opcode_ld <- get_opcode_mem_ld_imm op;
   match opcode_ld with
-  | op_BPF_LDDW      =>
-    if (Int.ltu (Int.add pc Int.one) len) then (**r pc+1 < len: pc+1 is less than the length of l *)
-      do next_ins <- eval_ins (Int.add pc Int.one);
-      do next_imm <- get_immediate next_ins;
-      do _ <- upd_reg dst (Val.orl (Val.longofint (sint32_to_vint imm)) (Val.shll  (Val.longofint (sint32_to_vint next_imm)) (sint32_to_vint (Int.repr 32))));
-      do _ <- upd_pc_incr; returnM tt
-    else
-      upd_flag BPF_ILLEGAL_LEN
+  | op_BPF_LDDW_low      =>
+    do _ <- upd_reg dst (Val.longofint (sint32_to_vint imm)); returnM tt
+  | op_BPF_LDDW_high     =>
+    do _ <- upd_reg dst (Val.orl dst64 (Val.shll  (Val.longofint (sint32_to_vint imm)) (sint32_to_vint (Int.repr 32))));
+      returnM tt
   | op_BPF_LDX_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-
-Definition step_opcode_mem_ld_reg (addr: val) (pc: int) (dst: reg) (op: nat): M unit :=
+Definition step_opcode_mem_ld_reg (addr: val) (pc: int) (dst: reg) (op: nat): M state unit :=
   do opcode_ld <- get_opcode_mem_ld_reg op;
   match opcode_ld with
   | op_BPF_LDXW      =>
@@ -385,7 +380,7 @@ Definition step_opcode_mem_ld_reg (addr: val) (pc: int) (dst: reg) (op: nat): M 
   | op_BPF_LDX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_st_imm (imm: val) (addr: val) (pc: int) (dst: reg) (op: nat): M unit :=
+Definition step_opcode_mem_st_imm (imm: val) (addr: val) (pc: int) (dst: reg) (op: nat): M state unit :=
   do opcode_st <- get_opcode_mem_st_imm op;
   match opcode_st with
   | op_BPF_STW       =>
@@ -419,7 +414,7 @@ Definition step_opcode_mem_st_imm (imm: val) (addr: val) (pc: int) (dst: reg) (o
   | op_BPF_ST_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_st_reg (src64: val) (addr: val) (pc: int) (dst: reg) (op: nat): M unit :=
+Definition step_opcode_mem_st_reg (src64: val) (addr: val) (pc: int) (dst: reg) (op: nat): M state unit :=
   do opcode_st <- get_opcode_mem_st_reg op;
   match opcode_st with
   | op_BPF_STXW      =>
@@ -453,7 +448,7 @@ Definition step_opcode_mem_st_reg (src64: val) (addr: val) (pc: int) (dst: reg) 
   | op_BPF_STX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step: M unit :=
+Definition step: M state unit :=
   do pc   <- eval_pc;
   do ins  <- eval_ins pc;
   do op   <- get_opcode_ins ins;
@@ -478,8 +473,9 @@ Definition step: M unit :=
     do src64  <- get_src64 op ins;
       step_opcode_branch dst64 src64 pc ofs op                    (**r 0xX5 / 0xXd *)
   | op_BPF_Mem_ld_imm  =>
+    do dst64  <- eval_reg dst;
     do imm    <- get_immediate ins;
-    step_opcode_mem_ld_imm imm pc dst op              (**r 0xX8 *)
+    step_opcode_mem_ld_imm imm dst64 pc dst op              (**r 0xX8 *)
   | op_BPF_Mem_ld_reg  =>
     do src    <- get_src ins;
     do src64  <- eval_reg src;
@@ -502,7 +498,7 @@ Definition step: M unit :=
   | op_BPF_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
+Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M state unit :=
   match fuel with
   | O => upd_flag BPF_ILLEGAL_LEN
   | S fuel0 =>
@@ -525,7 +521,7 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M unit :=
         upd_flag BPF_ILLEGAL_LEN
   end.
 
-Definition bpf_interpreter (fuel: nat): M val :=
+Definition bpf_interpreter (fuel: nat): M state val :=
   do mrs      <- eval_mrs_regions;
   do bpf_ctx  <- get_mem_region 0 mrs;
   do start  <- get_start_addr bpf_ctx;

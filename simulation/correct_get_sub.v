@@ -4,9 +4,11 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 
@@ -21,6 +23,7 @@ fun x y : valu32_t => returnM (Val.sub x y)
 
 Section Get_sub.
   Context {S: special_blocks}.
+
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -30,21 +33,21 @@ Section Get_sub.
   Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_sub.
+  Definition f : arrow_type args (M State.state res) := get_sub.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_sub.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
     (dcons (stateless val32_correct)
        (dcons (stateless val32_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := stateless val32_correct.
+  Definition match_res : res -> Inv State.state := stateless val32_correct.
 
-  Instance correct_function_get_sub : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_get_sub : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

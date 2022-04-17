@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include "interpreter.h"
 #include "fletcher32_bpf.h"
+#include "fletcher32_bpf_simpl.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <time.h> 
@@ -120,8 +121,8 @@ int main(){
     .regsmap  = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
     .mrs_num  = 2,
     .mrs      = my_memory_regions,
-    .ins_len  = sizeof(bpf_fletcher32_bpf_bin),
-    .ins      = (const unsigned long long *) bpf_fletcher32_bpf_bin
+    .ins_len  = sizeof(bpf_fletcher32_bpf_simpl_bin)/8,
+    .ins      = (const unsigned long long *) bpf_fletcher32_bpf_simpl_bin
   };
   
   //print_normal_addr(&st);

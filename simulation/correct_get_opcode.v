@@ -4,9 +4,11 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLemmaNat.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma CommonLemmaNat.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (**
 Check get_opcode.
@@ -17,6 +19,7 @@ get_opcode
 
 Section Get_opcode.
   Context {S: special_blocks}.
+
   (** The program contains our function of interest [fn] *)
   Definition p : Clight.program := prog.
 
@@ -26,20 +29,20 @@ Section Get_opcode.
   Definition res : Type := (opcode:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_opcode.
+  Definition f : arrow_type args (M State.state res) := get_opcode.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_opcode.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-    (dcons (fun x => StateLess (opcode_correct x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
+    (dcons (fun x => StateLess _ (opcode_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x  => StateLess (opcode_step_correct x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (opcode_step_correct x).
 
-  Instance correct_function_get_opcode : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_get_opcode : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -72,8 +75,8 @@ Section Get_opcode.
         rewrite Z.land_nonneg.
         right; lia.
         rewrite LemmaNat.land_land.
-        change (Z.to_nat 7%Z) with 7.
-        assert (Hnat_land: Nat.land c 7 <= 7) by (rewrite Nat.land_comm; rewrite LemmaNat.land_bound; lia).
+        change (Z.to_nat 7%Z) with 7%nat.
+        assert (Hnat_land: (Nat.land c 7 <= 7)%nat) by (rewrite Nat.land_comm; rewrite LemmaNat.land_bound; lia).
         lia.
       }
       rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
@@ -82,7 +85,7 @@ Section Get_opcode.
       forward_star.
     -
       unfold match_res, opcode_step_correct.
-      assert (Hc_le: 0 <= Nat.land c 7 <= 7). {
+      assert (Hc_le: (0 <= Nat.land c 7 <= 7)%nat). {
         rewrite Nat.land_comm.
         split. lia.
         rewrite LemmaNat.land_bound.
@@ -90,7 +93,7 @@ Section Get_opcode.
       }
       change 7%Z with (Z.of_nat (Z.to_nat 7%Z)).
       rewrite LemmaNat.land_land.
-      change (Z.to_nat 7) with 7.
+      change (Z.to_nat 7) with 7%nat.
       remember (Nat.land c 7) as n.
       destruct n eqn: Hld_imm; [ reflexivity |].
       destruct n0 eqn: Hld_reg; [ reflexivity |].
@@ -99,7 +102,7 @@ Section Get_opcode.
       destruct n3 eqn: Halu32; [ reflexivity |].
       destruct n4 eqn: Hbranch; [ reflexivity |].
       destruct n5 eqn: Hill.
-      exists 6; split ;[ reflexivity | intuition].
+      exists 6%nat; split ;[ reflexivity | intuition].
       destruct n6 eqn: Halu64; [ reflexivity | lia].
     - constructor.
       simpl.
@@ -113,8 +116,8 @@ Section Get_opcode.
         rewrite Z.land_nonneg.
         right; lia.
         rewrite LemmaNat.land_land.
-        change (Z.to_nat 7%Z) with 7.
-        assert (Hnat_land: Nat.land c 7 <= 7) by (rewrite Nat.land_comm; rewrite LemmaNat.land_bound; lia).
+        change (Z.to_nat 7%Z) with 7%nat.
+        assert (Hnat_land: (Nat.land c 7 <= 7)%nat) by (rewrite Nat.land_comm; rewrite LemmaNat.land_bound; lia).
         lia.
       }
       rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].

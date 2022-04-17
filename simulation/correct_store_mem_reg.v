@@ -1,4 +1,4 @@
-From bpf.comm Require Import State Monad.
+From bpf.comm Require Import State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.
@@ -6,7 +6,9 @@ Import ListNotations.
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
+From bpf.clightlogic Require Import Clightlogic clight_exec CommonLemma CorrectRel.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 (**
 Check store_mem_reg.
@@ -28,25 +30,25 @@ Section Store_mem_reg.
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := Monad.store_mem_reg.
+  Definition f : arrow_type args (M State.state res) := store_mem_reg.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_store_mem_reg.
 
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    dcons (fun x => StateLess is_state_handle)
-      (dcons (fun x => StateLess (eq x))
-         (dcons (fun x => StateLess (match_chunk x))
-            (dcons (fun x => StateLess (val64_correct x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    dcons (fun x => StateLess _ is_state_handle)
+      (dcons (fun x => StateLess _ (eq x))
+         (dcons (fun x => StateLess _ (match_chunk x))
+            (dcons (fun x => StateLess _ (val64_correct x))
               (DList.DNil _)))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x => StateLess (eq Vundef).
+  Definition match_res : res -> Inv State.state := fun x => StateLess _ (eq Vundef).
 
 
-  Instance correct_function_store_mem_reg : forall ck ptr v, correct_function p args res f fn ModSomething false match_state match_arg_list match_res (DList.DCons ptr
+  Instance correct_function_store_mem_reg : forall ck ptr v, correct_function _ p args res f fn ModSomething false match_state match_arg_list match_res (DList.DCons ptr
       (DList.DCons ck
          (DList.DCons v
               (DList.DNil _)))). (**r defines a function : args -> block *)

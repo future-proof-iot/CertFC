@@ -10,9 +10,12 @@ Module MyList.
 
   Definition t := list int64.
   Definition index_s32 (l: t) (idx: int): int64 := 
-    List.nth (Z.to_nat (Int.unsigned idx)) l (Int64.zero).
+    match List.nth_error l (Z.to_nat (Int.unsigned idx)) with
+    | Some i => i
+    | None => Integers.Int64.zero
+    end.
   Definition index_nat (l: t) (idx: nat): int64 := 
-    List.nth idx l (Integers.Int64.zero).
+    List.nth idx l Integers.Int64.zero.
 
 End MyList.
 

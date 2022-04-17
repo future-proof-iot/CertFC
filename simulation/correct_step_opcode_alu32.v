@@ -1,15 +1,17 @@
-From bpf.comm Require Import Regs State Monad.
+From bpf.comm Require Import Regs State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma CommonLib CommonLemmaNat.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma CommonLib CommonLemmaNat.
 
 From bpf.clight Require Import interpreter.
 
 From bpf.simulation Require Import correct_get_opcode_alu32 correct_upd_reg correct_upd_flag correct_reg64_to_reg32.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 (**
@@ -31,15 +33,15 @@ Section Step_opcode_alu32.
   Definition args : list Type := [(val:Type); (val:Type); (reg:Type); (nat:Type)].
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M unit) := step_opcode_alu32.
+  Definition f : arrow_type args (M State.state unit) := step_opcode_alu32.
 
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_step_opcode_alu32.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) ((unit:Type) ::args) :=
-    (dcons (fun _ => StateLess is_state_handle)
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
+    (dcons (fun _ => StateLess _ is_state_handle)
       (dcons (stateless val32_correct)
        (dcons (stateless val32_correct)
           (dcons (stateless reg_correct)
@@ -47,11 +49,11 @@ Section Step_opcode_alu32.
                     (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : unit -> Inv := fun _ => StateLess (eq Vundef).
+  Definition match_res : unit -> Inv State.state := fun _ => StateLess _ (eq Vundef).
 
 Ltac correct_forward L :=
   match goal with
-  | |- @correct_body _ _ (bindM ?F1 ?F2)  _
+  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
                      (Ssequence
                         (Ssequence
                            (Scall _ _ _)
@@ -66,13 +68,13 @@ Ltac correct_forward L :=
                  end in
         eapply correct_statement_call with (has_cast := b)
       |]
-  | |- @correct_body _ _ (match  ?x with true => _ | false => _ end) _
+  | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
                      (Sifthenelse _ _ _)
                      _ _ _ _ _ _ _ =>
       eapply correct_statement_if_body; [prove_in_inv | destruct x ]
   end.
 
-  Instance correct_function_step_opcode_alu32 : forall a, correct_function p args unit f fn modifies false match_state match_arg_list match_res a.
+  Instance correct_function_step_opcode_alu32 : forall a, correct_function _ p args unit f fn modifies false match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.

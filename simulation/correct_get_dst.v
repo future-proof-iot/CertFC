@@ -1,12 +1,14 @@
-From bpf.comm Require Import Regs State Monad.
+From bpf.comm Require Import Regs BinrBPF State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.proof Require Import Clightlogic MatchState CorrectRel CommonLemma.
+From bpf.clightlogic Require Import Clightlogic CorrectRel CommonLemma.
 
 From bpf.clight Require Import interpreter.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 (**
@@ -30,20 +32,20 @@ Section Get_dst.
   Definition res : Type := (reg:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := get_dst.
+  Definition f : arrow_type args (M State.state res) := get_dst.
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f_get_dst.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-    (dcons (fun x => StateLess (int64_correct x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
+    (dcons (fun x => StateLess _ (int64_correct x))
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun x => StateLess (reg_correct x).
+  Definition match_res : res -> Inv State.state := fun x => StateLess _ (reg_correct x).
 
-  Instance correct_function_get_dst : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Instance correct_function_get_dst : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
     correct_body.
@@ -66,7 +68,7 @@ Section Get_dst.
        1. return value should be  
        2. the memory is same
      *)
-    unfold z_to_reg, Regs.get_dst in Hdst.
+    unfold z_to_reg, BinrBPF.get_dst in Hdst.
     simpl in c.
     exists (Vint (Int.repr (Int64.unsigned (Int64.shru (Int64.and c (Int64.repr 4095)) (Int64.repr 8))))), m, Events.E0.
 

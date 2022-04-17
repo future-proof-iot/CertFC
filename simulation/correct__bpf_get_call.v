@@ -1,14 +1,16 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues.
+From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values Clight Memory Integers.
 
 From bpf.clight Require Import interpreter.
 
-From bpf.proof Require Import MatchState Clightlogic clight_exec CommonLemma CorrectRel.
+From bpf.clightlogic Require Import Clightlogic clight_exec CommonLemma CorrectRel.
+
+From bpf.simulation Require Import MatchState InterpreterRel.
 
 
 (*
@@ -27,21 +29,21 @@ Section Bpf_get_call.
   Definition res : Type := (val:Type).
 
   (* [f] is a Coq Monadic function with the right type *)
-  Definition f : arrow_type args (M res) := _bpf_get_call.
+  Definition f : arrow_type args (M State.state res) := _bpf_get_call.
 
 
   (* [fn] is the Cligth function which has the same behaviour as [f] *)
   Definition fn: Clight.function := f__bpf_get_call.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
-  Definition match_arg_list : DList.t (fun x => x -> Inv) args :=
-      (dcons (fun x => StateLess (val32_correct x))
+  Definition match_arg_list : DList.t (fun x => x -> Inv State.state) args :=
+      (dcons (fun x => StateLess State.state (val32_correct x))
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv := fun r  => StateLess (eq r).
+  Definition match_res : res -> Inv State.state := fun r  => StateLess State.state (eq r).
 
-  Axiom correct_function__bpf_get_call : forall a, correct_function p args res f fn ModNothing true match_state match_arg_list match_res a.
+  Axiom correct_function__bpf_get_call : forall a, correct_function State.state p args res f fn ModNothing true match_state match_arg_list match_res a.
 
 End Bpf_get_call.
 
