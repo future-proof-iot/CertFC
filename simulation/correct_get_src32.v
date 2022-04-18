@@ -58,23 +58,9 @@ Section Get_src32.
     unfold f, app, get_src32.
     intros.
 
-    eapply correct_statement_if_body_expr. intro EXPR.
-    destruct Int.eq eqn: Heq.
-    - eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+    correct_forward.
+    -
+      correct_forward.
 
       intros.
       correct_Forall.
@@ -87,9 +73,7 @@ Section Get_src32.
       tauto.
 
       intros.
-      instantiate (1 := ModNothing).
-      eapply correct_body_Sreturn_Some; eauto.
-      intros.
+      correct_forward.
       get_invariant _imm.
       unfold eval_inv,correct_get_immediate.match_res, int32_correct in c1.
       eexists ; split_and.
@@ -102,21 +86,8 @@ Section Get_src32.
       {simpl ; auto.
       }
       reflexivity.
-    - eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+    -
+      correct_forward.
 
       intros.
       correct_Forall.
@@ -130,21 +101,7 @@ Section Get_src32.
       tauto.
 
       intros.
-      eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+      correct_forward.
 
       intros.
       correct_Forall.
@@ -160,21 +117,7 @@ Section Get_src32.
         tauto.
       }
       intros.
-      eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+      correct_forward.
 
       intros.
       correct_Forall. simpl in H.
@@ -187,10 +130,8 @@ Section Get_src32.
         tauto.
       }
       intros.
-      instantiate (1 := ModNothing).
-      eapply correct_body_Sreturn_Some; eauto.
-      intros.
-      simpl in H0.
+      correct_forward.
+
       get_invariant _src32.
       destruct c1 as (Hv_eq & vl & Hvl_eq).
       subst.
@@ -202,7 +143,6 @@ Section Get_src32.
       reflexivity.
       simpl. auto.
       all: reflexivity.
-    - reflexivity.
     - intros.
       get_invariant _x.
       unfold exec_expr.

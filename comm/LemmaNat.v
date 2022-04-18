@@ -5,6 +5,13 @@ From Coq Require Import Lia ZArith.
   a set of useful lemmas about Nat.land
  *)
 
+
+Ltac simpl_nat :=
+  match goal with
+  | H: ?X <> ?Y |- context [if (?X =? ?Y) then _ else _] =>
+    destruct (X =? Y) eqn: Ht; [rewrite Nat.eqb_eq in Ht; intuition | try reflexivity]; clear Ht
+  end.
+
 Open Scope Z_scope.
 
 Fixpoint Forall_exec (P : nat -> bool) (n: nat)  : bool :=

@@ -47,46 +47,52 @@ Section Is_shift_range.
   Proof.
     correct_function_from_body args.
     correct_body.
-    repeat intro.
-    unfold INV in H.
+
+    unfold f. unfold is_shift_range.
+    correct_forward.
+
     get_invariant _i.
     get_invariant _upper.
     unfold eval_inv, int64_correct in c1.
     unfold eval_inv, int32_correct in c2.
     subst.
 
-    eexists; exists m, Events.E0.
+    eexists.
 
     split_and; auto.
     {
-      forward_star.
-      simpl.
+      unfold exec_expr. repeat
       match goal with
-      | |- Cop.sem_cast ?X _ _ _ = _ =>
-        instantiate (1:= X)
-      end.
-      unfold Cop.sem_cast, Val.of_bool; simpl.
+      | H: ?X = _ |- context [match ?X with _ => _ end] =>
+        rewrite H
+      end. simpl.
+      unfold Cop.sem_shr, Cop.sem_shift; simpl.
+      change Int64.iwordsize with (Int64.repr 64).
+      change (Int64.ltu (Int64.repr 32) (Int64.repr 64)) with true; simpl.
+      unfold Cop.sem_cmp; simpl.
+      unfold Cop.sem_binarith; simpl.
+      unfold Val.of_bool; simpl.
       unfold Vtrue, Vfalse.
-      match goal with
-      | |- _ = Some (if ?X then _ else _) =>
-        destruct X; [ rewrite Int_eq_one_zero | rewrite Int.eq_true]; reflexivity
-      end.
-      forward_star.
+      reflexivity.
     }
-    unfold eval_inv, match_res, state.is_shift_range'.
+
+    unfold eval_inv, match_res, state.is_shift_range', typeof.
     unfold bool_correct, Val.of_bool, BinrBPF.get_immediate.
-    unfold Vtrue, Vfalse, Int.cmpu, rBPFValues.int64_to_sint32.
+    unfold Int.cmpu, rBPFValues.int64_to_sint32.
     match goal with
     | |- (if ?X then _ else _) = _ =>
       destruct X; reflexivity
     end.
-    unfold Val.of_bool.
-    unfold Vtrue, Vfalse.
+    unfold Cop.sem_cast; simpl.
     match goal with
-    | |- Cop.val_casted (if ?X then _ else _) _ =>
+    | |- context[if ?X then _ else _] =>
+      destruct X; [rewrite Int_eq_one_zero | rewrite Int.eq_true]; reflexivity
+    end.
+    intros.
+    match goal with
+    | |- context[if ?X then _ else _] =>
       destruct X; constructor; reflexivity
     end.
-    apply unmodifies_effect_refl.
   Qed.
 
 End Is_shift_range.

@@ -127,7 +127,9 @@ Qed.
     correct_body.
     unfold f, app.
     rewrite check_mem_aux_eq.
-    eapply correct_statement_if_body_expr. intro EXPR.
+
+    correct_forward.
+    inversion Hcnd.
     simpl.
     apply correct_statement_seq_set with (match_res1 := StateLess _ (nat_correct c)).
     +
@@ -180,22 +182,8 @@ Qed.
   + (**r then here we lose m0 = m? *)
     intros.
     (**r correct_body _ _ (bindM (get_mem_region _ _) ... *)
-    eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
-    unfold typeof.
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast:=false).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    intros.
-    typeclasses eauto.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -211,21 +199,8 @@ Qed.
 
     intros.
     (**r goal: correct_body p val (bindM (check_mem_aux2 ... *)
-    eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
-    unfold typeof.
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast:=false).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall. simpl in H.
@@ -245,22 +220,8 @@ Qed.
 
     intros.
     (**r goal: correct_body p val (bindM (cmp_ptr32_nullM ... *)
-    eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
-    unfold typeof.
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast:=true).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    intros.
-    typeclasses eauto.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall. simpl in H.
@@ -275,12 +236,9 @@ Qed.
 
     intros.
     (**r modifying here? *)
-    eapply correct_statement_if_body_expr. clear EXPR ; intro EXPR.
-    destruct x1.
+    correct_forward.
     2:{
-      eapply correct_body_Sreturn_Some.
-      intros.
-      simpl in H0.
+        correct_forward.
       get_invariant _check_mem__1.
       eexists ; split_and.
       -
@@ -321,7 +279,6 @@ Qed.
     rewrite p0, p1, p2, p3, p4, p5; reflexivity.
     simpl;intros.
     intuition eauto.
-    reflexivity.
 
     intros.
     get_invariant _is_null.
@@ -332,8 +289,8 @@ Qed.
     rewrite c4.
     destruct x1; reflexivity.
     reflexivity.
-  +
-    reflexivity.
+    unfold lub_modifies; reflexivity.
+    unfold lub_modifies; reflexivity.
   + intros MS H.
     unfold INV in H.
     get_invariant _num.

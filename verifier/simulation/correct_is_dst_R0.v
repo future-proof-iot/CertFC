@@ -1,7 +1,3 @@
-From Coq Require Import List Lia ZArith.
-From compcert Require Import Integers Values Clight Memory.
-Import ListNotations.
-
 From bpf.comm Require Import Monad.
 From bpf.clightlogic Require Import CommonLemma CommonLib Clightlogic CorrectRel.
 From bpf.verifier.comm Require Import monad.
@@ -10,6 +6,9 @@ From bpf.verifier.synthesismodel Require Import verifier_synthesis.
 From bpf.verifier.clightmodel Require Import verifier.
 From bpf.verifier.simulation Require Import VerifierSimulation VerifierRel.
 
+From Coq Require Import List Lia ZArith.
+From compcert Require Import Integers Values Clight Memory.
+Import ListNotations.
 
 (**
 Check is_dst_R0.
@@ -44,39 +43,40 @@ Section Is_dst_R0.
   Proof.
     correct_function_from_body args.
     correct_body.
-    repeat intro.
-    unfold INV in H.
+
+    unfold f. unfold is_dst_R0.
+    correct_forward.
+
     get_invariant _i.
     unfold eval_inv, int64_correct in c0.
     subst.
 
-    eexists; exists m, Events.E0.
+    eexists.
 
     split_and; auto.
     {
-      forward_star.
+      unfold exec_expr.
+      rewrite p0.
       simpl.
-      match goal with
-      | |- Cop.sem_cast ?X _ _ _ = _ =>
-        instantiate (1:= X)
-      end.
-      unfold Cop.sem_cast, Val.of_bool; simpl.
-      unfold Vtrue, Vfalse.
-      destruct Int.eq.
-      rewrite Int_eq_one_zero.
-      reflexivity.
-      rewrite Int.eq_true.
-      reflexivity.
-      forward_star.
-    }
-    unfold eval_inv, match_res, state.is_dst_R0'.
-    unfold bool_correct, Val.of_bool, BinrBPF.get_dst.
-    unfold Vtrue, Vfalse, Int.cmpu.
-    destruct Int.eq; reflexivity.
-    unfold Val.of_bool.
+      unfold Cop.sem_shr, Cop.sem_shift; simpl.
+      change Int64.iwordsize with (Int64.repr 64).
+      change (Int64.ltu (Int64.repr 8) (Int64.repr 64)) with true.
+      simpl.
+      unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+      unfold Val.of_bool.
     unfold Vtrue, Vfalse.
+      reflexivity.
+    }
+
+    unfold eval_inv, match_res, bool_correct, state.is_dst_R0'.
+    unfold Int.cmpu, BinrBPF.get_dst.
+    destruct Int.eq; reflexivity.
+
+    unfold Cop.sem_cast; simpl.
+    destruct Int.eq; [rewrite Int_eq_one_zero | rewrite Int.eq_true]; reflexivity.
+
+    intros.
     destruct Int.eq; constructor; reflexivity.
-    apply unmodifies_effect_refl.
   Qed.
 
 End Is_dst_R0.

@@ -1,5 +1,5 @@
 From compcert Require Import Coqlib Clight Integers Values Ctypes Memory AST.
-From bpf.comm Require Import Regs.
+From bpf.comm Require Import Regs Monad.
 From bpf.clightlogic Require Import Clightlogic CommonLib.
 From Coq Require Import List Lia ZArith.
 Import ListNotations.
@@ -26,7 +26,7 @@ Ltac build_app T :=
   let f := get_function T in
   match type of v with
   | @DList.t _ _ ?L =>
-      change T with (Clightlogic.app (f: @arrow_type L _) v)
+      change T with (cl_app (f: @arrow_type L _) v)
   end.
 
 Ltac change_app_for_body :=
@@ -61,7 +61,7 @@ Ltac Hdisj_false :=
 Ltac correct_Forall :=
 match goal with
 | H: Forall (match_elt ?st ?m ?le) ?L |- _ =>
-  change (match_temp_env L le st m) in H
+  change (match_temp_env L le st m) in H; simpl in H
 end.
 
 Ltac my_reflex :=
@@ -146,22 +146,126 @@ Ltac get_invariant VAR :=
         end
   end.
 
-
 Ltac correct_body :=
   intros st le m;
 (*  match type of a with
   | DList.t _ ?A =>
       unfold A in a
   end;
-  car_cdr ;*)  unfold list_rel_arg,app;
+  car_cdr ;*)  unfold list_rel_arg, cl_app;
   match goal with
     |- correct_body _ _ _ _ _ ?B _ _ ?INV
                  _ _ _ _ =>
       let I := fresh "INV" in
       set (I := INV) ; simpl in I;
       let B1 := eval simpl in B in
-        change B with B1
+        change B with B1; unfold I
   end.
+
+Ltac correct_forward :=
+  let Hst := fresh "Hst" in
+  let H := fresh "H" in
+  let Hcnd := fresh "Hcnd" in
+  let EXPR := fresh "EXPR" in
+  match goal with
+  | |- @correct_body _ _ _ (returnM _) _ (Sreturn (Some _)) _ _ _
+       _ _ _ _ =>
+    eapply correct_body_Sreturn_Some; intros Hst H; simpl in H
+  | |- @correct_body _ _ unit (returnM tt) _ (Sreturn None) _ _ _
+       _ _ _ _ =>
+    eapply correct_body_Sreturn_None
+
+  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
+                     (Ssequence
+                        (Ssequence
+                           (Scall _ _ _)
+                           (Sset ?V ?T))
+                        ?R)
+                     _ _ _ _ _ _ _ =>
+      eapply correct_statement_seq_body;
+      [ change_app_for_statement;
+        let b := match T with
+                 | Ecast _ _ => constr:(true)
+                 | _         => constr:(false)
+                 end in
+        eapply correct_statement_call with (has_cast := b);
+      [ my_reflex |
+      reflexivity |
+      reflexivity |
+      typeclasses eauto |
+
+      reflexivity  |
+      reflexivity  |
+      reflexivity  |
+      prove_in_inv |
+      prove_in_inv |
+      reflexivity  |
+      reflexivity  | ..]
+      | |]
+  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
+                     (Ssequence
+                        (Scall None _ _)
+                         _)
+                     _ _ _ _ _ _ _ =>
+      eapply correct_statement_seq_body_unit;
+      [ change_app_for_statement;
+        eapply correct_statement_call_none;
+      [ my_reflex |
+      reflexivity |
+      reflexivity |
+      typeclasses eauto |
+
+      intuition  |
+      reflexivity  |
+      reflexivity  |
+      reflexivity  |
+      reflexivity  |
+      reflexivity  | ..]
+      | ]
+  | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
+                     (Sifthenelse _ _ _)
+                     _ _ _ _ _ _ _ =>
+      eapply correct_statement_if_body_expr;[
+        intro EXPR; destruct x eqn: Hcnd |
+        reflexivity | ]
+  end.
+
+(**r
+correct_statement_if_body
+     : forall (St : Type) (p : Clight.program) (res : Type) 
+         (f1 f2 : M St res) (fn : function) (match_state : St -> mem -> Prop)
+         (match_res : res -> Inv St) (s1 s2 : statement) 
+         (x : bool) (vr : positive) (modifies : modifies_spec)
+         (var_inv : list (positive * type * Inv St)) (st : St) 
+         (le : temp_env) (m : mem),
+       In (vr, Clightdefs.tbool, StateLess St (match_bool x)) var_inv ->
+       correct_body St p res (if x then f1 else f2) fn 
+         (if x then s1 else s2) modifies match_state var_inv match_res st le m ->
+       correct_body St p res (if x then f1 else f2) fn
+         (Sifthenelse (Etempvar vr Clightdefs.tbool) s1 s2) modifies match_state
+         var_inv match_res st le m
+correct_statement_if_body_expr
+     : forall (St : Type) (p : Clight.program) (res : Type) 
+         (f1 f2 : M St res) (fn : function) (match_state : St -> mem -> Prop)
+         (match_res : res -> Inv St) (s1 s2 : statement) 
+         (x : bool) (e : expr) (modifies : modifies_spec)
+         (var_inv : list (positive * type * Inv St)) (st : St) 
+         (le : temp_env) (m : mem),
+       (exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le m e =
+        Some (Val.of_bool x) ->
+        correct_body St p res (if x then f1 else f2) fn 
+          (if x then s1 else s2) modifies match_state var_inv match_res st le m) ->
+       Cop.classify_bool (typeof e) = Cop.bool_case_i ->
+       (match_state st m ->
+        match_temp_env var_inv le st m ->
+        exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le m e =
+        Some (Val.of_bool x)) ->
+       correct_body St p res (if x then f1 else f2) fn 
+         (Sifthenelse e s1 s2) modifies match_state var_inv match_res st le m
+
+
+*)
+
 
 Ltac normalise_post_unit :=
   match goal with
@@ -425,6 +529,10 @@ Ltac post_process :=
 
 
 Ltac forward_star := try simpl_if_one_zero; try forward_star'; repeat forward_step'; try post_process; try reflexivity.
+
+
+
+
 
 Lemma eval_upd_regmap_same:
   forall r regs v, eval_regmap r (upd_regmap r v regs) = v.

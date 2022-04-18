@@ -46,6 +46,7 @@ Section Eval_ins.
   Proof.
     correct_function_from_body args.
     correct_body.
+
     repeat intro.
     unfold f; simpl.
     destruct eval_ins eqn: Heval_ins; [| constructor].

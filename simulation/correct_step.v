@@ -47,28 +47,6 @@ Section Step.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> Inv State.state := fun x => StateLess _ (eq Vundef).
 
-Ltac correct_forward L :=
-  match goal with
-  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
-                     (Ssequence
-                        (Ssequence
-                           (Scall _ _ _)
-                           (Sset ?V ?T))
-                        ?R)
-                     _ _ _ _ _ _ _ =>
-      eapply L;
-      [ change_app_for_statement ;
-        let b := match T with
-                 | Ecast _ _ => constr:(true)
-                 | _         => constr:(false)
-                 end in
-        eapply correct_statement_call with (has_cast := b)
-      |]
-  | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
-                     (Sifthenelse _ _ _)
-                     _ _ _ _ _ _ _ =>
-      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
-  end.
 
   Instance correct_function_step: forall a, correct_function _ p args res f fn ModSomething false match_state match_arg_list match_res a.
   Proof.
@@ -78,19 +56,7 @@ Ltac correct_forward L :=
     unfold f, rBPFInterpreter.step.
     simpl.
     (** goal: correct_body _ _ (bindM (eval_pc _) ... *)
-    correct_forward correct_statement_seq_body_nil.
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -103,19 +69,7 @@ Ltac correct_forward L :=
 
     intros.
     (** goal: correct_body _ _ (bindM (eval_ins _) ... *)
-    correct_forward correct_statement_seq_body_nil.
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -129,19 +83,7 @@ Ltac correct_forward L :=
 
     intros.
     (** goal: correct_body _ _ (bindM (get_opcode_ins _) ... *)
-    correct_forward correct_statement_seq_body_nil.
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -154,19 +96,7 @@ Ltac correct_forward L :=
 
     intros.
     (** goal: correct_body _ _ (bindM (get_opcode _) ... *)
-    correct_forward correct_statement_seq_body_nil.
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -179,19 +109,7 @@ Ltac correct_forward L :=
 
     intros.
     (** goal: correct_body _ _ (bindM (get_dst _) ... *)
-    correct_forward correct_statement_seq_body_nil.
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -201,6 +119,7 @@ Ltac correct_forward L :=
     unfold map_opt, exec_expr. rewrite p0; reflexivity.
     intros; simpl.
     eauto.
+    instantiate (1 := modifies).
 
     intros.
     (** goal: correct_body _ _
@@ -215,20 +134,8 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        (**r because upd_reg return unit, here we use *_unit? *)
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -242,19 +149,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_src64 _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -305,21 +200,8 @@ Ltac correct_forward L :=
           destruct Val.shrl; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        unfold correct_step_opcode_alu64.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -338,14 +220,16 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         intros.
 
         unfold eval_inv, match_res.
         reflexivity.
         reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
-      + intros.
+      + intros. simpl in H0.
         get_invariant _opc.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -362,19 +246,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -388,19 +260,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (reg64_to_reg32 _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -413,19 +273,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_src32 _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -466,20 +314,8 @@ Ltac correct_forward L :=
           destruct Val.longofint; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_step_opcode_alu32.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -498,14 +334,17 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res.
         intros.
         unfold eval_inv.
         reflexivity.
         reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
-      + intros.
+      + intros. simpl in H0.
         get_invariant _opc.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -522,19 +361,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -548,19 +375,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -573,19 +388,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_src64 _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -641,20 +444,8 @@ Ltac correct_forward L :=
           destruct Val.longofintu; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_step_opcode_branch.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -677,14 +468,17 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res.
         intros.
         unfold eval_inv.
         reflexivity.
         reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
-      + intros.
+      + intros. simpl in H0.
         get_invariant _opc.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -701,19 +495,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -727,19 +509,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_immediate _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -764,20 +534,8 @@ Ltac correct_forward L :=
           destruct Val.orl; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_step_opcode_mem_ld_imm.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -797,14 +555,16 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res.
         intros.
         unfold eval_inv.
         reflexivity.
         reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
-      + intros.
+      + intros. simpl in H0.
         get_invariant _opc.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -821,19 +581,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_src _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -846,19 +594,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -872,19 +608,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -897,19 +621,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_addr_ofs _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -943,20 +655,8 @@ Ltac correct_forward L :=
           all: reflexivity.
         }
         rewrite Heq; clear Heq.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_step_opcode_mem_ld_reg.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -975,14 +675,18 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res.
         intros.
         unfold eval_inv.
         reflexivity.
         reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
-      + intros.
+      + intros. simpl in H0.
         get_invariant _opc.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -999,19 +703,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1025,19 +717,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1050,19 +730,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_immediate _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1075,19 +743,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_addr_ofs _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1119,20 +775,8 @@ Ltac correct_forward L :=
           all: reflexivity.
         }
         rewrite Heq; clear Heq.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_step_opcode_mem_st_imm.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1153,14 +797,18 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res.
         intros.
         unfold eval_inv.
         reflexivity.
         reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
-      + intros.
+      + intros. simpl in H0.
         get_invariant _opc.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -1177,19 +825,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1203,19 +839,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_src _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1228,19 +852,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1254,19 +866,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1279,19 +879,7 @@ Ltac correct_forward L :=
         intros.
 
         (** goal: correct_body _ _ (bindM (get_addr_ofs _) ... *)
-        correct_forward correct_statement_seq_body_nil.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1323,20 +911,8 @@ Ltac correct_forward L :=
           all: reflexivity.
         }
         rewrite Heq; clear Heq.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_step_opcode_mem_st_reg.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1356,13 +932,18 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res.
         intros.
         unfold eval_inv; auto.
         reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
-      + intros.
+      + intros. simpl in H0.
         get_invariant _opc.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -1382,7 +963,7 @@ Ltac correct_forward L :=
           exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le4 m4
             (Etempvar _opc Clightdefs.tuchar) =
               Some (Vint (Int.repr (Z.of_nat i)))).
-        {
+        { simpl in H0.
           get_invariant _opc.
           unfold correct_get_opcode.match_res in c.
           exists v.
@@ -1418,21 +999,7 @@ Ltac correct_forward L :=
 
         change (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) (fun _ : unit => returnM tt)).
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. tauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro HH.
         correct_Forall.
@@ -1450,11 +1017,16 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         unfold eval_inv; auto.
         reflexivity.
+      - reflexivity.
+      - reflexivity.
+      - reflexivity.
+      - reflexivity.
+      - reflexivity.
 Qed.
 
 End Step.

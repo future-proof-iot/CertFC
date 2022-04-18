@@ -18,28 +18,84 @@ bpf_verifier_opcode_store_imm
 *)
 Open Scope Z_scope.
 
-Lemma bpf_verifier_opcode_store_imm_match:
-  forall c
-  (Hstore : match c with
-   | 98%nat => STW
-   | 106%nat => STH
-   | 114%nat => STB
-   | 122%nat => STDW
-   | _ => ST_ILLEGAL_INS
-   end = ST_ILLEGAL_INS),
-      98  <> (Z.of_nat c) /\
-      106 <> (Z.of_nat c) /\
-      114 <> (Z.of_nat c) /\
-      122 <> (Z.of_nat c).
+Definition opcode_store_imm_if (op: nat) : opcode_store_imm :=
+  if Nat.eqb op 98%nat then STW
+  else if Nat.eqb op 106%nat then STH
+  else if Nat.eqb op 114%nat then STB
+  else if Nat.eqb op 122%nat then STDW
+  else ST_ILLEGAL_INS.
+
+Lemma opcode_store_imm_eqb_eq : forall a b,
+    opcode_store_imm_eqb a b = true -> a = b.
+Proof.
+  destruct a,b ; simpl; congruence.
+Qed.
+
+Lemma lift_opcode_store_imm :
+  forall (E: nat -> opcode_store_imm)
+         (F: nat -> opcode_store_imm) n,
+    ((fun n => opcode_store_imm_eqb (E n) (F n) = true) n) <->
+      (((fun n => opcode_store_imm_eqb (E n) (F n)) n) = true).
 Proof.
   intros.
-  do 123 (destruct c; [inversion Hstore; split_conj | ]).
+  simpl. reflexivity.
+Qed.
+
+Lemma byte_to_opcode_store_imm_if_same:
+  forall (op: nat),
+    (op <= 255)%nat ->
+    nat_to_opcode_store_imm op = opcode_store_imm_if op.
+Proof.
+  intros.
+  unfold nat_to_opcode_store_imm, opcode_store_imm_if.
+  apply opcode_store_imm_eqb_eq.
+  match goal with
+  | |- ?A = true => set (P := A)
+  end.
+  pattern op in P.
+  match goal with
+  | P := ?F op |- _=>
+      apply (Forall_exec_spec F 255)
+  end.
+  vm_compute.
+  reflexivity.
+  assumption.
+Qed.
+
+Lemma bpf_verifier_opcode_store_imm_match:
+  forall op
+    (Hop: (op <= 255)%nat)
+    (Halu : nat_to_opcode_store_imm op = ST_ILLEGAL_INS),
+      98  <> (Z.of_nat op) /\
+      106 <> (Z.of_nat op) /\
+      114 <> (Z.of_nat op) /\
+      122 <> (Z.of_nat op).
+Proof.
+  intros.
+  rewrite byte_to_opcode_store_imm_if_same in Halu; auto.
+  unfold opcode_store_imm_if in Halu.
   change 98  with (Z.of_nat 98%nat).
   change 106 with (Z.of_nat 106%nat).
   change 114 with (Z.of_nat 114%nat).
   change 122 with (Z.of_nat 122%nat).
-  repeat (split; [intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse |]).
-  intro Hfalse; apply Nat2Z.inj in Hfalse; inversion Hfalse.
+
+  repeat match goal with
+  | H : (if ?X then _ else _) = _ |- _ /\ _ =>
+    split; [destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+    | destruct X eqn: Hnew; [inversion H| clear Hnew]]
+  | H : (if ?X then _ else _) = _ |- _ =>
+    destruct X eqn: Hnew; [inversion H |
+      rewrite Nat.eqb_neq in Hnew;
+      intro Hfalse; apply Hnew;
+      symmetry in Hfalse;
+      apply Nat2Z.inj in Hfalse;
+      assumption]
+  end.
 Qed.
 
 
@@ -70,29 +126,6 @@ Section Bpf_verifier_opcode_store_imm.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> Inv state.state := fun x => StateLess _ (bool_correct x).
 
-Ltac correct_forward L :=
-  match goal with
-  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
-                     (Ssequence
-                        (Ssequence
-                           (Scall _ _ _)
-                           (Sset ?V ?T))
-                        ?R)
-                     _ _ _ _ _ _ _ =>
-      eapply L;
-      [ change_app_for_statement ;
-        let b := match T with
-                 | Ecast _ _ => constr:(true)
-                 | _         => constr:(false)
-                 end in
-        eapply correct_statement_call with (has_cast := b)
-      |]
-  | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
-                     (Sifthenelse _ _ _)
-                     _ _ _ _ _ _ _ =>
-      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
-  end.
-
   Instance correct_function_bpf_verifier_opcode_store_imm : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
@@ -109,8 +142,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         exists (Vint (Int.repr 1)).
         unfold exec_expr.
         split; [reflexivity|].
@@ -147,8 +179,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         exists (Vint (Int.repr 1)).
         unfold exec_expr.
         split; [reflexivity|].
@@ -185,8 +216,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         exists (Vint (Int.repr 1)).
         unfold exec_expr.
         split; [reflexivity|].
@@ -223,8 +253,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         exists (Vint (Int.repr 1)).
         unfold exec_expr.
         split; [reflexivity|].
@@ -274,8 +303,7 @@ Ltac correct_forward L :=
 
         unfold select_switch.
         unfold select_switch_case.
-        unfold nat_to_opcode_store_imm in Hstore.
-        apply bpf_verifier_opcode_store_imm_match in Hstore.
+        apply bpf_verifier_opcode_store_imm_match in Hstore; auto.
         destruct Hstore as (Hfirst & Hstore). eapply Coqlib.zeq_false in Hfirst. rewrite Hfirst; clear Hfirst.
         repeat match goal with
         | H: ?X <> ?Y /\ _ |- context[Coqlib.zeq ?X ?Y] =>
@@ -288,8 +316,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         exists (Vint (Int.repr 0)).
         unfold exec_expr.
         split; [reflexivity|].

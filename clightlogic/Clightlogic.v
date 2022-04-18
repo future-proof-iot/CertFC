@@ -428,11 +428,11 @@ Module MatchCType.
     end.
 End MatchCType.
 
-Fixpoint app {l : list Type} {r: Type} (f : arrow_type l r) (a : DList.t (fun x => x) l) : r:=
+Fixpoint cl_app {l : list Type} {r: Type} (f : arrow_type l r) (a : DList.t (fun x => x) l) : r:=
   match a in (DList.t _ l0) return (arrow_type l0 r -> r) with
   | @DList.DNil _ _ => fun f0 : arrow_type nil r => f0
   | @DList.DCons _ _ e v _ a' =>
-      fun f => app  (f v) a'
+      fun f => cl_app  (f v) a'
   end f.
 
 Fixpoint app_n {e: Type} {r:Type} (d:e) (n: nat) (f: arrow_n n e r) (l:list e) {struct n} : r:=
@@ -587,7 +587,7 @@ Section S.
     mk_correct_function3
       {
         fn_eval_ok3 : forall (st:St),
-          match app (r:=M St res) f  a st with
+          match cl_app (r:=M St res) f  a st with
           | None => True
           | Some (v',st') =>
               (* We prove that we can reach a return state *)
@@ -648,7 +648,7 @@ Section S.
     constructor.
     intros. destruct H.
     specialize (fn_eval_ok4 st).
-    destruct (app f a st) ; auto.
+    destruct (cl_app f a st) ; auto.
     destruct p0; auto.
     intros.
     specialize (fn_eval_ok4  _ k _ MS H H0).
@@ -912,7 +912,7 @@ Section S.
       (NOVAR : fn_vars fn = nil)
       (HLEN : Datatypes.length (fn_params fn) = Datatypes.length (all_args args is_pure))
       a
-      (C : forall (st:St) le m, correct_body St p  res (app f a) fn (fn_body fn) modifies match_state
+      (C : forall (st:St) le m, correct_body St p  res (cl_app f a) fn (fn_body fn) modifies match_state
                                           (list_rel_arg (fn_params fn) (all_args args is_pure) match_arg_list (all_args_list args is_pure  a))
                                           match_res st le m)
 
@@ -921,7 +921,7 @@ Section S.
   Proof.
     econstructor.
     intros.
-    destruct (app f a st) eqn: EQ; auto.
+    destruct (cl_app f a st) eqn: EQ; auto.
     destruct p0 as (v',st').
     intros lval k m MS MM MA.
     specialize (C st (bind_parameter_temps_s (fn_params fn) ((DList.to_list (fun (_ : Type) (v0 : val) => v0) lval))
@@ -2355,7 +2355,7 @@ Section S.
       DList.Forall2 (fun (a : Type) (R : a -> Inv St) (X : a * val) => eval_inv (R (fst X)) (snd X) st m) match_arg
                     (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
     ,
-      correct_statement St p res (app f a) fn
+      correct_statement St p res (cl_app f a) fn
     (Ssequence
        (Scall (Some tres)
           (Evar fvar
@@ -2369,7 +2369,7 @@ Section S.
     rename H into PRE.
     destruct C.
     specialize (fn_eval_ok4  st).
-    destruct (app f a st); try congruence.
+    destruct (cl_app f a st); try congruence.
     destruct p0 as (v',st').
     intros s' k k' K.
     unfold pre in PRE. unfold match_temp_env in PRE.
@@ -2531,7 +2531,7 @@ Section S.
       DList.Forall2 (fun (a : Type) (R : a -> Inv St) (X : a * val) => eval_inv (R (fst X)) (snd X) st m) match_arg
                     (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
     ,
-      correct_statement St p unit (app f a) fn
+      correct_statement St p unit (cl_app f a) fn
        (Scall None
           (Evar fvar
              (Ctypes.Tfunction targs ti AST.cc_default))
@@ -2542,7 +2542,7 @@ Section S.
     rename H into PRE.
     destruct C.
     specialize (fn_eval_ok4  st).
-    destruct (app f a st); try congruence.
+    destruct (cl_app f a st); try congruence.
     destruct p0 as (v',st').
     intros s' k k' K.
     unfold pre in PRE. unfold match_temp_env in PRE.
@@ -2662,7 +2662,7 @@ Section S.
       DList.Forall2 (fun (a : Type) (R : a -> Inv St) (X : a * val) => eval_inv (R (fst X)) (snd X) st m) match_arg
                     (DList.zip (all_args_list args is_pure a) (DList.of_list_sl lval (all_args args is_pure) LEN)))
     ,
-      correct_body St p res (app f a) fn
+      correct_body St p res (cl_app f a) fn
     (Ssequence
        (Scall (Some tres)
           (Evar fvar
@@ -2676,7 +2676,7 @@ Section S.
     rename H into PRE.
     destruct C.
     specialize (fn_eval_ok4  st).
-    destruct (app f a st); try congruence.
+    destruct (cl_app f a st); try congruence.
     destruct p0 as (v',st').
     intros k.
     destruct (LVAL PRE) as (lval & MAP & ALL).
@@ -2805,7 +2805,7 @@ Proof.
   econstructor.
   intros.
   specialize (fn_eval_ok4 st).
-  destruct (app f a st);auto.
+  destruct (cl_app f a st);auto.
   destruct p0 ; auto.
   intros.
   destruct (fn_eval_ok4 lval k m MS H H0) as (v & m' & t & ST & MR & CS & UN & MS').
@@ -2896,6 +2896,7 @@ Section S.
     auto.
 Qed.
 
+(*
   Lemma correct_statement_seq_body_nil :
     forall (s1 s2:Clight.statement) vret ti
            (modifies : modifies_spec)
@@ -2909,7 +2910,7 @@ Qed.
   Proof.
     intros.
     eapply correct_statement_seq_body; eauto.
-  Qed.
+  Qed.*)
 
 End S.
 

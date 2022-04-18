@@ -48,27 +48,40 @@ Section Get_offset.
   Proof.
     correct_function_from_body args.
     correct_body.
-    (** how to use correct_* *)
-    unfold INV.
-    unfold f.
-    repeat intro.
+
+    unfold f. unfold get_offset.
+    correct_forward.
+
     get_invariant _i.
 
     unfold eval_inv, int64_correct in c0.
     subst.
 
-    eexists; exists m, Events.E0.
+    eexists.
 
     split_and; auto.
     {
-      repeat forward_star.
+      unfold exec_expr. repeat
+      match goal with
+      | H: ?X = _ |- context [match ?X with _ => _ end] =>
+        rewrite H
+      end. simpl.
+      unfold Cop.sem_shl, Cop.sem_shift; simpl.
+      change Int64.iwordsize with (Int64.repr 64).
+      change (Int64.ltu (Int64.repr 32) (Int64.repr 64)) with true; simpl.
+      unfold Cop.sem_shr; simpl.
+      unfold Cop.sem_shift; simpl.
+      change Int64.iwordsize with (Int64.repr 64).
+      change (Int64.ltu (Int64.repr 48) (Int64.repr 64)) with true; simpl.
+      unfold Cop.sem_cast; simpl.
+      reflexivity.
     }
     {
       unfold match_res, int32_correct, BinrBPF.get_offset; simpl.
       reflexivity.
     }
-    constructor;auto.
-    apply unmodifies_effect_refl.
+    unfold Cop.sem_cast; simpl.
+    reflexivity.
   Qed.
 
 End Get_offset.

@@ -84,13 +84,6 @@ Proof.
   apply land_bound.
 Qed.
 
-
-Ltac simpl_nat :=
-  match goal with
-  | H: ?X <> ?Y |- context [if (?X =? ?Y) then _ else _] =>
-    destruct (X =? Y) eqn: Ht; [rewrite Nat.eqb_eq in Ht; intuition | try reflexivity]; clear Ht
-  end.
-
 Lemma byte_to_opcode_alu64_if_default:
   forall op
     (Hadd: Nat.land op 240 <> 0x00)
