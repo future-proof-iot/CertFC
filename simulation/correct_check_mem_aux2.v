@@ -51,22 +51,8 @@ Proof.
   unfold f. unfold check_mem_aux2.
   simpl.
 
-  (** goal: correct_body _ _ (bindM (get_start_addr c) ... *)
-  eapply correct_statement_seq_body with (modifies1:=ModNothing).
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  my_reflex.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
+  correct_forward.
 
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
   unfold INV; intro H.
   correct_Forall.
   get_invariant _mr.
@@ -80,21 +66,8 @@ Proof.
   intuition eauto.
   intros.
   (** goal: correct_body _ _ (bindM (get_block_size c) ... *)
-  eapply correct_statement_seq_body with (modifies1:=ModNothing).
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  my_reflex.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
 
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
+  correct_forward.
 
   unfold INV; intro H.
   correct_Forall. simpl in H.
@@ -109,21 +82,8 @@ Proof.
   intuition eauto.
   intros.
   (**r goal: correct_body p val (bindM (get_block_perm c) ... *)
-  eapply correct_statement_seq_body with (modifies1:=ModNothing).
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  my_reflex.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
 
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
+  correct_forward.
 
   unfold INV; intro H.
   correct_Forall.
@@ -140,21 +100,8 @@ Proof.
   intros.
 
   (** goal:  correct_body _ _ (bindM (get_sub c0 x0) ... *)
-  eapply correct_statement_seq_body with (modifies1:=ModNothing).
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  my_reflex.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
 
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
+  correct_forward.
 
   unfold INV; intro H.
   correct_Forall. simpl in H.
@@ -170,20 +117,8 @@ Proof.
   eauto.
   intros.
   (** goal:  correct_body _ _ (bindM (get_add x2 (memory_chunk_to_valu32 c1)) ... *)
-  eapply correct_statement_seq_body with (modifies1:=ModNothing).
-  change_app_for_statement.
-  eapply correct_statement_call with (has_cast := false).
-  my_reflex.
-  reflexivity.
-  reflexivity.
-  typeclasses eauto.
-  reflexivity.
-  reflexivity.
-  reflexivity.
-  prove_in_inv.
-  prove_in_inv.
-  reflexivity.
-  reflexivity.
+
+  correct_forward.
 
   unfold INV; intro H.
   correct_Forall. simpl in H.

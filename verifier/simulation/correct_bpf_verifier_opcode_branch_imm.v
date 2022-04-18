@@ -159,29 +159,6 @@ Section Bpf_verifier_opcode_branch_imm.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> Inv state.state := fun x => StateLess _ (bool_correct x).
 
-Ltac correct_forward L :=
-  match goal with
-  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
-                     (Ssequence
-                        (Ssequence
-                           (Scall _ _ _)
-                           (Sset ?V ?T))
-                        ?R)
-                     _ _ _ _ _ _ _ =>
-      eapply L;
-      [ change_app_for_statement ;
-        let b := match T with
-                 | Ecast _ _ => constr:(true)
-                 | _         => constr:(false)
-                 end in
-        eapply correct_statement_call with (has_cast := b)
-      |]
-  | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
-                     (Sifthenelse _ _ _)
-                     _ _ _ _ _ _ _ =>
-      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
-  end.
-
   Instance correct_function_bpf_verifier_opcode_branch_imm : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
     correct_function_from_body args.
@@ -198,20 +175,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -224,21 +188,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -257,8 +207,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -275,6 +224,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -301,21 +252,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -328,21 +265,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -361,8 +284,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -379,6 +301,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -405,21 +329,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -432,21 +342,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -465,8 +361,7 @@ Ltac correct_forward L :=
         intuition .
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -483,6 +378,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -509,21 +406,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -536,21 +419,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -569,8 +438,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -587,6 +455,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -613,21 +483,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -640,21 +496,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -673,8 +515,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -691,6 +532,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -717,21 +560,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -744,21 +573,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -777,8 +592,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -795,6 +609,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -821,21 +637,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -848,21 +650,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -881,8 +669,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -899,6 +686,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -925,21 +714,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -952,21 +727,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -985,8 +746,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -1003,6 +763,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1029,21 +791,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1056,21 +804,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1089,8 +823,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -1107,6 +840,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1133,21 +868,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1160,21 +881,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1193,8 +900,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -1211,6 +917,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1237,21 +945,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1264,21 +958,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1297,8 +977,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -1315,6 +994,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1341,21 +1022,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1368,21 +1035,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1401,8 +1054,7 @@ Ltac correct_forward L :=
         intuition congruence.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -1419,6 +1071,8 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x0; reflexivity.
+        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1444,21 +1098,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1471,8 +1111,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -1489,6 +1128,7 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x; reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1515,21 +1155,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        correct_forward correct_statement_seq_body_nil.
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1542,8 +1168,7 @@ Ltac correct_forward L :=
         tauto.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         get_invariant _b.
         exists v.
         unfold exec_expr.
@@ -1560,6 +1185,7 @@ Ltac correct_forward L :=
         intros.
         constructor.
         destruct x; reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1613,8 +1239,7 @@ Ltac correct_forward L :=
         eapply correct_statement_seq_body_drop.
         intros.
 
-        eapply correct_body_Sreturn_Some.
-        intros.
+        correct_forward.
         exists (Vint (Int.repr 0)).
         unfold exec_expr.
         split; [reflexivity|].

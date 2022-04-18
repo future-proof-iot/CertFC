@@ -55,25 +55,11 @@ Section Get_src64.
     correct_body.
     (** how to use correct_* *)
     unfold INV.
-    unfold f, app, get_src64.
+    unfold f, cl_app, get_src64.
     intros.
 
-    eapply correct_statement_if_body_expr. intro EXPR.
-    destruct Int.eq eqn: Heq.
-    - eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+    correct_forward.
+    - correct_forward.
 
       intros.
       correct_Forall.
@@ -86,20 +72,7 @@ Section Get_src64.
       tauto.
 
       intros.
-      eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+      correct_forward.
 
       intros.
       correct_Forall.
@@ -112,8 +85,7 @@ Section Get_src64.
       unfold correct_get_immediate.match_res in c1.
       tauto.
       intros.
-      eapply correct_body_Sreturn_Some; eauto.
-      intros.
+      correct_forward.
       get_invariant _imm64.
       unfold correct_eval_immediate.match_res, val64_correct in c1.
       {
@@ -131,21 +103,7 @@ Section Get_src64.
       }
       reflexivity.
       reflexivity.
-    - eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+    - correct_forward.
 
       intros.
       correct_Forall.
@@ -160,21 +118,7 @@ Section Get_src64.
       tauto.
       }
       intros.
-      eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+      correct_forward.
 
       intros.
       correct_Forall.
@@ -191,9 +135,7 @@ Section Get_src64.
       tauto.
 
       intros.
-      instantiate (1 := ModNothing).
-      eapply correct_body_Sreturn_Some; eauto.
-      intros.
+      correct_forward.
       get_invariant _src64.
       unfold eval_inv, correct_eval_reg.match_res, val64_correct in c1.
       destruct c1 as (Hv_eq & vl & Hvl_eq).
@@ -210,7 +152,6 @@ Section Get_src64.
       simpl ; auto.
       reflexivity.
       reflexivity.
-    - reflexivity.
     - intros MS MT.
       get_invariant _x.
       unfold exec_expr.

@@ -46,35 +46,41 @@ Section Is_well_dst.
   Proof.
     correct_function_from_body args.
     correct_body.
-    repeat intro.
-    unfold INV in H.
+
+    unfold f. unfold is_well_dst.
+    correct_forward.
+
     get_invariant _i.
     unfold eval_inv, int64_correct in c0.
     subst.
 
-    eexists; exists m, Events.E0.
+    eexists.
 
     split_and; auto.
     {
-      forward_star.
-      simpl.
+      unfold exec_expr. repeat
       match goal with
-      | |- Cop.sem_cast ?X _ _ _ = _ =>
-        instantiate (1:= X)
-      end.
-      unfold Cop.sem_cast, Val.of_bool; simpl.
+      | H: ?X = _ |- context [match ?X with _ => _ end] =>
+        rewrite H
+      end. simpl.
+      unfold Cop.sem_shr, Cop.sem_shift; simpl.
+      change Int64.iwordsize with (Int64.repr 64).
+      change (Int64.ltu (Int64.repr 8) (Int64.repr 64)) with true; simpl.
+      unfold Cop.sem_cmp; simpl.
+      unfold Cop.sem_binarith; simpl.
+      unfold Val.of_bool; simpl.
       unfold Vtrue, Vfalse.
-      destruct negb; [ rewrite Int_eq_one_zero | rewrite Int.eq_true]; reflexivity.
-      forward_star.
+      reflexivity.
     }
+
     unfold eval_inv, match_res, state.is_well_dst'.
     unfold bool_correct, Val.of_bool, BinrBPF.get_dst.
-    unfold Vtrue, Vfalse, Int.cmpu.
+    unfold Int.cmpu.
     destruct negb; reflexivity.
-    unfold Val.of_bool.
-    unfold Vtrue, Vfalse.
+    unfold Cop.sem_cast; simpl.
+    destruct negb; reflexivity.
+    intros.
     destruct negb; constructor; reflexivity.
-    apply unmodifies_effect_refl.
   Qed.
 
 End Is_well_dst.

@@ -54,22 +54,7 @@ Section Bpf_verifier.
     unfold f, bpf_verifier.
     unfold INV.
 
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -81,31 +66,9 @@ Section Bpf_verifier.
     intuition eauto.
     intros.
 
-    eapply correct_statement_if_body_expr. intro EXPR.
-    destruct (negb (Int.ltu (Int.repr (Z.of_nat x)) Int.one)) eqn: Hle.
-    {
-      eapply correct_statement_if_body_expr. intro EXPR1.
-      destruct (negb
-      (Int.ltu (Int.divu (Int.repr Int.max_unsigned) (Int.repr 8))
-         (Int.repr (Z.of_nat x)))) eqn: Hle1.
-      {
-
-        eapply correct_statement_seq_body with (modifies1:=ModSomething).
-        change_app_for_statement.
-        eapply correct_statement_call with (has_cast := true).
-
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        prove_in_inv.
-        prove_in_inv.
-        reflexivity.
-        reflexivity.
+    correct_forward.
+    { correct_forward.
+      { correct_forward.
 
         unfold INV; intro H.
         correct_Forall. simpl in H.
@@ -118,25 +81,9 @@ Section Bpf_verifier.
         unfold eval_inv, correct_bpf_verifier_eval_ins_len.match_res in c0.
         intuition eauto.
         intros.
-        eapply correct_statement_if_body_expr. intro EXPR2.
-        destruct x0 eqn: Hle2.
-        {
-          eapply correct_statement_seq_body.
-          change_app_for_statement.
-          eapply correct_statement_call with (has_cast := false).
 
-          my_reflex.
-          reflexivity.
-          reflexivity.
-          typeclasses eauto.
-
-          reflexivity.
-          reflexivity.
-          reflexivity.
-          prove_in_inv.
-          prove_in_inv.
-          reflexivity.
-          reflexivity.
+        correct_forward.
+        { correct_forward.
 
           unfold INV; intro H.
           correct_Forall. simpl in H.
@@ -160,19 +107,17 @@ Section Bpf_verifier.
           f_equal.
           change 1 with (Z.of_nat 1).
           apply Nat2Z.inj_sub.
-          apply Cle_Zle_unsigned in Hle.
-          change (Int.unsigned Int.one) with 1 in Hle.
-          rewrite Int.unsigned_repr in Hle.
+          apply Cle_Zle_unsigned in Hcnd.
+          change (Int.unsigned Int.one) with 1 in Hcnd.
+          rewrite Int.unsigned_repr in Hcnd.
           lia.
           lia.
           lia.
           intros.
 
-          eapply correct_body_Sreturn_Some.
+          correct_forward.
           unfold match_res.
 
-          unfold INV; intros Hst H.
-          simpl in H.
           get_invariant _ins64.
           exists (Val.of_bool (Int64.eq x1 (Int64.repr 149))).
           unfold exec_expr, eval_inv.
@@ -193,9 +138,8 @@ Section Bpf_verifier.
           reflexivity.
         }
 
-        eapply correct_body_Sreturn_Some.
+        correct_forward.
         unfold match_res.
-        intros. simpl in H0.
         exists (Vint (Int.repr 0)).
         unfold exec_expr, eval_inv.
         split; [reflexivity |].
@@ -207,8 +151,6 @@ Section Bpf_verifier.
         split; [reflexivity |].
         intros.
         constructor.
-        reflexivity.
-
         reflexivity.
 
         intros.
@@ -224,9 +166,8 @@ Section Bpf_verifier.
         reflexivity.
       }
 
-      eapply correct_body_Sreturn_Some.
+      correct_forward.
       unfold match_res.
-      intros. simpl in H0.
       exists (Vint (Int.repr 0)).
       unfold exec_expr, eval_inv.
       split; [reflexivity |].
@@ -238,8 +179,6 @@ Section Bpf_verifier.
       split; [reflexivity |].
       intros.
       constructor.
-      reflexivity.
-
       reflexivity.
 
       intros.
@@ -269,10 +208,8 @@ Section Bpf_verifier.
 
       f_equal.
     }
-    {
-      eapply correct_body_Sreturn_Some.
+    { correct_forward.
       unfold match_res.
-      intros. simpl in H0.
       exists (Vint (Int.repr 0)).
       unfold exec_expr, eval_inv.
       split; [reflexivity |].
@@ -286,8 +223,6 @@ Section Bpf_verifier.
       constructor.
       reflexivity.
     }
-
-    reflexivity.
 
     intros.
     simpl in H0.

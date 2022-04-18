@@ -53,28 +53,6 @@ Section Step_opcode_branch.
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> Inv State.state:= fun _ => StateLess _ (eq Vundef).
 
-Ltac correct_forward L :=
-  match goal with
-  | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
-                     (Ssequence
-                        (Ssequence
-                           (Scall _ _ _)
-                           (Sset ?V ?T))
-                        ?R)
-                     _ _ _ _ _ _ _ =>
-      eapply L;
-      [ change_app_for_statement ;
-        let b := match T with
-                 | Ecast _ _ => constr:(true)
-                 | _         => constr:(false)
-                 end in
-        eapply correct_statement_call with (has_cast := b)
-      |]
-  | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
-                     (Sifthenelse _ _ _)
-                     _ _ _ _ _ _ _ =>
-      eapply correct_statement_if_body; [prove_in_inv | destruct x ]
-  end.
 
   Lemma Cop_add : forall vl1 vl2 m,
        Cop.sem_binary_operation (globalenv p) Cop.Oadd
@@ -92,20 +70,7 @@ Ltac correct_forward L :=
     unfold f, step_opcode_branch.
     simpl.
     (** goal: correct_body _ _ (bindM (get_opcode_branch _) ... *)
-    correct_forward correct_statement_seq_body_nil.
-
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -129,26 +94,9 @@ Ltac correct_forward L :=
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (c3 =? 5)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -170,24 +118,11 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
         reflexivity.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -207,9 +142,9 @@ Ltac correct_forward L :=
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
         reflexivity.
 
         intros.
@@ -252,32 +187,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.compl_eq.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 => match c0 with
-                                | Vlong n2 => Int64.eq n1 n2
-                                | _ => false
-                                end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -301,14 +212,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
         reflexivity.
         eapply correct_body_Sreturn_None.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -339,32 +251,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.complu_gt.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 => match c0 with
-                                | Vlong n2 => Int64.ltu n2 n1
-                                | _ => false
-                                end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -388,13 +276,16 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -425,33 +316,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.complu_ge.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 =>
-                      match c0 with
-                      | Vlong n2 => negb (Int64.ltu n1 n2)
-                      | _ => false
-                      end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -474,12 +340,14 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
+        reflexivity.
+        reflexivity.
+
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
         reflexivity.
         intros.
         get_invariant _dst64.
@@ -511,32 +379,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.complu_lt.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 => match c0 with
-                                | Vlong n2 => Int64.ltu n1 n2
-                                | _ => false
-                                end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -559,13 +403,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -596,33 +442,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.complu_le.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 =>
-                      match c0 with
-                      | Vlong n2 => negb (Int64.ltu n2 n1)
-                      | _ => false
-                      end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -645,13 +466,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -682,33 +505,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.complu_set.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 =>
-                      match c0 with
-                      | Vlong n2 => negb (Int64.eq (Int64.and n1 n2) Int64.zero)
-                      | _ => false
-                      end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -731,13 +529,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -768,33 +568,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.compl_ne.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-    | Vlong n1 =>
-        match c0 with
-        | Vlong n2 => negb (Int64.eq n1 n2)
-        | _ => false
-        end
-    | _ => false
-    end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -817,13 +592,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -854,32 +631,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.compl_gt.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 => match c0 with
-                                | Vlong n2 => Int64.lt n2 n1
-                                | _ => false
-                                end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -902,13 +655,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -939,33 +694,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.compl_ge.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 =>
-                      match c0 with
-                      | Vlong n2 => negb (Int64.lt n1 n2)
-                      | _ => false
-                      end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -988,13 +718,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -1025,32 +757,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.compl_lt.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 => match c0 with
-                                | Vlong n2 => Int64.lt n1 n2
-                                | _ => false
-                                end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1073,13 +781,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -1110,33 +820,8 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
         unfold rBPFValues.compl_le.
-        (**r because upd_reg return unit, here we use *_unit? *)
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (match c with
-                  | Vlong n1 =>
-                      match c0 with
-                      | Vlong n2 => negb (Int64.lt n2 n1)
-                      | _ => false
-                      end
-                  | _ => false
-                  end)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_pc.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1159,13 +844,15 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_body_Sreturn_None.
-        unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
         reflexivity.
+        reflexivity.
+        correct_forward.
+        unfold match_res, correct_get_opcode_branch.match_res.
+        reflexivity.
+        reflexivity.
+
         intros.
         get_invariant _dst64.
         get_invariant _src64.
@@ -1195,28 +882,8 @@ reflexivity.        reflexivity.
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        (**r because upd_reg return unit, here we use *_unit? *)
-
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (c3 =? 133)%nat eqn: Hneg_eq.
-
-        eapply correct_statement_seq_body with (modifies1:=ModNothing).
-        change_app_for_statement.
-        eapply correct_statement_call with (has_cast := false).
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        simpl.
-        Hdisj_false.
-        simpl.
-        Hdisj_false.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1234,22 +901,7 @@ reflexivity.        reflexivity.
         intuition eauto.
         intros.
 
-        eapply correct_statement_seq_body with (modifies1:=ModNothing).
-        change_app_for_statement.
-        eapply correct_statement_call with (has_cast := true).
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        simpl.
-        Hdisj_false.
-        simpl.
-        Hdisj_false.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1270,27 +922,12 @@ reflexivity.        reflexivity.
         intros.
 
 
-        eapply correct_statement_if_body_expr. intro EXPR0.
-        destruct x1 eqn: Hx1_eq.
+        correct_forward.
 
         change (upd_flag Flag.BPF_ILLEGAL_CALL) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_CALL) (fun _ : unit => returnM tt)).
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        normalise_post_unit.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. intuition.
-
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall. simpl in H.
@@ -1308,26 +945,12 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
+        reflexivity.
 
-        eapply correct_statement_seq_body with (modifies1:=ModNothing).
-        change_app_for_statement.
-        eapply correct_statement_call with (has_cast := false).
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        simpl.
-        Hdisj_false.
-        simpl.
-        Hdisj_false.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall. simpl in H.
@@ -1353,21 +976,8 @@ reflexivity.        reflexivity.
         }
         rewrite Heq; clear Heq.
 
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        normalise_post_unit.
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_reg.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        instantiate (1 := modifies).
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall. simpl in H.
@@ -1388,9 +998,10 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res.
-reflexivity.        reflexivity.
+        reflexivity.
+        reflexivity.
 
         all: try reflexivity.
 
@@ -1403,20 +1014,7 @@ reflexivity.        reflexivity.
         unfold Vtrue, Vfalse.
         destruct x1; reflexivity.
 
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1433,9 +1031,10 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
+        reflexivity.
 
         intros.
         get_invariant _op.
@@ -1475,27 +1074,8 @@ reflexivity.        reflexivity.
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        (**r because upd_reg return unit, here we use *_unit? *)
-
-        eapply correct_statement_if_body_expr. intro EXPR.
-
-        destruct (c3 =? 149)%nat eqn: Hneg_eq.
-
-
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1516,23 +1096,11 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
         reflexivity.
         reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H.
         correct_Forall.
@@ -1550,9 +1118,9 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
         reflexivity.
 
         intros.
@@ -1637,20 +1205,7 @@ reflexivity.        reflexivity.
         eapply correct_statement_seq_body_drop.
         intros.
 
-        eapply correct_statement_seq_body_unit.
-        change_app_for_statement.
-        (**r goal: correct_statement p unit (app f a) fn (Scall None (Evar ... *)
-        eapply correct_statement_call_none.
-        my_reflex.
-        reflexivity.
-        reflexivity.
-        typeclasses eauto.
-        unfold correct_upd_flag.match_res. intuition.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
+        correct_forward.
 
         unfold INV; intro H1.
         correct_Forall.
@@ -1670,9 +1225,11 @@ reflexivity.        reflexivity.
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
+        reflexivity.
+      - reflexivity.
 Qed.
 
 End Step_opcode_branch.

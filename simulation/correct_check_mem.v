@@ -58,22 +58,7 @@ Section Check_mem.
     unfold INV.
     unfold f, app.
     unfold check_mem.
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := true).
-
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     intros.
     change (match_temp_env INV le st m) in H.
@@ -87,10 +72,10 @@ Section Check_mem.
     intuition eauto.
 
     intros.
-    eapply correct_statement_if_body; [prove_in_inv | destruct x ].
+    correct_forward.
     2:{ (**r if-else branch *)
-      eapply correct_body_Sreturn_Some.
-      intros MS MT.
+      correct_forward.
+
       eexists ; split_and.
       - reflexivity.
       - reflexivity.
@@ -100,22 +85,9 @@ Section Check_mem.
     }
     (**r if-then branch *)
 
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
-    unfold INV; intro H. simpl in H.
+    intro H. simpl in H.
     correct_Forall.
     get_invariant _st.
     unfold eval_inv in *.
@@ -125,133 +97,98 @@ Section Check_mem.
     rewrite p0; reflexivity.
     simpl; intros.
     tauto.
-    -
-    intros.
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+      -
+      intros.
+      correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
-    get_invariant _st.
-    unfold eval_inv,stateless, is_state_handle in *.
-    subst.
-    exists (Vptr st_blk Ptrofs.zero::nil).
-    split.
-    unfold map_opt, exec_expr.
-    rewrite p0; reflexivity.
-    simpl;intros.
-    unfold is_state_handle. split ; auto.
-    intros.
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+      unfold INV; intro H.
+      correct_Forall. simpl in H.
+      get_invariant _st.
+      unfold eval_inv,stateless, is_state_handle in *.
+      subst.
+      exists (Vptr st_blk Ptrofs.zero::nil).
+      split.
+      unfold map_opt, exec_expr.
+      rewrite p0; reflexivity.
+      simpl;intros.
+      unfold is_state_handle. split ; auto.
+      intros.
+      correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
-    get_invariant _st.
-    get_invariant _mem_reg_num.
-    get_invariant _perm.
-    get_invariant _chunk.
-    get_invariant _addr.
-    get_invariant _mrs.
-    exists (v :: v0 :: v1 :: v2 :: v3 :: v4 :: nil).
-    split.
-    unfold map_opt, exec_expr.
-    rewrite p0, p1, p2, p3, p4, p5; reflexivity.
-    simpl;intros.
-    unfold correct_eval_mrs_num.match_res in c3.
-    destruct c3 as (Hc_eq & _).
-    unfold correct_eval_mrs_regions.match_res in c7.
-    intuition eauto.
+      unfold INV; intro H.
+      correct_Forall. simpl in H.
+      get_invariant _st.
+      get_invariant _mem_reg_num.
+      get_invariant _perm.
+      get_invariant _chunk.
+      get_invariant _addr.
+      get_invariant _mrs.
+      exists (v :: v0 :: v1 :: v2 :: v3 :: v4 :: nil).
+      split.
+      unfold map_opt, exec_expr.
+      rewrite p0, p1, p2, p3, p4, p5; reflexivity.
+      simpl;intros.
+      unfold correct_eval_mrs_num.match_res in c3.
+      destruct c3 as (Hc_eq & _).
+      unfold correct_eval_mrs_regions.match_res in c7.
+      intuition eauto.
 
-    intros.
-    eapply correct_statement_seq_body with (modifies1:=ModNothing);eauto.
-    unfold typeof.
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast:=true).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    intros.
-    typeclasses eauto.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+      intros.
+      correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
-    get_invariant _check_mem__1.
-    exists (v::nil).
-    split.
-    unfold map_opt, exec_expr.
-    rewrite p0; reflexivity.
-    simpl;intros.
-    unfold eval_inv,correct_check_mem_aux.match_res,stateless in c2.
-    tauto.
-    intros.
-    
-    eapply correct_statement_if_body_expr. intro EXPR.
-    destruct x2.
-    2:{
-      eapply correct_body_Sreturn_Some.
+      unfold INV; intro H.
+      correct_Forall. simpl in H.
+      get_invariant _check_mem__1.
+      exists (v::nil).
+      split.
+      unfold map_opt, exec_expr.
+      rewrite p0; reflexivity.
+      simpl;intros.
+      unfold eval_inv,correct_check_mem_aux.match_res,stateless in c2.
+      tauto.
+      intros.
+
+      correct_forward.
+      2:{
+        correct_forward.
+
+        get_invariant _check_mem__1.
+        exists v.
+        split_and;auto.
+        simpl.
+        apply Cop.cast_val_casted;auto.
+        }
+
+      correct_forward.
+      eexists.
+      split_and.
+      reflexivity.
+      reflexivity.
+      reflexivity.
+      simpl.
+      intro ; constructor; reflexivity.
       intros MS MT.
       simpl in MT.
-      get_invariant _check_mem__1.
-      exists v.
-      split_and;auto.
-      simpl.
-      apply Cop.cast_val_casted;auto.
-      }
+      get_invariant _is_null.
+      unfold exec_expr.
+      unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool,stateless in c2.
+      rewrite p0.
+      rewrite c2.
+      unfold Val.of_bool.
+      destruct x3; reflexivity.
+      reflexivity.
+      reflexivity.
+      unfold lub_modifies; reflexivity.
+    - unfold lub_modifies; reflexivity.
+    - intros.
 
-    eapply correct_body_Sreturn_Some; eauto.
-    intros MS MT.
-    eexists.
-    split_and.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    simpl.
-    intro ; constructor; reflexivity.
-    reflexivity.
-    intros MS MT.
-    simpl in MT.
-    get_invariant _is_null.
-    unfold exec_expr.
-    unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool,stateless in c2.
-    rewrite p0.
-    rewrite c2.
-    unfold Val.of_bool.
-    destruct x2; reflexivity.
-    reflexivity.
-    reflexivity.
-    -  reflexivity.
+      get_invariant _well_chunk.
+      unfold exec_expr.
+      rewrite p0.
+      unfold eval_inv, stateless, match_bool in c2.
+      unfold Val.of_bool.
+      rewrite c2.
+      destruct x; reflexivity.
     - reflexivity.
   Qed.
 

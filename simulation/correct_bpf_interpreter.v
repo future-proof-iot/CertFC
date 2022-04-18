@@ -55,22 +55,7 @@ Section Bpf_interpreter.
     unfold INV.
     unfold f, app.
     unfold bpf_interpreter.
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -83,23 +68,7 @@ Section Bpf_interpreter.
     intros.
 
     instantiate (1:= ModSomething). (**r TODO: right? *)
-
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -115,7 +84,7 @@ Section Bpf_interpreter.
     lia.
     intros.
 
-    instantiate (1:= ModSomething). (**r TODO: right? *)
+    instantiate (1:= ModSomething).
 
     eapply correct_statement_seq_body with (modifies1:=ModSomething).
     change_app_for_statement.
@@ -163,7 +132,7 @@ Section Bpf_interpreter.
 
     reflexivity.
     reflexivity.
-    reflexivity. (**r TODO: should we support `upd_reg(```( *bpf_ctx).start_addr)```;` in vc_casted? *)
+    reflexivity.
     reflexivity.
     reflexivity.
 
@@ -184,20 +153,7 @@ Section Bpf_interpreter.
     intuition eauto.
     intros.
 
-    eapply correct_statement_seq_body_unit.
-    change_app_for_statement.
-    eapply correct_statement_call_none.
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-    unfold correct_bpf_interpreter_aux.match_res. intuition.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall.
@@ -210,22 +166,7 @@ Section Bpf_interpreter.
     intuition eauto.
     intros.
 
-    eapply correct_statement_seq_body with (modifies1:=ModNothing).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
+    correct_forward.
 
     unfold INV; intro H.
     correct_Forall. simpl in H.
@@ -238,25 +179,9 @@ Section Bpf_interpreter.
     intros.
 
     instantiate (1:= ModSomething). (**r TODO: right? *)
-
-    eapply correct_statement_if_body_expr. intro EXPR.
-    destruct Flag.flag_eq eqn: Hflag.
-    { eapply correct_statement_seq_body with (modifies1:=ModNothing).
-      change_app_for_statement.
-      eapply correct_statement_call with (has_cast := false).
-
-      my_reflex.
-      reflexivity.
-      reflexivity.
-      typeclasses eauto.
-
-      reflexivity.
-      reflexivity.
-      reflexivity.
-      prove_in_inv.
-      prove_in_inv.
-      reflexivity.
-      reflexivity.
+    correct_forward.
+    {
+      correct_forward.
 
       unfold INV; intro H.
       correct_Forall. simpl in H.
@@ -270,12 +195,8 @@ Section Bpf_interpreter.
       intros.
 
       instantiate (1:= ModSomething). (**r TODO: right? *)
+      correct_forward.
 
-      (*
-      change (eval_reg Regs.R0) with
-        ((bindM (eval_reg Regs.R0) (fun res => returnM res))). *)
-      eapply correct_body_Sreturn_Some.
-      intros Hst H.
       simpl in H.
       get_invariant _res.
       unfold eval_inv, correct_eval_reg.match_res, val64_correct in c0.
@@ -294,8 +215,7 @@ Section Bpf_interpreter.
       reflexivity.
     }
 
-    eapply correct_body_Sreturn_Some; eauto.
-    intros.
+    correct_forward; eauto.
     eexists.
     split.
     unfold exec_expr; simpl.

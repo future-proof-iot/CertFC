@@ -47,20 +47,17 @@ Section Get_opcode.
   Proof.
     correct_function_from_body args.
     correct_body.
-    (** how to use correct_* *)
-    unfold INV.
-    unfold f.
-    repeat intro.
+
+    unfold f. unfold get_opcode.
+    correct_forward.
+
     get_invariant _ins.
 
     unfold eval_inv, int64_correct in c0.
     subst.
 
-    eexists. exists m, Events.E0.
-    unfold match_res, opcode_correct, BinrBPF.get_opcode.
+    eexists.
 
-    unfold Int64.and.
-    change (Int64.unsigned (Int64.repr 255)) with 255%Z.
     assert (Hc_le: (0 <= Z.land (Int64.unsigned c) 255 <= 255)%Z). {
       assert (Heq: (Int64.unsigned c) = Z.of_nat (Z.to_nat(Int64.unsigned c))). {
         rewrite Z2Nat.id.
@@ -80,15 +77,15 @@ Section Get_opcode.
       }
       lia.
     }
-    rewrite Int64.unsigned_repr; [ | change Int64.max_unsigned with 18446744073709551615%Z; lia].
 
-    rewrite Z2Nat.id; [| lia].
-
-    split; unfold step2.
-    -
-      forward_star.
-      simpl.
-      rewrite Int.zero_ext_idem; [| lia].
+    split_and; auto.
+    {
+      unfold exec_expr. repeat
+      match goal with
+      | H: ?X = _ |- context [match ?X with _ => _ end] =>
+        rewrite H
+      end. simpl.
+      unfold Cop.sem_cast; simpl.
       rewrite Int.zero_ext_and; [| lia].
       change (two_p 8 - 1)%Z with 255%Z.
 
@@ -101,24 +98,26 @@ Section Get_opcode.
       change (Int.unsigned (Int.repr 255)) with 255%Z.
       rewrite <- Z.land_assoc.
       rewrite Z.land_diag.
+      reflexivity.
+    }
 
-      unfold step2; forward_star.
-    - split.
-      + unfold eval_inv.
-        split; [reflexivity|].
-        lia.
-      + split.
-        * constructor.
-          simpl.
-          rewrite Int.zero_ext_and; [| lia].
-          change (two_p 8 - 1)%Z with 255%Z.
-          unfold Int.and.
-          rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
-          change (Int.unsigned (Int.repr 255)) with 255%Z.
-          rewrite <- Z.land_assoc.
-          reflexivity.
-        * split; [auto|].
-          apply unmodifies_effect_refl.
+    unfold eval_inv, match_res, BinrBPF.get_opcode.
+    unfold opcode_correct.
+    unfold Int64.and.
+    change (Int64.unsigned (Int64.repr 255)) with 255%Z.
+    rewrite Int64.unsigned_repr; [ | change Int64.max_unsigned with 18446744073709551615%Z; lia].
+
+    rewrite Z2Nat.id; [| lia].
+    split; [reflexivity | lia].
+
+    unfold Cop.sem_cast; simpl.
+    rewrite Int.zero_ext_and; [| lia].
+    change (two_p 8 - 1)%Z with 255%Z.
+    unfold Int.and.
+    rewrite Int.unsigned_repr; [| change Int.max_unsigned with 4294967295%Z; lia].
+    change (Int.unsigned (Int.repr 255)) with 255%Z.
+    rewrite <- Z.land_assoc.
+    reflexivity.
   Qed.
 
 End Get_opcode.

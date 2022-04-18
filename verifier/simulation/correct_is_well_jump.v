@@ -48,8 +48,10 @@ Section Is_well_jump.
   Proof.
     correct_function_from_body args.
     correct_body.
-    repeat intro.
-    unfold INV in H.
+
+    unfold f. unfold is_well_jump.
+    correct_forward.
+
     get_invariant _pc.
     get_invariant _len.
     get_invariant _ofs.
@@ -59,38 +61,38 @@ Section Is_well_jump.
     destruct c3 as (c3 & Hc3_range).
     subst.
 
-    eexists; exists m, Events.E0.
+    eexists.
 
     split_and; auto.
     {
-      forward_star.
-      simpl.
+      unfold exec_expr. repeat
       match goal with
-      | |- Cop.sem_cast ?X _ _ _ = _ =>
-        instantiate (1:= X)
-      end.
-      unfold Cop.sem_cast, Val.of_bool; simpl.
+      | H: ?X = _ |- context [match ?X with _ => _ end] =>
+        rewrite H
+      end. simpl.
+      unfold Cop.sem_cmp; simpl.
+      unfold Cop.sem_binarith; simpl.
+      unfold Val.of_bool; simpl.
       unfold Vtrue, Vfalse.
-      match goal with
-      | |- _ = Some (if ?X then _ else _) =>
-        destruct X; [ rewrite Int_eq_one_zero | rewrite Int.eq_true]; reflexivity
-      end.
-      forward_star.
+      reflexivity.
     }
     unfold eval_inv, match_res, state.is_well_jump'.
     unfold bool_correct, Val.of_bool.
-    unfold Vtrue, Vfalse, Int.cmpu.
+    unfold Int.cmpu.
     match goal with
-    | |- (if ?X then _ else _) = _ =>
+    | |- context[if ?X then _ else _] =>
       destruct X; reflexivity
     end.
-    unfold Val.of_bool.
-    unfold Vtrue, Vfalse.
+    unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[if ?X then _ else _] =>
+      destruct X; reflexivity
+    end.
+    intros.
     match goal with
     | |- Cop.val_casted (if ?X then _ else _) _ =>
       destruct X; constructor; reflexivity
     end.
-    apply unmodifies_effect_refl.
   Qed.
 
 End Is_well_jump.
