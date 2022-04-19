@@ -60,8 +60,6 @@ Section Step_opcode_mem_ld_reg.
     simpl.
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _op.
     exists (v::nil).
     split.
@@ -77,11 +75,8 @@ Section Step_opcode_mem_ld_reg.
 
         eapply correct_statement_seq_body_drop.
         intros.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr.
         exists (v::Vint (Int.repr 1)::Vint (Int.repr 4)::v0::nil).
@@ -96,8 +91,6 @@ Section Step_opcode_mem_ld_reg.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         exists (v0::nil).
@@ -114,11 +107,8 @@ Section Step_opcode_mem_ld_reg.
 
         change (upd_flag Flag.BPF_ILLEGAL_MEM) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_MEM) (fun _ : unit => returnM tt)).
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         exists (v::Vint (Int.neg (Int.repr 2))::nil). (**r star here *)
         unfold map_opt, exec_expr.
@@ -135,12 +125,9 @@ Section Step_opcode_mem_ld_reg.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         get_invariant _is_null.
@@ -156,11 +143,8 @@ Section Step_opcode_mem_ld_reg.
         tauto.
 
         intros.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _v.
@@ -175,18 +159,13 @@ Section Step_opcode_mem_ld_reg.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _is_null.
         unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
         destruct x1; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
@@ -206,8 +185,6 @@ Section Step_opcode_mem_ld_reg.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr.
         exists (v::Vint (Int.repr 1)::Vint (Int.repr 2)::v0::nil).
@@ -222,8 +199,6 @@ Section Step_opcode_mem_ld_reg.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         exists (v0::nil).
@@ -241,11 +216,8 @@ Section Step_opcode_mem_ld_reg.
 
         change (upd_flag Flag.BPF_ILLEGAL_MEM) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_MEM) (fun _ : unit => returnM tt)).
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         exists (v::Vint (Int.neg (Int.repr 2))::nil). (**r star here *)
         unfold map_opt, exec_expr.
@@ -262,13 +234,9 @@ Section Step_opcode_mem_ld_reg.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
-
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         get_invariant _is_null.
@@ -284,11 +252,8 @@ Section Step_opcode_mem_ld_reg.
         intuition congruence.
 
         intros.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _v.
@@ -305,19 +270,13 @@ Section Step_opcode_mem_ld_reg.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
 
-        reflexivity.
-
-        intros.
         get_invariant _is_null.
         unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
         destruct x1; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
@@ -337,8 +296,6 @@ Section Step_opcode_mem_ld_reg.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr.
         exists (v::Vint (Int.repr 1)::Vint (Int.repr 1)::v0::nil).
@@ -353,8 +310,6 @@ Section Step_opcode_mem_ld_reg.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         exists (v0::nil).
@@ -372,11 +327,8 @@ Section Step_opcode_mem_ld_reg.
 
         change (upd_flag Flag.BPF_ILLEGAL_MEM) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_MEM) (fun _ : unit => returnM tt)).
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         exists (v::Vint (Int.neg (Int.repr 2))::nil). (**r star here *)
         unfold map_opt, exec_expr.
@@ -393,12 +345,9 @@ Section Step_opcode_mem_ld_reg.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         get_invariant _is_null.
@@ -415,11 +364,8 @@ Section Step_opcode_mem_ld_reg.
         intuition congruence.
 
         intros.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _v.
@@ -438,18 +384,13 @@ Section Step_opcode_mem_ld_reg.
         intros.
         unfold eval_inv.
         reflexivity.
-        reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _is_null.
         unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
         destruct x1; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
@@ -469,8 +410,6 @@ Section Step_opcode_mem_ld_reg.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr.
         exists (v::Vint (Int.repr 1)::Vint (Int.repr 8)::v0::nil).
@@ -485,8 +424,6 @@ Section Step_opcode_mem_ld_reg.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         exists (v0::nil).
@@ -504,11 +441,8 @@ Section Step_opcode_mem_ld_reg.
 
         change (upd_flag Flag.BPF_ILLEGAL_MEM) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_MEM) (fun _ : unit => returnM tt)).
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         exists (v::Vint (Int.neg (Int.repr 2))::nil). (**r star here *)
         unfold map_opt, exec_expr.
@@ -525,12 +459,9 @@ Section Step_opcode_mem_ld_reg.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr_ptr.
         get_invariant _is_null.
@@ -544,11 +475,8 @@ Section Step_opcode_mem_ld_reg.
         intuition congruence.
 
         intros.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _v.
@@ -565,19 +493,13 @@ Section Step_opcode_mem_ld_reg.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
 
-        reflexivity.
-
-        intros.
         get_invariant _is_null.
         unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
         destruct x1; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
@@ -635,8 +557,6 @@ Section Step_opcode_mem_ld_reg.
           (bindM (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) (fun _ : unit => returnM tt)).
         correct_forward.
 
-        unfold INV; intro HH.
-        correct_Forall.
         get_invariant _st.
         exists (v ::
                 (Vint (Int.neg (Int.repr 1))) :: nil). (**r star here *)
@@ -653,8 +573,6 @@ Section Step_opcode_mem_ld_reg.
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         correct_forward.
         reflexivity.
-        reflexivity.
-      - reflexivity.
   Qed.
 
 End Step_opcode_mem_ld_reg.

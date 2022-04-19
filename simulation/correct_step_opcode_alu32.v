@@ -61,8 +61,6 @@ Section Step_opcode_alu32.
     (** goal: correct_body _ _ (bindM (get_opcode_alu32 _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _op.
     exists (v::nil).
     split.
@@ -83,12 +81,9 @@ Section Step_opcode_alu32.
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        instantiate (1 := modifies).
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -115,7 +110,6 @@ Section Step_opcode_alu32.
         intros.
         get_invariant _st.
         reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_alu32.
@@ -135,8 +129,6 @@ Section Step_opcode_alu32.
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -161,7 +153,6 @@ Section Step_opcode_alu32.
         unfold match_res, correct_get_opcode_alu32.match_res.
         intros.
         reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_alu32.
@@ -181,8 +172,6 @@ Section Step_opcode_alu32.
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -209,7 +198,6 @@ Section Step_opcode_alu32.
         get_invariant _st.
         unfold eval_inv,is_state_handle in c3.
         reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_alu32.
@@ -232,8 +220,6 @@ Section Step_opcode_alu32.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -243,7 +229,7 @@ Section Step_opcode_alu32.
         destruct c6 as (Hv2_eq & (vl2 & Hvl2_eq)); subst.
         unfold rBPFValues.val32_divu, Val.divlu. (**r star here *)
         rewrite Bool.negb_true_iff in Hcnd.
-        
+
         exists (v ::v0 :: Vlong (Int64.repr (Int.unsigned (Int.divu vl1 vl2))) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3.
@@ -263,15 +249,12 @@ Section Step_opcode_alu32.
         unfold match_res, correct_get_opcode_alu32.match_res.
         intros.
         reflexivity.
-        reflexivity.
 
         change (upd_flag Flag.BPF_ILLEGAL_DIV) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_DIV) (fun _ : unit => returnM tt)).
         (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_DIV) fn ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -296,7 +279,6 @@ Section Step_opcode_alu32.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         intros.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -328,8 +310,6 @@ Section Step_opcode_alu32.
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -354,7 +334,6 @@ Section Step_opcode_alu32.
         unfold match_res, correct_get_opcode_alu32.match_res.
         intros.
         reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_alu32.
@@ -374,8 +353,6 @@ Section Step_opcode_alu32.
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -400,7 +377,6 @@ Section Step_opcode_alu32.
         unfold match_res, correct_get_opcode_alu32.match_res.
         intros.
         reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_alu32.
@@ -421,8 +397,6 @@ Section Step_opcode_alu32.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -449,15 +423,12 @@ Section Step_opcode_alu32.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         reflexivity.
-        reflexivity.
 
         change (upd_flag Flag.BPF_ILLEGAL_SHIFT) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_SHIFT) (fun _ : unit => returnM tt)).
         (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         unfold eval_inv,is_state_handle in c3.
         subst.
@@ -476,7 +447,6 @@ Section Step_opcode_alu32.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         intros.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -507,8 +477,6 @@ Section Step_opcode_alu32.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -537,15 +505,12 @@ Section Step_opcode_alu32.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         reflexivity.
-        reflexivity.
 
         change (upd_flag Flag.BPF_ILLEGAL_SHIFT) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_SHIFT) (fun _ : unit => returnM tt)).
         (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         unfold eval_inv,is_state_handle in c3.
         subst.
@@ -566,9 +531,7 @@ Section Step_opcode_alu32.
         unfold match_res, correct_get_opcode_alu32.match_res.
         intros.
         reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _src32.
         unfold correct_reg64_to_reg32.match_res, val32_correct in c3.
         destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
@@ -596,8 +559,6 @@ Section Step_opcode_alu32.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -621,14 +582,11 @@ Section Step_opcode_alu32.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         reflexivity.
-        reflexivity.
 
         change (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) (fun _ : unit => returnM tt)).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -653,9 +611,7 @@ Section Step_opcode_alu32.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
@@ -699,8 +655,6 @@ Section Step_opcode_alu32.
         (**r correct_body p unit (if rBPFValues.compl_ne c0 valu32_zero then ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -729,15 +683,13 @@ Section Step_opcode_alu32.
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
 
         change (upd_flag Flag.BPF_ILLEGAL_DIV) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_DIV) (fun _ : unit => returnM tt)).
         unfold rBPFValues.comp_ne_32 in Hcnd.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -762,9 +714,7 @@ reflexivity.        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _src32.
         unfold exec_expr.
         rewrite p0. unfold rBPFValues.comp_ne_32, Int.zero.
@@ -793,8 +743,6 @@ reflexivity.        reflexivity.
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -818,7 +766,7 @@ reflexivity.        reflexivity.
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_alu32.
@@ -838,8 +786,6 @@ reflexivity.        reflexivity.
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst32.
@@ -861,7 +807,7 @@ reflexivity.        reflexivity.
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_alu32.
@@ -883,8 +829,6 @@ reflexivity.        reflexivity.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
 
         get_invariant _st.
         get_invariant _dst.
@@ -916,15 +860,13 @@ reflexivity.        reflexivity.
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
-reflexivity.        reflexivity.
+        reflexivity.
 
         change (upd_flag Flag.BPF_ILLEGAL_SHIFT) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_SHIFT) (fun _ : unit => returnM tt)).
         (**r goal: correct_body p unit (upd_flag Flag.BPF_ILLEGAL_SHIFT) fn ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         unfold eval_inv,is_state_handle in c3.
         subst.
@@ -944,9 +886,7 @@ reflexivity.        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _src32.
         unfold correct_reg64_to_reg32.match_res, val32_correct in c3.
         destruct c3 as (Hv_eq & vi & Hvi_eq); subst.
@@ -1017,8 +957,6 @@ reflexivity.        reflexivity.
           (bindM (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) (fun _ : unit => returnM tt)).
         correct_forward.
 
-        unfold INV; intro HH.
-        correct_Forall.
         get_invariant _st.
         unfold eval_inv,is_state_handle in c3.
         subst.
@@ -1039,8 +977,6 @@ reflexivity.        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_alu32.match_res.
         reflexivity.
-        reflexivity.
-    - reflexivity.
 Qed.
 
 End Step_opcode_alu32.

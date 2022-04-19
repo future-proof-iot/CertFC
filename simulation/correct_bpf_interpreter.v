@@ -57,8 +57,6 @@ Section Bpf_interpreter.
     unfold bpf_interpreter.
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     exists (v::nil).
     split.
@@ -67,11 +65,8 @@ Section Bpf_interpreter.
     intuition eauto.
     intros.
 
-    instantiate (1:= ModSomething). (**r TODO: right? *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _mrs.
     exists ((Vint (Int.repr 0))::v::nil).
     split.
@@ -84,9 +79,8 @@ Section Bpf_interpreter.
     lia.
     intros.
 
-    instantiate (1:= ModSomething).
 
-    eapply correct_statement_seq_body with (modifies1:=ModSomething).
+    eapply correct_statement_seq_body with (modifies2:=ModSomething).
     change_app_for_statement.
     eapply correct_statement_call with (has_cast := false).
     my_reflex.
@@ -103,8 +97,7 @@ Section Bpf_interpreter.
     reflexivity.
     reflexivity.
 
-    unfold INV; intro H.
-    correct_Forall.
+    intros H; correct_Forall.
     get_invariant _bpf_ctx.
     exists (v::nil).
     split.
@@ -114,30 +107,8 @@ Section Bpf_interpreter.
     intuition eauto.
     intros.
 
-    instantiate (1:= ModSomething). (**r TODO: right? *)
-    simpl.
+    correct_forward.
 
-    eapply correct_statement_seq_body_unit.
-    simpl.
-
-    change_app_for_statement.
-    normalise_post_unit.
-
-    eapply correct_statement_call_none.
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    typeclasses eauto.
-    unfold correct_upd_reg.match_res. intuition.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    reflexivity.
-
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     get_invariant _start.
     unfold correct_get_start_addr.match_res, val32_correct in c1.
@@ -155,8 +126,6 @@ Section Bpf_interpreter.
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     get_invariant _fuel.
     exists (v::v0::nil).
@@ -168,8 +137,6 @@ Section Bpf_interpreter.
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
     get_invariant _st.
     exists (v::nil).
     split.
@@ -178,13 +145,10 @@ Section Bpf_interpreter.
     intuition eauto.
     intros.
 
-    instantiate (1:= ModSomething). (**r TODO: right? *)
     correct_forward.
     {
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _st.
       exists (v:: (Vint (Int.repr 0))::nil).
       split.
@@ -194,10 +158,8 @@ Section Bpf_interpreter.
       intuition eauto.
       intros.
 
-      instantiate (1:= ModSomething). (**r TODO: right? *)
       correct_forward.
 
-      simpl in H.
       get_invariant _res.
       unfold eval_inv, correct_eval_reg.match_res, val64_correct in c0.
       destruct c0 as (c0 & vl & Hvl_eq); subst.
@@ -212,7 +174,6 @@ Section Bpf_interpreter.
       reflexivity.
       intros.
       constructor.
-      reflexivity.
     }
 
     correct_forward; eauto.
@@ -228,7 +189,7 @@ Section Bpf_interpreter.
     intros.
     constructor.
     all: try reflexivity.
-    intros. simpl in H0.
+
     get_invariant _f.
     unfold exec_expr.
     unfold eval_inv, correct_eval_flag.match_res, flag_correct in c0.

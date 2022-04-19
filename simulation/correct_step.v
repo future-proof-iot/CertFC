@@ -58,8 +58,6 @@ Section Step.
     (** goal: correct_body _ _ (bindM (eval_pc _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     exists (v::nil).
     split.
@@ -71,8 +69,6 @@ Section Step.
     (** goal: correct_body _ _ (bindM (eval_ins _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     get_invariant _pc.
     exists (v::v0::nil).
@@ -85,8 +81,6 @@ Section Step.
     (** goal: correct_body _ _ (bindM (get_opcode_ins _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _ins.
     exists (v::nil).
     split.
@@ -98,8 +92,6 @@ Section Step.
     (** goal: correct_body _ _ (bindM (get_opcode _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _op.
     exists (v::nil).
     split.
@@ -111,15 +103,12 @@ Section Step.
     (** goal: correct_body _ _ (bindM (get_dst _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _ins.
     exists (v::nil).
     split.
     unfold map_opt, exec_expr. rewrite p0; reflexivity.
     intros; simpl.
     eauto.
-    instantiate (1 := modifies).
 
     intros.
     (** goal: correct_body _ _
@@ -137,8 +126,6 @@ Section Step.
         (**r because upd_reg return unit, here we use *_unit? *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         exists (v::v0::nil).
@@ -151,8 +138,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_src64 _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _op.
         get_invariant _ins.
@@ -200,11 +185,8 @@ Section Step.
           destruct Val.shrl; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst64.
         get_invariant _src64.
@@ -224,9 +206,6 @@ Section Step.
         intros.
 
         unfold eval_inv, match_res.
-        reflexivity.
-        reflexivity.
-        reflexivity.
         reflexivity.
       + reflexivity.
       + intros. simpl in H0.
@@ -248,8 +227,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         exists (v::v0::nil).
@@ -262,8 +239,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (reg64_to_reg32 _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _dst64.
         exists (v::nil).
         split.
@@ -275,8 +250,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_src32 _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _op.
         get_invariant _ins.
@@ -314,11 +287,8 @@ Section Step.
           destruct Val.longofint; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst32.
         get_invariant _src32.
@@ -338,10 +308,6 @@ Section Step.
         unfold match_res.
         intros.
         unfold eval_inv.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
         reflexivity.
       + reflexivity.
       + intros. simpl in H0.
@@ -363,8 +329,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         exists (v::v0::nil).
@@ -377,8 +341,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -390,8 +352,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_src64 _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _op.
         get_invariant _ins.
@@ -444,11 +404,8 @@ Section Step.
           destruct Val.longofintu; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst64.
         get_invariant _src64.
@@ -473,10 +430,6 @@ Section Step.
         intros.
         unfold eval_inv.
         reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros. simpl in H0.
         get_invariant _opc.
@@ -497,8 +450,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         exists (v::v0::nil).
@@ -511,8 +462,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_immediate _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -534,11 +483,8 @@ Section Step.
           destruct Val.orl; try reflexivity.
         }
         rewrite Heq; clear Heq.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _imm.
         get_invariant _dst64.
@@ -560,9 +506,6 @@ Section Step.
         intros.
         unfold eval_inv.
         reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros. simpl in H0.
         get_invariant _opc.
@@ -583,8 +526,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_src _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -596,8 +537,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _src.
         exists (v::v0::nil).
@@ -610,8 +549,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -623,8 +560,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_addr_ofs _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _src64.
         get_invariant _ofs.
         exists (v::v0::nil).
@@ -655,11 +590,8 @@ Section Step.
           all: reflexivity.
         }
         rewrite Heq; clear Heq.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _addr.
         get_invariant _pc.
@@ -679,11 +611,6 @@ Section Step.
         unfold match_res.
         intros.
         unfold eval_inv.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
         reflexivity.
       + reflexivity.
       + intros. simpl in H0.
@@ -705,8 +632,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         exists (v::v0::nil).
@@ -719,8 +644,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -732,8 +655,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_immediate _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -745,8 +666,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_addr_ofs _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _dst64.
         get_invariant _ofs.
         exists (v::v0::nil).
@@ -775,11 +694,8 @@ Section Step.
           all: reflexivity.
         }
         rewrite Heq; clear Heq.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _imm.
         get_invariant _addr.
@@ -802,11 +718,6 @@ Section Step.
         intros.
         unfold eval_inv.
         reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros. simpl in H0.
         get_invariant _opc.
@@ -827,8 +738,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         exists (v::v0::nil).
@@ -841,8 +750,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_src _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -854,8 +761,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (eval_reg _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _src.
         exists (v::v0::nil).
@@ -868,8 +773,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_offset _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -881,8 +784,6 @@ Section Step.
         (** goal: correct_body _ _ (bindM (get_addr_ofs _) ... *)
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _dst64.
         get_invariant _ofs.
         exists (v::v0::nil).
@@ -911,11 +812,8 @@ Section Step.
           all: reflexivity.
         }
         rewrite Heq; clear Heq.
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _src64.
         get_invariant _addr.
@@ -936,12 +834,6 @@ Section Step.
         unfold match_res.
         intros.
         unfold eval_inv; auto.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros. simpl in H0.
         get_invariant _opc.
@@ -1001,8 +893,6 @@ Section Step.
           (bindM (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) (fun _ : unit => returnM tt)).
         correct_forward.
 
-        unfold INV; intro HH.
-        correct_Forall.
         get_invariant _st.
         exists (v ::
                 (Vint (Int.neg (Int.repr 1))) :: nil). (**r star here *)
@@ -1021,12 +911,6 @@ Section Step.
         unfold match_res, correct_get_opcode_alu64.match_res.
         intros.
         unfold eval_inv; auto.
-        reflexivity.
-      - reflexivity.
-      - reflexivity.
-      - reflexivity.
-      - reflexivity.
-      - reflexivity.
 Qed.
 
 End Step.

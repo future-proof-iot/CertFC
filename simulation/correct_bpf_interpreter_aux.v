@@ -103,9 +103,6 @@ Qed.
       correct_forward.
       correct_forward.
 
-      intro HH.
-      correct_Forall.
-      cbn in HH.
       get_invariant _st.
       exists (v ::
               (Vint (Int.neg (Int.repr 5))) :: nil). (**r star here *)
@@ -122,15 +119,11 @@ Qed.
       (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
       correct_forward.
       unfold match_res, correct_get_opcode_alu64.match_res.
-      intros.
-      cbn in H.
+
       unfold eval_inv; auto.
-      reflexivity.
 
       inversion Hcnd.
 
-      intros.
-      cbn in H0.
       get_invariant _fuel.
       unfold exec_expr.
       rewrite p0.
@@ -154,8 +147,7 @@ Qed.
     simpl.
     apply correct_statement_seq_set with (match_res1 := stateless nat_correct c).
 
-    intro Hst.
-    unfold INV; intro H.
+    intros Hst H; simpl in H.
     get_invariant _fuel.
     unfold eval_inv, stateless, nat_correct in c0.
     destruct c0 as (c0 & Hc0_range).
@@ -191,8 +183,6 @@ Qed.
     (**r correct_body _ _ (bindM (eval_ins_len _ _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     exists (v::nil).
     split.
@@ -205,8 +195,6 @@ Qed.
     (**r correct_body _ _ (bindM (eval_pc _ _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
     get_invariant _st.
     exists (v::nil).
     split.
@@ -215,14 +203,11 @@ Qed.
     simpl;intros.
     intuition eauto.
     intros.
-    instantiate (1 := modifies).
 
     correct_forward.
     {
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _st.
       exists (v::nil).
       split.
@@ -234,8 +219,6 @@ Qed.
 
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _st.
       exists (v::nil).
       split.
@@ -245,14 +228,11 @@ Qed.
       intuition eauto.
       intros.
 
-      instantiate (1:= ModSomething). (**r TODO: right? *)
       correct_forward.
       {
         - (**r correct_body _ _ (bindM (eval_ins_len _ _) ... *)
           correct_forward.
 
-          unfold INV; intro H.
-          correct_Forall. simpl in H.
           get_invariant _st.
           exists (v::nil).
           split.
@@ -265,8 +245,6 @@ Qed.
           (**r correct_body _ _ (bindM (eval_pc _ _) ... *)
           correct_forward.
 
-          unfold INV; intro H.
-          correct_Forall. simpl in H.
           get_invariant _st.
           exists (v::nil).
           split.
@@ -275,13 +253,10 @@ Qed.
           simpl;intros.
           intuition eauto.
           intros.
-          instantiate (1 := modifies).
 
           correct_forward.
           + correct_forward.
 
-            unfold INV; intro H.
-            correct_Forall. simpl in H.
             get_invariant _st.
             exists (v::nil).
             split.
@@ -374,8 +349,6 @@ Qed.
             rewrite Heq; clear Heq.
             correct_forward.
 
-            unfold INV; intro H.
-            correct_Forall. simpl in H.
             get_invariant _st.
             get_invariant _fuel0.
             exists (v::v0::nil).
@@ -387,15 +360,11 @@ Qed.
 
             intros.
             correct_forward.
-            unfold INV; intros Hst H.
             unfold eval_inv.
             unfold match_res.
             reflexivity.
-            reflexivity.
           + correct_forward.
 
-            unfold INV; intro H.
-            correct_Forall. simpl in H.
             get_invariant _st.
             exists (v::(Vint (Int.neg (Int.repr 5))) :: nil).
             split.
@@ -407,13 +376,10 @@ Qed.
             intros.
 
             correct_forward.
-            unfold INV; intros Hst H.
             unfold eval_inv.
             unfold match_res.
             reflexivity.
-            reflexivity.
-          + unfold INV; intros Hst H. simpl in H.
-            get_invariant _pc0.
+          + get_invariant _pc0.
             get_invariant _len0.
             unfold exec_expr. rewrite p0, p1.
             unfold eval_inv, correct_eval_pc.match_res, int32_correct in c0.
@@ -422,18 +388,14 @@ Qed.
             simpl.
             unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
             reflexivity.
-          + reflexivity.
-          + reflexivity.
       }
 
       correct_forward.
-      unfold INV; intros Hst H.
+
       unfold eval_inv.
       unfold match_res.
       reflexivity.
-      reflexivity.
 
-      unfold INV; intros Hst H. simpl in H.
       get_invariant _f.
       unfold exec_expr.
       rewrite p0.
@@ -444,14 +406,10 @@ Qed.
       unfold flag_eq, CommonLib.int_of_flag.
       unfold Val.of_bool, Vtrue, Vfalse.
       destruct x2 eqn: Heq_x2; simpl; try reflexivity.
-
-      reflexivity.
     }
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
     get_invariant _st.
     exists (v::(Vint (Int.neg (Int.repr 5))) :: nil).
     split.
@@ -463,13 +421,11 @@ Qed.
     intros.
 
     correct_forward.
-    unfold INV; intros Hst H.
+
     unfold eval_inv.
     unfold match_res.
     reflexivity.
-    reflexivity.
 
-    unfold INV; intros Hst H. simpl in H.
     get_invariant _pc.
     get_invariant _len.
     unfold exec_expr. rewrite p0, p1.
@@ -480,10 +436,6 @@ Qed.
     unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
     reflexivity.
 
-    reflexivity.
-    reflexivity.
-
-    unfold INV; intros Hst H.
     get_invariant _fuel.
     unfold stateless, nat_correct in c0.
     destruct c0 as (Hv_eq & Hrange).

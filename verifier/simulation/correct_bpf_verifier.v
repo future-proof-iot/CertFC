@@ -56,8 +56,6 @@ Section Bpf_verifier.
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     exists (v::nil).
     split.
@@ -70,8 +68,6 @@ Section Bpf_verifier.
     { correct_forward.
       { correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall. simpl in H.
         get_invariant _st.
         get_invariant _len.
         exists (v::v0::v0::nil).
@@ -85,8 +81,6 @@ Section Bpf_verifier.
         correct_forward.
         { correct_forward.
 
-          unfold INV; intro H.
-          correct_Forall. simpl in H.
           get_invariant _st.
           get_invariant _len.
           unfold eval_inv, correct_bpf_verifier_eval_ins_len.match_res in c0.
@@ -135,7 +129,6 @@ Section Bpf_verifier.
           split; [destruct Int64.eq; reflexivity |].
           intros.
           destruct Int64.eq; constructor; reflexivity.
-          reflexivity.
         }
 
         correct_forward.
@@ -153,8 +146,6 @@ Section Bpf_verifier.
         constructor.
         reflexivity.
 
-        intros.
-        cbn in H0.
         get_invariant _b.
         unfold exec_expr.
         rewrite p0.
@@ -163,7 +154,6 @@ Section Bpf_verifier.
         unfold Val.of_bool; simpl.
         unfold Vtrue, Vfalse.
         destruct x0; reflexivity.
-        reflexivity.
       }
 
       correct_forward.
@@ -181,8 +171,6 @@ Section Bpf_verifier.
       constructor.
       reflexivity.
 
-      intros.
-      cbn in H0.
       get_invariant _len.
       unfold exec_expr.
       rewrite p0.
@@ -224,8 +212,6 @@ Section Bpf_verifier.
       reflexivity.
     }
 
-    intros.
-    simpl in H0.
     get_invariant _len.
     unfold exec_expr.
     rewrite p0.
@@ -238,9 +224,6 @@ Section Bpf_verifier.
 
     unfold Int.one.
     f_equal.
-    unfold lub_modifies.
-    instantiate (1:= ModSomething).
-    reflexivity.
 Qed.
 
 End Bpf_verifier.

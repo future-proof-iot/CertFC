@@ -287,8 +287,6 @@ Section Bpf_verifier_opcode_alu32_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -315,7 +313,6 @@ Section Bpf_verifier_opcode_alu32_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -416,8 +413,6 @@ Section Bpf_verifier_opcode_alu32_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v:: (Vint (Int.repr 32)) ::nil).
         split.
@@ -446,7 +441,6 @@ Section Bpf_verifier_opcode_alu32_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -475,8 +469,6 @@ Section Bpf_verifier_opcode_alu32_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v:: (Vint (Int.repr 32)) ::nil).
         split.
@@ -506,7 +498,6 @@ Section Bpf_verifier_opcode_alu32_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -571,8 +562,6 @@ Section Bpf_verifier_opcode_alu32_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -599,7 +588,6 @@ Section Bpf_verifier_opcode_alu32_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -700,8 +688,6 @@ Section Bpf_verifier_opcode_alu32_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v:: (Vint (Int.repr 32)) ::nil).
         split.
@@ -731,7 +717,6 @@ Section Bpf_verifier_opcode_alu32_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.

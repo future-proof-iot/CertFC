@@ -55,15 +55,13 @@ Section Get_src32.
     correct_body.
     (** how to use correct_* *)
     unfold INV.
-    unfold f, app, get_src32.
+    unfold f, cl_app, get_src32.
     intros.
 
     correct_forward.
     -
       correct_forward.
 
-      intros.
-      correct_Forall.
       get_invariant _ins.
       exists (v::nil).
       split.
@@ -85,12 +83,9 @@ Section Get_src32.
       { subst. reflexivity. }
       {simpl ; auto.
       }
-      reflexivity.
     -
       correct_forward.
 
-      intros.
-      correct_Forall.
       get_invariant _ins.
       exists (v::nil).
       split.
@@ -103,9 +98,6 @@ Section Get_src32.
       intros.
       correct_forward.
 
-      intros.
-      correct_Forall.
-      simpl in H.
       get_invariant _st.
       get_invariant _src.
       exists (v::v0::nil).
@@ -119,8 +111,6 @@ Section Get_src32.
       intros.
       correct_forward.
 
-      intros.
-      correct_Forall. simpl in H.
       get_invariant _src64.
       exists (v::nil).
       split_and.
@@ -142,9 +132,7 @@ Section Get_src32.
         eauto. }
       reflexivity.
       simpl. auto.
-      all: reflexivity.
-    - intros.
-      get_invariant _x.
+    - get_invariant _x.
       unfold exec_expr.
       rewrite p0.
       simpl.

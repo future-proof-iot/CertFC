@@ -62,8 +62,6 @@ Section Step_opcode_mem_ld_imm.
     simpl.
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _op.
     exists (v::nil).
     split.
@@ -79,11 +77,8 @@ Section Step_opcode_mem_ld_imm.
         eapply correct_statement_seq_body_drop.
         intros.
 
-        instantiate (1 := modifies).
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _imm.
@@ -110,8 +105,6 @@ Section Step_opcode_mem_ld_imm.
         get_invariant _st.
         unfold eval_inv, is_state_handle in c4.
         reflexivity.
-
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
@@ -130,8 +123,6 @@ Section Step_opcode_mem_ld_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _dst.
         get_invariant _dst64.
@@ -166,7 +157,6 @@ Section Step_opcode_mem_ld_imm.
         unfold match_res.
         intros.
         unfold eval_inv.
-        reflexivity.
         reflexivity.
       + reflexivity.
       + intros.
@@ -224,8 +214,6 @@ Section Step_opcode_mem_ld_imm.
           (bindM (upd_flag Flag.BPF_ILLEGAL_INSTRUCTION) (fun _ : unit => returnM tt)).
         correct_forward.
 
-        unfold INV; intro HH.
-        correct_Forall.
         get_invariant _st.
         exists (v ::
                 (Vint (Int.neg (Int.repr 1))) :: nil). (**r star here *)
@@ -246,8 +234,6 @@ Section Step_opcode_mem_ld_imm.
         get_invariant _st.
         unfold eval_inv, is_state_handle in c4.
         reflexivity.
-        reflexivity.
-      - reflexivity.
   Qed.
 
 End Step_opcode_mem_ld_imm.

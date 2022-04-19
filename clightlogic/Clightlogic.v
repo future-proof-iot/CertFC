@@ -2896,22 +2896,6 @@ Section S.
     auto.
 Qed.
 
-(*
-  Lemma correct_statement_seq_body_nil :
-    forall (s1 s2:Clight.statement) vret ti
-           (modifies : modifies_spec)
-           (var_inv  : list (positive * Ctypes.type * Inv St))
-      st le m
-      (C1 : correct_statement St p res1 f1 fn s1 ModNothing (pre match_state var_inv) (post ModNothing match_state match_res1 var_inv (vret,ti)) st le m)
-      (C2 : forall le m st x, correct_body St p res2 (f2 x) fn s2 modifies match_state ((vret,ti,match_res1 x):: var_inv) match_res2 st le m)
-    ,
-             correct_body St p  res2 (bindM f1 f2) fn
-             (Ssequence s1 s2) modifies match_state var_inv match_res2 st le m.
-  Proof.
-    intros.
-    eapply correct_statement_seq_body; eauto.
-  Qed.*)
-
 End S.
 
 Section S.

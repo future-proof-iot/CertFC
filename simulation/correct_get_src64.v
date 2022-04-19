@@ -61,8 +61,6 @@ Section Get_src64.
     correct_forward.
     - correct_forward.
 
-      intros.
-      correct_Forall.
       get_invariant _ins.
       exists (v::nil).
       split.
@@ -74,8 +72,6 @@ Section Get_src64.
       intros.
       correct_forward.
 
-      intros.
-      correct_Forall.
       get_invariant _imm.
       exists (v::nil).
       split.
@@ -89,39 +85,33 @@ Section Get_src64.
       get_invariant _imm64.
       unfold correct_eval_immediate.match_res, val64_correct in c1.
       {
-      destruct c1 as (Hv_eq & vl & Hvl_eq).
-      subst.
-      eexists.
-      split_and.
-      +
-      unfold exec_expr, empty_env.
-      rewrite p0. reflexivity.
-      + unfold eval_inv. simpl.
-      unfold val64_correct; simpl. eauto.
-      + reflexivity.
-      + simpl. auto.
+        destruct c1 as (Hv_eq & vl & Hvl_eq).
+        subst.
+        eexists.
+        split_and.
+        +
+          unfold exec_expr, empty_env.
+          rewrite p0. reflexivity.
+        + unfold eval_inv. simpl.
+          unfold val64_correct; simpl. eauto.
+        + reflexivity.
+        + simpl. auto.
       }
-      reflexivity.
-      reflexivity.
     - correct_forward.
 
-      intros.
-      correct_Forall.
       get_invariant _ins.
       exists (v::nil).
       split_and.
       { unfold map_opt, exec_expr. rewrite p0.
-      reflexivity.
+        reflexivity.
       }
       { intros; simpl.
-      unfold int64_correct.
-      tauto.
+        unfold int64_correct.
+        tauto.
       }
       intros.
       correct_forward.
 
-      intros.
-      correct_Forall.
       simpl in H.
       get_invariant _st.
       get_invariant _src.
@@ -146,14 +136,11 @@ Section Get_src64.
         rewrite p0; reflexivity.
       }
       { unfold eval_inv. simpl.
-      unfold val64_correct; simpl; eauto.
+        unfold val64_correct; simpl; eauto.
       }
       reflexivity.
-      simpl ; auto.
-      reflexivity.
-      reflexivity.
-    - intros MS MT.
-      get_invariant _x.
+      simpl; auto.
+    - get_invariant _x.
       unfold exec_expr.
       rewrite p0.
       simpl.
