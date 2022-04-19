@@ -72,8 +72,6 @@ Section Step_opcode_branch.
     (** goal: correct_body _ _ (bindM (get_opcode_branch _) ... *)
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _op.
     exists (v::nil).
     split.
@@ -94,12 +92,9 @@ Section Step_opcode_branch.
         (**r s1 -> (Ssequence s1 s2) *)
         eapply correct_statement_seq_body_drop.
         intros.
-        instantiate (1 := modifies).
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -121,11 +116,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         unfold eval_inv, is_state_handle in c4.
         exists (v ::Vint (Int.repr (-1)) :: nil). (**r star here: it should be -1 *)
@@ -145,9 +137,7 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
@@ -190,8 +180,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -215,13 +203,10 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
-        eapply correct_body_Sreturn_None.
+        correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _dst64.
         get_invariant _src64.
         unfold stateless, val64_correct in c4.
@@ -254,8 +239,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -279,11 +262,9 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
 
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -319,8 +300,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -343,11 +322,9 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
 
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
         intros.
         get_invariant _dst64.
@@ -382,8 +359,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -406,10 +381,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -445,8 +418,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -469,10 +440,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -508,8 +477,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -532,10 +499,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -571,8 +536,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -595,10 +558,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -634,8 +595,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -658,10 +617,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -697,8 +654,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -721,10 +676,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -760,8 +713,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -784,10 +735,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -823,8 +772,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -847,10 +794,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -885,8 +830,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _src64.
         unfold val64_correct,stateless in c4.
         destruct c4 as (Hv_eq & vl & Hvl_eq); subst.
@@ -903,8 +846,6 @@ Section Step_opcode_branch.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _f_ptr.
         unfold eval_inv,correct__bpf_get_call.match_res, val_ptr_correct in c4.
         subst.
@@ -926,11 +867,8 @@ Section Step_opcode_branch.
 
         change (upd_flag Flag.BPF_ILLEGAL_CALL) with
           (bindM (upd_flag Flag.BPF_ILLEGAL_CALL) (fun _ : unit => returnM tt)).
-        instantiate (1 := modifies).
         correct_forward.
-
-        unfold INV; intro H.
-        correct_Forall. simpl in H.
+ simpl in H.
         get_invariant _st.
         exists (v ::Vint (Int.neg (Int.repr 4)) :: nil). (**r star here: it should be -1 *)
         unfold map_opt, exec_expr.
@@ -948,12 +886,9 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
 
         correct_forward.
-
-        unfold INV; intro H.
-        correct_Forall. simpl in H.
+ simpl in H.
         get_invariant _st.
         get_invariant _f_ptr.
         unfold eval_inv, is_state_handle in c4.
@@ -976,11 +911,8 @@ Section Step_opcode_branch.
         }
         rewrite Heq; clear Heq.
 
-        instantiate (1 := modifies).
         correct_forward.
-
-        unfold INV; intro H.
-        correct_Forall. simpl in H.
+ simpl in H.
         get_invariant _st.
         get_invariant _res.
         unfold eval_inv, is_state_handle in c4.
@@ -1001,11 +933,7 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res.
         reflexivity.
-        reflexivity.
 
-        all: try reflexivity.
-
-        intros.
         get_invariant _is_null.
         unfold exec_expr, Val.of_bool.
         rewrite p0.
@@ -1016,8 +944,6 @@ Section Step_opcode_branch.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         unfold eval_inv, is_state_handle in c4.
         exists (v :: (Vint (Int.neg (Int.repr 1))) :: nil). (**r star here *)
@@ -1034,9 +960,7 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
 
-        intros.
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. simpl.
@@ -1077,8 +1001,6 @@ Section Step_opcode_branch.
         correct_forward.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -1099,11 +1021,8 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _st.
         exists (v ::Vint (Int.repr (-1)) :: nil). (**r star here: it should be -1 *)
         unfold map_opt, exec_expr.
@@ -1120,7 +1039,6 @@ Section Step_opcode_branch.
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
-        reflexivity.
         reflexivity.
 
         intros.
@@ -1207,8 +1125,6 @@ Section Step_opcode_branch.
 
         correct_forward.
 
-        unfold INV; intro H1.
-        correct_Forall.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
@@ -1228,8 +1144,6 @@ Section Step_opcode_branch.
         correct_forward.
         unfold match_res, correct_get_opcode_branch.match_res.
         reflexivity.
-        reflexivity.
-      - reflexivity.
 Qed.
 
 End Step_opcode_branch.

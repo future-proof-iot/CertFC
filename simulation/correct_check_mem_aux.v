@@ -125,7 +125,7 @@ Qed.
     intros.
     correct_function_from_body args.
     correct_body.
-    unfold f, app.
+    unfold f, cl_app.
     rewrite check_mem_aux_eq.
 
     correct_forward.
@@ -185,8 +185,6 @@ Qed.
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _n.
     get_invariant _mrs.
     get_invariant _st.
@@ -202,8 +200,6 @@ Qed.
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
     get_invariant _cur_mr.
     get_invariant _perm.
     get_invariant _addr.
@@ -223,8 +219,6 @@ Qed.
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall. simpl in H.
     get_invariant _check_mem__1.
     exists (v::nil).
     split.
@@ -239,18 +233,18 @@ Qed.
     correct_forward.
     2:{
         correct_forward.
-      get_invariant _check_mem__1.
-      eexists ; split_and.
-      -
-        unfold exec_expr. rewrite p0. reflexivity.
-      -
-        unfold eval_inv,correct_check_mem_aux2.match_res,stateless in c4.
-        subst.
-        unfold match_res,eval_inv,stateless.
-        reflexivity.
-      -simpl.
-       apply Cop.cast_val_casted; auto.
-      - simpl ; auto.
+        get_invariant _check_mem__1.
+        eexists ; split_and.
+        -
+          unfold exec_expr. rewrite p0. reflexivity.
+        -
+          unfold eval_inv,correct_check_mem_aux2.match_res,stateless in c4.
+          subst.
+          unfold match_res,eval_inv,stateless.
+          reflexivity.
+        -simpl.
+         apply Cop.cast_val_casted; auto.
+        - simpl ; auto.
     }
 
     change_app_for_body.
@@ -288,12 +282,7 @@ Qed.
     unfold Vtrue, Vfalse.
     rewrite c4.
     destruct x1; reflexivity.
-    reflexivity.
-    unfold lub_modifies; reflexivity.
-    unfold lub_modifies; reflexivity.
-  + intros MS H.
-    unfold INV in H.
-    get_invariant _num.
+  + get_invariant _num.
     unfold nat_correct in c4.
     destruct c4 as (Hv_eq & Hrange).
     unfold exec_expr.
@@ -304,7 +293,7 @@ Qed.
     unfold Int.eq.
     change (Int.unsigned (Int.repr 0)) with 0.
     get_invariant _st.
-    destruct MS.
+    destruct Hst.
     clear - Hrange mem_regs.
     destruct mem_regs as (_ & Hmrs).
     unfold match_regions in Hmrs.

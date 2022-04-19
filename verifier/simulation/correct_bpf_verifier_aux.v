@@ -111,8 +111,6 @@ Qed.
 
       inversion Hcnd.
 
-      intros.
-      cbn in H0.
       get_invariant _pc.
       unfold exec_expr.
       rewrite p0.
@@ -173,8 +171,6 @@ Qed.
     intros.
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _st.
     get_invariant _n.
     exists (v::v0::nil).
@@ -190,8 +186,6 @@ Qed.
 
     correct_forward.
 
-    unfold INV; intro H.
-    correct_Forall.
     get_invariant _ins.
     exists (v::nil).
     split.
@@ -205,8 +199,6 @@ Qed.
     {
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _ins.
       exists (v::nil).
       split.
@@ -218,8 +210,6 @@ Qed.
 
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _n.
       get_invariant _len.
       get_invariant _op.
@@ -276,16 +266,12 @@ Qed.
           reflexivity.
       }
 
-      unfold INV; intros Hst H.
-      simpl in H.
       get_invariant _b0.
       unfold map_opt, exec_expr.
       rewrite p0.
       unfold eval_inv, correct_bpf_verifier_aux2.match_res, bool_correct in c1.
       rewrite c1.
       destruct x2; reflexivity.
-      reflexivity.
-      reflexivity.
     }
     { correct_forward.
       exists (Vint (Int.repr 0)); split_and.
@@ -302,8 +288,6 @@ Qed.
         reflexivity.
     }
 
-    unfold INV; intros Hst H.
-    simpl in H.
     get_invariant _b.
     unfold map_opt, exec_expr.
     rewrite p0.
@@ -311,10 +295,6 @@ Qed.
     rewrite c1.
     destruct x0; reflexivity.
 
-    reflexivity.
-    reflexivity.
-
-    unfold INV; intros Hst H.
     get_invariant _pc.
     unfold map_opt, exec_expr.
     rewrite p0.

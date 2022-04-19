@@ -283,8 +283,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -310,7 +308,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -410,8 +407,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v:: (Vint (Int.repr 64)) ::nil).
         split.
@@ -440,9 +435,8 @@ Section Bpf_verifier_opcode_alu64_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
-      + intros.
+      + intros Hst H; cbn in H.
         get_invariant _op.
         unfold exec_expr.
         rewrite p0. f_equal.
@@ -468,8 +462,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v:: (Vint (Int.repr 64)) ::nil).
         split.
@@ -498,7 +490,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -562,8 +553,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -589,7 +578,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -689,8 +677,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros.
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v:: (Vint (Int.repr 64)) ::nil).
         split.
@@ -719,7 +705,6 @@ Section Bpf_verifier_opcode_alu64_imm.
         constructor.
         simpl.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.

@@ -61,7 +61,7 @@ Ltac Hdisj_false :=
 Ltac correct_Forall :=
 match goal with
 | H: Forall (match_elt ?st ?m ?le) ?L |- _ =>
-  change (match_temp_env L le st m) in H; simpl in H
+  change (match_temp_env L le st m) in H; cbn in H
 end.
 
 Ltac my_reflex :=
@@ -170,10 +170,13 @@ Ltac correct_forward :=
   match goal with
   | |- @correct_body _ _ _ (returnM _) _ (Sreturn (Some _)) _ _ _
        _ _ _ _ =>
-    eapply correct_body_Sreturn_Some; intros Hst H; simpl in H
+    eapply correct_body_Sreturn_Some; intros Hst H; cbn in H
   | |- @correct_body _ _ unit (returnM tt) _ (Sreturn None) _ _ _
        _ _ _ _ =>
-    eapply correct_body_Sreturn_None
+    eapply correct_body_Sreturn_None; [
+      intros Hst H; cbn in H |
+      reflexivity
+    ]
 
   | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
                      (Ssequence
@@ -181,8 +184,8 @@ Ltac correct_forward :=
                            (Scall _ _ _)
                            (Sset ?V ?T))
                         ?R)
-                     _ _ _ _ _ _ _ =>
-      eapply correct_statement_seq_body;
+                     ?MOD _ _ _ _ _ _ =>
+      eapply correct_statement_seq_body with (modifies2 := MOD);
       [ change_app_for_statement;
         let b := match T with
                  | Ecast _ _ => constr:(true)
@@ -200,8 +203,9 @@ Ltac correct_forward :=
       prove_in_inv |
       prove_in_inv |
       reflexivity  |
-      reflexivity  | ..]
-      | |]
+      reflexivity  |
+      intro H; correct_Forall | ..]
+      | | try reflexivity]
   | |- @correct_body _ _ _ (bindM ?F1 ?F2)  _
                      (Ssequence
                         (Scall None _ _)
@@ -220,52 +224,16 @@ Ltac correct_forward :=
       reflexivity  |
       reflexivity  |
       reflexivity  |
-      reflexivity  | ..]
+      reflexivity  |
+      intro H; correct_Forall | ..]
       | ]
   | |- @correct_body _ _ _ (match  ?x with true => _ | false => _ end) _
                      (Sifthenelse _ _ _)
                      _ _ _ _ _ _ _ =>
       eapply correct_statement_if_body_expr;[
         intro EXPR; destruct x eqn: Hcnd |
-        reflexivity | ]
+        reflexivity | intros Hst H; cbn in H]
   end.
-
-(**r
-correct_statement_if_body
-     : forall (St : Type) (p : Clight.program) (res : Type) 
-         (f1 f2 : M St res) (fn : function) (match_state : St -> mem -> Prop)
-         (match_res : res -> Inv St) (s1 s2 : statement) 
-         (x : bool) (vr : positive) (modifies : modifies_spec)
-         (var_inv : list (positive * type * Inv St)) (st : St) 
-         (le : temp_env) (m : mem),
-       In (vr, Clightdefs.tbool, StateLess St (match_bool x)) var_inv ->
-       correct_body St p res (if x then f1 else f2) fn 
-         (if x then s1 else s2) modifies match_state var_inv match_res st le m ->
-       correct_body St p res (if x then f1 else f2) fn
-         (Sifthenelse (Etempvar vr Clightdefs.tbool) s1 s2) modifies match_state
-         var_inv match_res st le m
-correct_statement_if_body_expr
-     : forall (St : Type) (p : Clight.program) (res : Type) 
-         (f1 f2 : M St res) (fn : function) (match_state : St -> mem -> Prop)
-         (match_res : res -> Inv St) (s1 s2 : statement) 
-         (x : bool) (e : expr) (modifies : modifies_spec)
-         (var_inv : list (positive * type * Inv St)) (st : St) 
-         (le : temp_env) (m : mem),
-       (exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le m e =
-        Some (Val.of_bool x) ->
-        correct_body St p res (if x then f1 else f2) fn 
-          (if x then s1 else s2) modifies match_state var_inv match_res st le m) ->
-       Cop.classify_bool (typeof e) = Cop.bool_case_i ->
-       (match_state st m ->
-        match_temp_env var_inv le st m ->
-        exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le m e =
-        Some (Val.of_bool x)) ->
-       correct_body St p res (if x then f1 else f2) fn 
-         (Sifthenelse e s1 s2) modifies match_state var_inv match_res st le m
-
-
-*)
-
 
 Ltac normalise_post_unit :=
   match goal with

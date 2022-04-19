@@ -56,13 +56,10 @@ Section Check_mem.
     correct_body.
     (** how to use correct_* *)
     unfold INV.
-    unfold f, app.
+    unfold f, cl_app.
     unfold check_mem.
     correct_forward.
 
-    intros.
-    change (match_temp_env INV le st m) in H.
-    unfold INV in H.
     get_invariant _chunk.
     exists (v::nil).
     split.
@@ -74,21 +71,19 @@ Section Check_mem.
     intros.
     correct_forward.
     2:{ (**r if-else branch *)
-      correct_forward.
+        correct_forward.
 
-      eexists ; split_and.
-      - reflexivity.
-      - reflexivity.
-      - reflexivity.
-      - simpl ; auto.
-        intro. constructor. reflexivity.
+        eexists ; split_and.
+        - reflexivity.
+        - reflexivity.
+        - reflexivity.
+        - simpl ; auto.
+          intro. constructor. reflexivity.
     }
     (**r if-then branch *)
 
     correct_forward.
 
-    intro H. simpl in H.
-    correct_Forall.
     get_invariant _st.
     unfold eval_inv in *.
     exists (v::nil).
@@ -101,8 +96,6 @@ Section Check_mem.
       intros.
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _st.
       unfold eval_inv,stateless, is_state_handle in *.
       subst.
@@ -115,8 +108,6 @@ Section Check_mem.
       intros.
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _st.
       get_invariant _mem_reg_num.
       get_invariant _perm.
@@ -136,8 +127,6 @@ Section Check_mem.
       intros.
       correct_forward.
 
-      unfold INV; intro H.
-      correct_Forall. simpl in H.
       get_invariant _check_mem__1.
       exists (v::nil).
       split.
@@ -150,13 +139,13 @@ Section Check_mem.
 
       correct_forward.
       2:{
-        correct_forward.
+          correct_forward.
 
-        get_invariant _check_mem__1.
-        exists v.
-        split_and;auto.
-        simpl.
-        apply Cop.cast_val_casted;auto.
+          get_invariant _check_mem__1.
+          exists v.
+          split_and;auto.
+          simpl.
+          apply Cop.cast_val_casted;auto.
         }
 
       correct_forward.
@@ -167,8 +156,7 @@ Section Check_mem.
       reflexivity.
       simpl.
       intro ; constructor; reflexivity.
-      intros MS MT.
-      simpl in MT.
+
       get_invariant _is_null.
       unfold exec_expr.
       unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool,stateless in c2.
@@ -176,20 +164,13 @@ Section Check_mem.
       rewrite c2.
       unfold Val.of_bool.
       destruct x3; reflexivity.
-      reflexivity.
-      reflexivity.
-      unfold lub_modifies; reflexivity.
-    - unfold lub_modifies; reflexivity.
-    - intros.
-
-      get_invariant _well_chunk.
+    - get_invariant _well_chunk.
       unfold exec_expr.
       rewrite p0.
       unfold eval_inv, stateless, match_bool in c2.
       unfold Val.of_bool.
       rewrite c2.
       destruct x; reflexivity.
-    - reflexivity.
   Qed.
 
 End Check_mem.

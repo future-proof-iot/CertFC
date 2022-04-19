@@ -177,8 +177,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -190,8 +188,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -224,8 +220,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -254,8 +248,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -267,8 +259,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -301,8 +291,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -331,8 +319,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -344,8 +330,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -378,8 +362,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -408,8 +390,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -421,8 +401,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -455,8 +433,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -485,8 +461,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -498,8 +472,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -532,8 +504,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -562,8 +532,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -575,8 +543,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -609,8 +575,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -639,8 +603,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -652,8 +614,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -686,8 +646,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -716,8 +674,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -729,8 +685,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -763,8 +717,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -793,8 +745,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -806,8 +756,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -840,8 +788,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -870,8 +816,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -883,8 +827,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -917,8 +859,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -947,8 +887,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -960,8 +898,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -994,8 +930,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1024,8 +958,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1037,8 +969,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _pc.
         get_invariant _len.
         get_invariant _ofs.
@@ -1071,8 +1001,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x0; reflexivity.
-        reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1100,8 +1028,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1128,7 +1054,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1157,8 +1082,6 @@ Section Bpf_verifier_opcode_branch_imm.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1185,7 +1108,6 @@ Section Bpf_verifier_opcode_branch_imm.
         intros.
         constructor.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.

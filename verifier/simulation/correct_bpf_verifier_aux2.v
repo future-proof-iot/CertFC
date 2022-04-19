@@ -104,8 +104,6 @@ Section Bpf_verifier_aux2.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _op.
           get_invariant _ins.
           exists (v::v0::nil).
@@ -133,11 +131,8 @@ Section Bpf_verifier_aux2.
           intros.
           constructor.
           destruct x; reflexivity.
-          reflexivity.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _op.
           get_invariant _ins.
           exists (v::v0::nil).
@@ -165,7 +160,6 @@ Section Bpf_verifier_aux2.
           intros.
           constructor.
           destruct x; reflexivity.
-          reflexivity.
         * intros.
           get_invariant _op.
           unfold exec_expr.
@@ -213,8 +207,6 @@ Section Bpf_verifier_aux2.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _op.
           get_invariant _ins.
           exists (v::v0::nil).
@@ -242,11 +234,8 @@ Section Bpf_verifier_aux2.
           intros.
           constructor.
           destruct x; reflexivity.
-          reflexivity.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _op.
           get_invariant _ins.
           exists (v::v0::nil).
@@ -274,7 +263,6 @@ Section Bpf_verifier_aux2.
           intros.
           constructor.
           destruct x; reflexivity.
-          reflexivity.
         * intros.
           get_invariant _op.
           unfold exec_expr.
@@ -322,8 +310,6 @@ Section Bpf_verifier_aux2.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _op.
@@ -353,11 +339,8 @@ Section Bpf_verifier_aux2.
           intros.
           constructor.
           destruct x; reflexivity.
-          reflexivity.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _op.
@@ -387,7 +370,6 @@ Section Bpf_verifier_aux2.
           intros.
           constructor.
           destruct x; reflexivity.
-          reflexivity.
         * intros.
           get_invariant _op.
           unfold exec_expr.
@@ -434,8 +416,6 @@ Section Bpf_verifier_aux2.
 
         correct_forward.
 
-        intros.
-        correct_Forall.
         get_invariant _op.
         get_invariant _ins.
         exists (v::v0::nil).
@@ -463,7 +443,6 @@ Section Bpf_verifier_aux2.
         intros.
         constructor.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -499,8 +478,6 @@ Section Bpf_verifier_aux2.
 
         correct_forward.
 
-        intros.
-        correct_Forall.
         get_invariant _op.
         get_invariant _ins.
         exists (v::v0::nil).
@@ -528,7 +505,6 @@ Section Bpf_verifier_aux2.
         intros.
         constructor.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -564,8 +540,6 @@ Section Bpf_verifier_aux2.
 
         correct_forward.
 
-        intros.
-        correct_Forall.
         get_invariant _op.
         get_invariant _ins.
         exists (v::v0::nil).
@@ -593,7 +567,6 @@ Section Bpf_verifier_aux2.
         intros.
         constructor.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -629,8 +602,6 @@ Section Bpf_verifier_aux2.
 
         correct_forward.
 
-        intros.
-        correct_Forall.
         get_invariant _op.
         get_invariant _ins.
         exists (v::v0::nil).
@@ -658,7 +629,6 @@ Section Bpf_verifier_aux2.
         intros.
         constructor.
         destruct x; reflexivity.
-        reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.

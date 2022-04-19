@@ -53,8 +53,6 @@ Proof.
 
   correct_forward.
 
-  unfold INV; intro H.
-  correct_Forall.
   get_invariant _mr.
   exists (v::nil).
   split.
@@ -69,8 +67,6 @@ Proof.
 
   correct_forward.
 
-  unfold INV; intro H.
-  correct_Forall. simpl in H.
   get_invariant _mr.
   (**  exists lval : list val, _ [Etempvar _mr3 _] = Some lval *)
   exists (v::nil).
@@ -85,9 +81,6 @@ Proof.
 
   correct_forward.
 
-  unfold INV; intro H.
-  correct_Forall.
-  simpl in H.
   get_invariant _mr.
   (**  exists lval : list val, _ [Etempvar _mr3 _] = Some lval *)
   exists (v::nil).
@@ -103,8 +96,6 @@ Proof.
 
   correct_forward.
 
-  unfold INV; intro H.
-  correct_Forall. simpl in H.
   get_invariant _addr.
   get_invariant _start.
   (**  exists lval : list val, _ [(Etempvar _addr0 _); (Etempvar _start _)] = Some lval *)
@@ -120,8 +111,6 @@ Proof.
 
   correct_forward.
 
-  unfold INV; intro H.
-  correct_Forall. simpl in H.
   get_invariant _lo_ofs.
   get_invariant _chunk.
   unfold map_opt, exec_expr.

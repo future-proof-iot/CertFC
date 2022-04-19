@@ -168,8 +168,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -181,8 +179,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -195,8 +191,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -229,7 +223,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -250,8 +243,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -280,8 +271,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -293,8 +282,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -307,8 +294,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros H.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -341,7 +326,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -362,8 +346,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -392,8 +374,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -405,8 +385,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -419,8 +397,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -453,7 +429,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -474,8 +449,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -504,8 +477,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -517,8 +488,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -531,8 +500,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -565,7 +532,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -586,8 +552,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -616,8 +580,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -629,8 +591,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -643,8 +603,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -677,7 +635,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -698,8 +655,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -728,8 +683,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -741,8 +694,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -755,8 +706,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -789,7 +738,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -810,8 +758,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -840,8 +786,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -853,8 +797,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -867,8 +809,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -901,7 +841,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -922,8 +861,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -952,8 +889,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -965,8 +900,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -979,8 +912,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -1013,7 +944,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -1034,8 +964,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1064,8 +992,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1077,8 +1003,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1091,8 +1015,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -1125,7 +1047,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -1146,8 +1067,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1176,8 +1095,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1189,8 +1106,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1203,8 +1118,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -1237,7 +1150,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -1258,8 +1170,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
@@ -1288,8 +1198,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1301,8 +1209,6 @@ Section Bpf_verifier_opcode_branch_reg.
 
         correct_forward.
 
-        unfold INV; intro H.
-        correct_Forall.
         get_invariant _ins.
         exists (v::nil).
         split.
@@ -1315,8 +1221,6 @@ Section Bpf_verifier_opcode_branch_reg.
         correct_forward.
         * correct_forward.
 
-          intros.
-          correct_Forall.
           get_invariant _pc.
           get_invariant _len.
           get_invariant _ofs.
@@ -1349,7 +1253,6 @@ Section Bpf_verifier_opcode_branch_reg.
           intros.
           constructor.
           destruct x1; reflexivity.
-          reflexivity.
         * correct_forward.
           exists (Vint (Int.repr 0)).
           unfold exec_expr.
@@ -1370,8 +1273,6 @@ Section Bpf_verifier_opcode_branch_reg.
           unfold nat_to_opcode_branch_reg in Hbranch.
           unfold Val.of_bool, Vtrue, Vfalse.
           rewrite c3. destruct x0; reflexivity.
-        * reflexivity.
-        * reflexivity.
       + reflexivity.
       + intros.
         get_invariant _op.
