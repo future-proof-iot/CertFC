@@ -46,7 +46,7 @@ Section Get_addr_ofs.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
     (dcons (stateless val64_correct)
-       (dcons (stateless int32_correct)
+       (dcons (stateless sint32_correct)
                     (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -64,8 +64,9 @@ Section Get_addr_ofs.
     get_invariant _ofs.
 
     unfold stateless, eval_inv, val64_correct in c1.
-    unfold stateless, eval_inv,int32_correct in c2.
+    unfold stateless, eval_inv, sint32_correct in c2.
     destruct c1 as (Hc_eq & (vi & Hvi_eq)).
+    destruct c2 as (c2 & c2_range).
     subst c v v0.
 
     (**according to the type of eval_pc:

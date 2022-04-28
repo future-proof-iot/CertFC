@@ -39,7 +39,7 @@ Section Upd_pc.
   (* [match_arg] relates the Coq arguments and the C arguments *)
 Definition match_arg_list : DList.t (fun (x:Type) => x -> Inv _) ((unit:Type) ::args) :=
     dcons  (fun (x:unit) => StateLess _ (is_state_handle))
-                (dcons  (fun (x:int) => StateLess _ (int32_correct x))
+                (dcons  (fun (x:int) => StateLess _ (uint32_correct x))
                              (DList.DNil _)).
 
 (* [match_res] relates the Coq result and the C result *)
@@ -60,7 +60,8 @@ Definition match_arg_list : DList.t (fun (x:Type) => x -> Inv _) ((unit:Type) ::
     get_invariant _st.
     get_invariant _pc.
     unfold eval_inv,is_state_handle in c0.
-    unfold eval_inv,int32_correct in c1.
+    unfold eval_inv, uint32_correct in c1.
+    destruct c1 as (c1 & c1_range).
     subst.
     (** we need to get the proof of `upd_pc` store permission *)
     apply upd_pc_store with (pc:=c) in MS as Hstore.

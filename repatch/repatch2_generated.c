@@ -509,10 +509,11 @@ static __attribute__((always_inline)) inline void step_opcode_mem_ld_imm(struct 
   opcode_ld = get_opcode_mem_ld_imm(op);
   switch (opcode_ld) {
     case 24:
-      upd_reg(st, dst, (unsigned long long) imm);
+      upd_reg(st, dst, (unsigned long long) (unsigned int) imm);
       return;
     case 16:
-      upd_reg(st, dst, dst64 | (unsigned long long) imm << 32U);
+      upd_reg(st, dst,
+              dst64 | (unsigned long long) (unsigned int) imm << 32U);
       return;
     default:
       upd_flag(st, -1);

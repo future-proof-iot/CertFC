@@ -393,9 +393,9 @@ Definition valS64CompilableType :=
 (** S32_to_S64: Val_slongofint
   *)
 
-Definition Val_slongofint (i:val) := Val.longofint i.
+Definition Val_slongofint (i:int) := Val.longofint (Vint i).
 Definition valS32TovalS64SymbolType :=
-  MkCompilableSymbolType [valS32CompilableType] (Some valS64CompilableType).
+  MkCompilableSymbolType [sint32CompilableType] (Some valS64CompilableType).
 
 Definition Const_valS32TovalS64 :=
   MkPrimitive valS32TovalS64SymbolType
@@ -498,6 +498,20 @@ Definition Const_sint32_to_vint :=
                            | [e1] => Ok e1
                            | _       => Err PrimitiveEncodingFailed
                            end).
+
+Definition svint_to_uvint (v:val) := v.
+
+Definition svint32Touval32SymbolType :=
+  MkCompilableSymbolType [valS32CompilableType] (Some valU32CompilableType).
+
+Definition Const_svint_to_uvint :=
+  MkPrimitive svint32Touval32SymbolType
+                svint_to_uvint
+                (fun es => match es with
+                           | [e1] => Ok (Csyntax.Ecast e1 C_U32)
+                           | _       => Err PrimitiveEncodingFailed
+                           end).
+
 
 Definition int64Toval64SymbolType :=
   MkCompilableSymbolType [int64CompilableType] (Some val64CompilableType).
@@ -607,6 +621,7 @@ Module Exports.
   Definition Const_val64TovalU32    := Const_val64TovalU32.
   Definition Const_val64TovalS32    := Const_val64TovalS32.
   Definition Const_sint32_to_vint   := Const_sint32_to_vint.
+  Definition Const_svint_to_uvint   := Const_svint_to_uvint.
   Definition Const_int64_to_vlong   := Const_int64_to_vlong.
   Definition Const_valS32Toval64    := Const_valS32Toval64.
   Definition Const_valU32Toval64    := Const_valU32Toval64.

@@ -328,11 +328,11 @@ Definition step : M state unit :=
         returnM tt
 
     | BPF_LDDW_low d i =>
-      do _   <- upd_reg d (Val.longofint (sint32_to_vint i));
+      do _   <- upd_reg d (Val.longofintu (sint32_to_vint i));
         returnM tt
     | BPF_LDDW_high d i =>
       do d64 <- eval_reg d;
-      do _   <- upd_reg d (Val.orl d64 (Val.shll  (Val.longofint (sint32_to_vint i)) (sint32_to_vint (Int.repr 32))));
+      do _   <- upd_reg d (Val.orl d64 (Val.shll  (Val.longofintu (sint32_to_vint i)) (sint32_to_vint (Int.repr 32))));
         returnM tt
     | BPF_LDX chunk d s ofs =>
       step_load_x_operation chunk d s ofs

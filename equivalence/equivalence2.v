@@ -77,6 +77,7 @@ Proof.
     unfold get_opcode_alu64.
     unfold get_immediate, eval_immediate, reg64_to_reg32.
     unfold_dx.
+    unfold rBPFValues.sint32_to_vint.
     destruct byte_to_opcode_alu64; try destruct_if_reflexivity; try(destruct upd_reg; reflexivity).
     reflexivity.
   - destruct_if_reflexivity.
@@ -85,6 +86,7 @@ Proof.
     unfold step_opcode_alu32.
     unfold get_opcode_alu32, Vzero, DxIntegers.int32_32.
     unfold_dx.
+    unfold rBPFValues.sint32_to_vint.
     destruct byte_to_opcode_alu32; try destruct_if_reflexivity; try(destruct upd_reg; reflexivity).
     reflexivity.
   - destruct_if_reflexivity.

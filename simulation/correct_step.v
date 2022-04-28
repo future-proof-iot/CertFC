@@ -415,13 +415,16 @@ Section Step.
         exists (v ::v0::v1::v2 ::v3 ::v4:: nil).
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3, p4, p5.
+        unfold eval_inv, correct_get_offset.match_res, sint32_correct in c3.
+        destruct c3 as (c3 & c3_range).
         split.
-        unfold eval_inv, correct_get_offset.match_res, int32_correct in c3.
         rewrite <- c3.
         simpl.
         reflexivity.
         intros; simpl.
         intuition eauto.
+        unfold uint32_correct.
+        split; [assumption | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -703,10 +706,10 @@ Section Step.
         get_invariant _dst.
         get_invariant _op.
         exists (v::v0::v1::v2::v3::v4::nil).
+        unfold eval_inv, correct_get_immediate.match_res, sint32_correct in c0.
         split.
         unfold map_opt, exec_expr. rewrite p0,p1,p2,p3,p4,p5; reflexivity.
         intros; simpl.
-        unfold correct_get_immediate.match_res, int32_correct in c0.
         intuition eauto.
         unfold stateless, val32_correct, rBPFValues.sint32_to_vint.
         intuition eauto.

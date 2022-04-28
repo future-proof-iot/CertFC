@@ -43,7 +43,7 @@ Section Get_offset.
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (int32_correct x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (sint32_correct x).
 
   Instance correct_function_get_offset : forall a, correct_function _ p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
@@ -65,9 +65,9 @@ Section Get_offset.
       repeat forward_star.
     }
     {
-      unfold match_res, int32_correct, BinrBPF.get_offset; simpl.
+      unfold match_res, sint32_correct, BinrBPF.get_offset; simpl.
       (**r according to the clight representation, we delete the self-defined library int16 in order to simplify the proof here *)
-      reflexivity.
+      split;[reflexivity | apply Int.signed_range].
     }
     constructor;auto.
     apply unmodifies_effect_refl.

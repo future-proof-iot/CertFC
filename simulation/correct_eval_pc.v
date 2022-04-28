@@ -41,7 +41,7 @@ Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :
 
   (* [match_res] relates the Coq result and the C result *)
 
-Definition match_res : res -> Inv State.state := fun x  => StateLess _ (int32_correct x).
+Definition match_res : res -> Inv State.state := fun x  => StateLess _ (uint32_correct x).
 
 Instance correct_function_eval_pc :
   forall a, correct_function _ p args res f fn ModNothing false (match_state ) match_arg_list match_res a.
@@ -68,7 +68,11 @@ Instance correct_function_eval_pc :
     rewrite Ptrofs_max_unsigned_eq32.
     lia.
     - simpl.
+      unfold uint32_correct.
+      unfold State.eval_pc.
+      split.
       constructor.
+      apply Int.unsigned_range_2.
     - simpl. reflexivity.
     - simpl ; auto.
   Qed.

@@ -32,7 +32,7 @@ Definition get_offset (ins:int64_t ):M sint32_t := returnM (get_offset ins).
 
 Definition get_immediate (ins:int64_t):M sint32_t := returnM (get_immediate ins).
 
-Definition eval_immediate (ins: sint32_t): M vals64_t := returnM ((Val_slongofint (sint32_to_vint ins))).
+Definition eval_immediate (ins: sint32_t): M vals64_t := returnM (Val_slongofint ins).
 
 Definition get_src64 (x: nat8) (ins: int64_t): M val64_t :=
   if Int.eq int32_0 (Int.and (nat2int x) int32_8) then
@@ -345,9 +345,9 @@ Definition step_opcode_mem_ld_imm (imm: sint32_t) (dst64: val64_t) (pc: uint32_t
   do opcode_ld <-- get_opcode_mem_ld_imm op;
   match opcode_ld with
   | op_BPF_LDDW_low      =>
-    do _ <-- upd_reg dst (Val.longofint (sint32_to_vint imm)); returnM tt
+    do _ <-- upd_reg dst (Val.longofintu (svint_to_uvint (sint32_to_vint imm))); returnM tt
   | op_BPF_LDDW_high     =>
-    do _ <-- upd_reg dst (Val.orl dst64 (Val.shll  (Val.longofint (sint32_to_vint imm)) (sint32_to_vint int32_32)));
+    do _ <-- upd_reg dst (Val.orl dst64 (Val.shll  (Val.longofintu (svint_to_uvint (sint32_to_vint imm))) (sint32_to_vint int32_32)));
       returnM tt
   | op_BPF_LDX_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.

@@ -38,7 +38,7 @@ Section Is_well_jump.
   Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
     dcons (fun x => StateLess _ (nat_correct x))
       (dcons (fun x => StateLess _ (nat_correct x))
-        (dcons (fun x => StateLess _ (int32_correct x))
+        (dcons (fun x => StateLess _ (sint32_correct x))
           (DList.DNil _))).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -56,9 +56,10 @@ Section Is_well_jump.
     get_invariant _len.
     get_invariant _ofs.
     unfold eval_inv, nat_correct in c2, c3.
-    unfold eval_inv, int32_correct in c4.
+    unfold eval_inv, sint32_correct in c4.
     destruct c2 as (c2 & Hc2_range).
     destruct c3 as (c3 & Hc3_range).
+    destruct c4 as (c4 & Hc4_range).
     subst.
 
     eexists.

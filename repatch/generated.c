@@ -637,10 +637,11 @@ void step_opcode_mem_ld_imm(int imm$278, unsigned long long dst64$280, unsigned 
   opcode_ld = get_opcode_mem_ld_imm(op$286);
   switch (opcode_ld) {
     case 24:
-      upd_reg(dst$284, (unsigned long long) imm$278);
+      upd_reg(dst$284, (unsigned long long) (unsigned int) imm$278);
       return;
     case 16:
-      upd_reg(dst$284, dst64$280 | (unsigned long long) imm$278 << 32U);
+      upd_reg(dst$284,
+              dst64$280 | (unsigned long long) (unsigned int) imm$278 << 32U);
       return;
     default:
       upd_flag(-1);

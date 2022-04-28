@@ -42,7 +42,7 @@ Section Step_opcode_mem_ld_reg.
   Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
   (dcons (fun _ => StateLess _ is_state_handle)
     (dcons (stateless val32_correct)
-      (dcons (stateless int32_correct)
+      (dcons (stateless uint32_correct)
         (dcons (stateless reg_correct)
           (dcons (stateless opcode_correct)
                 (DList.DNil _)))))).

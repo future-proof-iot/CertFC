@@ -415,8 +415,8 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros. simpl.
         unfold eval_inv in c1.
         split; [assumption |].
-        unfold int32_correct.
-        tauto.
+        unfold uint32_correct.
+        split;[ split;[reflexivity | apply Int.unsigned_range_2] |constructor].
 
         intros.
         correct_forward.
@@ -470,8 +470,8 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros. simpl.
         unfold eval_inv in c1.
         split; [assumption |].
-        unfold int32_correct.
-        tauto.
+        unfold uint32_correct.
+        split;[ split;[reflexivity | apply Int.unsigned_range_2] |constructor].
 
         intros.
         correct_forward.
@@ -685,8 +685,8 @@ Section Bpf_verifier_opcode_alu64_imm.
         intros. simpl.
         unfold eval_inv in c1.
         split; [assumption |].
-        unfold int32_correct.
-        tauto.
+        unfold uint32_correct.
+        split;[ split;[reflexivity | apply Int.unsigned_range_2] |constructor].
 
         intros.
         correct_forward.

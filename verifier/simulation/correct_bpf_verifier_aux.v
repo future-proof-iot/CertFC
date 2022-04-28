@@ -178,10 +178,12 @@ Qed.
     unfold map_opt, exec_expr.
     rewrite p0, p1; reflexivity.
     simpl;intros.
-    unfold int32_correct.
     intuition eauto.
+    unfold uint32_correct.
     unfold eval_inv, nat_correct in c2.
-    destruct c2 as (c2 & _); assumption.
+    destruct c2 as (c2 & c2_range).
+    split; [assumption |].
+    rewrite Int.unsigned_repr; lia.
     intros.
 
     correct_forward.

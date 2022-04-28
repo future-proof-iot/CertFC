@@ -19,9 +19,11 @@ Definition val64_correct (x:val) (v: val) :=
 Definition val32_correct (x:val) (v: val) :=
   x = v /\ exists vi, x = Vint vi.
 
+Definition sint32_correct (x: int) (v: val) :=
+  Vint x = v /\ Int.min_signed <= Int.signed x <= Int.max_signed.
 
-Definition int32_correct (x: int) (v: val) :=
-  Vint x = v.
+Definition uint32_correct (x: int) (v: val) :=
+  Vint x = v /\ 0 <= Int.unsigned x <= Int.max_unsigned.
 
 Definition nat_correct (x: nat) (v: val) :=
   Vint (Int.repr (Z.of_nat x)) = v /\ Z.of_nat x <= Int.max_unsigned.

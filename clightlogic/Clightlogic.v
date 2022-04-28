@@ -446,7 +446,6 @@ Fixpoint app_n {e: Type} {r:Type} (d:e) (n: nat) (f: arrow_n n e r) (l:list e) {
       end
   end f.
 
-
 Ltac car_cdr :=
   repeat match goal with
   | DL : @DList.t ?T _ (?E :: ?L) |- _ =>

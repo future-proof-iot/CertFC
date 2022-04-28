@@ -151,6 +151,44 @@ Proof.
   inversion Haux.
 Qed.
 
+Theorem verifier_some:
+  forall st,
+    (Z.of_nat (ins_len st) <= Int.max_unsigned) ->
+      exists res,
+        bpf_verifier st = Some (res, st).
+Proof.
+  intros.
+  unfold bpf_verifier.
+  unfold eval_ins_len, bindM, returnM.
+  unfold state.eval_ins_len.
+  match goal with
+  | |- context[if ?X then _ else _] =>
+    destruct X eqn: Hlow; [| exists false; reflexivity]
+  end.
+  match goal with
+  | |- context[if ?X then _ else _] =>
+    destruct X; [| exists false; reflexivity]
+  end.
+
+  eapply bpf_verifier_aux_some in H as Haux.
+  destruct Haux as (res & Haux).
+  rewrite Haux.
+  destruct res.
+  unfold eval_ins.
+  unfold Int.cmpu.
+  apply Cle_Zle_unsigned in Hlow.
+  change (Int.unsigned Int.one) with 1 in Hlow.
+  rewrite Int.unsigned_repr in Hlow; [| lia].
+  destruct Int.ltu eqn: Hcond.
+  eexists; reflexivity.
+
+  apply Bool.negb_true_iff in Hcond.
+  apply Cle_Zle_unsigned in Hcond.
+  do 2 rewrite Int.unsigned_repr in Hcond; try lia.
+  exists false; reflexivity.
+  apply Nat.le_refl.
+Qed.
+
 Theorem verifier_never_none:
   forall st,
     (Z.of_nat (ins_len st) <= Int.max_unsigned) ->

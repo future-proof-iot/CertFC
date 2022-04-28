@@ -36,7 +36,7 @@ Section Eval_ins.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
     dcons (fun x => StateLess _ is_state_handle)
-      (dcons (fun x => StateLess _ (int32_correct x))
+      (dcons (fun x => StateLess _ (uint32_correct x))
         (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -55,7 +55,8 @@ Section Eval_ins.
     get_invariant _st.
     get_invariant _idx.
     unfold eval_inv, is_state_handle in c0.
-    unfold eval_inv, int32_correct in c1.
+    unfold eval_inv, uint32_correct in c1.
+    destruct c1 as (c1 & c1_range).
     subst.
 
     (** we need to get the value of pc in the memory *)

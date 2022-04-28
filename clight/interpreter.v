@@ -2112,8 +2112,8 @@ Definition f_step_opcode_mem_ld_imm := {|
                              (Tcons tuint (Tcons tulong Tnil))) tvoid
                            cc_default))
           ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
-           (Etempvar _dst tuint) :: (Ecast (Etempvar _imm tint) tulong) ::
-           nil))
+           (Etempvar _dst tuint) ::
+           (Ecast (Ecast (Etempvar _imm tint) tuint) tulong) :: nil))
         (Sreturn None))
       (LScons (Some 16)
         (Ssequence
@@ -2125,7 +2125,7 @@ Definition f_step_opcode_mem_ld_imm := {|
             ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
              (Etempvar _dst tuint) ::
              (Ebinop Oor (Etempvar _dst64 tulong)
-               (Ebinop Oshl (Ecast (Etempvar _imm tint) tulong)
+               (Ebinop Oshl (Ecast (Ecast (Etempvar _imm tint) tuint) tulong)
                  (Econst_int (Int.repr 32) tuint) tulong) tulong) :: nil))
           (Sreturn None))
         (LScons None

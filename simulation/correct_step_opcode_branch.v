@@ -45,8 +45,8 @@ Section Step_opcode_branch.
     (dcons (fun _ => StateLess _ is_state_handle)
       (dcons (stateless val64_correct)
        (dcons (stateless val64_correct)
-          (dcons (stateless int32_correct)
-          (dcons (stateless int32_correct)
+          (dcons (stateless uint32_correct)
+          (dcons (stateless uint32_correct)
             (dcons (stateless opcode_correct)
                     (DList.DNil _))))))).
 
@@ -98,7 +98,10 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv,int32_correct,stateless in c5, c6; subst.
+        unfold eval_inv,uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -108,8 +111,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless, int32_correct.
-        split; auto.
+        unfold stateless, uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -184,7 +187,10 @@ Section Step_opcode_branch.
         get_invariant _pc.
         get_invariant _ofs.
         unfold eval_inv in *.
-        unfold int32_correct,stateless in c5, c6; subst.
+        unfold eval_inv,uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -195,8 +201,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -243,7 +249,10 @@ Section Step_opcode_branch.
         get_invariant _pc.
         get_invariant _ofs.
         unfold eval_inv in *.
-        unfold int32_correct,stateless in c5, c6; subst.
+        unfold eval_inv,uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -254,8 +263,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -303,7 +312,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -314,8 +327,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -362,7 +375,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -373,8 +390,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -421,7 +438,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -432,8 +453,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -480,7 +501,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -491,8 +516,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -539,7 +564,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -550,8 +579,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -598,7 +627,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -609,8 +642,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -657,7 +690,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -668,8 +705,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -716,7 +753,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -727,8 +768,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -775,7 +816,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.add c1 c2) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
@@ -786,8 +831,8 @@ Section Step_opcode_branch.
         intros.
         simpl.
         intuition.
-        unfold stateless,int32_correct.
-        split; auto.
+        unfold stateless,uint32_correct.
+        split; [reflexivity | apply Int.unsigned_range_2].
         intros.
 
         (**r goal: correct_body p unit (returnM tt) fn (Sreturn None) modifies *)
@@ -1004,7 +1049,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.repr 1) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.
@@ -1128,7 +1177,11 @@ Section Step_opcode_branch.
         get_invariant _st.
         get_invariant _pc.
         get_invariant _ofs.
-        unfold eval_inv in * ; unfold int32_correct,stateless in c5,c6.
+        unfold eval_inv in *.
+        unfold uint32_correct,stateless in c5, c6.
+        destruct c5 as (c5 & c5_range).
+        destruct c6 as (c6 & c6_range).
+        subst.
         exists (v :: Vint (Int.repr (-1)) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0.

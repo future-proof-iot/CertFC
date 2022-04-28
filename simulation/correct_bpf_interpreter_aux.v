@@ -382,8 +382,10 @@ Qed.
           + get_invariant _pc0.
             get_invariant _len0.
             unfold exec_expr. rewrite p0, p1.
-            unfold eval_inv, correct_eval_pc.match_res, int32_correct in c0.
-            unfold eval_inv, correct_eval_ins_len.match_res, int32_correct in c1.
+            unfold eval_inv, correct_eval_pc.match_res, uint32_correct in c0.
+            destruct c0 as (c0 & c0_range).
+            unfold eval_inv, correct_eval_ins_len.match_res, uint32_correct in c1.
+            destruct c1 as (c1 & c10_range).
             subst.
             simpl.
             unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
@@ -429,8 +431,10 @@ Qed.
     get_invariant _pc.
     get_invariant _len.
     unfold exec_expr. rewrite p0, p1.
-    unfold eval_inv, correct_eval_pc.match_res, int32_correct in c0.
-    unfold eval_inv, correct_eval_ins_len.match_res, int32_correct in c1.
+    unfold eval_inv, correct_eval_pc.match_res, uint32_correct in c0.
+    destruct c0 as (c0 & c0_range).
+    unfold eval_inv, correct_eval_ins_len.match_res, uint32_correct in c1.
+    destruct c1 as (c1 & c10_range).
     subst.
     simpl.
     unfold Cop.sem_cmp, Cop.sem_binarith; simpl.

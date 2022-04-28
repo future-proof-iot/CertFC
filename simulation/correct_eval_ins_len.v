@@ -32,7 +32,7 @@ Section Eval_ins_len.
     dcons (fun x => StateLess _ is_state_handle) (DList.DNil _).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (int32_correct x).
+  Definition match_res : res -> Inv State.state := fun x  => StateLess _ (uint32_correct x).
 
   Instance correct_function_eval_ins_len : forall a, correct_function _ p args res f fn ModNothing false match_state match_arg_list match_res a.
   Proof.
@@ -62,7 +62,8 @@ Section Eval_ins_len.
       reflexivity.
       forward_star.
     }
-    reflexivity.
+    unfold eval_inv, match_res, uint32_correct, State.eval_ins_len.
+    split; [reflexivity | apply Int.unsigned_range_2].
     constructor. reflexivity.
     apply unmodifies_effect_refl.
   Qed.

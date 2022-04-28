@@ -42,9 +42,9 @@ Section Step_opcode_mem_ld_imm.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> Inv State.state) ((unit:Type) ::args) :=
   (dcons (fun _ => StateLess _ is_state_handle)
-    (dcons (stateless int32_correct)
+    (dcons (stateless sint32_correct)
       (dcons (stateless val64_correct)
-        (dcons (stateless int32_correct)
+        (dcons (stateless uint32_correct)
           (dcons (stateless reg_correct)
             (dcons (stateless opcode_correct)
                   (DList.DNil _))))))).
@@ -83,13 +83,14 @@ Section Step_opcode_mem_ld_imm.
         get_invariant _dst.
         get_invariant _imm.
         exists (v ::v0 :: 
-                (Vlong (Int64.repr (Int.signed c))) :: nil). (**r star here *)
+                (Vlong (Int64.repr (Int.unsigned c))) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
-        unfold eval_inv,stateless, int32_correct in c6.
+        unfold eval_inv,stateless, sint32_correct in c6.
+        destruct c6 as (c6 & c6_range).
         subst.
         split.
-        simpl; reflexivity.
+        simpl. reflexivity.
         intros; simpl.
         unfold stateless, val64_correct.
         unfold stateless in c5.
@@ -129,12 +130,13 @@ Section Step_opcode_mem_ld_imm.
         get_invariant _imm.
         exists (v ::v0 ::
                 (Val.orl v1
-                  (Vlong (Int64.shl' (Int64.repr (Int.signed c)) (Int.repr 32)))) :: nil). (**r star here *)
+                  (Vlong (Int64.shl' (Int64.repr (Int.unsigned c)) (Int.repr 32)))) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3.
         unfold eval_inv,stateless, val64_correct in c6.
-        unfold eval_inv,stateless, int32_correct in c7.
+        unfold eval_inv,stateless, sint32_correct in c7.
         destruct c6 as (Hc0_eq & vl & Hvl_eq).
+        destruct c7 as (c7 & c7_range).
         subst.
         simpl.
         split.

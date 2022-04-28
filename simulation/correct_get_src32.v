@@ -73,7 +73,8 @@ Section Get_src32.
       intros.
       correct_forward.
       get_invariant _imm.
-      unfold eval_inv,correct_get_immediate.match_res, int32_correct in c1.
+      unfold eval_inv,correct_get_immediate.match_res, sint32_correct in c1.
+      destruct c1 as (c1 & c1_range).
       eexists ; split_and.
       { unfold exec_expr, empty_env.
         rewrite p0; reflexivity.

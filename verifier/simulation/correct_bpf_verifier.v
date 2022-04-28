@@ -92,12 +92,12 @@ Section Bpf_verifier.
           rewrite <- c0.
           simpl. reflexivity.
           intros; simpl.
-          unfold int32_correct.
           intuition eauto.
+          unfold uint32_correct.
           unfold Int.sub.
           change (Int.unsigned (Int.repr 1)) with 1.
           rewrite Int.unsigned_repr.
-          f_equal.
+          split; [f_equal | rewrite Int.unsigned_repr; lia].
           f_equal.
           change 1 with (Z.of_nat 1).
           apply Nat2Z.inj_sub.

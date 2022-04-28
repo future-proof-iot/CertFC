@@ -46,7 +46,7 @@ Section Get_immediate.
                 (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
-  Definition match_res : res -> Inv State.state := fun x => StateLess State.state (int32_correct x).
+  Definition match_res : res -> Inv State.state := fun x => StateLess State.state (sint32_correct x).
 
   Instance correct_function_get_immediate : forall a, correct_function State.state p args res f fn ModNothing true match_state match_arg_list match_res a.
   Proof.
@@ -66,7 +66,8 @@ Section Get_immediate.
     split_and; unfold step2;auto.
     - repeat forward_star.
     - simpl.
-      constructor.
+      unfold sint32_correct.
+      split; [reflexivity | apply Int.signed_range].
     - constructor.
       reflexivity.
     - apply unmodifies_effect_refl.

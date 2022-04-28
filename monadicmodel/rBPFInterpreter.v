@@ -335,9 +335,9 @@ Definition step_opcode_mem_ld_imm (imm: int) (dst64: val) (pc: int) (dst: reg) (
   do opcode_ld <- get_opcode_mem_ld_imm op;
   match opcode_ld with
   | op_BPF_LDDW_low      =>
-    do _ <- upd_reg dst (Val.longofint (sint32_to_vint imm)); returnM tt
+    do _ <- upd_reg dst (Val.longofintu (sint32_to_vint imm)); returnM tt
   | op_BPF_LDDW_high     =>
-    do _ <- upd_reg dst (Val.orl dst64 (Val.shll  (Val.longofint (sint32_to_vint imm)) (sint32_to_vint (Int.repr 32))));
+    do _ <- upd_reg dst (Val.orl dst64 (Val.shll  (Val.longofintu (sint32_to_vint imm)) (sint32_to_vint (Int.repr 32))));
       returnM tt
   | op_BPF_LDX_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.

@@ -37,7 +37,7 @@ Section Is_shift_range64.
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
     dcons (fun x => StateLess _ (int64_correct x))
-        (dcons (fun x => StateLess _ (int32_correct x))
+        (dcons (fun x => StateLess _ (uint32_correct x))
           (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -54,7 +54,8 @@ Section Is_shift_range64.
     get_invariant _i.
     get_invariant _upper.
     unfold eval_inv, int64_correct in c1.
-    unfold eval_inv, int32_correct in c2.
+    unfold eval_inv, uint32_correct in c2.
+    destruct c2 as (c2 & c2_range).
     subst.
 
     eexists.

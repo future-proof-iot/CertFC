@@ -39,7 +39,7 @@ Section Eval_immediate.
 
   (* [match_arg] relates the Coq arguments and the C arguments *)
   Definition match_arg_list : DList.t (fun x => x -> Inv _) args :=
-    (dcons (fun x => StateLess _ (int32_correct x))
+    (dcons (fun x => StateLess _ (sint32_correct x))
                     (DList.DNil _)).
 
   (* [match_res] relates the Coq result and the C result *)
@@ -55,7 +55,8 @@ Section Eval_immediate.
     repeat intro.
     get_invariant _ins.
 
-    unfold eval_inv, int32_correct in c0.
+    unfold eval_inv, sint32_correct in c0.
+    destruct c0 as (c0 & c0_range).
     subst.
 
     eexists; exists m, Events.E0.
