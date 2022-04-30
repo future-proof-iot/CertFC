@@ -29,7 +29,7 @@ Section Step_opcode_mem_ld_imm.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(int:Type); (val:Type); (int:Type); (reg:Type); (nat:Type)].
+  Definition args : list Type := [(int:Type); (val:Type); (reg:Type); (nat:Type)].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -44,10 +44,9 @@ Section Step_opcode_mem_ld_imm.
   (dcons (fun _ => StateLess _ is_state_handle)
     (dcons (stateless sint32_correct)
       (dcons (stateless val64_correct)
-        (dcons (stateless uint32_correct)
-          (dcons (stateless reg_correct)
-            (dcons (stateless opcode_correct)
-                  (DList.DNil _))))))).
+        (dcons (stateless reg_correct)
+          (dcons (stateless opcode_correct)
+                (DList.DNil _)))))).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> Inv State.state := fun _ => StateLess _ (eq Vundef).
@@ -86,15 +85,15 @@ Section Step_opcode_mem_ld_imm.
                 (Vlong (Int64.repr (Int.unsigned c))) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2.
-        unfold eval_inv,stateless, sint32_correct in c6.
-        destruct c6 as (c6 & c6_range).
+        unfold eval_inv,stateless, sint32_correct in c5.
+        destruct c5 as (c5 & c5_range).
         subst.
         split.
         simpl. reflexivity.
         intros; simpl.
         unfold stateless, val64_correct.
-        unfold stateless in c5.
-        unfold eval_inv, is_state_handle in c4.
+        unfold stateless in c4.
+        unfold eval_inv, is_state_handle in c3.
         split; [auto|].
         split; [auto|].
         split; [split; [reflexivity| eexists; reflexivity]| constructor].
@@ -104,12 +103,12 @@ Section Step_opcode_mem_ld_imm.
         unfold match_res.
         intros.
         get_invariant _st.
-        unfold eval_inv, is_state_handle in c4.
+        unfold eval_inv, is_state_handle in c3.
         reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
-        unfold eval_inv,correct_get_opcode_mem_ld_imm.match_res, opcode_mem_ld_imm_correct in c4.
+        unfold eval_inv,correct_get_opcode_mem_ld_imm.match_res, opcode_mem_ld_imm_correct in c3.
         subst.
         unfold exec_expr.
         rewrite p0.
@@ -133,10 +132,10 @@ Section Step_opcode_mem_ld_imm.
                   (Vlong (Int64.shl' (Int64.repr (Int.unsigned c)) (Int.repr 32)))) :: nil). (**r star here *)
         unfold map_opt, exec_expr.
         rewrite p0, p1, p2, p3.
-        unfold eval_inv,stateless, val64_correct in c6.
-        unfold eval_inv,stateless, sint32_correct in c7.
-        destruct c6 as (Hc0_eq & vl & Hvl_eq).
-        destruct c7 as (c7 & c7_range).
+        unfold eval_inv,stateless, val64_correct in c5.
+        unfold eval_inv,stateless, sint32_correct in c6.
+        destruct c5 as (Hc0_eq & vl & Hvl_eq).
+        destruct c6 as (c6 & c6_range).
         subst.
         simpl.
         split.
@@ -148,8 +147,8 @@ Section Step_opcode_mem_ld_imm.
         reflexivity.
         intros; simpl.
         unfold stateless, val64_correct.
-        unfold stateless in c5.
-        unfold eval_inv, is_state_handle in c4.
+        unfold stateless in c4.
+        unfold eval_inv, is_state_handle in c3.
         split; [auto|].
         split; [auto|].
         split; [split; [reflexivity| eexists; reflexivity]| constructor].
@@ -163,7 +162,7 @@ Section Step_opcode_mem_ld_imm.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
-        unfold eval_inv,correct_get_opcode_mem_ld_imm.match_res, opcode_mem_ld_imm_correct in c4.
+        unfold eval_inv,correct_get_opcode_mem_ld_imm.match_res, opcode_mem_ld_imm_correct in c3.
         subst.
         unfold exec_expr.
         rewrite p0.
@@ -182,9 +181,9 @@ Section Step_opcode_mem_ld_imm.
               Some (Vint (Int.repr (Z.of_nat i)))).
         {
           get_invariant _opcode_ld.
-          unfold correct_get_opcode_mem_ld_imm.match_res in c4.
+          unfold correct_get_opcode_mem_ld_imm.match_res in c3.
           exists v.
-          assert (c4':=c4).
+          assert (c4':=c3).
           unfold opcode_mem_ld_imm_correct in c4'.
           destruct c4' as (i & V & ILL & RANGE).
           exists i.
@@ -234,7 +233,7 @@ Section Step_opcode_mem_ld_imm.
         unfold match_res.
         intros.
         get_invariant _st.
-        unfold eval_inv, is_state_handle in c4.
+        unfold eval_inv, is_state_handle in c3.
         reflexivity.
   Qed.
 

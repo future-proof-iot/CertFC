@@ -73,13 +73,13 @@ extern void step_opcode_alu32(unsigned int, unsigned int, unsigned int, unsigned
 
 extern void step_opcode_branch(unsigned long long, unsigned long long, unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_ld_imm(int, unsigned long long, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_ld_imm(int, unsigned long long, unsigned int, unsigned char);
 
-extern void step_opcode_mem_ld_reg(unsigned int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_ld_reg(unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_st_imm(int, unsigned int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_st_imm(int, unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, unsigned int, unsigned char);
 
 extern void step(void);
 
@@ -631,16 +631,16 @@ void step_opcode_branch(unsigned long long dst64$260, unsigned long long src64$2
   }
 }
 
-void step_opcode_mem_ld_imm(int imm$278, unsigned long long dst64$280, unsigned int pc$282, unsigned int dst$284, unsigned char op$286)
+void step_opcode_mem_ld_imm(int imm$278, unsigned long long dst64$280, unsigned int dst$282, unsigned char op$284)
 {
   unsigned char opcode_ld;
-  opcode_ld = get_opcode_mem_ld_imm(op$286);
+  opcode_ld = get_opcode_mem_ld_imm(op$284);
   switch (opcode_ld) {
     case 24:
-      upd_reg(dst$284, (unsigned long long) (unsigned int) imm$278);
+      upd_reg(dst$282, (unsigned long long) (unsigned int) imm$278);
       return;
     case 16:
-      upd_reg(dst$284,
+      upd_reg(dst$282,
               dst64$280 | (unsigned long long) (unsigned int) imm$278 << 32U);
       return;
     default:
@@ -650,65 +650,65 @@ void step_opcode_mem_ld_imm(int imm$278, unsigned long long dst64$280, unsigned 
   }
 }
 
-void step_opcode_mem_ld_reg(unsigned int addr$290, unsigned int pc$292, unsigned int dst$294, unsigned char op$296)
+void step_opcode_mem_ld_reg(unsigned int addr$288, unsigned int dst$290, unsigned char op$292)
 {
-  unsigned char opcode_ld$298;
+  unsigned char opcode_ld$294;
   unsigned char *addr_ptr;
-  _Bool is_null$302;
+  _Bool is_null$298;
   unsigned long long v;
-  unsigned char *addr_ptr$306;
-  _Bool is_null$308;
-  unsigned long long v$310;
-  unsigned char *addr_ptr$312;
-  _Bool is_null$314;
-  unsigned long long v$316;
-  unsigned char *addr_ptr$318;
-  _Bool is_null$320;
-  unsigned long long v$322;
-  opcode_ld$298 = get_opcode_mem_ld_reg(op$296);
-  switch (opcode_ld$298) {
+  unsigned char *addr_ptr$302;
+  _Bool is_null$304;
+  unsigned long long v$306;
+  unsigned char *addr_ptr$308;
+  _Bool is_null$310;
+  unsigned long long v$312;
+  unsigned char *addr_ptr$314;
+  _Bool is_null$316;
+  unsigned long long v$318;
+  opcode_ld$294 = get_opcode_mem_ld_reg(op$292);
+  switch (opcode_ld$294) {
     case 97:
-      addr_ptr = check_mem(1U, 4U, addr$290);
-      is_null$302 = cmp_ptr32_nullM(addr_ptr);
-      if (is_null$302) {
+      addr_ptr = check_mem(1U, 4U, addr$288);
+      is_null$298 = cmp_ptr32_nullM(addr_ptr);
+      if (is_null$298) {
         upd_flag(-2);
         return;
       } else {
         v = load_mem(4U, addr_ptr);
-        upd_reg(dst$294, v);
+        upd_reg(dst$290, v);
         return;
       }
     case 105:
-      addr_ptr$306 = check_mem(1U, 2U, addr$290);
-      is_null$308 = cmp_ptr32_nullM(addr_ptr$306);
-      if (is_null$308) {
+      addr_ptr$302 = check_mem(1U, 2U, addr$288);
+      is_null$304 = cmp_ptr32_nullM(addr_ptr$302);
+      if (is_null$304) {
         upd_flag(-2);
         return;
       } else {
-        v$310 = load_mem(2U, addr_ptr$306);
-        upd_reg(dst$294, v$310);
+        v$306 = load_mem(2U, addr_ptr$302);
+        upd_reg(dst$290, v$306);
         return;
       }
     case 113:
-      addr_ptr$312 = check_mem(1U, 1U, addr$290);
-      is_null$314 = cmp_ptr32_nullM(addr_ptr$312);
-      if (is_null$314) {
+      addr_ptr$308 = check_mem(1U, 1U, addr$288);
+      is_null$310 = cmp_ptr32_nullM(addr_ptr$308);
+      if (is_null$310) {
         upd_flag(-2);
         return;
       } else {
-        v$316 = load_mem(1U, addr_ptr$312);
-        upd_reg(dst$294, v$316);
+        v$312 = load_mem(1U, addr_ptr$308);
+        upd_reg(dst$290, v$312);
         return;
       }
     case 121:
-      addr_ptr$318 = check_mem(1U, 8U, addr$290);
-      is_null$320 = cmp_ptr32_nullM(addr_ptr$318);
-      if (is_null$320) {
+      addr_ptr$314 = check_mem(1U, 8U, addr$288);
+      is_null$316 = cmp_ptr32_nullM(addr_ptr$314);
+      if (is_null$316) {
         upd_flag(-2);
         return;
       } else {
-        v$322 = load_mem(8U, addr_ptr$318);
-        upd_reg(dst$294, v$322);
+        v$318 = load_mem(8U, addr_ptr$314);
+        upd_reg(dst$290, v$318);
         return;
       }
     default:
@@ -718,57 +718,57 @@ void step_opcode_mem_ld_reg(unsigned int addr$290, unsigned int pc$292, unsigned
   }
 }
 
-void step_opcode_mem_st_imm(int imm$324, unsigned int addr$326, unsigned int pc$328, unsigned int dst$330, unsigned char op$332)
+void step_opcode_mem_st_imm(int imm$320, unsigned int addr$322, unsigned int dst$324, unsigned char op$326)
 {
   unsigned char opcode_st;
-  unsigned char *addr_ptr$336;
-  _Bool is_null$338;
-  unsigned char *addr_ptr$340;
-  _Bool is_null$342;
-  unsigned char *addr_ptr$344;
-  _Bool is_null$346;
-  unsigned char *addr_ptr$348;
-  _Bool is_null$350;
-  opcode_st = get_opcode_mem_st_imm(op$332);
+  unsigned char *addr_ptr$330;
+  _Bool is_null$332;
+  unsigned char *addr_ptr$334;
+  _Bool is_null$336;
+  unsigned char *addr_ptr$338;
+  _Bool is_null$340;
+  unsigned char *addr_ptr$342;
+  _Bool is_null$344;
+  opcode_st = get_opcode_mem_st_imm(op$326);
   switch (opcode_st) {
     case 98:
-      addr_ptr$336 = check_mem(2U, 4U, addr$326);
-      is_null$338 = cmp_ptr32_nullM(addr_ptr$336);
-      if (is_null$338) {
+      addr_ptr$330 = check_mem(2U, 4U, addr$322);
+      is_null$332 = cmp_ptr32_nullM(addr_ptr$330);
+      if (is_null$332) {
         upd_flag(-2);
         return;
       } else {
-        store_mem_imm(addr_ptr$336, 4U, imm$324);
+        store_mem_imm(addr_ptr$330, 4U, imm$320);
         return;
       }
     case 106:
-      addr_ptr$340 = check_mem(2U, 2U, addr$326);
-      is_null$342 = cmp_ptr32_nullM(addr_ptr$340);
-      if (is_null$342) {
+      addr_ptr$334 = check_mem(2U, 2U, addr$322);
+      is_null$336 = cmp_ptr32_nullM(addr_ptr$334);
+      if (is_null$336) {
         upd_flag(-2);
         return;
       } else {
-        store_mem_imm(addr_ptr$340, 2U, imm$324);
+        store_mem_imm(addr_ptr$334, 2U, imm$320);
         return;
       }
     case 114:
-      addr_ptr$344 = check_mem(2U, 1U, addr$326);
-      is_null$346 = cmp_ptr32_nullM(addr_ptr$344);
-      if (is_null$346) {
+      addr_ptr$338 = check_mem(2U, 1U, addr$322);
+      is_null$340 = cmp_ptr32_nullM(addr_ptr$338);
+      if (is_null$340) {
         upd_flag(-2);
         return;
       } else {
-        store_mem_imm(addr_ptr$344, 1U, imm$324);
+        store_mem_imm(addr_ptr$338, 1U, imm$320);
         return;
       }
     case 122:
-      addr_ptr$348 = check_mem(2U, 8U, addr$326);
-      is_null$350 = cmp_ptr32_nullM(addr_ptr$348);
-      if (is_null$350) {
+      addr_ptr$342 = check_mem(2U, 8U, addr$322);
+      is_null$344 = cmp_ptr32_nullM(addr_ptr$342);
+      if (is_null$344) {
         upd_flag(-2);
         return;
       } else {
-        store_mem_imm(addr_ptr$348, 8U, imm$324);
+        store_mem_imm(addr_ptr$342, 8U, imm$320);
         return;
       }
     default:
@@ -778,57 +778,57 @@ void step_opcode_mem_st_imm(int imm$324, unsigned int addr$326, unsigned int pc$
   }
 }
 
-void step_opcode_mem_st_reg(unsigned long long src64$352, unsigned int addr$354, unsigned int pc$356, unsigned int dst$358, unsigned char op$360)
+void step_opcode_mem_st_reg(unsigned long long src64$346, unsigned int addr$348, unsigned int dst$350, unsigned char op$352)
 {
-  unsigned char opcode_st$362;
+  unsigned char opcode_st$354;
+  unsigned char *addr_ptr$356;
+  _Bool is_null$358;
+  unsigned char *addr_ptr$360;
+  _Bool is_null$362;
   unsigned char *addr_ptr$364;
   _Bool is_null$366;
   unsigned char *addr_ptr$368;
   _Bool is_null$370;
-  unsigned char *addr_ptr$372;
-  _Bool is_null$374;
-  unsigned char *addr_ptr$376;
-  _Bool is_null$378;
-  opcode_st$362 = get_opcode_mem_st_reg(op$360);
-  switch (opcode_st$362) {
+  opcode_st$354 = get_opcode_mem_st_reg(op$352);
+  switch (opcode_st$354) {
     case 99:
-      addr_ptr$364 = check_mem(2U, 4U, addr$354);
+      addr_ptr$356 = check_mem(2U, 4U, addr$348);
+      is_null$358 = cmp_ptr32_nullM(addr_ptr$356);
+      if (is_null$358) {
+        upd_flag(-2);
+        return;
+      } else {
+        store_mem_reg(addr_ptr$356, 4U, src64$346);
+        return;
+      }
+    case 107:
+      addr_ptr$360 = check_mem(2U, 2U, addr$348);
+      is_null$362 = cmp_ptr32_nullM(addr_ptr$360);
+      if (is_null$362) {
+        upd_flag(-2);
+        return;
+      } else {
+        store_mem_reg(addr_ptr$360, 2U, src64$346);
+        return;
+      }
+    case 115:
+      addr_ptr$364 = check_mem(2U, 1U, addr$348);
       is_null$366 = cmp_ptr32_nullM(addr_ptr$364);
       if (is_null$366) {
         upd_flag(-2);
         return;
       } else {
-        store_mem_reg(addr_ptr$364, 4U, src64$352);
+        store_mem_reg(addr_ptr$364, 1U, src64$346);
         return;
       }
-    case 107:
-      addr_ptr$368 = check_mem(2U, 2U, addr$354);
+    case 123:
+      addr_ptr$368 = check_mem(2U, 8U, addr$348);
       is_null$370 = cmp_ptr32_nullM(addr_ptr$368);
       if (is_null$370) {
         upd_flag(-2);
         return;
       } else {
-        store_mem_reg(addr_ptr$368, 2U, src64$352);
-        return;
-      }
-    case 115:
-      addr_ptr$372 = check_mem(2U, 1U, addr$354);
-      is_null$374 = cmp_ptr32_nullM(addr_ptr$372);
-      if (is_null$374) {
-        upd_flag(-2);
-        return;
-      } else {
-        store_mem_reg(addr_ptr$372, 1U, src64$352);
-        return;
-      }
-    case 123:
-      addr_ptr$376 = check_mem(2U, 8U, addr$354);
-      is_null$378 = cmp_ptr32_nullM(addr_ptr$376);
-      if (is_null$378) {
-        upd_flag(-2);
-        return;
-      } else {
-        store_mem_reg(addr_ptr$376, 8U, src64$352);
+        store_mem_reg(addr_ptr$368, 8U, src64$346);
         return;
       }
     default:
@@ -840,84 +840,84 @@ void step_opcode_mem_st_reg(unsigned long long src64$352, unsigned int addr$354,
 
 void step(void)
 {
-  unsigned int pc$380;
-  unsigned long long ins$382;
-  unsigned char op$384;
+  unsigned int pc$372;
+  unsigned long long ins$374;
+  unsigned char op$376;
   unsigned char opc;
-  unsigned int dst$388;
-  unsigned long long dst64$390;
-  unsigned long long src64$392;
-  unsigned long long dst64$394;
-  unsigned int dst32$396;
-  unsigned int src32$398;
-  unsigned long long dst64$400;
-  int ofs$402;
+  unsigned int dst$380;
+  unsigned long long dst64$382;
+  unsigned long long src64$384;
+  unsigned long long dst64$386;
+  unsigned int dst32$388;
+  unsigned int src32$390;
+  unsigned long long dst64$392;
+  int ofs$394;
+  unsigned long long src64$396;
+  unsigned long long dst64$398;
+  int imm$400;
+  unsigned int src$402;
   unsigned long long src64$404;
-  unsigned long long dst64$406;
-  int imm$408;
-  unsigned int src$410;
-  unsigned long long src64$412;
-  int ofs$414;
+  int ofs$406;
+  unsigned int addr$408;
+  unsigned long long dst64$410;
+  int ofs$412;
+  int imm$414;
   unsigned int addr$416;
   unsigned long long dst64$418;
-  int ofs$420;
-  int imm$422;
-  unsigned int addr$424;
-  unsigned long long dst64$426;
-  unsigned int src$428;
-  unsigned long long src64$430;
-  int ofs$432;
-  unsigned int addr$434;
-  pc$380 = eval_pc();
-  ins$382 = eval_ins(pc$380);
-  op$384 = get_opcode_ins(ins$382);
-  opc = get_opcode(op$384);
-  dst$388 = get_dst(ins$382);
+  unsigned int src$420;
+  unsigned long long src64$422;
+  int ofs$424;
+  unsigned int addr$426;
+  pc$372 = eval_pc();
+  ins$374 = eval_ins(pc$372);
+  op$376 = get_opcode_ins(ins$374);
+  opc = get_opcode(op$376);
+  dst$380 = get_dst(ins$374);
   switch (opc) {
     case 7:
-      dst64$390 = eval_reg(dst$388);
-      src64$392 = get_src64(op$384, ins$382);
-      step_opcode_alu64(dst64$390, src64$392, dst$388, op$384);
+      dst64$382 = eval_reg(dst$380);
+      src64$384 = get_src64(op$376, ins$374);
+      step_opcode_alu64(dst64$382, src64$384, dst$380, op$376);
       return;
     case 4:
-      dst64$394 = eval_reg(dst$388);
-      dst32$396 = reg64_to_reg32(dst64$394);
-      src32$398 = get_src32(op$384, ins$382);
-      step_opcode_alu32(dst32$396, src32$398, dst$388, op$384);
+      dst64$386 = eval_reg(dst$380);
+      dst32$388 = reg64_to_reg32(dst64$386);
+      src32$390 = get_src32(op$376, ins$374);
+      step_opcode_alu32(dst32$388, src32$390, dst$380, op$376);
       return;
     case 5:
-      dst64$400 = eval_reg(dst$388);
-      ofs$402 = get_offset(ins$382);
-      src64$404 = get_src64(op$384, ins$382);
-      step_opcode_branch(dst64$400, src64$404, pc$380,
-                         (unsigned int) ofs$402, op$384);
+      dst64$392 = eval_reg(dst$380);
+      ofs$394 = get_offset(ins$374);
+      src64$396 = get_src64(op$376, ins$374);
+      step_opcode_branch(dst64$392, src64$396, pc$372,
+                         (unsigned int) ofs$394, op$376);
       return;
     case 0:
-      dst64$406 = eval_reg(dst$388);
-      imm$408 = get_immediate(ins$382);
-      step_opcode_mem_ld_imm(imm$408, dst64$406, pc$380, dst$388, op$384);
+      dst64$398 = eval_reg(dst$380);
+      imm$400 = get_immediate(ins$374);
+      step_opcode_mem_ld_imm(imm$400, dst64$398, dst$380, op$376);
       return;
     case 1:
-      src$410 = get_src(ins$382);
-      src64$412 = eval_reg(src$410);
-      ofs$414 = get_offset(ins$382);
-      addr$416 = get_addr_ofs(src64$412, ofs$414);
-      step_opcode_mem_ld_reg(addr$416, pc$380, dst$388, op$384);
+      src$402 = get_src(ins$374);
+      src64$404 = eval_reg(src$402);
+      ofs$406 = get_offset(ins$374);
+      addr$408 = get_addr_ofs(src64$404, ofs$406);
+      step_opcode_mem_ld_reg(addr$408, dst$380, op$376);
       return;
     case 2:
-      dst64$418 = eval_reg(dst$388);
-      ofs$420 = get_offset(ins$382);
-      imm$422 = get_immediate(ins$382);
-      addr$424 = get_addr_ofs(dst64$418, ofs$420);
-      step_opcode_mem_st_imm(imm$422, addr$424, pc$380, dst$388, op$384);
+      dst64$410 = eval_reg(dst$380);
+      ofs$412 = get_offset(ins$374);
+      imm$414 = get_immediate(ins$374);
+      addr$416 = get_addr_ofs(dst64$410, ofs$412);
+      step_opcode_mem_st_imm(imm$414, addr$416, dst$380, op$376);
       return;
     case 3:
-      dst64$426 = eval_reg(dst$388);
-      src$428 = get_src(ins$382);
-      src64$430 = eval_reg(src$428);
-      ofs$432 = get_offset(ins$382);
-      addr$434 = get_addr_ofs(dst64$426, ofs$432);
-      step_opcode_mem_st_reg(src64$430, addr$434, pc$380, dst$388, op$384);
+      dst64$418 = eval_reg(dst$380);
+      src$420 = get_src(ins$374);
+      src64$422 = eval_reg(src$420);
+      ofs$424 = get_offset(ins$374);
+      addr$426 = get_addr_ofs(dst64$418, ofs$424);
+      step_opcode_mem_st_reg(src64$422, addr$426, dst$380, op$376);
       return;
     default:
       upd_flag(-1);
@@ -930,7 +930,7 @@ void bpf_interpreter_aux(unsigned int fuel)
 {
   unsigned int fuel0;
   unsigned int len;
-  unsigned int pc$442;
+  unsigned int pc$434;
   int f;
   unsigned int len0;
   unsigned int pc0;
@@ -940,8 +940,8 @@ void bpf_interpreter_aux(unsigned int fuel)
   } else {
     fuel0 = fuel - 1U;
     len = eval_ins_len();
-    pc$442 = eval_pc();
-    if (pc$442 < len) {
+    pc$434 = eval_pc();
+    if (pc$434 < len) {
       step();
       f = eval_flag();
       if (f == 0) {
@@ -965,22 +965,22 @@ void bpf_interpreter_aux(unsigned int fuel)
   }
 }
 
-unsigned long long bpf_interpreter(unsigned int fuel$450)
+unsigned long long bpf_interpreter(unsigned int fuel$442)
 {
-  struct memory_region *mrs$452;
+  struct memory_region *mrs$444;
   struct memory_region *bpf_ctx;
-  unsigned int start$456;
-  int f$458;
-  unsigned long long res$460;
-  mrs$452 = eval_mrs_regions();
-  bpf_ctx = get_mem_region(0U, mrs$452);
-  start$456 = get_start_addr(bpf_ctx);
-  upd_reg(1U, (unsigned long long) start$456);
-  bpf_interpreter_aux(fuel$450);
-  f$458 = eval_flag();
-  if (f$458 == 1) {
-    res$460 = eval_reg(0U);
-    return res$460;
+  unsigned int start$448;
+  int f$450;
+  unsigned long long res$452;
+  mrs$444 = eval_mrs_regions();
+  bpf_ctx = get_mem_region(0U, mrs$444);
+  start$448 = get_start_addr(bpf_ctx);
+  upd_reg(1U, (unsigned long long) start$448);
+  bpf_interpreter_aux(fuel$442);
+  f$450 = eval_flag();
+  if (f$450 == 1) {
+    res$452 = eval_reg(0U);
+    return res$452;
   } else {
     return 0LLU;
   }

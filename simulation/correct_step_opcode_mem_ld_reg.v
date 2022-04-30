@@ -29,7 +29,7 @@ Section Step_opcode_mem_ld_reg.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(val:Type); (int:Type); (reg:Type); (nat:Type)].
+  Definition args : list Type := [(val:Type); (reg:Type); (nat:Type)].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -42,10 +42,9 @@ Section Step_opcode_mem_ld_reg.
   Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :=
   (dcons (fun _ => StateLess _ is_state_handle)
     (dcons (stateless val32_correct)
-      (dcons (stateless uint32_correct)
-        (dcons (stateless reg_correct)
-          (dcons (stateless opcode_correct)
-                (DList.DNil _)))))).
+      (dcons (stateless reg_correct)
+        (dcons (stateless opcode_correct)
+              (DList.DNil _))))).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> Inv State.state:= fun _ => StateLess _ (eq Vundef).
@@ -85,7 +84,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold stateless, perm_correct, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z.
-        unfold eval_inv, is_state_handle in c3; unfold stateless in c4.
+        unfold eval_inv, is_state_handle in c2; unfold stateless in c3.
         eauto.
 
         intros.
@@ -99,7 +98,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -117,7 +116,7 @@ Section Step_opcode_mem_ld_reg.
         split; [reflexivity |].
         intros; simpl.
         unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
-        unfold eval_inv, is_state_handle in c3.
+        unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
 
@@ -137,7 +136,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold stateless, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z, val_ptr_correct.
-        unfold eval_inv, is_state_handle in c3; unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold eval_inv, is_state_handle in c2; unfold correct_check_mem.match_res, val_ptr_correct in c3.
         split; [intuition|].
         split; [reflexivity|].
         tauto.
@@ -161,7 +160,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
 
         get_invariant _is_null.
-        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
+        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c2.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
@@ -169,7 +168,7 @@ Section Step_opcode_mem_ld_reg.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
-        unfold eval_inv, correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c3.
+        unfold eval_inv, correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c2.
         subst.
         unfold exec_expr.
         rewrite p0.
@@ -193,7 +192,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold eval_inv, stateless, perm_correct, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z.
-        unfold eval_inv, is_state_handle in c3; unfold stateless in c4.
+        unfold eval_inv, is_state_handle in c2; unfold stateless in c3.
         eauto.
 
         intros.
@@ -207,8 +206,8 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold eval_inv, is_state_handle in c3.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold eval_inv, is_state_handle in c2.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -226,7 +225,7 @@ Section Step_opcode_mem_ld_reg.
         split; [reflexivity |].
         intros; simpl.
         unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
-        unfold eval_inv, is_state_handle in c3.
+        unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
 
@@ -246,7 +245,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold eval_inv, stateless, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z, val_ptr_correct.
-        unfold eval_inv, is_state_handle in c3; unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold eval_inv, is_state_handle in c2; unfold correct_check_mem.match_res, val_ptr_correct in c3.
         split; [intuition|].
         split; [reflexivity|].
         intuition congruence.
@@ -262,8 +261,8 @@ Section Step_opcode_mem_ld_reg.
         rewrite p0, p1, p2.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, is_state_handle in c3.
-        unfold correct_load_mem.match_res in c5.
+        unfold eval_inv, is_state_handle in c2.
+        unfold correct_load_mem.match_res in c4.
         intuition eauto.
 
         intros.
@@ -272,7 +271,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
 
         get_invariant _is_null.
-        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
+        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c2.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
@@ -280,7 +279,7 @@ Section Step_opcode_mem_ld_reg.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
-        unfold eval_inv,correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c3.
+        unfold eval_inv,correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c2.
         subst.
         unfold exec_expr.
         rewrite p0.
@@ -304,7 +303,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold eval_inv, stateless, perm_correct, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z.
-        unfold eval_inv, is_state_handle in c3; unfold stateless in c4.
+        unfold eval_inv, is_state_handle in c2; unfold stateless in c3.
         eauto.
 
         intros.
@@ -318,8 +317,8 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold eval_inv, is_state_handle in c3.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold eval_inv, is_state_handle in c2.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -337,7 +336,7 @@ Section Step_opcode_mem_ld_reg.
         split; [reflexivity |].
         intros; simpl.
         unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
-        unfold eval_inv, is_state_handle in c3.
+        unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
 
@@ -357,10 +356,10 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold eval_inv, stateless, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z, val_ptr_correct.
-        unfold eval_inv, is_state_handle in c3; unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold eval_inv, is_state_handle in c2; unfold correct_check_mem.match_res, val_ptr_correct in c3.
         split; [intuition|].
         split; [reflexivity|].
-        unfold correct_cmp_ptr32_nullM.match_res in c5.
+        unfold correct_cmp_ptr32_nullM.match_res in c4.
         intuition congruence.
 
         intros.
@@ -374,8 +373,8 @@ Section Step_opcode_mem_ld_reg.
         rewrite p0, p1, p2.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, is_state_handle in c3.
-        unfold correct_load_mem.match_res in c5.
+        unfold eval_inv, is_state_handle in c2.
+        unfold correct_load_mem.match_res in c4.
         intuition eauto.
 
         intros.
@@ -386,7 +385,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
 
         get_invariant _is_null.
-        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
+        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c2.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
@@ -394,7 +393,7 @@ Section Step_opcode_mem_ld_reg.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
-        unfold eval_inv,correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c3.
+        unfold eval_inv,correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c2.
         subst.
         unfold exec_expr.
         rewrite p0.
@@ -418,7 +417,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold eval_inv, stateless, perm_correct, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z.
-        unfold eval_inv, is_state_handle in c3; unfold stateless in c4.
+        unfold eval_inv, is_state_handle in c2; unfold stateless in c3.
         eauto.
 
         intros.
@@ -432,8 +431,8 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold eval_inv, is_state_handle in c3.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold eval_inv, is_state_handle in c2.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -451,7 +450,7 @@ Section Step_opcode_mem_ld_reg.
         split; [reflexivity |].
         intros; simpl.
         unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
-        unfold eval_inv, is_state_handle in c3.
+        unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
 
@@ -471,7 +470,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
         intros; simpl.
         unfold eval_inv, stateless, match_chunk, rBPFAST.memory_chunk_to_valu32, rBPFAST.well_chunk_Z, val_ptr_correct.
-        unfold eval_inv, is_state_handle in c3; unfold eval_inv,correct_check_mem.match_res, val_ptr_correct,stateless in c4.
+        unfold eval_inv, is_state_handle in c2; unfold eval_inv,correct_check_mem.match_res, val_ptr_correct,stateless in c3.
         intuition congruence.
 
         intros.
@@ -485,8 +484,8 @@ Section Step_opcode_mem_ld_reg.
         rewrite p0, p1, p2.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, is_state_handle in c3.
-        unfold correct_load_mem.match_res in c5.
+        unfold eval_inv, is_state_handle in c2.
+        unfold correct_load_mem.match_res in c4.
         intuition eauto.
 
         intros.
@@ -495,7 +494,7 @@ Section Step_opcode_mem_ld_reg.
         reflexivity.
 
         get_invariant _is_null.
-        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c3.
+        unfold eval_inv,correct_cmp_ptr32_nullM.match_res, match_bool in c2.
         unfold exec_expr. rewrite p0.
         subst.
         unfold Val.of_bool, Vtrue, Vfalse.
@@ -503,7 +502,7 @@ Section Step_opcode_mem_ld_reg.
       + reflexivity.
       + intros.
         get_invariant _opcode_ld.
-        unfold eval_inv,correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c3.
+        unfold eval_inv,correct_get_opcode_mem_ld_reg.match_res, opcode_mem_ld_reg_correct in c2.
         subst.
         unfold exec_expr.
         rewrite p0.
@@ -524,9 +523,9 @@ Section Step_opcode_mem_ld_reg.
               Some (Vint (Int.repr (Z.of_nat i)))).
         {
           get_invariant _opcode_ld.
-          unfold correct_get_opcode_mem_ld_reg.match_res in c3.
+          unfold correct_get_opcode_mem_ld_reg.match_res in c2.
           exists v.
-          assert (c3':=c3).
+          assert (c3':=c2).
           unfold opcode_mem_ld_reg_correct in c3'.
           destruct c3' as (i & V & ILL & RANGE).
           exists i.

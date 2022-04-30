@@ -2091,8 +2091,7 @@ Definition f_step_opcode_mem_ld_imm := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
   fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_imm, tint) ::
-                (_dst64, tulong) :: (_pc, tuint) :: (_dst, tuint) ::
-                (_op, tuchar) :: nil);
+                (_dst64, tulong) :: (_dst, tuint) :: (_op, tuchar) :: nil);
   fn_vars := nil;
   fn_temps := ((_opcode_ld, tuchar) :: (_t'1, tuchar) :: nil);
   fn_body :=
@@ -2144,8 +2143,7 @@ Definition f_step_opcode_mem_ld_reg := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
   fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
-                (_addr, tuint) :: (_pc, tuint) :: (_dst, tuint) ::
-                (_op, tuchar) :: nil);
+                (_addr, tuint) :: (_dst, tuint) :: (_op, tuchar) :: nil);
   fn_vars := nil;
   fn_temps := ((_opcode_ld, tuchar) :: (_addr_ptr, (tptr tuchar)) ::
                (_is_null, tbool) :: (_v, tulong) :: (_t'13, tulong) ::
@@ -2397,8 +2395,7 @@ Definition f_step_opcode_mem_st_imm := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
   fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) :: (_imm, tint) ::
-                (_addr, tuint) :: (_pc, tuint) :: (_dst, tuint) ::
-                (_op, tuchar) :: nil);
+                (_addr, tuint) :: (_dst, tuint) :: (_op, tuchar) :: nil);
   fn_vars := nil;
   fn_temps := ((_opcode_st, tuchar) :: (_addr_ptr, (tptr tuchar)) ::
                (_is_null, tbool) :: (_t'9, tbool) :: (_t'8, (tptr tuchar)) ::
@@ -2611,8 +2608,8 @@ Definition f_step_opcode_mem_st_reg := {|
   fn_return := tvoid;
   fn_callconv := cc_default;
   fn_params := ((_st, (tptr (Tstruct _bpf_state noattr))) ::
-                (_src64, tulong) :: (_addr, tuint) :: (_pc, tuint) ::
-                (_dst, tuint) :: (_op, tuchar) :: nil);
+                (_src64, tulong) :: (_addr, tuint) :: (_dst, tuint) ::
+                (_op, tuchar) :: nil);
   fn_vars := nil;
   fn_temps := ((_opcode_st, tuchar) :: (_addr_ptr, (tptr tuchar)) ::
                (_is_null, tbool) :: (_t'9, tbool) :: (_t'8, (tptr tuchar)) ::
@@ -3049,15 +3046,13 @@ Definition f_step := {|
                                                                   (Tcons
                                                                     tuint
                                                                     (Tcons
-                                                                    tuint
-                                                                    (Tcons
                                                                     tuchar
-                                                                    Tnil))))))
+                                                                    Tnil)))))
                                                             tvoid cc_default))
                             ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                              (Etempvar _imm tint) ::
                              (Etempvar _dst64 tulong) ::
-                             (Etempvar _pc tuint) :: (Etempvar _dst tuint) ::
+                             (Etempvar _dst tuint) ::
                              (Etempvar _op tuchar) :: nil))
                           (Sreturn None))))
                     (LScons (Some 1)
@@ -3107,15 +3102,12 @@ Definition f_step := {|
                                                                     (Tcons
                                                                     tuint
                                                                     (Tcons
-                                                                    tuint
-                                                                    (Tcons
                                                                     tuchar
-                                                                    Tnil)))))
+                                                                    Tnil))))
                                                                   tvoid
                                                                   cc_default))
                                   ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                                    (Etempvar _addr tuint) ::
-                                   (Etempvar _pc tuint) ::
                                    (Etempvar _dst tuint) ::
                                    (Etempvar _op tuchar) :: nil))
                                 (Sreturn None))))))
@@ -3169,16 +3161,13 @@ Definition f_step := {|
                                                                     (Tcons
                                                                     tuint
                                                                     (Tcons
-                                                                    tuint
-                                                                    (Tcons
                                                                     tuchar
-                                                                    Tnil))))))
+                                                                    Tnil)))))
                                                                     tvoid
                                                                     cc_default))
                                     ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                                      (Etempvar _imm tint) ::
                                      (Etempvar _addr tuint) ::
-                                     (Etempvar _pc tuint) ::
                                      (Etempvar _dst tuint) ::
                                      (Etempvar _op tuchar) :: nil))
                                   (Sreturn None))))))
@@ -3242,13 +3231,11 @@ Definition f_step := {|
                                             (Tcons tulong
                                               (Tcons tuint
                                                 (Tcons tuint
-                                                  (Tcons tuint
-                                                    (Tcons tuchar Tnil))))))
+                                                  (Tcons tuchar Tnil)))))
                                           tvoid cc_default))
                                         ((Etempvar _st (tptr (Tstruct _bpf_state noattr))) ::
                                          (Etempvar _src64 tulong) ::
                                          (Etempvar _addr tuint) ::
-                                         (Etempvar _pc tuint) ::
                                          (Etempvar _dst tuint) ::
                                          (Etempvar _op tuchar) :: nil))
                                       (Sreturn None)))))))

@@ -73,13 +73,13 @@ extern void step_opcode_alu32(unsigned int, unsigned int, unsigned int, unsigned
 
 extern void step_opcode_branch(unsigned long long, unsigned long long, unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_ld_imm(int, unsigned long long, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_ld_imm(int, unsigned long long, unsigned int, unsigned char);
 
-extern void step_opcode_mem_ld_reg(unsigned int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_ld_reg(unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_st_imm(int, unsigned int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_st_imm(int, unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, unsigned int, unsigned char);
 
 extern void step(void);
 
@@ -631,7 +631,7 @@ void step_opcode_branch(unsigned long long dst64, unsigned long long src64, unsi
   }
 }
 
-void step_opcode_mem_ld_imm(int imm, unsigned long long dst64, unsigned int pc, unsigned int dst, unsigned char op)
+void step_opcode_mem_ld_imm(int imm, unsigned long long dst64, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_ld;
   opcode_ld = get_opcode_mem_ld_imm(op);
@@ -650,7 +650,7 @@ void step_opcode_mem_ld_imm(int imm, unsigned long long dst64, unsigned int pc, 
   }
 }
 
-void step_opcode_mem_ld_reg(unsigned int addr, unsigned int pc, unsigned int dst, unsigned char op)
+void step_opcode_mem_ld_reg(unsigned int addr, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_ld;
   unsigned char *addr_ptr;
@@ -718,7 +718,7 @@ void step_opcode_mem_ld_reg(unsigned int addr, unsigned int pc, unsigned int dst
   }
 }
 
-void step_opcode_mem_st_imm(int imm, unsigned int addr, unsigned int pc, unsigned int dst, unsigned char op)
+void step_opcode_mem_st_imm(int imm, unsigned int addr, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
@@ -778,7 +778,7 @@ void step_opcode_mem_st_imm(int imm, unsigned int addr, unsigned int pc, unsigne
   }
 }
 
-void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, unsigned int pc, unsigned int dst, unsigned char op)
+void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, unsigned int dst, unsigned char op)
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
@@ -895,21 +895,21 @@ void step(void)
     case 0:
       dst64 = eval_reg(dst);
       imm = get_immediate(ins);
-      step_opcode_mem_ld_imm(imm, dst64, pc, dst, op);
+      step_opcode_mem_ld_imm(imm, dst64, dst, op);
       return;
     case 1:
       src = get_src(ins);
       src64 = eval_reg(src);
       ofs = get_offset(ins);
       addr = get_addr_ofs(src64, ofs);
-      step_opcode_mem_ld_reg(addr, pc, dst, op);
+      step_opcode_mem_ld_reg(addr, dst, op);
       return;
     case 2:
       dst64 = eval_reg(dst);
       ofs = get_offset(ins);
       imm = get_immediate(ins);
       addr = get_addr_ofs(dst64, ofs);
-      step_opcode_mem_st_imm(imm, addr, pc, dst, op);
+      step_opcode_mem_st_imm(imm, addr, dst, op);
       return;
     case 3:
       dst64 = eval_reg(dst);
@@ -917,7 +917,7 @@ void step(void)
       src64 = eval_reg(src);
       ofs = get_offset(ins);
       addr = get_addr_ofs(dst64, ofs);
-      step_opcode_mem_st_reg(src64, addr, pc, dst, op);
+      step_opcode_mem_st_reg(src64, addr, dst, op);
       return;
     default:
       upd_flag(-1);

@@ -331,7 +331,7 @@ Definition step_opcode_branch (dst64: val) (src64: val) (pc: int) (ofs: int) (op
       do _ <- upd_flag BPF_ILLEGAL_INSTRUCTION; returnM tt
   end.
 
-Definition step_opcode_mem_ld_imm (imm: int) (dst64: val) (pc: int) (dst: reg) (op: nat): M state unit :=
+Definition step_opcode_mem_ld_imm (imm: int) (dst64: val) (dst: reg) (op: nat): M state unit :=
   do opcode_ld <- get_opcode_mem_ld_imm op;
   match opcode_ld with
   | op_BPF_LDDW_low      =>
@@ -342,7 +342,7 @@ Definition step_opcode_mem_ld_imm (imm: int) (dst64: val) (pc: int) (dst: reg) (
   | op_BPF_LDX_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_ld_reg (addr: val) (pc: int) (dst: reg) (op: nat): M state unit :=
+Definition step_opcode_mem_ld_reg (addr: val) (dst: reg) (op: nat): M state unit :=
   do opcode_ld <- get_opcode_mem_ld_reg op;
   match opcode_ld with
   | op_BPF_LDXW      =>
@@ -380,7 +380,7 @@ Definition step_opcode_mem_ld_reg (addr: val) (pc: int) (dst: reg) (op: nat): M 
   | op_BPF_LDX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_st_imm (imm: val) (addr: val) (pc: int) (dst: reg) (op: nat): M state unit :=
+Definition step_opcode_mem_st_imm (imm: val) (addr: val) (dst: reg) (op: nat): M state unit :=
   do opcode_st <- get_opcode_mem_st_imm op;
   match opcode_st with
   | op_BPF_STW       =>
@@ -414,7 +414,7 @@ Definition step_opcode_mem_st_imm (imm: val) (addr: val) (pc: int) (dst: reg) (o
   | op_BPF_ST_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_st_reg (src64: val) (addr: val) (pc: int) (dst: reg) (op: nat): M state unit :=
+Definition step_opcode_mem_st_reg (src64: val) (addr: val) (dst: reg) (op: nat): M state unit :=
   do opcode_st <- get_opcode_mem_st_reg op;
   match opcode_st with
   | op_BPF_STXW      =>
@@ -475,26 +475,26 @@ Definition step: M state unit :=
   | op_BPF_Mem_ld_imm  =>
     do dst64  <- eval_reg dst;
     do imm    <- get_immediate ins;
-    step_opcode_mem_ld_imm imm dst64 pc dst op              (**r 0xX8 *)
+    step_opcode_mem_ld_imm imm dst64 dst op              (**r 0xX8 *)
   | op_BPF_Mem_ld_reg  =>
     do src    <- get_src ins;
     do src64  <- eval_reg src;
     do ofs    <- get_offset ins;
     do addr   <- get_addr_ofs src64 ofs;
-    step_opcode_mem_ld_reg addr pc dst op       (**r 0xX1/0xX9 *)
+    step_opcode_mem_ld_reg addr dst op       (**r 0xX1/0xX9 *)
   | op_BPF_Mem_st_imm  =>
     do dst64  <- eval_reg dst;
     do ofs    <- get_offset ins;
     do imm    <- get_immediate ins;
     do addr   <- get_addr_ofs dst64 ofs;
-    step_opcode_mem_st_imm (sint32_to_vint imm) addr pc dst op       (**r 0xX2/0xXa *)
+    step_opcode_mem_st_imm (sint32_to_vint imm) addr dst op       (**r 0xX2/0xXa *)
   | op_BPF_Mem_st_reg  =>
     do dst64  <- eval_reg dst;
     do src    <- get_src ins;
     do src64  <- eval_reg src;
     do ofs    <- get_offset ins;
     do addr <- get_addr_ofs dst64 ofs;
-    step_opcode_mem_st_reg src64 addr pc dst op       (**r 0xX3/0xXb *)
+    step_opcode_mem_st_reg src64 addr dst op       (**r 0xX3/0xXb *)
   | op_BPF_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 

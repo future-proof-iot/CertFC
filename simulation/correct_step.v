@@ -474,8 +474,8 @@ Section Step.
         intros.
 
         assert (Heq:
-              step_opcode_mem_ld_imm x5 x4 x x3 x1 =
-              bindM (step_opcode_mem_ld_imm x5 x4 x x3 x1) (fun _ : unit => returnM tt)). {
+              step_opcode_mem_ld_imm x5 x4 x3 x1 =
+              bindM (step_opcode_mem_ld_imm x5 x4 x3 x1) (fun _ : unit => returnM tt)). {
           clear - st6.
           unfold step_opcode_mem_ld_imm, get_opcode_mem_ld_imm.
           unfold bindM, returnM.
@@ -491,12 +491,11 @@ Section Step.
         get_invariant _st.
         get_invariant _imm.
         get_invariant _dst64.
-        get_invariant _pc.
         get_invariant _dst.
         get_invariant _op.
-        exists (v ::v0::v1::v2::v3::v4:: nil).
+        exists (v ::v0::v1::v2::v3:: nil).
         unfold map_opt, exec_expr.
-        rewrite p0, p1, p2, p3, p4, p5.
+        rewrite p0, p1, p2, p3, p4.
         split.
         reflexivity.
         intros; simpl.
@@ -573,8 +572,8 @@ Section Step.
         intros.
 
         assert (Heq:
-              step_opcode_mem_ld_reg x7 x x3 x1 =
-              bindM (step_opcode_mem_ld_reg x7 x x3 x1) (fun _ : unit => returnM tt)). {
+              step_opcode_mem_ld_reg x7 x3 x1 =
+              bindM (step_opcode_mem_ld_reg x7 x3 x1) (fun _ : unit => returnM tt)). {
           clear.
           unfold step_opcode_mem_ld_reg, get_opcode_mem_ld_reg.
           unfold bindM, returnM.
@@ -597,12 +596,11 @@ Section Step.
 
         get_invariant _st.
         get_invariant _addr.
-        get_invariant _pc.
         get_invariant _dst.
         get_invariant _op.
-        exists (v ::v0::v1::v2 ::v3:: nil).
+        exists (v ::v0::v1::v2:: nil).
         unfold map_opt, exec_expr.
-        rewrite p0, p1, p2, p3, p4.
+        rewrite p0, p1, p2, p3.
         split.
         reflexivity.
         intros; simpl.
@@ -679,8 +677,8 @@ Section Step.
         intros.
 
         assert (Heq:
-              step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x x3 x1 =
-              bindM (step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x x3 x1) (fun _ : unit => returnM tt)). {
+              step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x3 x1 =
+              bindM (step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x3 x1) (fun _ : unit => returnM tt)). {
           clear.
           unfold step_opcode_mem_st_imm, get_opcode_mem_st_imm.
           unfold bindM, returnM.
@@ -702,13 +700,12 @@ Section Step.
         get_invariant _st.
         get_invariant _imm.
         get_invariant _addr.
-        get_invariant _pc.
         get_invariant _dst.
         get_invariant _op.
-        exists (v::v0::v1::v2::v3::v4::nil).
+        exists (v::v0::v1::v2::v3::nil).
         unfold eval_inv, correct_get_immediate.match_res, sint32_correct in c0.
         split.
-        unfold map_opt, exec_expr. rewrite p0,p1,p2,p3,p4,p5; reflexivity.
+        unfold map_opt, exec_expr. rewrite p0,p1,p2,p3,p4; reflexivity.
         intros; simpl.
         intuition eauto.
         unfold stateless, val32_correct, rBPFValues.sint32_to_vint.
@@ -797,8 +794,8 @@ Section Step.
         intros.
 
         assert (Heq:
-              step_opcode_mem_st_reg x6 x8 x x3 x1 =
-              bindM (step_opcode_mem_st_reg x6 x8 x x3 x1) (fun _ : unit => returnM tt)). {
+              step_opcode_mem_st_reg x6 x8 x3 x1 =
+              bindM (step_opcode_mem_st_reg x6 x8 x3 x1) (fun _ : unit => returnM tt)). {
           clear.
           unfold step_opcode_mem_st_reg, get_opcode_mem_st_reg.
           unfold bindM, returnM.
@@ -820,12 +817,11 @@ Section Step.
         get_invariant _st.
         get_invariant _src64.
         get_invariant _addr.
-        get_invariant _pc.
         get_invariant _dst.
         get_invariant _op.
-        exists (v ::v0::v1::v2 ::v3 :: v4:: nil).
+        exists (v ::v0::v1::v2 ::v3:: nil).
         unfold map_opt, exec_expr.
-        rewrite p0, p1, p2, p3, p4, p5.
+        rewrite p0, p1, p2, p3, p4.
         split.
         reflexivity.
         intros; simpl.
