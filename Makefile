@@ -203,6 +203,7 @@ gitpush:
 	cp Makefile $(GITDIR)
 	cp compcertcprinter-cmx-args $(GITDIR)
 	cp *.md $(GITDIR)
+	cp LICENSE $(GITDIR)
 	cp _CoqProject $(GITDIR)
 	cp Makefile.config $(GITDIR)
 	cp verifier/clightmodel/*.h $(GITDIR)/verifier/clightmodel
