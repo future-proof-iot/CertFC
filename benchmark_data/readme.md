@@ -1,3 +1,0 @@
-# Benchmarks and Experiments
-
-boards + benchmarks + how to flash + data: TBC...
