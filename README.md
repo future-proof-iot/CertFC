@@ -45,7 +45,7 @@ To help the last step, we design a minimal logic for Clight (`clightlogic`).
 There are also some folders:
 
 1. `repatch`: repatching the dx-extracted C implementation in order to make it executable.
-2. `benchmark data`: all experiment data from our benchmarks.
+2. `benchmark_data`: all experiment data from our benchmarks.
 
 ## Installation
 
@@ -131,7 +131,43 @@ graph TD;
     A -->|isolation| A;
 ```
 
+
 ## Benchmarks and Experiments
 
-TBC...
+The benchmark applications are available in the `benchmark_data` directory. It
+contains the main RIOT tree as used to produce the results and the two benchmark
+applications.
+
+The benchmark applications are automated. They will execute on the targeted
+platform and output the benchmark results over the available serial console
+after running the benchmark.
+
+### Building the applications
+
+To build the example applications, a toolchain is required. See the included
+[RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md) for
+the exact tools required for each target platform.
+
+In addition to this, **clang** and **llvm** with eBPF support are required for
+the `bench_bpf_coq_incr` applications.
+
+Compiling the applications for the Nordic nRF52DK development kit can be done with:
+
+```Console
+$ export BOARD=nrf52dk
+$ make -C benchmark_data/bench_bpf_coq_incr/bpf
+$ make -C benchmark_data/bench_bpf_coq_incr/
+$ make -C benchmark_data/bench_bpf_coq_unit/
+```
+
+Flashing and running the example on the board can be done with:
+
+```Console
+$ export BOARD=nrf52dk
+$ make -C benchmark_data/bench_bpf_coq_incr/ flash term
+```
+
+This flashes the application code on the board and will start a serial console
+attached to the serial interface of the board.
+
 
