@@ -1,7 +1,7 @@
 # Link the coq development to CAV22 paper
 The markdown file is used to explain how to link the CertrBPF coq repo with CAV22 paper:
 - we first have two repo: [The latest version (202205)](https://gitlab.inria.fr/syuan/rbpf-dx/-/tree/CAV22-AE) v.s. [the initial version (202001)](https://anonymous.4open.science/r/AnonymousCAV22-59DC). This file focuses on the former, the latter is the version when submitting the initial CAV22 manuscript. 
-- we also have two pdf: The latest version (202205) and the initial version (202001). This file focuses on the former, NB the latest version is not the camera-ready version.
+- we also have two pdf: [The latest version (202205)](doc/CAV22-draft202205.pdf) and [the initial version (202001)](doc/CAV_2022_paper_115.pdf). This file focuses on the former, NB the latest version is not the camera-ready version.
 
 We will explain each concept/definition/theorems/code appearing in the latest pdf.
 Let's go~
