@@ -1,0 +1,13 @@
+test
+ALU negate
+ALU Add
+ALU Add imm
+ALU multiply imm
+ALU right shift imm
+ALU divide imm
+MEM load double
+MEM store double imm
+MEM store double 
+Branch always
+Branch equal (jump)
+Branch equal (continue)

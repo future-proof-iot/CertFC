@@ -1,0 +1,15 @@
+nrf52dk:
+certrbpf: 1666B
+inlined_certrbpf: 3208B
+switchcase: 1543B + 176B + 126B = 1845B
+jumptable: 3764B + 176B + 126B = 4066B
+
+esp32:
+certrbpf: 1872B
+switchcase: 2467B
+jumptable: 4205B
+
+gd32v:
+certrbpf: 1914B
+switchcase: 3062B
+jumptable: 5160B
