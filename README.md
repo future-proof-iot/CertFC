@@ -87,15 +87,15 @@ ocaml           4.11.1      The OCaml compiler (virtual package)
 ### Building CertrBPF
 
 There are two ways to build CertrBPF:
-1. docker image: we provide a docker image: `docker pull shenghaoyuaninria/certrbpf:tagname`
+1. docker image: we provide a docker image: `https://hub.docker.com/r/shenghaoyuaninria/certrbpf`
 ```shell
 # install docker: following the offical instrutions: Ubuntu.20.04 for example: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04
 
 # pull the docker image
-sudo docker pull shenghaoyuaninria/certrbpf:v1
+sudo docker pull docker pull shenghaoyuaninria/certrbpf
 
 # run the docker image
-sudo docker run -it shenghaoyuaninria/certrbpf:v1
+sudo docker run -it docker pull shenghaoyuaninria/certrbpf
 
 # build CertrBPF
 cd /home/CertrBPF/rbpf-dx
@@ -127,8 +127,8 @@ make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
 exit
 
 # restart the docker image
-sudo docker ps -a # find the id of `shenghaoyuaninria/certrbpf:v1`
-sudo docker restart shenghaoyuaninria/certrbpf:v1
+sudo docker ps -a # find the id of `docker pull shenghaoyuaninria/certrbpf`
+sudo docker restart docker pull shenghaoyuaninria/certrbpf
 sudo docker exec -u 0 -it id /bin/bash
 
 ```

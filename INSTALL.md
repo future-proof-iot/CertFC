@@ -110,7 +110,7 @@ vim compcertcprinter-cmi
 make; make install
 # stop and return the following infomation, but it works 
 # /bin/sh: 1: tools/modorder: not found
-install: missing destination file operand after '/root/.opam/bpf/lib/coq/user-contrib/dx/extr/compcertcprinter'
+# install: missing destination file operand after '/root/.opam/bpf/lib/coq/user-contrib/dx/extr/compcertcprinter'
 # Try 'install --help' for more information.
 # make: *** [Makefile:199: install] Error 1
 
