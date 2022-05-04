@@ -44,8 +44,19 @@ To help the last step, we design a minimal logic for Clight (`clightlogic`).
 
 There are also some folders:
 
-1. `repatch`: repatching the dx-extracted C implementation in order to make it executable.
-2. `benchmark_data`: all experiment data from our benchmarks.
+1. `benchmark_data`: all experiment data from our benchmarks.
+2. `doc`
+3. `repatch`: repatching the dx-extracted C implementation in order to make it executable.
+
+## Authors
+Authors information, please check [`author`].
+
+[`author`]: AUTHORS.md
+
+## Link to paper
+The relation between the CAV22 paper and this coq development. See [`linktopaper`].
+
+[`linktopaper`]: LINKTOPAPER.md
 
 ## Installation
 
@@ -75,24 +86,55 @@ ocaml           4.11.1      The OCaml compiler (virtual package)
 ```
 ### Building CertrBPF
 
-_NB: you need to modify the makefile of the source project_, to run this repo:
-1. install `dx`
+There are two ways to build CertrBPF:
+1. docker image: we provide a docker image: `docker pull shenghaoyuaninria/certrbpf:tagname`
 ```shell
-$ git clone https://gitlab.univ-lille.fr/samuel.hym/dx
-$ cd dx
-$ ./configure ...
-$ ./configure --install-compcert-printer --cprinterdir=/home/YOUR-NAME/.opam/YOUR-BPF-OPAM-SWITCH/lib/coq/user-contrib/dx/extr
-$ make; make install
-```
-2. download this repo and config the Makefie.config:
-```shell
-$ git clone THIS-REPO
-$ cd rbpf-dx
-$ vim Makefile.config #`OPAMPREFIX := `/home/YOUR-NAME/.opam/YOUR-BPF-OPAM-SWITCH`
-$ make all
-```
+# install docker: following the offical instrutions: Ubuntu.20.04 for example: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04
 
-*You also need to set path of Compcert32 in the environment.*
+# pull the docker image
+sudo docker pull shenghaoyuaninria/certrbpf:v1
+
+# run the docker image
+sudo docker run -it shenghaoyuaninria/certrbpf:v1
+
+# build CertrBPF
+cd /home/CertrBPF/rbpf-dx
+make all # you could always `make clean` firstly to get a clear environment
+
+# do the experiments on native board
+
+# current folder: /home/CertrBPF/rbpf-dx
+
+# test bench_bpf_coq_incr
+# compile CertBPF
+make -C benchmark_data/bench_bpf_coq_incr/bpf
+make -C benchmark_data/bench_bpf_coq_incr
+# run on a native port using CertBPF
+make -C benchmark_data/bench_bpf_coq_incr term
+# complie original rBPF: Vanilla-rBPF
+make -C benchmark_data/bench_bpf_coq_incr BPF_COQ=0 BPF_USE_JUMPTABLE=0
+make -C benchmark_data/bench_bpf_coq_incr BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
+
+# test bench_bpf_coq_unit
+# compile CertBPF
+make -C benchmark_data/bench_bpf_coq_unit
+make -C benchmark_data/bench_bpf_coq_unit term
+# complie original rBPF: Vanilla-rBPF
+make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0
+make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
+
+# exit the docker image
+exit
+
+# restart the docker image
+sudo docker ps -a # find the id of `shenghaoyuaninria/certrbpf:v1`
+sudo docker restart shenghaoyuaninria/certrbpf:v1
+sudo docker exec -u 0 -it id /bin/bash
+
+```
+2. build step by step: follwing the [`instructions`].
+
+[`instructions`]: INSTALL.md
 
 ## Checking Coq code
 

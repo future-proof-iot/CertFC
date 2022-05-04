@@ -16,12 +16,7 @@ CLIGHTGEN32=$(CLIGHTGEN32DIR)/clightgen
 
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
-# Disable warnings on notations (that are coming from the standard
-# library)
-COQPROJOPTS := $(shell $(CAT) _CoqProject)
-COQDEPOPTS := $(COQPROJOPTS)
-COQCOPTS := $(COQPROJOPTS) -w all,-notation
-COQEXTROPTS :=  -R ../src dx.src -w all,-extraction
+COQEXTRAFLAGS := COQEXTRAFLAGS = '-w all,-extraction,-disj-pattern-notation'
 
 OCAMLINCS := -I extr # -I src
 
@@ -66,17 +61,17 @@ COQDXCOMM = $(addprefix dxcomm/, InfComp.v GenMatchable.v CoqIntegers.v DxIntege
 
 comm:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(COQCOMM) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQCOMM) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 dxcomm:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(COQDXCOMM) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQDXCOMM) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 verifier:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIER) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIER) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 	$(CP) verifier_TestMain.ml verifier/dxmodel
 	$(CP) verifier_TestMain.mli verifier/dxmodel
@@ -84,64 +79,48 @@ verifier:
 dxverifier:
 	@echo $@
 	cd verifier && $(MAKE) verifier-all
-	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERCLIGHT) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERCLIGHT) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
-	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERSIMULATION) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERSIMULATION) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
-	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERPROPERTY) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQVERIFIERPROPERTY) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 model:
 	@echo $@
 #	rm -f model/*.vo
-	$(COQMAKEFILE) -f _CoqProject $(COQMODEL) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQMODEL) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 monadicmodel:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(COQEMONADIC) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQEMONADIC) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 isolation:
 	@echo $@
 #	rm -f isolation/*.vo
-	$(COQMAKEFILE) -f _CoqProject $(COQISOLATION) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQISOLATION) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 equivalence:
 	@echo $@
 #	rm -f equivalence/*.vo
-	$(COQMAKEFILE) -f _CoqProject $(COQEQUIV) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQEQUIV) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 compile:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(COQDXMODEL) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject $(COQDXMODEL) $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 	$(CP) TestMain.ml dxmodel # mv -> cp to avoid when running `make` again, it doesn't find the two files
 	$(CP) TestMain.mli dxmodel
 
 extract:
 	@echo $@
-	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
-	    $(AWK) '{ delete paths ;                                                                 \
-	              for(i = 1; i <= NF; i++) {                                                     \
-	                 x = $$i ;                                                                   \
-	                 sub("/[^/]*$$", "", x) ;                                                    \
-	                 paths[x] = 1 ;                                                              \
-	              }                                                                              \
-	              for(p in paths) {                                                              \
-	                 print "-I" ;                                                                \
-	                 print "$(COMPCERTSRCDIR)/" p ;                                              \
-	              }                                                                              \
-	            }' > compcertsrc-I	
-	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
-	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I dxmodel dxmodel/TestMain.mli	
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I dxmodel -c dxmodel/TestMain.ml
-	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
-	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
-	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx dxmodel/TestMain.cmx -o dxmodel/main
+	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel dxmodel/TestMain.mli	
+	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel -c dxmodel/TestMain.ml
+	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -args $(DXDIR)/cprinter-link-args dxmodel/TestMain.cmx -o dxmodel/main
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini dxmodel/compcert.ini
 	cd dxmodel && ./main
 
@@ -155,7 +134,7 @@ clightmodel:
 	@echo $@
 	cd clight && $(CC) -o $@ $(OFLAGS) fletcher32_bpf_test.c interpreter.c && ./$@
 	cd clight && $(CLIGHTGEN32) interpreter.c
-	$(COQMAKEFILE) -f _CoqProject clight/interpreter.v COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject clight/interpreter.v $(COQEXTRAFLAGS)  -o CoqMakefile
 	make -f CoqMakefile
 
 PROOF = $(addprefix simulation/, MatchState.v InterpreterRel.v correct_eval_pc.v correct_upd_pc.v correct_upd_pc_incr.v correct_eval_reg.v correct_upd_reg.v correct_eval_flag.v correct_upd_flag.v correct_eval_mrs_num.v correct_eval_mrs_regions.v correct_load_mem.v correct_store_mem_reg.v correct_store_mem_imm.v correct_eval_ins_len.v correct_eval_ins.v correct_cmp_ptr32_nullM.v correct_get_dst.v correct_get_src.v correct_get_mem_region.v correct__bpf_get_call.v correct_exec_function.v correct_reg64_to_reg32.v correct_get_offset.v correct_get_immediate.v correct_eval_immediate.v correct_get_src64.v correct_get_src32.v correct_get_opcode_ins.v correct_get_opcode_alu64.v correct_get_opcode_alu32.v correct_get_opcode_branch.v correct_get_opcode_mem_ld_imm.v correct_get_opcode_mem_ld_reg.v correct_get_opcode_mem_st_imm.v correct_get_opcode_mem_st_reg.v correct_get_opcode.v correct_get_add.v correct_get_sub.v correct_get_addr_ofs.v correct_get_start_addr.v correct_get_block_size.v correct_get_block_perm.v correct_is_well_chunk_bool.v correct_check_mem_aux2.v correct_check_mem_aux.v correct_check_mem.v correct_step_opcode_alu64.v correct_step_opcode_alu32.v correct_step_opcode_branch.v correct_step_opcode_mem_ld_imm.v correct_step_opcode_mem_ld_reg.v correct_step_opcode_mem_st_reg.v correct_step_opcode_mem_st_imm.v correct_step.v correct_bpf_interpreter_aux.v correct_bpf_interpreter.v)
@@ -168,12 +147,12 @@ CLIGHTLOGICDIR =  $(addprefix clightlogic/, clight_exec.v Clightlogic.v CommonLi
 
 clightlogic:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
+	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) $(COQEXTRAFLAGS)  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 
 simulation:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(PROOF) COQEXTRAFLAGS = '-w all,-extraction'  -o CoqMakefilePrf
+	$(COQMAKEFILE) -f _CoqProject $(PROOF) $(COQEXTRAFLAGS)  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
 
 GITDIR=/home/shyuan/GitLab/rbpf-dx
