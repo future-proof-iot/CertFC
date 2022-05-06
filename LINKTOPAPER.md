@@ -1,13 +1,16 @@
-# Link the coq development to CAV22 paper
-The markdown file is used to explain how to link the CertrBPF coq repo with CAV22 paper:
-- we first have two repo: [The latest version (202205)](https://gitlab.inria.fr/syuan/rbpf-dx/-/tree/CAV22-AE) v.s. [the initial version (202001)](https://anonymous.4open.science/r/AnonymousCAV22-59DC). This file focuses on the former, the latter is the version when submitting the initial CAV22 manuscript. 
-- we also have two pdf: [The latest version (202205)](doc/CAV22-draft202205.pdf) and [the initial version (202001)](doc/CAV_2022_paper_115.pdf). This file focuses on the former, NB the latest version is not the camera-ready version.
+This document explains how to locate in the Coq developments the theorems stated in the paper.
 
-We will explain each concept/definition/theorems/code appearing in the latest pdf.
-Let's go~
+# Source of the development and paper
+
+The current VM contains a clone of our gitlab repository (https://gitlab.inria.fr/syuan/rbpf-dx/-/tree/CAV22-AE)
+which contains both the development and the current version of the [paper](doc/CAV22-draft202205.pdf)
+
+This is the version this [LINKTOPAPER.md] refers to.
+
+In the following, we give more details about the structure of the development and refer to the appropriate statements in the paper. 
 
 # Monad
-In the section `A generic method for end-to-end verification in Coq`, we use the standard option-state monad `M`, its [coq definition](https://gitlab.inria.fr/syuan/rbpf-dx/-/blob/CAV22-AE/comm/Monad.v):
+In section 4, `A generic method for end-to-end verification in Coq`, we use the standard option-state monad `M` (see  [coq definition](https://gitlab.inria.fr/syuan/rbpf-dx/-/blob/CAV22-AE/comm/Monad.v):
 ```coq
 Definition M (St: Type) (A: Type) := St -> option (A * St).
 
@@ -18,7 +21,7 @@ Definition bindM {A B: Type} {St: Type} (x: M St A) (f: A -> M St B) : M St B :=
 
 # Proof Model
 
-In the section `A proof-oriented virtual machine model`:
+In the section 5`A proof-oriented virtual machine model`:
 - syntax (i.e. `Fig. 2: Core syntax of rBPF instruction set`), the [corresponding coq code](https://gitlab.inria.fr/syuan/rbpf-dx/-/blob/CAV22-AE/model/Syntax.v)
 ```coq
 Inductive instruction: Type :=
@@ -169,7 +172,7 @@ Proof.
 - the extracted & executable C code: see [here](https://gitlab.inria.fr/syuan/rbpf-dx/-/blob/CAV22-AE/clight/interpreter.c) (*NB: from extracted C to executable, a repatching process is necessary, see [here](https://gitlab.inria.fr/syuan/rbpf-dx/-/tree/CAV22-AE/repatch) *)
 
 # Simulation Proof
-In the section `Simulation Proof of the C rBPF Virtual Machine`:
+In the section 6 `Simulation Proof of the C rBPF Virtual Machine`:
 
 - Clight model: see [the coq file](https://gitlab.inria.fr/syuan/rbpf-dx/-/blob/CAV22-AE/clight/interpreter.v)
 - simulation relation: the Figure `Simulation relation R between strbpf , left, and rBPFClight, right.` please see the [definition](https://gitlab.inria.fr/syuan/rbpf-dx/-/blob/CAV22-AE/simulation/MatchState.v)
