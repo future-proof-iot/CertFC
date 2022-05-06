@@ -36,6 +36,7 @@ all:
 	@$(MAKE) isolation
 	@$(MAKE) equivalence
 	@$(MAKE) dxverifier
+	@$(MAKE) document
 
 COQVERIFIER =  $(addprefix verifier/, comm/state.v comm/monad.v synthesismodel/opcode_synthesis.v synthesismodel/verifier_synthesis.v dxmodel/Dxopcode.v dxmodel/Dxstate.v dxmodel/Dxmonad.v dxmodel/Dxverifier.v dxmodel/verifier_dx.v dxmodel/verifier_TestMain.v dxmodel/verifier_ExtrMain.v)
 
@@ -154,6 +155,41 @@ simulation:
 	@echo $@
 	$(COQMAKEFILE) -f _CoqProject $(PROOF) $(COQEXTRAFLAGS)  -o CoqMakefilePrf
 	make -f CoqMakefilePrf
+
+document:
+	@echo $@
+	cp clight/*.glob html/glob
+	cp clightlogic/*.glob html/glob
+	cp comm/*.glob html/glob
+	cp dxcomm/*.glob html/glob
+	cp dxmodel/*.glob html/glob
+	cp equivalence/*.glob html/glob
+	cp model/*.glob html/glob
+	cp monadicmodel/*.glob html/glob
+	cp simulation/*.glob html/glob
+	cp isolation/*.glob html/glob
+	cp verifier/clightmodel/*.glob html/glob
+	cp verifier/comm/*.glob html/glob
+	cp verifier/dxmodel/*.glob html/glob
+	cp verifier/property/*.glob html/glob
+	cp verifier/simulation/*.glob html/glob
+	cp verifier/synthesismodel/*.glob html/glob
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob clight/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob clightlogic/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob comm/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob dxcomm/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob dxmodel/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob equivalence/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob model/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob monadicmodel/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob simulation/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob isolation/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/clightmodel/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/comm/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/dxmodel/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/property/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/simulation/*.v
+	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/synthesismodel/*.v
 
 GITDIR=/home/shyuan/GitLab/rbpf-dx
 

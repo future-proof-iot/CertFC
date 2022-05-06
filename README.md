@@ -56,13 +56,22 @@ There are also some folders:
 
 1. `benchmark_data`: all experiment data from our benchmarks.
 2. `doc`: CAV22 draft
-3. `repatch`: repatching the dx-extracted C implementation in order to make it executable.
+3. `html`: the html files of the whole Coq development, using `make document` 
+4. `repatch`: repatching the dx-extracted C implementation in order to make it executable.
 
 # Authors
 Authors information, please check [author](AUTHORS.md).
 
 # Link to paper
 The relation between our CAV22 paper and this coq development. See [linktopaper](LINKTOPAPER.md).
+
+We also provide a makefile command to generate html files (see [html](html)) in order to help users to read the coq development without executing Coq code (it uses the [coq2html](https://github.com/xavierleroy/coq2html) tool)
+
+```shell
+# make sure you have installed `coq2html` and compiled the CertrBPF before (i.e. `make all`)
+make document
+```
+
 
 # Installation
 
