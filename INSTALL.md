@@ -39,25 +39,24 @@ opam switch list
 #   switch  compiler      description
 ->  bpf     ocaml.4.11.1  bpf
 
-# install coq and coqide
-opam install coq=8.13.2
-opam install coqide=8.13.2
-
-# install compcert-32, NB we need to keep the build directory
+# install coq, compcert-32, etc. NB we need to keep the build directory of compcert-32 by `-b`
 opam repository add coq-released https://coq.inria.fr/opam/released
+
+# install coq and coqide
+opam install coq.8.13.2 coqide.8.13.2 coq-elpi.1.11.0
 opam install -b coq-compcert-32.3.9
+opam install coq-vst-32.2.8
 
-# install coq-elpi
-opam install coq-elpi=1.11.0
-
-# install coq-vst-32
-opam install coq-vst-32=2.8
+# install coq2html
+git clone https://github.com/xavierleroy/coq2html.git
+cd coq2html
+make coq2html
 
 # set path variables
 apt-get install vim
 # 1) find . -name ".opam" -type d
 #  ==> ./home/cav/.opam
-# 2); adding the line: export PATH=$PATH:/home/cav/.opam/bpf/bin
+# 2); adding the line: export PATH=$PATH:/home/cav/.opam/bpf/bin:/home/cav/CertrBPF/coq2html
 vim /home/cav/.bashrc
 source /home/cav/.bashrc
 ```

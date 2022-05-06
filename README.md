@@ -76,7 +76,7 @@ make document
 # Installation
 
 ## VirtualMachine installation 
-We provide a [Virtual Machine (.ova)](https://zenodo.org/record/6522348#.YnT_t3UzZhE) that the development environment is available.
+We provide a [Virtual Machine (.ova)](https://zenodo.org/record/6525237#.YnVZr9pByUk) that the development environment is available.
 
 ## Manual Installation
 see [install](INSTALL.md)
@@ -84,7 +84,7 @@ see [install](INSTALL.md)
 ### Build of verified verifier and interpreter
 
 ```shell
-cd /home/CertrBPF/rbpf-dx
+cd /home/cav/CertrBPF/rbpf-dx
 make all # you could always `make clean` firstly to get a clean environment
 ```
 

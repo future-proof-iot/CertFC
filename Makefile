@@ -158,8 +158,8 @@ simulation:
 
 document:
 	@echo $@
-	mkdir html
-	mkdir html/glob
+	mkdir -p html
+	mkdir -p html/glob
 	cp clight/*.glob html/glob
 	cp clightlogic/*.glob html/glob
 	cp comm/*.glob html/glob
