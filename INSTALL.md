@@ -65,9 +65,6 @@ source /home/cav/.bashrc
 ```shell
 # current folder: /home/cav/CertrBPF
 # install dx
-cd /home/
-mkdir CertrBPF
-cd CertrBPF/
 git clone --branch compcert-3.9 https://gitlab.univ-lille.fr/samuel.hym/dx.git
 cd dx
 # modify the _CoqProject (adding the second line):
@@ -156,7 +153,7 @@ make all
 # compile CertBPF
 make -C benchmark_data/bench_bpf_coq_incr/bpf
 make -C benchmark_data/bench_bpf_coq_incr
-# run on a native port using CertBPF
+# run on a native board using CertBPF
 make -C benchmark_data/bench_bpf_coq_incr term
 # complie original rBPF: Vanilla-rBPF
 make -C benchmark_data/bench_bpf_coq_incr BPF_COQ=0 BPF_USE_JUMPTABLE=0
