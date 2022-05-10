@@ -1,7 +1,8 @@
 (**************************************************************************)
-(*  This file is part of dx, a tool to derive C from monadic Gallina.     *)
+(*  This file is part of CertrBPF,                                        *)
+(*  a formally verified rBPF verifier + interpreter + JIT in Coq.         *)
 (*                                                                        *)
-(*  Copyright (C) 2021 Université de Lille & CNRS                         *)
+(*  Copyright (C) 2022 Inria                                              *)
 (*                                                                        *)
 (*  This program is free software; you can redistribute it and/or modify  *)
 (*  it under the terms of the GNU General Public License as published by  *)
@@ -12,6 +13,7 @@
 (*  but WITHOUT ANY WARRANTY; without even the implied warranty of        *)
 (*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *)
 (*  GNU General Public License for more details.                          *)
+(*                                                                        *)
 (**************************************************************************)
 
 Require Import List.
