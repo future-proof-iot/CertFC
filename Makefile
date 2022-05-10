@@ -119,9 +119,25 @@ compile:
 
 extract:
 	@echo $@
+	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
+	    $(AWK) '{ delete paths ;                                                                 \
+	              for(i = 1; i <= NF; i++) {                                                     \
+	                 x = $$i ;                                                                   \
+	                 sub("/[^/]*$$", "", x) ;                                                    \
+	                 paths[x] = 1 ;                                                              \
+	              }                                                                              \
+	              for(p in paths) {                                                              \
+	                 print "-I" ;                                                                \
+	                 print "$(COMPCERTSRCDIR)/" p ;                                              \
+	              }                                                                              \
+	            }' > compcertsrc-I	
+	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
+	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
 	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel dxmodel/TestMain.mli	
 	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel -c dxmodel/TestMain.ml
-	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -args $(DXDIR)/cprinter-link-args dxmodel/TestMain.cmx -o dxmodel/main
+	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
+	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
+	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx dxmodel/TestMain.cmx -o dxmodel/main
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini dxmodel/compcert.ini
 	cd dxmodel && ./main
 
