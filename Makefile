@@ -119,9 +119,25 @@ compile:
 
 extract:
 	@echo $@
+	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
+	    $(AWK) '{ delete paths ;                                                                 \
+	              for(i = 1; i <= NF; i++) {                                                     \
+	                 x = $$i ;                                                                   \
+	                 sub("/[^/]*$$", "", x) ;                                                    \
+	                 paths[x] = 1 ;                                                              \
+	              }                                                                              \
+	              for(p in paths) {                                                              \
+	                 print "-I" ;                                                                \
+	                 print "$(COMPCERTSRCDIR)/" p ;                                              \
+	              }                                                                              \
+	            }' > compcertsrc-I	
+	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
+	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
 	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel dxmodel/TestMain.mli	
 	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel -c dxmodel/TestMain.ml
-	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -args $(DXDIR)/cprinter-link-args dxmodel/TestMain.cmx -o dxmodel/main
+	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
+	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
+	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx dxmodel/TestMain.cmx -o dxmodel/main
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini dxmodel/compcert.ini
 	cd dxmodel && ./main
 
@@ -218,7 +234,6 @@ gitpush:
 	cp isolation/*.v $(GITDIR)/isolation
 	cp isolation/*.md $(GITDIR)/isolation
 	cp Makefile $(GITDIR)
-	cp compcertcprinter-cmx-args $(GITDIR)
 	cp *.md $(GITDIR)
 	cp LICENSE $(GITDIR)
 	cp _CoqProject $(GITDIR)
@@ -234,7 +249,6 @@ gitpush:
 	cp verifier/synthesismodel/*.v $(GITDIR)/verifier/synthesismodel
 	cp verifier/Makefile $(GITDIR)/verifier
 	cp verifier/Makefile.config $(GITDIR)/verifier
-	cp verifier/compcertcprinter-cmx-args $(GITDIR)/verifier
 	cp verifier/*.md $(GITDIR)/verifier
 
 gitpull:
@@ -260,11 +274,9 @@ gitpull:
 	cp $(GITDIR)/clightlogic/*.md ./clightlogic
 	cp $(GITDIR)/repatch/*.c ./repatch
 	cp $(GITDIR)/Makefile .
-	cp $(GITDIR)/compcertcprinter-cmx-args .
 	cp $(GITDIR)/*.md .
 	cp $(GITDIR)/verifier/Makefile ./verifier
 	cp $(GITDIR)/verifier/Makefile.config ./verifier
-	cp $(GITDIR)/verifier/compcertcprinter-cmx-args ./verifier
 	cp $(GITDIR)/verifier/*.md ./verifier
 	cp $(GITDIR)/verifier/clightmodel/*.h ./verifier/clightmodel
 	cp $(GITDIR)/verifier/clightmodel/*.c ./verifier/clightmodel
