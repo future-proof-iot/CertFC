@@ -234,7 +234,6 @@ gitpush:
 	cp isolation/*.v $(GITDIR)/isolation
 	cp isolation/*.md $(GITDIR)/isolation
 	cp Makefile $(GITDIR)
-	cp compcertcprinter-cmx-args $(GITDIR)
 	cp *.md $(GITDIR)
 	cp LICENSE $(GITDIR)
 	cp _CoqProject $(GITDIR)
@@ -250,7 +249,6 @@ gitpush:
 	cp verifier/synthesismodel/*.v $(GITDIR)/verifier/synthesismodel
 	cp verifier/Makefile $(GITDIR)/verifier
 	cp verifier/Makefile.config $(GITDIR)/verifier
-	cp verifier/compcertcprinter-cmx-args $(GITDIR)/verifier
 	cp verifier/*.md $(GITDIR)/verifier
 
 gitpull:
@@ -276,11 +274,9 @@ gitpull:
 	cp $(GITDIR)/clightlogic/*.md ./clightlogic
 	cp $(GITDIR)/repatch/*.c ./repatch
 	cp $(GITDIR)/Makefile .
-	cp $(GITDIR)/compcertcprinter-cmx-args .
 	cp $(GITDIR)/*.md .
 	cp $(GITDIR)/verifier/Makefile ./verifier
 	cp $(GITDIR)/verifier/Makefile.config ./verifier
-	cp $(GITDIR)/verifier/compcertcprinter-cmx-args ./verifier
 	cp $(GITDIR)/verifier/*.md ./verifier
 	cp $(GITDIR)/verifier/clightmodel/*.h ./verifier/clightmodel
 	cp $(GITDIR)/verifier/clightmodel/*.c ./verifier/clightmodel

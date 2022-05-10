@@ -68,8 +68,6 @@ source /home/cav/.bashrc
 # install dx
 git clone --branch compcert-3.9 https://gitlab.univ-lille.fr/samuel.hym/dx.git
 cd dx
-
-./configure ...
 ./configure --cprinterdir="$(opam var lib)/dx" --compcertdir="$(opam var coq-compcert-32:build)" --install-compcert-printer
 make all install
 ```
