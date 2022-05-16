@@ -179,7 +179,9 @@ make -C benchmark_data/bench_bpf_coq_incr term
 100,0.36800000,-2,6.6800000,271.739120
 ```
 so we will get four files: `certrbpf_incr.csv`, `rbpf_incr.csv`, `certrbpf_unit.csv`, and `rbpf_unit.csv`.
+
 2. overwrite the [measure](measure) folder with the four files.
+
 3. use a latex compiler (offline or online e.g. overleaf) to get the visualization. The configuration of your latex compiler is:
 - compiler: pdfLaTeX
 - TeX Live version: 2021
