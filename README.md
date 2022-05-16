@@ -75,7 +75,7 @@ We also provide a makefile command to generate html files (see [html](html)) in 
 make document
 ```
 
-BTW, [CLOC][CLOC.md] shows the statistics on the complete specifications and proofs of CertrBPF.
+BTW, [CLOC](CLOC.md) shows the statistics on the complete specifications and proofs of CertrBPF.
 
 
 # Installation
