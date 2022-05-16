@@ -1,0 +1,159 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{units}
+\usepackage{siunitx}[=v2]
+\usepackage{tikz-cd} % using https://tikzcd.yichuanshen.de/ to draw nice category commutative diagrams
+\usepackage{graphicx}
+\usepackage{xcolor,xspace}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.18} 
+
+\title{rBPF Evaluation}
+\author{...}
+\date{May 2022}
+
+\begin{document}
+
+\maketitle
+
+\section{Test on Native platform}
+
+\pgfplotstableread[col sep=comma,]{measurements/rbpf_unit.csv}\scunit
+\pgfplotstableread[col sep=comma,]{measurements/certrbpf_unit.csv}\certunit
+\begin{figure}
+    \centering
+\begin{tikzpicture}
+  {\centering
+  \begin{axis}[
+        ybar, axis on top,
+        axis x line*=bottom,
+        axis y line*=left,
+        height=4cm, width=\textwidth,
+        enlarge x limits=true,
+        ylabel={\si{\micro\second} per instruction},
+        ytick distance=0.5,
+        xtick=data,
+        xticklabel style={font=\normalsize, rotate=45, anchor=east},
+        legend style={
+            anchor=north west,
+            legend pos=north west,
+        },
+    ]
+    \addplot table [x expr=\coordindex, y index=2]{\scunit};
+    \addplot table [x expr=\coordindex, y index=2]{\certunit};
+    \legend{Vanilla-rBPF, CertrBPF};
+  \end{axis}}
+  \end{tikzpicture}
+  \caption{Time per instructions on the native platform}
+\end{figure}
+
+\pgfplotstableread[col sep=comma,]{measurements/rbpf_incr.csv}\scincr
+\pgfplotstableread[col sep=comma,]{measurements/certrbpf_incr.csv}\certincr
+\begin{figure}[ht]
+    \centering
+\begin{tikzpicture}
+  \raggedleft
+  \begin{axis}[
+        axis x line*=bottom,
+        axis y line*=left,
+        height=5cm, width=\textwidth*0.7,
+        enlarge x limits=true,
+        ylabel={\si{\micro\second} per execution},
+        ytick distance=200,
+        xlabel={Number of samples to average},
+        xmin=20,
+        xtickmin=20,
+        every axis plot post/.append style={
+          mark=none,smooth},
+        legend style={
+            anchor=north west,
+        },
+    ]
+    \addplot table [x index=0, y index=3]{\scincr};
+    \addplot table [x index=0, y index=3]{\certincr};
+    \legend{Vanilla-rBPF(native), CertrBPF(native)};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Sliding window average on native.}
+\end{figure}
+
+\newpage
+\section{Test on Cortex-M, ESP32, and RISC-V platforms}
+
+\pgfplotstableread[col sep=comma,]{measurements/nrf52dk_switchcase_unit.csv}\nrfscunit
+\pgfplotstableread[col sep=comma,]{measurements/nrf52dk_jumptable_unit.csv}\nrfjumpunit
+\pgfplotstableread[col sep=comma,]{measurements/nrf52dk_certrbpf_unit.csv}\nrfcertunit
+\begin{figure}
+    \centering
+\begin{tikzpicture}
+  {\centering
+  \begin{axis}[
+        ybar, axis on top,
+        axis x line*=bottom,
+        axis y line*=left,
+        height=4cm, width=\textwidth,
+        enlarge x limits=true,
+        ylabel={\si{\micro\second} per instruction},
+        ytick distance=0.5,
+        xtick=data,
+        xticklabel style={font=\normalsize, rotate=45, anchor=east},
+        legend style={
+            anchor=north west,
+            legend pos=north west,
+        },
+    ]
+    \addplot table [x expr=\coordindex, y index=2]{\nrfscunit};
+    \addplot table [x expr=\coordindex, y index=2]{\nrfcertunit};
+    \legend{Vanilla-rBPF, CertrBPF};
+  \end{axis}}
+  \end{tikzpicture}
+  \caption{Time per instructions on the Cortex-M4 platform}
+\end{figure}
+
+
+\pgfplotstableread[col sep=comma,]{measurements/nrf52dk_switchcase_incr.csv}\nrfscincr
+\pgfplotstableread[col sep=comma,]{measurements/nrf52dk_jumptable_incr.csv}\nrfjumpincr
+\pgfplotstableread[col sep=comma,]{measurements/nrf52dk_certrbpf_incr.csv}\nrfcertincr
+\pgfplotstableread[col sep=comma,]{measurements/esp32_switchcase_incr.csv}\espscincr
+\pgfplotstableread[col sep=comma,]{measurements/esp32_jumptable_incr.csv}\espjumpincr
+\pgfplotstableread[col sep=comma,]{measurements/esp32_certrbpf_incr.csv}\espcertincr
+\pgfplotstableread[col sep=comma,]{measurements/gd32v_switchcase_incr.csv}\gdscincr
+\pgfplotstableread[col sep=comma,]{measurements/gd32v_jumptable_incr.csv}\gdjumpincr
+\pgfplotstableread[col sep=comma,]{measurements/gd32v_certrbpf_incr.csv}\gdcertincr
+\begin{figure}[ht]
+    \centering
+\begin{tikzpicture}
+  \raggedleft
+  \begin{axis}[
+        axis x line*=bottom,
+        axis y line*=left,
+        height=5cm, width=\textwidth*0.7,
+        enlarge x limits=true,
+        ylabel={\si{\micro\second} per execution},
+        ytick distance=200,
+        xlabel={Number of samples to average},
+        xmin=20,
+        xtickmin=20,
+        every axis plot post/.append style={
+          mark=none,smooth},
+        legend style={
+            anchor=north west,
+        },
+    ]
+    \addplot table [x index=0, y index=3]{\nrfscincr};
+    \addplot table [x index=0, y index=3]{\nrfcertincr};
+    \addplot table [x index=0, y index=3]{\espscincr};
+    \addplot table [x index=0, y index=3]{\espcertincr};
+    \addplot table [x index=0, y index=3]{\gdscincr};
+    \addplot table [x index=0, y index=3]{\gdcertincr};
+    \legend{Vanilla-rBPF(ARM), CertrBPF(ARM), Vanilla-rBPF(ESP32), CertrBPF(ESP32), Vanilla-rBPF(RISC-V), CertrBPF(RISC-V) };
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Sliding window average on Cortex-M, ESP32, and RISC-V.}
+\end{figure}
+
+\end{document}

@@ -1,0 +1,14 @@
+nrf52dk:
+certrbpf: 184B stack + 144B context
+switchcase: 272B stack, 92B context
+jumptable: 256B stack + 92B context
+
+esp32:
+certrbpf: 476B stack + 144B context
+switchcase: 492B stack + 92B context
+jumptable: 492B stack + 92B context
+
+gd32v:
+certrbpf: 200B + 144B context
+switchcase: 256B stack + 92B context
+jumptable:  244B stack + 92B context
