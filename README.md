@@ -258,5 +258,5 @@ You may need another shell to show the execution result (open this second shell 
 ```shell
 $ /WHERE-IS-YOUR-RIOT/RIOT/dist/tools/pyterm/pyterm -p "/dev/ttyACM0" -b "115200"
 ```
-- Second one:
+
 *NB: all experiments data (we tested on three boards) can be found at benckmark_data*
