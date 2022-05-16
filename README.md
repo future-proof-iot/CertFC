@@ -81,7 +81,27 @@ BTW, [CLOC](CLOC.md) shows the statistics on the complete specifications and pro
 # Installation
 
 ## VirtualMachine installation 
-We provide a [Virtual Machine (.ova)](https://zenodo.org/record/6525237#.YnVZr9pByUk) that the development environment is available.
+We provide a [Virtual Machine (.ova)](https://zenodo.org/record/6525237#.YnVZr9pByUk) that the development environment is available. Note that: **This VM doesn't support connecting any physical boards and we recommend readers use Ubuntu and follow the [RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md) to build the RIOT-OS world and then reproduce the results of our paper.**
+
+We tested this VM on the following environments:
+- OS = Windows 10 famille (version: 19044.1706)
+- RAM = 16G
+- CPU = Intel(R) Core(TM) i7-10710U CPU @ 1.10GHz   1.61 GHz
+- cores = 6
+- logical processors = 12
+- virtualbox = VirtualBox-6.1.34-150636-Win
+- virtualbox VM setting:
+  - memory size = 2048MB
+  - processors' number = 6
+  - DRAM = 16MB
+
+We also measured the execution time of scripts `make all`
+```shell
+$ time (make all)
+real 9m49,045s
+user 8m45,619s
+sys  0m27,199s
+```
 
 ## Manual Installation
 see [install](INSTALL.md)
