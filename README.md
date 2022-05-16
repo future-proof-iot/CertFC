@@ -163,6 +163,8 @@ make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0
 make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
 ```
 
+generate the figure: https://www.overleaf.com/5938889963xzvyfdygzhfv
+
 
 ## Building for the Nordic nRF52DK
 
