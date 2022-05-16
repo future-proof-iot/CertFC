@@ -142,7 +142,7 @@ after running the benchmark.
 
 We provide two ways to do the experiments:
 - **Building for the native port of RIOT**, the VirtualMachine only supports this one
-- **Building for the Nordic nRF52DK/Espressif WROOM-32/Sipeed Longan Nano GD32VF103CBT6**, the VirtualMachine doesn't support it (it is too difficult to connect RIOT-OS with a physical board on a Virtualbox VM), we recommand readers use Ubuntu and follow the [RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md) to build the RIOT-OS world.
+- **Building for the Nordic nRF52DK/Espressif WROOM-32/Sipeed Longan Nano GD32VF103CBT6**, the VirtualMachine doesn't support it (it is too difficult to connect RIOT-OS with a physical board on a Virtualbox VM), we recommend readers use Ubuntu and follow the [RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md) to build the RIOT-OS world.
 
 
 
