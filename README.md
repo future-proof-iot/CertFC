@@ -180,7 +180,7 @@ make -C benchmark_data/bench_bpf_coq_incr term
 ```
 so we will get four files: `certrbpf_incr.csv`, `rbpf_incr.csv`, `certrbpf_unit.csv`, and `rbpf_unit.csv`.
 
-2. overwrite the [measure](measure) folder with the four files.
+2. overwrite the [measurements](measure/measurements) folder with the four files.
 
 3. use a latex compiler (offline or online e.g. overleaf) to get the visualization. The configuration of your latex compiler is:
 - compiler: pdfLaTeX
@@ -234,7 +234,7 @@ $ make -C benchmark_data/bench_bpf_coq_incr/ flash term
 This flashes the application code on the board and will start a serial console
 attached to the serial interface of the board.
 
-You may need another shell to show the execution result (open this shell firstly and execute the above `flashing & running` command).
+You may need another shell to show the execution result (open this second shell and then execute the above `flashing & running` command on the first shell).
 ```shell
 $ /WHERE-IS-YOUR-RIOT/RIOT/dist/tools/pyterm/pyterm -p "/dev/ttyACM0" -b "115200"
 ```
