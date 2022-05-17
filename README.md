@@ -92,7 +92,8 @@ The VM may be out-of-date, to get the latest version of CertrBPF, please follow 
 sudo apt install cloc
 
 # current folder: /home/cav/CertrBPF/rbpf-dx
-git pull origin CAV22-AE
+git fetch --all
+git reset --hard origin/CAV22-AE
 
 # then you could build CertrBPF by running `make all`
 ```
