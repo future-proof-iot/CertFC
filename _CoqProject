@@ -7,7 +7,7 @@ INSTALLDEFAULTROOT = comm
 -R simulation bpf.simulation
 -R isolation bpf.isolation
 -R dxmodel bpf.dxmodel
--R /home/shyuan/.opam/4.11.1/lib/coq-variant/compcert32/compcert compcert
+-R /home/cav/.opam/bpf/lib/coq-variant/compcert32/compcert compcert
 -R clightlogic bpf.clightlogic
 -R clight bpf.clight
 -R verifier bpf.verifier

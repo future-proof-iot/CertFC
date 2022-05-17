@@ -85,6 +85,19 @@ make document
 ## VirtualMachine installation 
 We provide a [Virtual Machine (.ova)](https://zenodo.org/record/6525237#.YnVZr9pByUk) that the development environment is available. Note that: **This VM doesn't support connecting any physical boards and we recommend readers use Ubuntu and follow the [RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md) to build the RIOT-OS world and then reproduce the results of our paper.**
 
+### Update VM
+The VM may be out-of-date, to get the latest version of CertrBPF, please follow the instructions:
+```shell
+# currently (2022-05-17), this VM doesn't install cloc, we need install it manually
+sudo apt install cloc
+
+# current folder: /home/cav/CertrBPF/rbpf-dx
+git pull origin CAV22-AE
+
+# then you could build CertrBPF by running `make all`
+```
+
+### VM resource requirements 
 We tested this VM on the following environments:
 - OS = Windows 10 famille (version: 19044.1706)
 - RAM = 16G
@@ -101,6 +114,7 @@ We tested this VM on the following environments:
 
 We also measured the execution time of scripts `make all`
 ```shell
+# current folder: /home/cav/CertrBPF/rbpf-dx 
 $ time (make all)
 real 9m49,045s
 user 8m45,619s
