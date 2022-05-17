@@ -204,12 +204,14 @@ The second application tests the following eBPF/rBPF instructions:
 
 When executing the benchmark applications, a CSV content is printed as output and slightly modified to make it easier for LaTeX.
 - `bench_bpf_coq_incr` has the output format:
+
 | test | duration | code | usperexec | kexecspersec |
 | ---  | ---      | ---  | ---       |  ---         |
 | x-axis|         |      | y-axis    |              |
 
 - `bench_bpf_coq_unit` has the output format:
-| duration | code | usperinst | instrpersec |
+
+| duration | code | usperinst | instrpersec  |
 | ---      | ---  | ---       |  ---         |
 |          |      | y-axis    |              |
 
