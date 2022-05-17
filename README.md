@@ -75,7 +75,9 @@ We also provide a makefile command to generate html files (see [html](html)) in 
 make document
 ```
 
-BTW, [CLOC](CLOC.md) shows the statistics on the complete specifications and proofs of CertrBPF.
+## Code statistics
+
+[CLOC](CLOC.md) shows the statistics on the complete specifications and proofs of CertrBPF.
 
 
 # Installation
@@ -94,6 +96,8 @@ We tested this VM on the following environments:
   - memory size = 2048MB
   - processors' number = 6
   - DRAM = 16MB
+
+### How long of running the scripts
 
 We also measured the execution time of scripts `make all`
 ```shell
@@ -161,44 +165,84 @@ platform and output the benchmark results over the available serial console
 after running the benchmark.
 
 We provide two ways to do the experiments:
-- **Building for the native port of RIOT**, the VirtualMachine only supports this one
-- **Building for the Nordic nRF52DK/Espressif WROOM-32/Sipeed Longan Nano GD32VF103CBT6**, the VirtualMachine doesn't support it (it is too difficult to connect RIOT-OS with a physical board on a Virtualbox VM), we recommend readers use Ubuntu and follow the [RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md) to build the RIOT-OS world.
+- **Building for the native port of RIOT**, the VirtualMachine only supports this one. Note that, this native-board experiment, as a sample, is only used to show how our benchmarks work if users don't have any physical boards. 
+- **Building for the Nordic nRF52DK/Espressif WROOM-32/Sipeed Longan Nano GD32VF103CBT6**, the VirtualMachine doesn't support it (it is too difficult to connect RIOT-OS with a physical board on a Virtualbox VM), we recommend readers use Ubuntu and follow the [RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md) to build the RIOT-OS world. This way could reproduct the evaluation results shown in our CAV paper.
+
+## Details of benchmarks
+
+We provide two benchmark applications:
+- [bench_bpf_coq_incr](benchmark_data/bench_bpf_coq_incr): measuring the sliding window average (x-axis: Number of samples to average; y-axis: us per execution). 
+- [bench_bpf_coq_unit](benchmark_data/bench_bpf_coq_unit): measuring execution per instrucitons (x-axis: Id of selected instructions; y-axis: us per instruction).
+
+The second application tests the following eBPF/rBPF instructions:
+0. ALU neg64
+1. ALU Add
+2. ALU Add imm
+3. ALU mul imm
+4. ALU rsh imm
+5. ALU div imm
+6. MEM ldxdw
+7. MEM stdw
+8. MEM stxdw
+9. Branch always
+10. Branch eq (jump)
+11. Branch eq (cont)
+
+When executing the benchmark applications, a CSV content is printed as output and slightly modified to make it easier for LaTeX.
+- `bench_bpf_coq_incr` has the output format:
+| test | duration | code | usperexec | kexecspersec |
+| ---  | ---      | ---  | ---       |  ---         |
+| x-axis|         |      | y-axis    |              |
+
+- `bench_bpf_coq_unit` has the output format:
+| duration | code | usperinst | instrpersec |
+| ---      | ---  | ---       |  ---         |
+|          |      | y-axis    |              |
 
 
-
-## Building for the native port of RIOT
+## Building for the native board (i.e. Ubuntu) of RIOT
 ```shell
 # do the experiments on native board
 
 # current folder: /home/cav/CertrBPF/rbpf-dx
 
 # test bench_bpf_coq_incr
-# compile CertBPF
+# 0. compile CertBPF
 make -C benchmark_data/bench_bpf_coq_incr/bpf
 make -C benchmark_data/bench_bpf_coq_incr
-# run on a native port using CertBPF
+
+# 1. run on a native board, i.e. ubuntu, using CertBPF
+# 2. save the output as `certrbpf_incr.csv`
 make -C benchmark_data/bench_bpf_coq_incr term
-# complie original rBPF: Vanilla-rBPF
+
+
+# 3. complie original rBPF: Vanilla-rBPF
 make -C benchmark_data/bench_bpf_coq_incr BPF_COQ=0 BPF_USE_JUMPTABLE=0
+
+# 4. run this application
+# 5. save the output as `rbpf_incr.csv`
 make -C benchmark_data/bench_bpf_coq_incr BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
 
 # test bench_bpf_coq_unit
-# compile CertBPF
+# 6. compile CertBPF
 make -C benchmark_data/bench_bpf_coq_unit
+
+# 7. execute this application
+# 8. save the output as `certrbpf_unit.csv`
 make -C benchmark_data/bench_bpf_coq_unit term
-# complie original rBPF: Vanilla-rBPF
+
+
+# 9. complie original rBPF: Vanilla-rBPF
 make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0
+
+# 10. execute this application
+# 11. save the output as `rbpf_unit.csv`
 make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
 ```
 
-To understand the execution result, we show how to get the visualization from original data:
-1. save the original data: e.g. the following command prints a result, save it as `certrbpf_incr.csv`
-```
-make -C benchmark_data/bench_bpf_coq_incr term
-[...]
-100,0.36800000,-2,6.6800000,271.739120
-```
-so we will get four files: `certrbpf_incr.csv`, `rbpf_incr.csv`, `certrbpf_unit.csv`, and `rbpf_unit.csv`.
+We provide an [online latex template](https://www.overleaf.com/read/vsrfrxprzhyt) to show the visualization from the original data.
+
+1. copy the template;
 
 2. overwrite the [measurements](measure/measurements) folder with the four files.
 
@@ -206,9 +250,6 @@ so we will get four files: `certrbpf_incr.csv`, `rbpf_incr.csv`, `certrbpf_unit.
 - compiler: pdfLaTeX
 - TeX Live version: 2021
 - Main document: main.tex
-
-we also provide an [online overleaf project](https://www.overleaf.com/read/vsrfrxprzhyt) for visualization.
-
 
 ## Building for the Nordic nRF52DK
 

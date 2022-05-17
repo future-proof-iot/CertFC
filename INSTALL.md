@@ -1,4 +1,8 @@
 
+This file is used to explain how to build CertrBPF step-by-step.
+
+_NB: to build RIOT, please check the [RIOT documentation](benchmark_data/RIOT/doc/doxygen/src/getting-started.md)_
+
 # Build world: opam
 
 _NB: you may need to add `sudo` everywhere_
