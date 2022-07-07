@@ -16,7 +16,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From Coq Require Import List.
+From Coq Require Import List ZArith.
+From compcert Require Import Integers.
 Import ListNotations.
 
 Inductive bpf_flag: Type := 
@@ -41,3 +42,23 @@ decide equality. Defined.
 (** flag_eq: flag -> flag -> bool
   *)
 Definition flag_eq (x y: bpf_flag): bool := if bpf_flag_eq x y then true else false.
+
+Definition Z_of_flag (f:bpf_flag) : Z :=
+  match f with
+  | BPF_SUCC_RETURN  => 1
+  | BPF_OK  => 0
+  | BPF_ILLEGAL_INSTRUCTION => -1
+  | BPF_ILLEGAL_MEM => -2
+  | BPF_ILLEGAL_JUMP => -3
+  | BPF_ILLEGAL_CALL => -4
+  | BPF_ILLEGAL_LEN  => -5
+  | BPF_ILLEGAL_REGISTER => -6
+  | BPF_NO_RETURN => -7
+  | BPF_OUT_OF_BRANCHES => -8
+  | BPF_ILLEGAL_DIV => -9
+  | BPF_ILLEGAL_SHIFT => -10
+  | BPF_ILLEGAL_ALU => -11
+  end.
+
+Definition int_of_flag (f:bpf_flag)  :=
+  Int.repr (Z_of_flag f).

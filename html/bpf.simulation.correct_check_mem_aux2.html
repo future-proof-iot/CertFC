@@ -1,0 +1,514 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module correct_check_mem_aux2</title>
+<meta name="description" content="Documentation of Coq module correct_check_mem_aux2" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module correct_check_mem_aux2</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.LemmaInt.html">LemmaInt</a></span> <span class="id"><a href="bpf.comm.MemRegion.html">MemRegion</a></span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.State.html">State</a></span> <span class="id"><a href="bpf.comm.Monad.html">Monad</a></span> <span class="id"><a href="bpf.comm.rBPFAST.html">rBPFAST</a></span> <span class="id"><a href="bpf.comm.rBPFValues.html">rBPFValues</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.monadicmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html">rBPFInterpreter</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html">Clight</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clight</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clight.interpreter.html">interpreter</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clightlogic</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html">Clightlogic</a></span> <span class="id"><a href="bpf.clightlogic.clight_exec.html">clight_exec</a></span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html">CommonLemma</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html">CorrectRel</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.simulation</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.simulation.correct_get_sub.html">correct_get_sub</a></span> <span class="id"><a href="bpf.simulation.correct_get_add.html">correct_get_add</a></span> <span class="id"><a href="bpf.simulation.correct_get_start_addr.html">correct_get_start_addr</a></span> <span class="id"><a href="bpf.simulation.correct_get_block_size.html">correct_get_block_size</a></span> <span class="id"><a href="bpf.simulation.correct_get_block_perm.html">correct_get_block_perm</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.simulation</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.simulation.MatchState.html">MatchState</a></span> <span class="id"><a href="bpf.simulation.InterpreterRel.html">InterpreterRel</a></span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Check_mem_aux2">Check_mem_aux2</a></span>.<br/>
+<span class="kwd">Context</span> {<span class="id">S</span>:<span class="id"><a href="bpf.simulation.MatchState.html#special_blocks">special_blocks</a></span>}.<br/>
+<div class="doc">The program contains our function of interest <span class="bracket"><span class="id">fn</span></span> </div>
+<span class="kwd">Definition</span> <span class="id"><a name="p">p</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#program">Clight.program</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#prog">prog</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="args">args</a></span>  := [(<span class="id"><a href="bpf.comm.MemRegion.html#memory_region">memory_region</a></span>:<span class="kwd">Type</span>) ; (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#permission">permission</a></span>:<span class="kwd">Type</span>); <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>; (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">AST.memory_chunk</a></span>: <span class="kwd">Type</span>)].<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="res">res</a></span>  := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="f">f</a></span> := <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html#check_mem_aux2">check_mem_aux2</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="fn">fn</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#function">Clight.function</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#f_check_mem_aux2">f_check_mem_aux2</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="match_arg">match_arg</a></span>  :<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.t">DList.t</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>) <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#args">args</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.clightlogic.CorrectRel.html#statefull">statefull</a></span> (<span class="id"><a href="bpf.simulation.InterpreterRel.html#mr_correct">mr_correct</a></span> ))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#perm_correct">perm_correct</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#match_chunk">match_chunk</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.DNil">DList.DNil</a></span> <span class="id">_</span>)))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="match_res">match_res</a></span> : <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#res">res</a></span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span> := <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="correct_function_check_mem_aux2_correct">correct_function_check_mem_aux2_correct</a></span> : <span class="kwd">forall</span> <span class="id">a</span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_function">correct_function</a></span> <span class="id">_</span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#p">p</a></span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#args">args</a></span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#res">res</a></span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#f">f</a></span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#fn">fn</a></span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#ModNothing">ModNothing</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#match_state">match_state</a></span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#match_arg">match_arg</a></span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#match_res">match_res</a></span> <span class="id">a</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="id">correct_function_from_body</span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#args">args</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">correct_body</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#f">f</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html#check_mem_aux2">check_mem_aux2</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_mr">_mr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span>::<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>,<span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#mr_correct">mr_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>. <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<div class="doc">goal: correct_body _ _ (bindM (get_block_size c) ... </div>
+<br/>
+&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_mr">_mr</a></span>.<br/>
+<div class="doc"> exists lval : list val, _ <span class="bracket"><span class="id">Etempvar</span> <span class="id">_mr3</span> <span class="id">_</span></span> = Some lval </div>
+&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span>::<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#statefull">statefull</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#mr_correct">mr_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;val&nbsp;(bindM&nbsp;(get_block_perm&nbsp;c)&nbsp;...&nbsp;*)</span><br/>
+<br/>
+&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_mr">_mr</a></span>.<br/>
+<div class="doc"> exists lval : list val, _ <span class="bracket"><span class="id">Etempvar</span> <span class="id">_mr3</span> <span class="id">_</span></span> = Some lval </div>
+&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span>::<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#statefull">statefull</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#mr_correct">mr_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+<div class="doc">goal:  correct_body _ _ (bindM (get_sub c0 x0) ... </div>
+<br/>
+&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_addr">_addr</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_start">_start</a></span>.<br/>
+<div class="doc"> exists lval : list val, _ <span class="bracket">(<span class="id">Etempvar</span> <span class="id">_addr0</span> <span class="id">_</span>); (<span class="id">Etempvar</span> <span class="id">_start</span> <span class="id">_</span>)</span> = Some lval </div>
+&nbsp;&nbsp;<span class="tactic">exists</span> ([<span class="id">v</span>; <span class="id">v0</span>]).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>, <span class="id">p1</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<div class="doc">goal:  correct_body _ _ (bindM (get_add x2 (memory_chunk_to_valu32 c1)) ... </div>
+<br/>
+&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_lo_ofs">_lo_ofs</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_chunk">_chunk</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>, <span class="id">p1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exists</span> ([<span class="id">v</span>; <span class="id">v0</span>]).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32">memory_chunk_to_valu32</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#match_chunk">match_chunk</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32">memory_chunk_to_valu32</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="kwd">in</span> <span class="id">c4</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="comment">(**r&nbsp;then&nbsp;we&nbsp;consider&nbsp;the&nbsp;`if-then`&nbsp;case&nbsp;*)</span><br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">destruct_if</span> <span class="id">Hname</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id">context</span>[(<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>)] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span> <span class="id">eqn</span>: <span class="id">Hname</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;<span class="id">destruct_if</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;<span class="comment">(**r&nbsp;we&nbsp;have&nbsp;two&nbsp;goals:&nbsp;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;1.&nbsp;if-Hcond-then<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;2.&nbsp;if-Hcond-else<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;*)</span><br/>
+&nbsp;&nbsp;2:{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#list_rel_arg">list_rel_arg</a></span>,<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#app">app</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|- <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">B</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">INV</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">I</span> := <span class="tactic">fresh</span> "<span class="id">INV</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">I</span> := <span class="id">INV</span>) ; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">I</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">B1</span> := <span class="tactic">eval</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">B</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">B</span> <span class="kwd">with</span> <span class="id">B1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">INV0</span>, <span class="id">INV</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_hi_ofs">_hi_ofs</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_lo_ofs">_lo_ofs</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_size">_size</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_chunk">_chunk</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_mr_perm">_mr_perm</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_perm">_perm</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#statefull">statefull</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_add.html#match_res">correct_get_add.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">H0_eq</span> &amp; (<span class="id">vi0</span> &amp; <span class="id">Hvi0_eq</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_sub.html#match_res">correct_get_sub.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c4</span> <span class="kwd">as</span> (<span class="id">H2_eq</span> &amp; (<span class="id">vi2</span> &amp; <span class="id">Hvi2_eq</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_block_size.html#match_res">correct_get_block_size.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c5</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">H4_eq</span> &amp; (<span class="id">vi4</span> &amp; <span class="id">Hvi4_eq</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#match_chunk">match_chunk</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32">memory_chunk_to_valu32</a></span> <span class="kwd">in</span> <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_block_perm.html#match_res">correct_get_block_perm.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#perm_correct">perm_correct</a></span> <span class="kwd">in</span> <span class="id">c7</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#perm_correct">perm_correct</a></span> <span class="kwd">in</span> <span class="id">c8</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;we&nbsp;also&nbsp;need&nbsp;those&nbsp;info&nbsp;below&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hneq1</span>: <span class="id"><a href="bpf.clight.interpreter.html#_lo_ofs">_lo_ofs</a></span> &lt;&gt; <span class="id">_t</span>'7). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clight.interpreter.html#_lo_ofs">_lo_ofs</a></span>, <span class="id">_t</span>'7.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">Hneq</span>; <span class="tactic">inversion</span> <span class="id">Hneq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hneq2</span>: <span class="id"><a href="bpf.clight.interpreter.html#_chunk">_chunk</a></span> &lt;&gt; <span class="id">_t</span>'8). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clight.interpreter.html#_chunk">_chunk</a></span>, <span class="id">_t</span>'8.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">Hneq</span>; <span class="tactic">inversion</span> <span class="id">Hneq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hwell_chunk_unsigned</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">c2</span>)) = <span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">c2</span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c2</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> (<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>; <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_zero">Int.unsigned_zero</a></span>); <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_max_unsigned_eq64">Int_max_unsigned_eq64</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hchunk_ne_zero</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">c2</span>)) <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c2</span>; <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span>; <span class="tactic">simpl</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_max_unsigned_eq64">Int_max_unsigned_eq64</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zeq_false">zeq_false</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>), <span class="id">m4</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#E0">Events.E0</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">split_and</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#compu_lt_32">compu_lt_32</a></span>, <span class="id"><a href="bpf.comm.rBPFValues.html#compu_le_32">compu_le_32</a></span>, <span class="id"><a href="bpf.comm.rBPFValues.html#compu_le_32">compu_le_32</a></span>, <span class="id"><a href="bpf.comm.rBPFValues.html#val32_modu">val32_modu</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32">memory_chunk_to_valu32</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32_upbound">memory_chunk_to_valu32_upbound</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> <span class="kwd">with</span> 4294967295 <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">eqn</span>: <span class="id">Hltu</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_l">andb_true_l</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id">_</span> - <span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">_</span>)) <span class="id">_</span>)) <span class="id">eqn</span>: <span class="id">Hle</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_l">andb_true_l</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modu">Val.modu</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hchunk_ne_zero</span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modu">Int.modu</a></span> <span class="id">_</span> <span class="id">_</span>)) <span class="id">eqn</span>: <span class="id">Hmod</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_l">andb_true_l</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hltu</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.sub">Int.sub</a></span>. <span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.mone">Int.mone</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_mone">Int.unsigned_mone</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modulus">Int.modulus</a></span> - 1) <span class="kwd">with</span> 4294967295.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hwell_chunk_unsigned</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hle</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_mod">Cop.sem_mod</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hchunk_ne_zero</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hmod</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>. <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">post_process</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">post_process</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMemType.html#perm_ge">rBPFMemType.perm_ge</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c0</span> <span class="id">eqn</span>: <span class="id">Hc0_eq</span>; <span class="tactic">destruct</span> <span class="id">x1</span> <span class="id">eqn</span>: <span class="id">Hx1_eq</span>; <span class="tactic">inversion</span> <span class="id">Hcond</span>; <span class="tactic">rewrite</span> <span class="id">c7</span>, <span class="id">c8</span>; <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span>; <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_unsigned_repr_n">Int_unsigned_repr_n</a></span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">try</span> <span class="id">lia</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Hcond</span>; <span class="tactic">inversion</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vfalse">Vfalse</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>. <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hltu</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.of_bool">Val.of_bool</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.sub">Int.sub</a></span>. <span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.mone">Int.mone</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_mone">Int.unsigned_mone</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modulus">Int.modulus</a></span> - 1) <span class="kwd">with</span> 4294967295.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hwell_chunk_unsigned</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hle</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_mod">Cop.sem_mod</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hchunk_ne_zero</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hmod</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vfalse">Vfalse</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hltu</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.of_bool">Val.of_bool</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.sub">Int.sub</a></span>. <span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.mone">Int.mone</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_mone">Int.unsigned_mone</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modulus">Int.modulus</a></span> - 1) <span class="kwd">with</span> 4294967295.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hwell_chunk_unsigned</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hle</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vfalse">Vfalse</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>. <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 2 <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>. <span class="id">forward_star</span>. <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hltu</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.of_bool">Val.of_bool</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">constructor</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#unmodifies_effect_refl">unmodifies_effect_refl</a></span>.<br/>
+&nbsp;&nbsp;}<br/>
+<br/>
+&nbsp;&nbsp;<span class="comment">(**r&nbsp;if-Hcond-then&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#list_rel_arg">list_rel_arg</a></span>,<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#app">app</a></span>;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;|- <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">B</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">INV</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">I</span> := <span class="tactic">fresh</span> "<span class="id">INV</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">I</span> := <span class="id">INV</span>) ; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">I</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">B1</span> := <span class="tactic">eval</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">B</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">B</span> <span class="kwd">with</span> <span class="id">B1</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">INV0</span>, <span class="id">INV</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_hi_ofs">_hi_ofs</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_lo_ofs">_lo_ofs</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_size">_size</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_chunk">_chunk</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_perm">_perm</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_mr_perm">_mr_perm</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_mr">_mr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#statefull">statefull</a></span> <span class="kwd">in</span> *.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_add.html#match_res">correct_get_add.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">H0_eq</span> &amp; (<span class="id">vi0</span> &amp; <span class="id">Hvi0_eq</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_sub.html#match_res">correct_get_sub.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c4</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c4</span> <span class="kwd">as</span> (<span class="id">H2_eq</span> &amp; (<span class="id">vi2</span> &amp; <span class="id">Hvi2_eq</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_block_size.html#match_res">correct_get_block_size.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c5</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">H4_eq</span> &amp; (<span class="id">vi4</span> &amp; <span class="id">Hvi4_eq</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#match_chunk">match_chunk</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32">memory_chunk_to_valu32</a></span> <span class="kwd">in</span> <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#perm_correct">perm_correct</a></span> <span class="kwd">in</span> <span class="id">c7</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_block_perm.html#match_res">correct_get_block_perm.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#perm_correct">perm_correct</a></span> <span class="kwd">in</span> <span class="id">c8</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#mr_correct">mr_correct</a></span> <span class="kwd">in</span> <span class="id">c9</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c9</span> <span class="kwd">as</span> (<span class="id">Hin</span> &amp; <span class="id">c9</span> &amp; <span class="id">Hst</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.MatchState.html#match_region">match_region</a></span>, <span class="id"><a href="bpf.simulation.MatchState.html#match_region_at_ofs">match_region_at_ofs</a></span> <span class="kwd">in</span> <span class="id">c9</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c9</span> <span class="kwd">as</span> (<span class="id">ofs</span> &amp; <span class="id">Hv5_eq</span> &amp; ((<span class="id">Hvl_start_addr</span> &amp; <span class="id">Hstart_addr</span> &amp; <span class="id">Hstart_addr_eq</span>) &amp; (<span class="id">Hvl_block_size</span> &amp; <span class="id">Hblock_size</span> &amp; <span class="id">Hblock_size_eq</span>) &amp; (<span class="id">Hvl_block_perm</span> &amp; <span class="id">Hblock_perm</span> &amp; <span class="id">Hblock_perm_eq</span>) &amp; (<span class="id">Hb_block_ptr</span> &amp; <span class="id">Hblock_ptr</span> &amp; <span class="id">Hblock_ptr_eq</span> &amp;<span class="id">Hvalid_blk</span>))).<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="comment">(**r&nbsp;we&nbsp;also&nbsp;need&nbsp;those&nbsp;info&nbsp;below&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hneq1</span>: <span class="id"><a href="bpf.clight.interpreter.html#_lo_ofs">_lo_ofs</a></span> &lt;&gt; <span class="id">_t</span>'7). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clight.interpreter.html#_lo_ofs">_lo_ofs</a></span>, <span class="id">_t</span>'7.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">Hneq</span>; <span class="tactic">inversion</span> <span class="id">Hneq</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hneq2</span>: <span class="id"><a href="bpf.clight.interpreter.html#_chunk">_chunk</a></span> &lt;&gt; <span class="id">_t</span>'8). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clight.interpreter.html#_chunk">_chunk</a></span>, <span class="id">_t</span>'8.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">Hneq</span>; <span class="tactic">inversion</span> <span class="id">Hneq</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hwell_chunk_unsigned</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">c2</span>)) = <span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">c2</span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c2</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> (<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>; <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_zero">Int.unsigned_zero</a></span>); <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_max_unsigned_eq64">Int_max_unsigned_eq64</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;}<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hchunk_ne_zero</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">c2</span>)) <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c2</span>; <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span>; <span class="tactic">simpl</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_max_unsigned_eq64">Int_max_unsigned_eq64</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zeq_false">zeq_false</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;}<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#compu_lt_32">compu_lt_32</a></span>, <span class="id"><a href="bpf.comm.rBPFValues.html#compu_le_32">compu_le_32</a></span>, <span class="id"><a href="bpf.comm.rBPFValues.html#compu_le_32">compu_le_32</a></span>, <span class="id"><a href="bpf.comm.rBPFValues.html#val32_modu">val32_modu</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32">memory_chunk_to_valu32</a></span>, <span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32_upbound">memory_chunk_to_valu32_upbound</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> <span class="kwd">with</span> 4294967295 <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">andb_true_iff</a></span> <span class="kwd">in</span> <span class="id">Hcond</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hcond</span> <span class="kwd">as</span> ((<span class="id">Hltu</span> &amp; <span class="id">Hle</span> &amp; <span class="id">Hmod</span>) &amp; <span class="id">Hperm</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modu">Val.modu</a></span> <span class="kwd">in</span> <span class="id">Hmod</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hchunk_ne_zero</span> <span class="kwd">in</span> <span class="id">Hmod</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">eexists</span>; <span class="tactic">exists</span> <span class="id">m4</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#E0">Events.E0</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hltu</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.of_bool">Val.of_bool</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_mod">Cop.sem_mod</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.sub">Int.sub</a></span>. <span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.mone">Int.mone</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_mone">Int.unsigned_mone</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modulus">Int.modulus</a></span> - 1) <span class="kwd">with</span> 4294967295.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hwell_chunk_unsigned</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hle</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#bool_val">Cop.bool_val</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>; <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_mod">Cop.sem_mod</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hchunk_ne_zero</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hmod</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vtrue">Vtrue</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">post_process</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">post_process</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMemType.html#perm_ge">rBPFMemType.perm_ge</a></span> <span class="kwd">in</span> <span class="id">Hperm</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c0</span>, <span class="id">x1</span>; <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span>; <span class="tactic">rewrite</span> <span class="id">c7</span>, <span class="id">c8</span>; <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_unsigned_repr_n">Int_unsigned_repr_n</a></span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">try</span> <span class="id">lia</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Hperm</span>; <span class="tactic">inversion</span> <span class="id">Hperm</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 4 <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">post_process</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#align">align</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#alignof">Ctypes.alignof</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Hblock_ptr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="id">post_process</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.add">Val.add</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.one">Ptrofs.one</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.mul_commut">Ptrofs.mul_commut</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.mul_one">Ptrofs.mul_one</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">split_and</span> ; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">Hblock_ptr_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.add">Val.add</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#unmodifies_effect_refl">unmodifies_effect_refl</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.simulation.correct_check_mem_aux2.html#Check_mem_aux2">Check_mem_aux2</a></span>.<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">correct_function_check_mem_aux2_correct</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

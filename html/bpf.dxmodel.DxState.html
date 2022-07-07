@@ -1,0 +1,53 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxState</title>
+<meta name="description" content="Documentation of Coq module DxState" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxState</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.lib</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="id">Bool</span> <span class="id">Nat</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.State.html">State</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxValues.html">DxValues</a></span> <span class="id"><a href="bpf.dxcomm.DxList64.html">DxList64</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxmodel.IdentDef.html">IdentDef</a></span> <span class="id"><a href="bpf.dxmodel.DxFlag.html">DxFlag</a></span> <span class="id"><a href="bpf.dxmodel.DxRegs.html">DxRegs</a></span> <span class="id"><a href="bpf.dxmodel.DxMemRegion.html">DxMemRegion</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<br/>
+<div class="doc">Coq2C: state -&gt; 
+            struct state {
+              unsigned int pc;
+              unsigned long long regmap<span class="bracket">11</span>;
+            };
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="state_struct_type">state_struct_type</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#type">Ctypes.type</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Tstruct">Ctypes.Tstruct</a></span> <span class="id"><a href="bpf.dxmodel.IdentDef.html#state_id">state_id</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#noattr">Ctypes.noattr</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="state_struct_def">state_struct_def</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#composite_definition">Ctypes.composite_definition</a></span> := <br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Composite">Ctypes.Composite</a></span> <span class="id"><a href="bpf.dxmodel.IdentDef.html#state_id">state_id</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Struct">Ctypes.Struct</a></span> [(<span class="id"><a href="bpf.dxmodel.IdentDef.html#pc_id">pc_id</a></span>, <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>); (<span class="id"><a href="bpf.dxmodel.IdentDef.html#flag_id">flag_id</a></span>, <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_S32">C_S32</a></span>); (<span class="id"><a href="bpf.dxmodel.IdentDef.html#regmaps_id">regmaps_id</a></span>, <span class="id"><a href="bpf.dxmodel.DxRegs.html#C_regmap">C_regmap</a></span>); (<span class="id"><a href="bpf.dxmodel.IdentDef.html#mem_num_id">mem_num_id</a></span>, <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>); (<span class="id"><a href="bpf.dxmodel.IdentDef.html#mem_regs_id">mem_regs_id</a></span>, <span class="id"><a href="bpf.dxmodel.DxMemRegion.html#mem_region_type">mem_region_type</a></span>); (<span class="id"><a href="bpf.dxmodel.IdentDef.html#ins_len_id">ins_len_id</a></span>, <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>); (<span class="id"><a href="bpf.dxmodel.IdentDef.html#ins_id">ins_id</a></span>, <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64_pointer">C_U64_pointer</a></span>)] <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#noattr">Ctypes.noattr</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="stateCompilableType">stateCompilableType</a></span> := <span class="id">MkCompilableType</span> <span class="id"><a href="bpf.comm.State.html#state">state</a></span> <span class="id"><a href="bpf.dxmodel.DxState.html#state_struct_type">state_struct_type</a></span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Exports">Exports</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.stateCompilableType">stateCompilableType</a></span> := <span class="id"><a href="bpf.dxmodel.DxState.html#stateCompilableType">stateCompilableType</a></span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.dxmodel.DxState.html#Exports">Exports</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

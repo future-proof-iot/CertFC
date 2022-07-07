@@ -1,0 +1,79 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CommonLib</title>
+<meta name="description" content="Documentation of Coq module CommonLib" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CommonLib</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">rBPFValues</span> <span class="id">rBPFAST</span> <span class="id">Regs</span> <span class="id">Flag</span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span> <span class="id">Values</span> <span class="id">Memtype</span> <span class="id">Memory</span> <span class="id">AST</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span> <span class="id">ZArith</span> <span class="id">Lia</span>.<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<div class="doc">common libs for clightlogic
+</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">id_of_reg</span> (<span class="id">r</span>:<span class="id">reg</span>) : <span class="id">Z</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">R0</span> =&gt; 0<br/>
+&nbsp;&nbsp;| <span class="id">R1</span> =&gt; 1<br/>
+&nbsp;&nbsp;| <span class="id">R2</span> =&gt; 2<br/>
+&nbsp;&nbsp;| <span class="id">R3</span> =&gt; 3<br/>
+&nbsp;&nbsp;| <span class="id">R4</span> =&gt; 4<br/>
+&nbsp;&nbsp;| <span class="id">R5</span> =&gt; 5<br/>
+&nbsp;&nbsp;| <span class="id">R6</span> =&gt; 6<br/>
+&nbsp;&nbsp;| <span class="id">R7</span> =&gt; 7<br/>
+&nbsp;&nbsp;| <span class="id">R8</span> =&gt; 8<br/>
+&nbsp;&nbsp;| <span class="id">R9</span> =&gt; 9<br/>
+&nbsp;&nbsp;| <span class="id">R10</span> =&gt; 10<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">Z_of_flag</span> (<span class="id">f</span>:<span class="id">bpf_flag</span>) : <span class="id">Z</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">f</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">BPF_SUCC_RETURN</span>  =&gt; 1<br/>
+&nbsp;&nbsp;| <span class="id">BPF_OK</span>  =&gt; 0<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_INSTRUCTION</span> =&gt; -1<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_MEM</span> =&gt; -2<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_JUMP</span> =&gt; -3<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_CALL</span> =&gt; -4<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_LEN</span>  =&gt; -5<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_REGISTER</span> =&gt; -6<br/>
+&nbsp;&nbsp;| <span class="id">BPF_NO_RETURN</span> =&gt; -7<br/>
+&nbsp;&nbsp;| <span class="id">BPF_OUT_OF_BRANCHES</span> =&gt; -8<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_DIV</span> =&gt; -9<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_SHIFT</span> =&gt; -10<br/>
+&nbsp;&nbsp;| <span class="id">BPF_ILLEGAL_ALU</span> =&gt; -11<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">int_of_flag</span> (<span class="id">f</span>:<span class="id">bpf_flag</span>)  :=<br/>
+&nbsp;&nbsp;<span class="id">Int.repr</span> (<span class="id">Z_of_flag</span> <span class="id">f</span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">inject_bl_state</span> (<span class="id">bl_state</span> <span class="id">b</span>: <span class="id">block</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">Pos.eqb</span> <span class="id">b</span> <span class="id">bl_state</span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">None</span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> (<span class="id">b</span>, 0).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">correct_perm</span> (<span class="id">p</span>: <span class="id">permission</span>) (<span class="id">n</span>: <span class="id">int</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">p</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">Freeable</span> =&gt; <span class="id">n</span> = <span class="id">Int.repr</span> 3<br/>
+&nbsp;&nbsp;| <span class="id">Writable</span> =&gt; <span class="id">n</span> = <span class="id">Int.repr</span> 2<br/>
+&nbsp;&nbsp;| <span class="id">Readable</span> =&gt; <span class="id">n</span> = <span class="id">Int.repr</span> 1<br/>
+&nbsp;&nbsp;| <span class="id">Nonempty</span> =&gt; <span class="id">n</span> = <span class="id">Int.repr</span> 0<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

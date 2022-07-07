@@ -1,0 +1,81 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxFlag</title>
+<meta name="description" content="Documentation of Coq module DxFlag" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxFlag</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Bool</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Flag.html">Flag</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span>.<br/>
+<br/>
+<br/>
+<div class="doc">bpf_flag -&gt; sint32_t </div>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="flagCompilableType">flagCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_S32">C_S32</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="flagSymboalType">flagSymboalType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagCompilableType">flagCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_SUCC_RETURN">Const_BPF_SUCC_RETURN</a></span>         := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_SUCC_RETURN">BPF_SUCC_RETURN</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_one">C_S32_one</a></span>.          <span class="docright">(* =  1,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_OK">Const_BPF_OK</a></span>                  := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_OK">BPF_OK</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_zero">C_S32_zero</a></span>.                  <span class="docright">(* =  0,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_INSTRUCTION">Const_BPF_ILLEGAL_INSTRUCTION</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_INSTRUCTION">BPF_ILLEGAL_INSTRUCTION</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_mone">C_S32_mone</a></span>. <span class="docright">(* = -1,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_MEM">Const_BPF_ILLEGAL_MEM</a></span>         := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_MEM">BPF_ILLEGAL_MEM</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m2">C_S32_m2</a></span>.           <span class="docright">(* = -2,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_JUMP">Const_BPF_ILLEGAL_JUMP</a></span>        := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_JUMP">BPF_ILLEGAL_JUMP</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m3">C_S32_m3</a></span>.          <span class="docright">(* = -3,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_CALL">Const_BPF_ILLEGAL_CALL</a></span>        := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_CALL">BPF_ILLEGAL_CALL</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m4">C_S32_m4</a></span>.          <span class="docright">(* = -4,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_LEN">Const_BPF_ILLEGAL_LEN</a></span>         := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_LEN">BPF_ILLEGAL_LEN</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m5">C_S32_m5</a></span>.           <span class="docright">(* = -5,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_REGISTER">Const_BPF_ILLEGAL_REGISTER</a></span>    := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_REGISTER">BPF_ILLEGAL_REGISTER</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m6">C_S32_m6</a></span>.      <span class="docright">(* = -6   *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_NO_RETURN">Const_BPF_NO_RETURN</a></span>           := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_NO_RETURN">BPF_NO_RETURN</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m7">C_S32_m7</a></span>.             <span class="docright">(* = -7,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_OUT_OF_BRANCHES">Const_BPF_OUT_OF_BRANCHES</a></span>     := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_OUT_OF_BRANCHES">BPF_OUT_OF_BRANCHES</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m8">C_S32_m8</a></span>.       <span class="docright">(* = -8,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_DIV">Const_BPF_ILLEGAL_DIV</a></span>         := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_DIV">BPF_ILLEGAL_DIV</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m9">C_S32_m9</a></span>.           <span class="docright">(* = -9,  *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_SHIFT">Const_BPF_ILLEGAL_SHIFT</a></span>       := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_SHIFT">BPF_ILLEGAL_SHIFT</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m10">C_S32_m10</a></span>.        <span class="docright">(* = -10, *)</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_BPF_ILLEGAL_ALU">Const_BPF_ILLEGAL_ALU</a></span>         := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagSymboalType">flagSymboalType</a></span> <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_ALU">BPF_ILLEGAL_ALU</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_S32_m11">C_S32_m11</a></span>.          <span class="docright">(* = -11, *)</span><br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="flagToflagToboolSymbolType">flagToflagToboolSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxmodel.DxFlag.html#flagCompilableType">flagCompilableType</a></span>; <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagCompilableType">flagCompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">boolCompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_flag_eq">Const_flag_eq</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagToflagToboolSymbolType">flagToflagToboolSymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.Flag.html#flag_eq">flag_eq</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">f1</span>; <span class="id">f2</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oeq">Cop.Oeq</a></span> <span class="id">f1</span> <span class="id">f2</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_S64">C_S64</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Exports">Exports</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.flagCompilableType">flagCompilableType</a></span>            := <span class="id"><a href="bpf.dxmodel.DxFlag.html#flagCompilableType">flagCompilableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_SUCC_RETURN">Const_BPF_SUCC_RETURN</a></span>         := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_SUCC_RETURN">Const_BPF_SUCC_RETURN</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_OK">Const_BPF_OK</a></span>                  := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_OK">Const_BPF_OK</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_INSTRUCTION">Const_BPF_ILLEGAL_INSTRUCTION</a></span> := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_INSTRUCTION">Const_BPF_ILLEGAL_INSTRUCTION</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_MEM">Const_BPF_ILLEGAL_MEM</a></span>         := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_MEM">Const_BPF_ILLEGAL_MEM</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_JUMP">Const_BPF_ILLEGAL_JUMP</a></span>        := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_JUMP">Const_BPF_ILLEGAL_JUMP</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_CALL">Const_BPF_ILLEGAL_CALL</a></span>        := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_CALL">Const_BPF_ILLEGAL_CALL</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_LEN">Const_BPF_ILLEGAL_LEN</a></span>         := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_LEN">Const_BPF_ILLEGAL_LEN</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_REGISTER">Const_BPF_ILLEGAL_REGISTER</a></span>    := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_REGISTER">Const_BPF_ILLEGAL_REGISTER</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_NO_RETURN">Const_BPF_NO_RETURN</a></span>           := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_NO_RETURN">Const_BPF_NO_RETURN</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_OUT_OF_BRANCHES">Const_BPF_OUT_OF_BRANCHES</a></span>     := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_OUT_OF_BRANCHES">Const_BPF_OUT_OF_BRANCHES</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_DIV">Const_BPF_ILLEGAL_DIV</a></span>         := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_DIV">Const_BPF_ILLEGAL_DIV</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_SHIFT">Const_BPF_ILLEGAL_SHIFT</a></span>       := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_SHIFT">Const_BPF_ILLEGAL_SHIFT</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_BPF_ILLEGAL_ALU">Const_BPF_ILLEGAL_ALU</a></span>         := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_BPF_ILLEGAL_ALU">Const_BPF_ILLEGAL_ALU</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_flag_eq">Const_flag_eq</a></span>                 := <span class="id"><a href="bpf.dxmodel.DxFlag.html#Const_flag_eq">Const_flag_eq</a></span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.dxmodel.DxFlag.html#Exports">Exports</a></span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

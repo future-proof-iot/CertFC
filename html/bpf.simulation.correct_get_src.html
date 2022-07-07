@@ -1,0 +1,138 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module correct_get_src</title>
+<meta name="description" content="Documentation of Coq module correct_get_src" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module correct_get_src</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.BinrBPF.html">BinrBPF</a></span> <span class="id"><a href="bpf.comm.State.html">State</a></span> <span class="id"><a href="bpf.comm.Monad.html">Monad</a></span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html">rBPFMonadOp</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.monadicmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html">rBPFInterpreter</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html">Clight</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clightlogic</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html">Clightlogic</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html">CorrectRel</a></span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html">CommonLemma</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clight</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clight.interpreter.html">interpreter</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.simulation</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.simulation.MatchState.html">MatchState</a></span> <span class="id"><a href="bpf.simulation.InterpreterRel.html">InterpreterRel</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Get_src">Get_src</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">S</span>: <span class="id"><a href="bpf.simulation.MatchState.html#special_blocks">special_blocks</a></span>}.<br/>
+<br/>
+<div class="doc">The program contains our function of interest <span class="bracket"><span class="id">fn</span></span> </div>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="p">p</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#program">Clight.program</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#prog">prog</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="args">args</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span> := [(<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>:<span class="kwd">Type</span>)].<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="res">res</a></span> : <span class="kwd">Type</span> := (<span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span>:<span class="kwd">Type</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="f">f</a></span> : <span class="id"><a href="bpf.clightlogic.Clightlogic.html#arrow_type">arrow_type</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#args">args</a></span> (<span class="id"><a href="bpf.comm.Monad.html#M">M</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#res">res</a></span>) := <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html#get_src">get_src</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="fn">fn</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#function">Clight.function</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#f_get_src">f_get_src</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="match_arg_list">match_arg_list</a></span> : <span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.t">DList.t</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id">_</span>) <span class="id"><a href="bpf.simulation.correct_get_src.html#args">args</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#StateLess">StateLess</a></span> <span class="id">_</span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#int64_correct">int64_correct</a></span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.DNil">DList.DNil</a></span> <span class="id">_</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="match_res">match_res</a></span> : <span class="id"><a href="bpf.simulation.correct_get_src.html#res">res</a></span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span> := <span class="kwd">fun</span> <span class="id">x</span>  =&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#StateLess">StateLess</a></span> <span class="id">_</span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#reg_correct">reg_correct</a></span> <span class="id">x</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Instance</span> <span class="id"><a name="correct_function_get_src">correct_function_get_src</a></span> : <span class="kwd">forall</span> <span class="id">a</span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_function">correct_function</a></span> <span class="id">_</span> <span class="id"><a href="bpf.simulation.correct_get_src.html#p">p</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#args">args</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#res">res</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#f">f</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#fn">fn</a></span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#ModNothing">ModNothing</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#match_state">match_state</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#match_arg_list">match_arg_list</a></span> <span class="id"><a href="bpf.simulation.correct_get_src.html#match_res">match_res</a></span> <span class="id">a</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_function_from_body</span> <span class="id"><a href="bpf.simulation.correct_get_src.html#args">args</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_body</span>.<br/>
+<div class="doc">how to use correct_* </div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">INV</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_src.html#f">f</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html#get_src">get_src</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#int64_to_src_reg">int64_to_src_reg</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">int64_to_src_reg</span>' <span class="id">eqn</span>: <span class="id">Hsrc</span>; [| <span class="tactic">constructor</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">int64_to_src_reg</span>' <span class="kwd">in</span> <span class="id">Hsrc</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_ins">_ins</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#int64_correct">int64_correct</a></span> <span class="kwd">in</span> <span class="id">c0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.BinrBPF.html#z_to_reg">z_to_reg</a></span>, <span class="id"><a href="bpf.comm.BinrBPF.html#get_src">BinrBPF.get_src</a></span> <span class="kwd">in</span> <span class="id">Hsrc</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shru">Int64.shru</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span> <span class="id">c</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 65535)) (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 12))))), <span class="id">m</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#E0">Events.E0</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">split_and</span>; <span class="tactic">auto</span>;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;-<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">forward_star</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;-<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_src.html#match_res">match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#reg_correct">reg_correct</a></span>. <span class="docright">(* we need the invariant reg \in <span class="bracket">0; 10</span>  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">remember</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shru">Int64.shru</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span> <span class="id">c</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 65535)) (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 12)))) <span class="kwd">as</span> <span class="id">X</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 0) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq0</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 1) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq1</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 2) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq2</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 3) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq3</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 4) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq4</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 5) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq5</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 6) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq6</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 7) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq7</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 8) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq8</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 9) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq9</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? 10) <span class="id">eqn</span>: <span class="id">Heq</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Hsrc</span>; <span class="tactic">simpl</span>; <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="tactic">rename</span> <span class="id">Heq</span> <span class="id">into</span> <span class="id">Heq10</span>].<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hsrc</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.simulation.correct_get_src.html#Get_src">Get_src</a></span>.<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">correct_function_get_src</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

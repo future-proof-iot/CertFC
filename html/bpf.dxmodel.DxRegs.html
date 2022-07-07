@@ -1,0 +1,125 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxRegs</title>
+<meta name="description" content="Documentation of Coq module DxRegs" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxRegs</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.lib</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Bool</span> <span class="id">Nat</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxValues.html">DxValues</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxmodel.IdentDef.html">IdentDef</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<br/>
+<div class="doc">Coq2C: reg -&gt; unsigned int;
+           matchableType: R_i -&gt; i,  i.e. R0 -&gt; 0
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regCompilableType">regCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regSymbolType">regSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regCompilableType">regCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R0">Const_R0</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R0">R0</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_zero">C_U32_zero</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R1">Const_R1</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R1">R1</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_one">C_U32_one</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R2">Const_R2</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R2">R2</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_2">C_U32_2</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R3">Const_R3</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R3">R3</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_3">C_U32_3</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R4">Const_R4</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R4">R4</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_4">C_U32_4</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R5">Const_R5</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R5">R5</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_5">C_U32_5</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R6">Const_R6</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R6">R6</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_6">C_U32_6</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R7">Const_R7</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R7">R7</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_7">C_U32_7</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R8">Const_R8</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R8">R8</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_8">C_U32_8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R9">Const_R9</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R9">R9</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_9">C_U32_9</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_R10">Const_R10</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regSymbolType">regSymbolType</a></span> <span class="id"><a href="bpf.comm.Regs.html#R10">R10</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_10">C_U32_10</a></span>.<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<br/>
+<div class="doc">Coq2C: regmap -&gt; unsigned long long int regmap<span class="bracket">11</span>;
+  </div>
+<span class="kwd">Definition</span> <span class="id"><a name="C_regmap">C_regmap</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#type">Ctypes.type</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Tarray">Ctypes.Tarray</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span> 11%<span class="id">Z</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#noattr">Ctypes.noattr</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regmapCompilableType">regmapCompilableType</a></span> := <span class="id">MkCompilableType</span> <span class="id"><a href="bpf.comm.Regs.html#regmap">regmap</a></span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#C_regmap">C_regmap</a></span>.<br/>
+<br/>
+<div class="doc">Type signature: reg -&gt; regmap -&gt; val64
+  </div>
+<span class="kwd">Definition</span> <span class="id"><a name="regToregmapToVal64SymbolType">regToregmapToVal64SymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxmodel.DxRegs.html#regCompilableType">regCompilableType</a></span>; <span class="id"><a href="bpf.dxmodel.DxRegs.html#regmapCompilableType">regmapCompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxcomm.DxValues.html#val64CompilableType">val64CompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_eval_regmap">Const_eval_regmap</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regToregmapToVal64SymbolType">regToregmapToVal64SymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>; <span class="id">e2</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Eindex">Csyntax.Eindex</a></span> <span class="id">e2</span> <span class="id">e1</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<div class="doc">Type signature: reg -&gt; val64 -&gt; regmap -&gt; regmap
+  </div>
+<span class="kwd">Definition</span> <span class="id"><a name="regToval64ToregmapToregmapSymbolType">regToval64ToregmapToregmapSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxmodel.DxRegs.html#regCompilableType">regCompilableType</a></span>; <span class="id"><a href="bpf.dxcomm.DxValues.html#val64CompilableType">val64CompilableType</a></span>; <span class="id"><a href="bpf.dxmodel.DxRegs.html#regmapCompilableType">regmapCompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regmapCompilableType">regmapCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_upd_regmap">Const_upd_regmap</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#regToval64ToregmapToregmapSymbolType">regToval64ToregmapToregmapSymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">r</span>; <span class="id">v</span>; <span class="id">regmap</span>] =&gt; <span class="id">Ok</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Eassign">Csyntax.Eassign</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Eindex">Csyntax.Eindex</a></span> <span class="id">regmap</span> <span class="id">r</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Evalof">Csyntax.Evalof</a></span> <span class="id">v</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Exports">Exports</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.regCompilableType">regCompilableType</a></span>      := <span class="id"><a href="bpf.dxmodel.DxRegs.html#regCompilableType">regCompilableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R0">Const_R0</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R0">Const_R0</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R1">Const_R1</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R1">Const_R1</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R2">Const_R2</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R2">Const_R2</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R3">Const_R3</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R3">Const_R3</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R4">Const_R4</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R4">Const_R4</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R5">Const_R5</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R5">Const_R5</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R6">Const_R6</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R6">Const_R6</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R7">Const_R7</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R7">Const_R7</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R8">Const_R8</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R8">Const_R8</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R9">Const_R9</a></span>               := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R9">Const_R9</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_R10">Const_R10</a></span>              := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_R10">Const_R10</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.regmapCompilableType">regmapCompilableType</a></span>   := <span class="id"><a href="bpf.dxmodel.DxRegs.html#regmapCompilableType">regmapCompilableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_eval_regmap">Const_eval_regmap</a></span>      := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_eval_regmap">Const_eval_regmap</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_upd_regmap">Const_upd_regmap</a></span>       := <span class="id"><a href="bpf.dxmodel.DxRegs.html#Const_upd_regmap">Const_upd_regmap</a></span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.dxmodel.DxRegs.html#Exports">Exports</a></span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

@@ -1,0 +1,1075 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module correct_step_opcode_alu64</title>
+<meta name="description" content="Documentation of Coq module correct_step_opcode_alu64" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module correct_step_opcode_alu64</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.LemmaInt.html">LemmaInt</a></span> <span class="id"><a href="bpf.comm.Flag.html">Flag</a></span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.State.html">State</a></span> <span class="id"><a href="bpf.comm.Monad.html">Monad</a></span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html">rBPFMonadOp</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.monadicmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html">rBPFInterpreter</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.monadicmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html">Opcode</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html">Clight</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clightlogic</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html">Clightlogic</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html">CorrectRel</a></span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html">CommonLemma</a></span> <span class="id">CommonLib</span> <span class="id"><a href="bpf.clightlogic.CommonLemmaNat.html">CommonLemmaNat</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clight</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clight.interpreter.html">interpreter</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.simulation</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html">correct_get_opcode_alu64</a></span> <span class="id"><a href="bpf.simulation.correct_upd_reg.html">correct_upd_reg</a></span> <span class="id"><a href="bpf.simulation.correct_upd_flag.html">correct_upd_flag</a></span> <span class="id"><a href="bpf.simulation.correct_reg64_to_reg32.html">correct_reg64_to_reg32</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.simulation</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.simulation.MatchState.html">MatchState</a></span> <span class="id"><a href="bpf.simulation.InterpreterRel.html">InterpreterRel</a></span>.<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Step_opcode_alu64">Step_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">S</span>: <span class="id"><a href="bpf.simulation.MatchState.html#special_blocks">special_blocks</a></span>}.<br/>
+<br/>
+<div class="doc">The program contains our function of interest <span class="bracket"><span class="id">fn</span></span> </div>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="p">p</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#program">Clight.program</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#prog">prog</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="args">args</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span> := [(<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>:<span class="kwd">Type</span>); (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>:<span class="kwd">Type</span>); (<span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span>:<span class="kwd">Type</span>); (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>:<span class="kwd">Type</span>)].<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="res">res</a></span> : <span class="kwd">Type</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="f">f</a></span> : <span class="id"><a href="bpf.clightlogic.Clightlogic.html#arrow_type">arrow_type</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#args">args</a></span> (<span class="id"><a href="bpf.comm.Monad.html#M">M</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#res">res</a></span>) := <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html#step_opcode_alu64">step_opcode_alu64</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="fn">fn</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#function">Clight.function</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#f_step_opcode_alu64">f_step_opcode_alu64</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="match_arg_list">match_arg_list</a></span> : <span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.t">DList.t</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id">_</span>) ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span>:<span class="kwd">Type</span>) ::<span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#args">args</a></span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#StateLess">StateLess</a></span> <span class="id">_</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#reg_correct">reg_correct</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#opcode_correct">opcode_correct</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.DNil">DList.DNil</a></span> <span class="id">_</span>)))))).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="match_res">match_res</a></span> : <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#res">res</a></span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span> := <span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#StateLess">StateLess</a></span> <span class="id">_</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Cop_add">Cop_add</a></span> : <span class="kwd">forall</span> <span class="id">vl1</span> <span class="id">vl2</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#globalenv">globalenv</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#p">p</a></span>) <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oadd">Cop.Oadd</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl1</span>) <span class="id"><a href="https://compcert.org/doc/html/compcert.exportclight.Clightdefs.html#tulong">Clightdefs.tulong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl2</span>) <span class="id"><a href="https://compcert.org/doc/html/compcert.exportclight.Clightdefs.html#tulong">Clightdefs.tulong</a></span> <span class="id">m</span> =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.add">Int64.add</a></span> <span class="id">vl1</span> <span class="id">vl2</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Instance</span> <span class="id"><a name="correct_function_step_opcode_alu64">correct_function_step_opcode_alu64</a></span> : <span class="kwd">forall</span> <span class="id">a</span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_function">correct_function</a></span> <span class="id">_</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#p">p</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#args">args</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#res">res</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#f">f</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#fn">fn</a></span> <span class="id"><a href="bpf.simulation.correct_upd_flag.html#modifies">modifies</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#match_state">match_state</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_arg_list">match_arg_list</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span> <span class="id">a</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_function_from_body</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#args">args</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_body</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#f">f</a></span>, <span class="id"><a href="bpf.monadicmodel.rBPFInterpreter.html#step_opcode_alu64">step_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+<div class="doc">goal: correct_body _ _ (bindM (get_opcode_alu64 _) ... </div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_op">_op</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span>::<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>. <span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+<br/>
+<div class="doc">goal: correct_body _ _
+              match x with
+              | op_BPF_ADD64 =&gt; bindM (upd_reg ... </div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">INV</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span> <span class="id">eqn</span>: <span class="id">Halu</span>. <span class="docright">(* case discussion on each alu64_instruction  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_ADD64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 0).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.add">Int64.add</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_SUB64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 16).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.sub">Int64.sub</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_MUL64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 32).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.mul">Int64.mul</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_DIV64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 48).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#val64_divlu">rBPFValues.val64_divlu</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.divlu">Val.divlu</a></span>. <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#compl_ne">rBPFValues.compl_ne</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(if&nbsp;rBPFValues.compl_ne&nbsp;c0&nbsp;val64_zero&nbsp;then&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">Bool.negb_true_iff</a></span> <span class="kwd">in</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.divu">Int64.divu</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_div">Cop.sem_div</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.neg">Int.neg</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 9)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">c3_0</span> &amp; <span class="id">c3_vl</span> &amp; <span class="id">c3_1</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">clear</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_OR64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 64).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.or">Int64.or</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_AND64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 80).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_LSH64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 96).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">Hv_eq</span> &amp; (<span class="id">vl</span> &amp; <span class="id">Hvl_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl</span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#compu_lt_32">rBPFValues.compu_lt_32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(if&nbsp;rBPFValues.compu_lt_32&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src32">_src32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#reg_correct">reg_correct</a></span> <span class="kwd">in</span> <span class="id">c4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span> <span class="kwd">in</span> <span class="id">c5</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl</span> &amp; <span class="id">Hvl_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_reg64_to_reg32.html#match_res">correct_reg64_to_reg32.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vi</span> &amp; <span class="id">Hvi_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vptr">Vptr</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#st_blk">st_blk</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) :: (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id">id_of_reg</span> <span class="id">c1</span>))) :: (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.shll">Val.shll</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl</span>) (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">vi</span>)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>, <span class="id">p1</span>, <span class="id">p2</span>, <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_shl">Cop.sem_shl</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_shift">Cop.sem_shift</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">Int64.iwordsize</span>' <span class="kwd">with</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 64).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Int64.shl</span>', <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shl">Int64.shl</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Hint_unsigned_int64">Hint_unsigned_int64</a></span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span>. <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(upd_flag&nbsp;Flag.BPF_ILLEGAL_SHIFT)&nbsp;fn&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vptr">Vptr</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#st_blk">st_blk</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.neg">Int.neg</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 10)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_unary_operation">Cop.sem_unary_operation</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#flag_correct">flag_correct</a></span>, <span class="id">int_of_flag</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src32">_src32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_reg64_to_reg32.html#match_res">correct_reg64_to_reg32.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">Hv_eq</span> &amp; <span class="id">vi</span> &amp; <span class="id">Hvi_eq</span>); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>, <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_RSH64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 112).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">Hv_eq</span> &amp; (<span class="id">vl</span> &amp; <span class="id">Hvl_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl</span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(if&nbsp;rBPFValues.compu_lt_32&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#compu_lt_32">rBPFValues.compu_lt_32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src32">_src32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#reg_correct">reg_correct</a></span> <span class="kwd">in</span> <span class="id">c4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span> <span class="kwd">in</span> <span class="id">c5</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl</span> &amp; <span class="id">Hvl_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_reg64_to_reg32.html#match_res">correct_reg64_to_reg32.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vi</span> &amp; <span class="id">Hvi_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vptr">Vptr</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#st_blk">st_blk</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) :: (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id">id_of_reg</span> <span class="id">c1</span>))) :: (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.shrlu">Val.shrlu</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl</span>) (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">vi</span>)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>, <span class="id">p1</span>, <span class="id">p2</span>, <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_shr">Cop.sem_shr</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_shift">Cop.sem_shift</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">Int64.iwordsize</span>' <span class="kwd">with</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 64).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Int64.shru</span>', <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shru">Int64.shru</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Hint_unsigned_int64">Hint_unsigned_int64</a></span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">split_and</span>;<span class="tactic">auto</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>;<span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(upd_flag&nbsp;Flag.BPF_ILLEGAL_SHIFT)&nbsp;fn&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vptr">Vptr</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#st_blk">st_blk</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.neg">Int.neg</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 10)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_unary_operation">Cop.sem_unary_operation</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#flag_correct">flag_correct</a></span>, <span class="id">int_of_flag</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>. <span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src32">_src32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_reg64_to_reg32.html#match_res">correct_reg64_to_reg32.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">Hv_eq</span> &amp; <span class="id">vi</span> &amp; <span class="id">Hvi_eq</span>); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>, <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_NEG64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 128).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> :: <span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.neg">Int64.neg</a></span> <span class="id">vl1</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_unary_operation">Cop.sem_unary_operation</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.neg">Int.neg</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 1)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here: it should be -1  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_op">_op</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#opcode_correct">opcode_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">Hv_eq</span> &amp; <span class="id">Hrange</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">Hv_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">c2</span> =? 135)%<span class="id">nat</span> <span class="id">eqn</span>: <span class="id">Hc2_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.eqb_eq">Nat.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Hc2_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.eqb_neq">Nat.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Hc2_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hneq</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">c2</span>)) (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 135) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_false">Int.eq_false</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.clightlogic.CommonLemmaNat.html#nat8_neq_k">nat8_neq_k</a></span>; <span class="tactic">auto</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hneq</span>; <span class="tactic">clear</span> <span class="id">Hneq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> 135 240))) <span class="kwd">with</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 128) <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_MOD64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 144).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#compl_ne">rBPFValues.compl_ne</a></span>, <span class="id"><a href="bpf.comm.Regs.html#val64_zero">val64_zero</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(if&nbsp;rBPFValues.compl_ne&nbsp;c0&nbsp;val64_zero&nbsp;then&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#val64_modlu">rBPFValues.val64_modlu</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modlu">Val.modlu</a></span>. <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">Bool.negb_true_iff</a></span> <span class="kwd">in</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.modu">Int64.modu</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_mod">Cop.sem_mod</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.neg">Int.neg</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 9)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">c3_0</span> &amp; <span class="id">c3_vl</span> &amp; <span class="id">c3_1</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_XOR64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 160).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.xor">Int64.xor</a></span> <span class="id">vl1</span> <span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p2</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_MOV64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 176).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;because&nbsp;upd_reg&nbsp;return&nbsp;unit,&nbsp;here&nbsp;we&nbsp;use&nbsp;*_unit?&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c5</span>, <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl1</span> &amp; <span class="id">Hvl1_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vl2</span> &amp; <span class="id">Hvl2_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id">v</span> ::<span class="id">v0</span> :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id">vl2</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p1</span>. <span class="tactic">rewrite</span> <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> 183 240))) <span class="kwd">with</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 176) <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> 191 240))) <span class="kwd">with</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 176) <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_ARSH64  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch">correct_statement_switch</a></span> <span class="kwd">with</span> (<span class="id">n</span>:= 192).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src64">_src64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">Hv_eq</span> &amp; (<span class="id">vl</span> &amp; <span class="id">Hvl_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl</span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#compu_lt_32">rBPFValues.compu_lt_32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(if&nbsp;rBPFValues.compu_lt_32&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst">_dst</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_dst64">_dst64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src32">_src32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>, <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#reg_correct">reg_correct</a></span> <span class="kwd">in</span> <span class="id">c4</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span> <span class="kwd">in</span> <span class="id">c5</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c5</span> <span class="kwd">as</span> (<span class="id">Hv1_eq</span> &amp; (<span class="id">vl</span> &amp; <span class="id">Hvl_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_reg64_to_reg32.html#match_res">correct_reg64_to_reg32.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c6</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c6</span> <span class="kwd">as</span> (<span class="id">Hv2_eq</span> &amp; (<span class="id">vi</span> &amp; <span class="id">Hvi_eq</span>)); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vptr">Vptr</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#st_blk">st_blk</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) :: (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id">id_of_reg</span> <span class="id">c1</span>))) :: (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.shrl">Val.shrl</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl</span>) (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">vi</span>)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>, <span class="id">p1</span>, <span class="id">p2</span>, <span class="id">p3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_shr">Cop.sem_shr</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_shift">Cop.sem_shift</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">Int64.iwordsize</span>' <span class="kwd">with</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 64).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hcnd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Int64.shr</span>', <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shr">Int64.shr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Hint_unsigned_int64">Hint_unsigned_int64</a></span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#reg_correct">reg_correct</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val64_correct">val64_correct</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eexists</span> ; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(upd_flag&nbsp;Flag.BPF_ILLEGAL_SHIFT)&nbsp;fn&nbsp;...&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vptr">Vptr</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#st_blk">st_blk</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) :: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.neg">Int.neg</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 10)) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_unary_operation">Cop.sem_unary_operation</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#flag_correct">flag_correct</a></span>, <span class="id">int_of_flag</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_src32">_src32</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_reg64_to_reg32.html#match_res">correct_reg64_to_reg32.match_res</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#val32_correct">val32_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span> <span class="kwd">as</span> (<span class="id">Hv_eq</span> &amp; <span class="id">vi</span> &amp; <span class="id">Hvi_eq</span>); <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cmp">Cop.sem_cmp</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binarith">Cop.sem_binarith</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>, <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;opcode_alu64_correct&nbsp;should&nbsp;be&nbsp;a&nbsp;mapping&nbsp;between&nbsp;opcodes&nbsp;and&nbsp;int&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">compute</span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="docright">(* op_BPF_ALU64_ILLEGAL_INS  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_switch_ex">correct_statement_switch_ex</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hillegal_ins</span>: <span class="tactic">exists</span> <span class="id">n</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span> (<span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64_ILLEGAL_INS">op_BPF_ALU64_ILLEGAL_INS</a></span>) <span class="id">n</span> <span class="id">st0</span> <span class="id">m0</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">n</span> = <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">i</span> 240))) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_illegal_alu64_ins">is_illegal_alu64_ins</a></span> <span class="id">i</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#globalenv">Smallstep.globalenv</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#semantics2">semantics2</a></span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#p">p</a></span>)) <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#empty_env">empty_env</a></span> <span class="id">le0</span> <span class="id">m0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Etempvar">Etempvar</a></span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.exportclight.Clightdefs.html#tuchar">Clightdefs.tuchar</a></span>) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">i</span> 240))))).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_opcode_alu64">_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">v</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">c3</span>':=<span class="id">c3</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#opcode_alu64_correct">opcode_alu64_correct</a></span> <span class="kwd">in</span> <span class="id">c3</span>'.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c3</span>' <span class="kwd">as</span> (<span class="id">i</span> &amp; <span class="id">V</span> &amp; <span class="id">ILL</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span> ; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span> ; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span> ; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hillegal_ins</span> <span class="kwd">as</span> (<span class="id">n</span> &amp; <span class="id">i</span> &amp; <span class="id">Hprop</span> &amp; <span class="id">Hn_eq</span> &amp; <span class="id">Hill</span> &amp; <span class="id">EX</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">i</span> 240)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modulus">Int.modulus</a></span> <span class="kwd">with</span> 4294967296.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hand_le</span>: (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> 240 <span class="id">i</span> &lt;= 240)%<span class="id">nat</span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#land_bound">LemmaNat.land_bound</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#select_switch">select_switch</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#select_switch_case">select_switch_case</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_illegal_alu64_ins">is_illegal_alu64_ins</a></span> <span class="kwd">in</span> <span class="id">Hill</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id">context</span>[<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zeq">Coqlib.zeq</a></span> ?<span class="id">x</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">i</span> 240))] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zeq">Coqlib.zeq</a></span> <span class="id">x</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">i</span> 240))) ; <span class="tactic">try</span> <span class="id">lia</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;default&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;s1&nbsp;-&gt;&nbsp;(Ssequence&nbsp;s1&nbsp;s2)&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_drop">correct_statement_seq_body_drop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>,<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vptr">Vptr</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#st_blk">st_blk</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) ::<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.neg">Int.neg</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> 1))) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>). <span class="docright">(* star here  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#map_opt">map_opt</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#exec_expr">exec_expr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">p0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_unary_operation">Cop.sem_unary_operation</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html#stateless">stateless</a></span>, <span class="id"><a href="bpf.clightlogic.CorrectRel.html#flag_correct">flag_correct</a></span>, <span class="id">int_of_flag</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(**r&nbsp;goal:&nbsp;correct_body&nbsp;p&nbsp;unit&nbsp;(returnM&nbsp;tt)&nbsp;fn&nbsp;(Sreturn&nbsp;None)&nbsp;modifies&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_forward</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#match_res">match_res</a></span>, <span class="id"><a href="bpf.simulation.correct_get_opcode_alu64.html#match_res">correct_get_opcode_alu64.match_res</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.simulation.correct_step_opcode_alu64.html#Step_opcode_alu64">Step_opcode_alu64</a></span>.<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">correct_function_step_opcode_alu64</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

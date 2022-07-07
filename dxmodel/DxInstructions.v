@@ -409,7 +409,7 @@ Definition step_opcode_mem_ld_reg (addr: valu32_t) (dst: reg) (op: nat8): M unit
   | op_BPF_LDX_REG_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_st_imm (imm: vals32_t) (addr: valu32_t) (dst: reg) (op: nat8): M unit :=
+Definition step_opcode_mem_st_imm (imm: vals32_t) (addr: valu32_t) (op: nat8): M unit :=
   do opcode_st <-- get_opcode_mem_st_imm op;
   match opcode_st with
   | op_BPF_STW       =>
@@ -443,7 +443,7 @@ Definition step_opcode_mem_st_imm (imm: vals32_t) (addr: valu32_t) (dst: reg) (o
   | op_BPF_ST_IMM_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 
-Definition step_opcode_mem_st_reg (src64: val64_t) (addr: valu32_t) (dst: reg) (op: nat8): M unit :=
+Definition step_opcode_mem_st_reg (src64: val64_t) (addr: valu32_t) (op: nat8): M unit :=
   do opcode_st <-- get_opcode_mem_st_reg op;
   match opcode_st with
   | op_BPF_STXW      =>
@@ -516,14 +516,14 @@ Definition step: M unit :=
     do ofs    <-- get_offset ins;
     do imm    <-- get_immediate ins;
     do addr   <-- get_addr_ofs dst64 ofs;
-      step_opcode_mem_st_imm (sint32_to_vint imm) addr dst op       (**r 0xX2/0xXa *)
+      step_opcode_mem_st_imm (sint32_to_vint imm) addr op       (**r 0xX2/0xXa *)
   | op_BPF_Mem_st_reg  =>
     do dst64  <-- eval_reg dst;
     do src    <-- get_src ins;
     do src64  <-- eval_reg src;
     do ofs    <-- get_offset ins;
     do addr   <-- get_addr_ofs dst64 ofs;
-      step_opcode_mem_st_reg src64 addr dst op       (**r 0xX3/0xXb *)
+      step_opcode_mem_st_reg src64 addr op       (**r 0xX3/0xXb *)
   | op_BPF_ILLEGAL_INS => upd_flag BPF_ILLEGAL_INSTRUCTION
   end.
 

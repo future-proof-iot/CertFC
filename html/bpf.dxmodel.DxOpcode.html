@@ -1,0 +1,301 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxOpcode</title>
+<meta name="description" content="Documentation of Coq module DxOpcode" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxOpcode</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.InfComp.html">InfComp</a></span> <span class="id"><a href="bpf.dxcomm.GenMatchable.html">GenMatchable</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span> <span class="id">DxNat</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.monadicmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html">Opcode</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu64CompilableType">opcode_alu64CompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu64">opcode_alu64</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu64CompilableTypeMatchableType">opcode_alu64CompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu64CompilableType">opcode_alu64CompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu64_eqb">opcode_alu64_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(     (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD64">op_BPF_ADD64</a></span>, 0<span class="id">x00</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB64">op_BPF_SUB64</a></span>, 0<span class="id">x10</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL64">op_BPF_MUL64</a></span>, 0<span class="id">x20</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV64">op_BPF_DIV64</a></span>, 0<span class="id">x30</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR64">op_BPF_OR64</a></span>,  0<span class="id">x40</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND64">op_BPF_AND64</a></span>, 0<span class="id">x50</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH64">op_BPF_LSH64</a></span>, 0<span class="id">x60</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH64">op_BPF_RSH64</a></span>, 0<span class="id">x70</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG64">op_BPF_NEG64</a></span>, 0<span class="id">x80</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD64">op_BPF_MOD64</a></span>, 0<span class="id">x90</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR64">op_BPF_XOR64</a></span>, 0<span class="id">xa0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV64">op_BPF_MOV64</a></span>, 0<span class="id">xb0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH64">op_BPF_ARSH64</a></span>,0<span class="id">xc0</span>):: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64_ILLEGAL_INS">op_BPF_ALU64_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu64_rect">opcode_alu64_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu32CompilableType">opcode_alu32CompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu32">opcode_alu32</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu32CompilableTypeMatchableType">opcode_alu32CompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu32CompilableType">opcode_alu32CompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu32_eqb">opcode_alu32_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(     (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD32">op_BPF_ADD32</a></span>, 0<span class="id">x00</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB32">op_BPF_SUB32</a></span>, 0<span class="id">x10</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL32">op_BPF_MUL32</a></span>, 0<span class="id">x20</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV32">op_BPF_DIV32</a></span>, 0<span class="id">x30</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR32">op_BPF_OR32</a></span>,  0<span class="id">x40</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND32">op_BPF_AND32</a></span>, 0<span class="id">x50</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH32">op_BPF_LSH32</a></span>, 0<span class="id">x60</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH32">op_BPF_RSH32</a></span>, 0<span class="id">x70</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG32">op_BPF_NEG32</a></span>, 0<span class="id">x80</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD32">op_BPF_MOD32</a></span>, 0<span class="id">x90</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR32">op_BPF_XOR32</a></span>, 0<span class="id">xa0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV32">op_BPF_MOV32</a></span>, 0<span class="id">xb0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH32">op_BPF_ARSH32</a></span>,0<span class="id">xc0</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32_ILLEGAL_INS">op_BPF_ALU32_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu32_rect">opcode_alu32_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_branchCompilableType">opcode_branchCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_branch">opcode_branch</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_branchCompilableTypeMatchableType">opcode_branchCompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_branchCompilableType">opcode_branchCompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_branch_eqb">opcode_branch_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(     (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JA">op_BPF_JA</a></span>,   0<span class="id">x00</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JEQ">op_BPF_JEQ</a></span>,  0<span class="id">x10</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGT">op_BPF_JGT</a></span>,  0<span class="id">x20</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGE">op_BPF_JGE</a></span>,  0<span class="id">x30</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLT">op_BPF_JLT</a></span>,  0<span class="id">xa0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLE">op_BPF_JLE</a></span>,  0<span class="id">xb0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSET">op_BPF_JSET</a></span>, 0<span class="id">x40</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JNE">op_BPF_JNE</a></span>,  0<span class="id">x50</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGT">op_BPF_JSGT</a></span>, 0<span class="id">x60</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGE">op_BPF_JSGE</a></span>, 0<span class="id">x70</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLT">op_BPF_JSLT</a></span>, 0<span class="id">xc0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLE">op_BPF_JSLE</a></span>, 0<span class="id">xd0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_CALL">op_BPF_CALL</a></span>, 0<span class="id">x80</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RET">op_BPF_RET</a></span>,  0<span class="id">x90</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JMP_ILLEGAL_INS">op_BPF_JMP_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_branch_rect">opcode_branch_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_ld_immCompilableType">opcode_mem_ld_immCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_imm">opcode_mem_ld_imm</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_ld_immCompilableTypeMatchableType">opcode_mem_ld_immCompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_immCompilableType">opcode_mem_ld_immCompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_imm_eqb">opcode_mem_ld_imm_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(      (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_low">op_BPF_LDDW_low</a></span>,  0<span class="id">x18</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_high">op_BPF_LDDW_high</a></span>, 0<span class="id">x10</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_IMM_ILLEGAL_INS">op_BPF_LDX_IMM_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_imm_rect">opcode_mem_ld_imm_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_ld_regCompilableType">opcode_mem_ld_regCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_reg">opcode_mem_ld_reg</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_ld_regCompilableTypeMatchableType">opcode_mem_ld_regCompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_regCompilableType">opcode_mem_ld_regCompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_reg_eqb">opcode_mem_ld_reg_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(     (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXW">op_BPF_LDXW</a></span>, 0<span class="id">x61</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXH">op_BPF_LDXH</a></span>, 0<span class="id">x69</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXB">op_BPF_LDXB</a></span>, 0<span class="id">x71</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXDW">op_BPF_LDXDW</a></span>,0<span class="id">x79</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_REG_ILLEGAL_INS">op_BPF_LDX_REG_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_reg_rect">opcode_mem_ld_reg_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_st_immCompilableType">opcode_mem_st_immCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_imm">opcode_mem_st_imm</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_st_immCompilableTypeMatchableType">opcode_mem_st_immCompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_immCompilableType">opcode_mem_st_immCompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_imm_eqb">opcode_mem_st_imm_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(     (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STW">op_BPF_STW</a></span>, 0<span class="id">x62</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STH">op_BPF_STH</a></span>, 0<span class="id">x6a</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STB">op_BPF_STB</a></span>, 0<span class="id">x72</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STDW">op_BPF_STDW</a></span>, 0<span class="id">x7a</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ST_ILLEGAL_INS">op_BPF_ST_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_imm_rect">opcode_mem_st_imm_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_st_regCompilableType">opcode_mem_st_regCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_reg">opcode_mem_st_reg</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_st_regCompilableTypeMatchableType">opcode_mem_st_regCompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_regCompilableType">opcode_mem_st_regCompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_reg_eqb">opcode_mem_st_reg_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(     (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXW">op_BPF_STXW</a></span>, 0<span class="id">x63</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXH">op_BPF_STXH</a></span>, 0<span class="id">x6b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXB">op_BPF_STXB</a></span>, 0<span class="id">x73</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXDW">op_BPF_STXDW</a></span>, 0<span class="id">x7b</span>) :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STX_ILLEGAL_INS">op_BPF_STX_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_reg_rect">opcode_mem_st_reg_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcodeCompilableType">opcodeCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode">opcode</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcodeCompilableTypeMatchableType">opcodeCompilableTypeMatchableType</a></span> : <span class="id">MatchableType</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span><br/>
+&nbsp;(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcodeCompilableType">opcodeCompilableType</a></span>  <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_eqb">opcode_eqb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(     (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64">op_BPF_ALU64</a></span>,      0<span class="id">x07</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32">op_BPF_ALU32</a></span>,      0<span class="id">x04</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Branch">op_BPF_Branch</a></span>,     0<span class="id">x05</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_imm">op_BPF_Mem_ld_imm</a></span>, 0<span class="id">x00</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_reg">op_BPF_Mem_ld_reg</a></span>, 0<span class="id">x01</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_imm">op_BPF_Mem_st_imm</a></span>, 0<span class="id">x02</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:: (<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_reg">op_BPF_Mem_st_reg</a></span>, 0<span class="id">x03</span>):: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ILLEGAL_INS">op_BPF_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_rect">opcode_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">A</span>))).<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byteToopcodeSymbolType">byteToopcodeSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcodeCompilableType">opcodeCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="int64ToopcodeSymbolType">int64ToopcodeSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64CompilableType">int64CompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcodeCompilableType">opcodeCompilableType</a></span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="CINT">CINT</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id">nat8CompilableType</span>).<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP">COP</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode">opcode</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcodeCompilableType">opcodeCompilableType</a></span>).<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="CINT64">CINT64</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64_t">int64_t</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64CompilableType">int64CompilableType</a></span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode">Const_byte_to_opcode</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode">byte_to_opcode</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0x07</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_alu64SymbolType">byte_to_opcode_alu64SymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu64CompilableType">opcode_alu64CompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP_alu64">COP_alu64</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu64">opcode_alu64</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu64CompilableType">opcode_alu64CompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode_alu64">Const_byte_to_opcode_alu64</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode_alu64">byte_to_opcode_alu64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0xf0</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_alu32SymbolType">byte_to_opcode_alu32SymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu32CompilableType">opcode_alu32CompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP_alu32">COP_alu32</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu32">opcode_alu32</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu32CompilableType">opcode_alu32CompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode_alu32">Const_byte_to_opcode_alu32</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode_alu32">byte_to_opcode_alu32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0xf0</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_branchSymbolType">byte_to_opcode_branchSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_branchCompilableType">opcode_branchCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP_opcode_branch">COP_opcode_branch</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_branch">opcode_branch</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_branchCompilableType">opcode_branchCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode_branch">Const_byte_to_opcode_branch</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode_branch">byte_to_opcode_branch</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0xf0</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_ld_immSymbolType">byte_to_opcode_mem_ld_immSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_immCompilableType">opcode_mem_ld_immCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP_opcode_mem_ld_imm">COP_opcode_mem_ld_imm</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_imm">opcode_mem_ld_imm</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_immCompilableType">opcode_mem_ld_immCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode_mem_ld_imm">Const_byte_to_opcode_mem_ld_imm</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode_mem_ld_imm">byte_to_opcode_mem_ld_imm</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0xff</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_ld_regSymbolType">byte_to_opcode_mem_ld_regSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_regCompilableType">opcode_mem_ld_regCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP_opcode_mem_ld_reg">COP_opcode_mem_ld_reg</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_reg">opcode_mem_ld_reg</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_regCompilableType">opcode_mem_ld_regCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode_mem_ld_reg">Const_byte_to_opcode_mem_ld_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode_mem_ld_reg">byte_to_opcode_mem_ld_reg</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0xff</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_st_immSymbolType">byte_to_opcode_mem_st_immSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_immCompilableType">opcode_mem_st_immCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP_opcode_mem_st_imm">COP_opcode_mem_st_imm</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_imm">opcode_mem_st_imm</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_immCompilableType">opcode_mem_st_immCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode_mem_st_imm">Const_byte_to_opcode_mem_st_imm</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode_mem_st_imm">byte_to_opcode_mem_st_imm</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0xff</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_st_regSymbolType">byte_to_opcode_mem_st_regSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_regCompilableType">opcode_mem_st_regCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="COP_opcode_mem_st_reg">COP_opcode_mem_st_reg</a></span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_reg">opcode_mem_st_reg</a></span> := <span class="id"><a href="bpf.dxcomm.InfComp.html#mkCType">mkCType</a></span> <span class="id">_</span> (<span class="id">cType</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_regCompilableType">opcode_mem_st_regCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_byte_to_opcode_mem_st_reg">Const_byte_to_opcode_mem_st_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">ltac</span>: (<span class="id">mkprimitive</span> <span class="id"><a href="bpf.monadicmodel.Opcode.html#byte_to_opcode_mem_st_reg">byte_to_opcode_mem_st_reg</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id">C_NAT8_0xff</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">nat_scope</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Exports">Exports</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcode_alu64CompilableTypeMatchableType">opcode_alu64CompilableTypeMatchableType</a></span>      := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu64CompilableTypeMatchableType">opcode_alu64CompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcode_alu32CompilableTypeMatchableType">opcode_alu32CompilableTypeMatchableType</a></span>      := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_alu32CompilableTypeMatchableType">opcode_alu32CompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcode_branchCompilableTypeMatchableType">opcode_branchCompilableTypeMatchableType</a></span>     := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_branchCompilableTypeMatchableType">opcode_branchCompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcode_mem_ld_immCompilableTypeMatchableType">opcode_mem_ld_immCompilableTypeMatchableType</a></span> := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_immCompilableTypeMatchableType">opcode_mem_ld_immCompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcode_mem_ld_regCompilableTypeMatchableType">opcode_mem_ld_regCompilableTypeMatchableType</a></span> := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_ld_regCompilableTypeMatchableType">opcode_mem_ld_regCompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcode_mem_st_immCompilableTypeMatchableType">opcode_mem_st_immCompilableTypeMatchableType</a></span> := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_immCompilableTypeMatchableType">opcode_mem_st_immCompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcode_mem_st_regCompilableTypeMatchableType">opcode_mem_st_regCompilableTypeMatchableType</a></span> := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcode_mem_st_regCompilableTypeMatchableType">opcode_mem_st_regCompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.opcodeCompilableTypeMatchableType">opcodeCompilableTypeMatchableType</a></span>            := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#opcodeCompilableTypeMatchableType">opcodeCompilableTypeMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode_alu64">Const_byte_to_opcode_alu64</a></span>                   := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode_alu64">Const_byte_to_opcode_alu64</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode_alu32">Const_byte_to_opcode_alu32</a></span>                   := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode_alu32">Const_byte_to_opcode_alu32</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode_branch">Const_byte_to_opcode_branch</a></span>                  := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode_branch">Const_byte_to_opcode_branch</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode_mem_ld_imm">Const_byte_to_opcode_mem_ld_imm</a></span>              := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode_mem_ld_imm">Const_byte_to_opcode_mem_ld_imm</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode_mem_ld_reg">Const_byte_to_opcode_mem_ld_reg</a></span>              := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode_mem_ld_reg">Const_byte_to_opcode_mem_ld_reg</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode_mem_st_imm">Const_byte_to_opcode_mem_st_imm</a></span>              := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode_mem_st_imm">Const_byte_to_opcode_mem_st_imm</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode_mem_st_reg">Const_byte_to_opcode_mem_st_reg</a></span>              := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode_mem_st_reg">Const_byte_to_opcode_mem_st_reg</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_byte_to_opcode">Const_byte_to_opcode</a></span>                         := <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Const_byte_to_opcode">Const_byte_to_opcode</a></span>. <br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.dxmodel.DxOpcode.html#Exports">Exports</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

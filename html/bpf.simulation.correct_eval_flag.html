@@ -1,0 +1,95 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module correct_eval_flag</title>
+<meta name="description" content="Documentation of Coq module correct_eval_flag" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module correct_eval_flag</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Flag.html">Flag</a></span> <span class="id"><a href="bpf.comm.State.html">State</a></span> <span class="id"><a href="bpf.comm.Monad.html">Monad</a></span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html">rBPFMonadOp</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html">Clight</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clightlogic</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html">Clightlogic</a></span> <span class="id"><a href="bpf.clightlogic.CorrectRel.html">CorrectRel</a></span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html">CommonLemma</a></span> <span class="id">CommonLib</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.clight</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clight.interpreter.html">interpreter</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.simulation</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.simulation.MatchState.html">MatchState</a></span> <span class="id"><a href="bpf.simulation.InterpreterRel.html">InterpreterRel</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Eval_flag">Eval_flag</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">S</span>:<span class="id"><a href="bpf.simulation.MatchState.html#special_blocks">special_blocks</a></span>}.<br/>
+<br/>
+<div class="doc">The program contains our function of interest <span class="bracket"><span class="id">fn</span></span> </div>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="p">p</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#program">Clight.program</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#prog">prog</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="args">args</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span> := [].<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="res">res</a></span> : <span class="kwd">Type</span> := (<span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span>:<span class="kwd">Type</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="f">f</a></span> : <span class="id"><a href="bpf.clightlogic.Clightlogic.html#arrow_type">arrow_type</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#args">args</a></span> (<span class="id"><a href="bpf.comm.Monad.html#M">M</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#res">res</a></span>) := <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_flag">rBPFMonadOp.eval_flag</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="fn">fn</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#function">Clight.function</a></span> := <span class="id"><a href="bpf.clight.interpreter.html#f_eval_flag">f_eval_flag</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="match_arg_list">match_arg_list</a></span> : <span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.t">DList.t</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id">_</span>) ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span>:<span class="kwd">Type</span>) ::<span class="id"><a href="bpf.simulation.correct_eval_flag.html#args">args</a></span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.simulation.MatchState.html#dcons">dcons</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#StateLess">StateLess</a></span> <span class="id">_</span> (<span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span>)) (<span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.DNil">DList.DNil</a></span> <span class="id">_</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="match_res">match_res</a></span> : <span class="id"><a href="bpf.simulation.correct_eval_flag.html#res">res</a></span> -&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#Inv">Inv</a></span> <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span> := <span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="bpf.clightlogic.Clightlogic.html#StateLess">StateLess</a></span> <span class="id">_</span> (<span class="id"><a href="bpf.clightlogic.CorrectRel.html#flag_correct">flag_correct</a></span> <span class="id">x</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Instance</span> <span class="id"><a name="correct_function_eval_flag">correct_function_eval_flag</a></span> : <span class="kwd">forall</span> <span class="id">a</span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_function">correct_function</a></span> <span class="id">_</span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#p">p</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#args">args</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#res">res</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#f">f</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#fn">fn</a></span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#ModNothing">ModNothing</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> <span class="id"><a href="bpf.simulation.MatchState.html#match_state">match_state</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#match_arg_list">match_arg_list</a></span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#match_res">match_res</a></span> <span class="id">a</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_function_from_body</span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#args">args</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">correct_body</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">INV</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_invariant</span> <span class="id"><a href="bpf.clight.interpreter.html#_st">_st</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span>, <span class="id"><a href="bpf.simulation.InterpreterRel.html#is_state_handle">is_state_handle</a></span> <span class="kwd">in</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+<br/>
+<div class="doc">we need to get the value of pc in the memory </div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">MS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.loadv">Mem.loadv</a></span> <span class="kwd">in</span> <span class="id">mflags</span>.<br/>
+<div class="doc">pc \in <span class="bracket"> (<span class="id">state_block</span>,0), (<span class="id">state_block</span>,8) ) *)
+    (**<span class="id">according</span> <span class="id">to</span> <span class="id">the</span> <span class="id">type</span>:
+         <span class="id">static</span> <span class="id">int</span> <span class="id">eval_flag</span>(<span class="kwd">struct</span> <span class="id">bpf_state</span>* <span class="id">st</span>)
+       1. <span class="kwd">return</span> <span class="id">value</span> <span class="id">should</span> <span class="id">be</span> <span class="id">Vint</span>
+       2. <span class="id">the</span> <span class="id">memory</span> <span class="kwd">is</span> <span class="id">same</span>
+      *)
+    <span class="tactic">exists</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id">int_of_flag</span> (<span class="id"><a href="bpf.comm.State.html#flag">flag</a></span> <span class="id">st</span>))), <span class="id">m</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#E0">Events.E0</a></span>.
+
+    <span class="id">split_and</span>; <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step2">step2</a></span>.
+    - (* <span class="id">goal</span>: <span class="id">Smallstep.star</span>  <span class="id">_</span> <span class="id">_</span> (<span class="id">State</span> <span class="id">_</span> (<span class="id">Ssequence</span> ... *)
+      <span class="tactic">repeat</span> <span class="id">forward_star</span>.
+
+      <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#align">Coqlib.align</a></span>; <span class="tactic">simpl</span>.
+      <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.add_zero_l">Ptrofs.add_zero_l</a></span>.
+      <span class="tactic">rewrite</span> <span class="id">mflags</span>; <span class="tactic">reflexivity</span>.
+      <span class="tactic">econstructor</span>; <span class="tactic">eauto</span>.
+    - <span class="tactic">simpl</span>.
+      <span class="tactic">constructor</span>.
+    - <span class="tactic">constructor</span>.
+      <span class="tactic">reflexivity</span>.
+    - <span class="tactic">constructor</span> ;<span class="tactic">auto</span>.
+    - <span class="tactic">apply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#unmodifies_effect_refl">unmodifies_effect_refl</a></span>.
+  <span class="kwd">Qed</span>.
+
+<span class="kwd">End</span> <span class="id"><a href="bpf.simulation.correct_eval_flag.html#Eval_flag">Eval_flag</a></span>.
+
+<span class="id">Existing</span>  <span class="kwd">Instance</span> <span class="id">correct_function_eval_flag</span>.
+</span></div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

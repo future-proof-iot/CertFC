@@ -25,12 +25,31 @@ From Coq Require Import ZArith Lia.
 
 Open Scope Z_scope.
 
-Axiom call_inv: forall st st1 st2 b ofs res
+Axiom call_inv_0: forall st1 st2 b ofs res
+  (Hreg : register_inv st1)
+  (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
+    register_inv st2.
+
+Axiom call_inv_1: forall st1 st2 b ofs res
+  (Hmem : memory_inv st1)
+  (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
+    memory_inv st2.
+
+Axiom call_inv_2: forall st st1 st2 b ofs res
+  (Hst0 : state_include st st1)
+  (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
+    state_include st st2.
+
+Lemma call_inv: forall st st1 st2 b ofs res
   (Hreg : register_inv st1)
   (Hmem : memory_inv st1)
   (Hst0 : state_include st st1)
   (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
     register_inv st2 /\ memory_inv st2 /\ state_include st st2.
+Proof.
+  intros.
+  split; [eapply call_inv_0; eauto | split; [eapply call_inv_1; eauto | eapply call_inv_2; eauto]].
+Qed.
 
 Lemma step_preserving_inv:
   forall st st1 st2 t

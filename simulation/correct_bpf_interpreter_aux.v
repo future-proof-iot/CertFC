@@ -19,7 +19,7 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Flag Regs State Monad rBPFAST rBPFValues rBPFMonadOp.
+From bpf.comm Require Import Flag MemRegion Flag Regs State Monad rBPFAST rBPFValues rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values AST Clight Memory Memtype Integers.
@@ -130,7 +130,7 @@ Qed.
       split.
       reflexivity.
       intros.
-      unfold stateless, flag_correct, CommonLib.int_of_flag; simpl.
+      unfold stateless, flag_correct, int_of_flag; simpl.
       intuition congruence.
       intros.
 
@@ -389,7 +389,7 @@ Qed.
             unfold map_opt, exec_expr.
             rewrite p0; reflexivity.
             simpl;intros.
-            unfold stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+            unfold stateless, flag_correct, int_of_flag, Z_of_flag.
             intuition eauto.
             intros.
 
@@ -423,7 +423,7 @@ Qed.
       rewrite c0.
       unfold Cop.sem_binary_operation.
       unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
-      unfold flag_eq, CommonLib.int_of_flag.
+      unfold flag_eq, int_of_flag.
       unfold Val.of_bool, Vtrue, Vfalse.
       destruct x2 eqn: Heq_x2; simpl; try reflexivity.
     }
@@ -436,7 +436,7 @@ Qed.
     unfold map_opt, exec_expr.
     rewrite p0; reflexivity.
     simpl;intros.
-    unfold stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+    unfold stateless, flag_correct, int_of_flag, Z_of_flag.
     intuition eauto.
     intros.
 

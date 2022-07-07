@@ -17,7 +17,7 @@
 (**************************************************************************)
 
 From compcert Require Import Coqlib Integers AST Maps Values Memory Memtype Memdata.
-From bpf.comm Require Import MemRegion State.
+From bpf.comm Require Import MemRegion State rBPFAST.
 From bpf.model Require Import Semantics.
 From bpf.isolation Require Import AlignChunk.
 From Coq Require Import ZArith Lia List.
@@ -848,7 +848,7 @@ Lemma mem_inv_store_imm:
 Proof.
   intros.
   rewrite mem_inv_store_imm_well_chunk in Hstore; [| assumption].
-  unfold State.vlong_to_vint_or_vlong, Mem.storev in Hstore.
+  unfold rBPFAST.vlong_to_vint_or_vlong, Mem.storev in Hstore.
   assert (Hmem_inv' := Hmem_inv).
   unfold memory_inv in Hmem_inv'.
   destruct Hmem_inv' as (Hmem_inv_low & Hmem_inv_length & Hmem_inv_disjoint &_ ).

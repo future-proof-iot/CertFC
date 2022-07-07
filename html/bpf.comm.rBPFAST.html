@@ -1,0 +1,118 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module rBPFAST</title>
+<meta name="description" content="Documentation of Coq module rBPFAST" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module rBPFAST</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html">Memdata</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.lib</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="well_chunk_Z">well_chunk_Z</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>):<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> := <br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> =&gt; 1<br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> =&gt; 2<br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> =&gt; 4<br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt; 8<br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; 10<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="memory_chunk_to_valu32">memory_chunk_to_valu32</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> := <br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">chunk</span>)). <span class="docright">(* well_chunk implies align_chunk, so we didn't need align_chunk, but we must prove a lemma!  *)</span><br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="memory_chunk_to_valu32_upbound">memory_chunk_to_valu32_upbound</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>-(<span class="id"><a href="bpf.comm.rBPFAST.html#well_chunk_Z">well_chunk_Z</a></span> <span class="id">chunk</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="chunk_eqb">chunk_eqb</a></span> (<span class="id">c1</span> <span class="id">c2</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">c1</span>, <span class="id">c2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8signed">Mint8signed</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8signed">Mint8signed</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16signed">Mint16signed</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16signed">Mint16signed</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mfloat32">Mfloat32</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mfloat32">Mfloat32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mfloat64">Mfloat64</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mfloat64">Mfloat64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Many32">Many32</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Many32">Many32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Many64">Many64</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Many64">Many64</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="chunk_eqb_true">chunk_eqb_true</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.comm.rBPFAST.html#chunk_eqb">chunk_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="chunk_eqb_false">chunk_eqb_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt;&gt; <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.comm.rBPFAST.html#chunk_eqb">chunk_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="is_well_chunkb">is_well_chunkb</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="is_vint_or_vlong_chunk">is_vint_or_vlong_chunk</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span>, <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">_</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">_</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">_</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">_</span>  =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="_to_vlong">_to_vlong</a></span> (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span>) <span class="docright">(* Mint64  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span>  <span class="id">n</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">n</span>))) <span class="docright">(* Mint8unsigned, Mint16unsigned, Mint32  *)</span> <br/>
+&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="vlong_to_vint_or_vlong">vlong_to_vint_or_vlong</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero_ext">Int.zero_ext</a></span> 8 (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">n</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero_ext">Int.zero_ext</a></span> 16 (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">n</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">n</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>      =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="vint_to_vint_or_vlong">vint_to_vint_or_vlong</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> =&gt; (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero_ext">Int.zero_ext</a></span> 8 <span class="id">n</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> =&gt; (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero_ext">Int.zero_ext</a></span> 16 <span class="id">n</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt; (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.signed">Int.signed</a></span> <span class="id">n</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>      =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

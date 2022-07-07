@@ -1,0 +1,112 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxAST</title>
+<meta name="description" content="Documentation of Coq module DxAST" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxAST</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html">Memdata</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.lib</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Bool</span> <span class="id">Nat</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.rBPFAST.html">rBPFAST</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxValues.html">DxValues</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="memoryChunkCompilableType">memoryChunkCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="memoryChunkMatchableType">memoryChunkMatchableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkMatchableType</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkCompilableType">memoryChunkCompilableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">x</span> <span class="id">cases</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">cases</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">s8</span>; <span class="id">u8</span>; <span class="id">s16</span>; <span class="id">u16</span>; <span class="id">s32</span>; <span class="id">s64</span>; <span class="id">f32</span>; <span class="id">f64</span>; <span class="id">a32</span>; <span class="id">a64</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Sswitch">Csyntax.Sswitch</a></span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 1%<span class="id">Z</span>) <span class="id">u8</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 2%<span class="id">Z</span>) <span class="id">u16</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 4%<span class="id">Z</span>) <span class="id">s32</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 8%<span class="id">Z</span>) <span class="id">s64</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <span class="id">s8</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LSnil">Csyntax.LSnil</a></span>)))))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">Err</span> <span class="id">MatchEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[]; []; []; []; []; []; []; []; []; []]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[]; []; []; []; []; []; []; []; []; []]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> <span class="id">r</span> <span class="id">whenR0</span> <span class="id">whenR1</span> <span class="id">whenR2</span> <span class="id">whenR3</span> <span class="id">whenR4</span> <span class="id">whenR5</span> <span class="id">whenR6</span> <span class="id">whenR7</span> <span class="id">whenR8</span> <span class="id">whenR9</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8signed">Mint8signed</a></span> =&gt; <span class="id">whenR0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> =&gt; <span class="id">whenR1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16signed">Mint16signed</a></span> =&gt; <span class="id">whenR2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> =&gt; <span class="id">whenR3</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> =&gt; <span class="id">whenR4</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt; <span class="id">whenR5</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mfloat32">Mfloat32</a></span> =&gt; <span class="id">whenR6</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mfloat64">Mfloat64</a></span> =&gt; <span class="id">whenR7</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Many32">Many32</a></span> =&gt; <span class="id">whenR8</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Many64">Many64</a></span> =&gt; <span class="id">whenR9</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="memoryChunkSymbolType">memoryChunkSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkCompilableType">memoryChunkCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Mint8unsigned">Const_Mint8unsigned</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkSymbolType">memoryChunkSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_one">C_U32_one</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Mint16unsigned">Const_Mint16unsigned</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkSymbolType">memoryChunkSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_2">C_U32_2</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Mint32">Const_Mint32</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkSymbolType">memoryChunkSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_4">C_U32_4</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Mint64">Const_Mint64</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkSymbolType">memoryChunkSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_8">C_U32_8</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="memoryChunkToboolSymbolType">memoryChunkToboolSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkCompilableType">memoryChunkCompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">boolCompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="memoryChunkTovalU32SymbolType">memoryChunkTovalU32SymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkCompilableType">memoryChunkCompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxcomm.DxValues.html#valU32CompilableType">valU32CompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_memory_chunk_to_valu32">Const_memory_chunk_to_valu32</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkTovalU32SymbolType">memoryChunkTovalU32SymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32">memory_chunk_to_valu32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> <span class="id">e1</span> <span class="docright">(* e1 -&gt; (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_memory_chunk_to_valu32_upbound">Const_memory_chunk_to_valu32_upbound</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkTovalU32SymbolType">memoryChunkTovalU32SymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.rBPFAST.html#memory_chunk_to_valu32_upbound">memory_chunk_to_valu32_upbound</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Osub">Cop.Osub</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_max_unsigned">C_U32_max_unsigned</a></span> <span class="id">e1</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>) <span class="docright">(* e1 -&gt; (Csyntax.Ecast  e1 C_U64), dx doesn't know this issue  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Exports">Exports</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.memoryChunkMatchableType">memoryChunkMatchableType</a></span>  := <span class="id"><a href="bpf.dxmodel.DxAST.html#memoryChunkMatchableType">memoryChunkMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Mint8unsigned">Const_Mint8unsigned</a></span>       := <span class="id"><a href="bpf.dxmodel.DxAST.html#Const_Mint8unsigned">Const_Mint8unsigned</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Mint16unsigned">Const_Mint16unsigned</a></span>      := <span class="id"><a href="bpf.dxmodel.DxAST.html#Const_Mint16unsigned">Const_Mint16unsigned</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Mint32">Const_Mint32</a></span>              := <span class="id"><a href="bpf.dxmodel.DxAST.html#Const_Mint32">Const_Mint32</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Mint64">Const_Mint64</a></span>              := <span class="id"><a href="bpf.dxmodel.DxAST.html#Const_Mint64">Const_Mint64</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_memory_chunk_to_valu32">Const_memory_chunk_to_valu32</a></span>:= <span class="id"><a href="bpf.dxmodel.DxAST.html#Const_memory_chunk_to_valu32">Const_memory_chunk_to_valu32</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_memory_chunk_to_valu32_upbound">Const_memory_chunk_to_valu32_upbound</a></span> := <span class="id"><a href="bpf.dxmodel.DxAST.html#Const_memory_chunk_to_valu32_upbound">Const_memory_chunk_to_valu32_upbound</a></span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.dxmodel.DxAST.html#Exports">Exports</a></span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

@@ -1,0 +1,339 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Opcode</title>
+<meta name="description" content="Documentation of Coq module Opcode" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Opcode</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">nat_scope</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_alu64">opcode_alu64</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xX7  *)</span><br/>
+<div class="doc">ALU64:13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ADD64">op_BPF_ADD64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_SUB64">op_BPF_SUB64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_MUL64">op_BPF_MUL64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_DIV64">op_BPF_DIV64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_OR64">op_BPF_OR64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_AND64">op_BPF_AND64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LSH64">op_BPF_LSH64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_RSH64">op_BPF_RSH64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_NEG64">op_BPF_NEG64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_MOD64">op_BPF_MOD64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_XOR64">op_BPF_XOR64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_MOV64">op_BPF_MOV64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ARSH64">op_BPF_ARSH64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ALU64_ILLEGAL_INS">op_BPF_ALU64_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_alu64">byte_to_opcode_alu64</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu64">opcode_alu64</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opcode_alu</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">xf0</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opcode_alu</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x00</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD64">op_BPF_ADD64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x10</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB64">op_BPF_SUB64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x20</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL64">op_BPF_MUL64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x30</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV64">op_BPF_DIV64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x40</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR64">op_BPF_OR64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x50</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND64">op_BPF_AND64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x60</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH64">op_BPF_LSH64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x70</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH64">op_BPF_RSH64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x80</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG64">op_BPF_NEG64</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x90</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD64">op_BPF_MOD64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xa0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR64">op_BPF_XOR64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xb0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV64">op_BPF_MOV64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xc0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH64">op_BPF_ARSH64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64_ILLEGAL_INS">op_BPF_ALU64_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_alu32">opcode_alu32</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xX4  *)</span><br/>
+<div class="doc">ALU32:13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ADD32">op_BPF_ADD32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_SUB32">op_BPF_SUB32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_MUL32">op_BPF_MUL32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_DIV32">op_BPF_DIV32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_OR32">op_BPF_OR32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_AND32">op_BPF_AND32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LSH32">op_BPF_LSH32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_RSH32">op_BPF_RSH32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_NEG32">op_BPF_NEG32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_MOD32">op_BPF_MOD32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_XOR32">op_BPF_XOR32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_MOV32">op_BPF_MOV32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ARSH32">op_BPF_ARSH32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ALU32_ILLEGAL_INS">op_BPF_ALU32_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_alu32">byte_to_opcode_alu32</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu32">opcode_alu32</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opcode_alu</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">xf0</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opcode_alu</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x00</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD32">op_BPF_ADD32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x10</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB32">op_BPF_SUB32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x20</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL32">op_BPF_MUL32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x30</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV32">op_BPF_DIV32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x40</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR32">op_BPF_OR32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x50</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND32">op_BPF_AND32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x60</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH32">op_BPF_LSH32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x70</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH32">op_BPF_RSH32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x80</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG32">op_BPF_NEG32</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x90</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD32">op_BPF_MOD32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xa0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR32">op_BPF_XOR32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xb0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV32">op_BPF_MOV32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xc0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH32">op_BPF_ARSH32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32_ILLEGAL_INS">op_BPF_ALU32_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_branch">opcode_branch</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xX5  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JA">op_BPF_JA</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JEQ">op_BPF_JEQ</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JGT">op_BPF_JGT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JGE">op_BPF_JGE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JLT">op_BPF_JLT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JLE">op_BPF_JLE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JSET">op_BPF_JSET</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JNE">op_BPF_JNE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JSGT">op_BPF_JSGT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JSGE">op_BPF_JSGE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JSLT">op_BPF_JSLT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JSLE">op_BPF_JSLE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_CALL">op_BPF_CALL</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_RET">op_BPF_RET</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_JMP_ILLEGAL_INS">op_BPF_JMP_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_branch">byte_to_opcode_branch</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_branch">opcode_branch</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opcode_jmp</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">xf0</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opcode_jmp</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x00</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JA">op_BPF_JA</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x10</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JEQ">op_BPF_JEQ</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x20</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGT">op_BPF_JGT</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x30</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGE">op_BPF_JGE</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xa0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLT">op_BPF_JLT</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xb0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLE">op_BPF_JLE</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x40</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSET">op_BPF_JSET</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x50</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JNE">op_BPF_JNE</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x60</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGT">op_BPF_JSGT</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x70</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGE">op_BPF_JSGE</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xc0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLT">op_BPF_JSLT</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xd0</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLE">op_BPF_JSLE</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x80</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_CALL">op_BPF_CALL</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x90</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RET">op_BPF_RET</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JMP_ILLEGAL_INS">op_BPF_JMP_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_mem_ld_imm">opcode_mem_ld_imm</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX8  *)</span><br/>
+<div class="doc">Load/Store: 13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDDW_low">op_BPF_LDDW_low</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDDW_high">op_BPF_LDDW_high</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDX_IMM_ILLEGAL_INS">op_BPF_LDX_IMM_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_ld_imm">byte_to_opcode_mem_ld_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_imm">opcode_mem_ld_imm</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opcode_ld</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">xff</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opcode_ld</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x18</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_low">op_BPF_LDDW_low</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x10</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_high">op_BPF_LDDW_high</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_IMM_ILLEGAL_INS">op_BPF_LDX_IMM_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_mem_ld_reg">opcode_mem_ld_reg</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX1/0xX9  *)</span><br/>
+<div class="doc">Load/Store: 13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDXW">op_BPF_LDXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDXH">op_BPF_LDXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDXB">op_BPF_LDXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDXDW">op_BPF_LDXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_LDX_REG_ILLEGAL_INS">op_BPF_LDX_REG_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_ld_reg">byte_to_opcode_mem_ld_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_reg">opcode_mem_ld_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opcode_ld</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">xff</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opcode_ld</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x61</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXW">op_BPF_LDXW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x69</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXH">op_BPF_LDXH</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x71</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXB">op_BPF_LDXB</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x79</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXDW">op_BPF_LDXDW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_REG_ILLEGAL_INS">op_BPF_LDX_REG_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_mem_st_imm">opcode_mem_st_imm</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX2/0xXa  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STW">op_BPF_STW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STH">op_BPF_STH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STB">op_BPF_STB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STDW">op_BPF_STDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ST_ILLEGAL_INS">op_BPF_ST_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_st_imm">byte_to_opcode_mem_st_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_imm">opcode_mem_st_imm</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opcode_st</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">xff</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opcode_st</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x62</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STW">op_BPF_STW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x6a</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STH">op_BPF_STH</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x72</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STB">op_BPF_STB</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x7a</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STDW">op_BPF_STDW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ST_ILLEGAL_INS">op_BPF_ST_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_mem_st_reg">opcode_mem_st_reg</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX3/0xXb  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STXW">op_BPF_STXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STXH">op_BPF_STXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STXB">op_BPF_STXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STXDW">op_BPF_STXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_STX_ILLEGAL_INS">op_BPF_STX_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode_mem_st_reg">byte_to_opcode_mem_st_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_reg">opcode_mem_st_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opcode_st</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">xff</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opcode_st</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x63</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXW">op_BPF_STXW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x6b</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXH">op_BPF_STXH</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x73</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXB">op_BPF_STXB</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x7b</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXDW">op_BPF_STXDW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STX_ILLEGAL_INS">op_BPF_STX_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode">opcode</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ALU64">op_BPF_ALU64</a></span>   <span class="docright">(* 0xX7 / 0xXf  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ALU32">op_BPF_ALU32</a></span>   <span class="docright">(* 0xX4 / 0xXc  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_Branch">op_BPF_Branch</a></span>  <span class="docright">(* 0xX5 / 0xXd  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_Mem_ld_imm">op_BPF_Mem_ld_imm</a></span>  <span class="docright">(* 0xX8  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_Mem_ld_reg">op_BPF_Mem_ld_reg</a></span>  <span class="docright">(* 0xX1/0xX9  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_Mem_st_imm">op_BPF_Mem_st_imm</a></span>  <span class="docright">(* 0xX2/0xXa  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_Mem_st_reg">op_BPF_Mem_st_reg</a></span>  <span class="docright">(* 0xX3/0xXb  *)</span><br/>
+<br/>
+&nbsp;&nbsp;| <span class="id"><a name="op_BPF_ILLEGAL_INS">op_BPF_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="byte_to_opcode">byte_to_opcode</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode">opcode</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opc</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">x07</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x07</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64">op_BPF_ALU64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x04</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32">op_BPF_ALU32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x05</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Branch">op_BPF_Branch</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x00</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_imm">op_BPF_Mem_ld_imm</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x01</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_reg">op_BPF_Mem_ld_reg</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x02</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_imm">op_BPF_Mem_st_imm</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x03</span> =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_reg">op_BPF_Mem_st_reg</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ILLEGAL_INS">op_BPF_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu64_eqb">opcode_alu64_eqb</a></span>  (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu64">opcode_alu64</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD64">op_BPF_ADD64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD64">op_BPF_ADD64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB64">op_BPF_SUB64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB64">op_BPF_SUB64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL64">op_BPF_MUL64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL64">op_BPF_MUL64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV64">op_BPF_DIV64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV64">op_BPF_DIV64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR64">op_BPF_OR64</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR64">op_BPF_OR64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND64">op_BPF_AND64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND64">op_BPF_AND64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH64">op_BPF_LSH64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH64">op_BPF_LSH64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH64">op_BPF_RSH64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH64">op_BPF_RSH64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG64">op_BPF_NEG64</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG64">op_BPF_NEG64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD64">op_BPF_MOD64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD64">op_BPF_MOD64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR64">op_BPF_XOR64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR64">op_BPF_XOR64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV64">op_BPF_MOV64</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV64">op_BPF_MOV64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH64">op_BPF_ARSH64</a></span>,<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH64">op_BPF_ARSH64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64_ILLEGAL_INS">op_BPF_ALU64_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64_ILLEGAL_INS">op_BPF_ALU64_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu32_eqb">opcode_alu32_eqb</a></span>  (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_alu32">opcode_alu32</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD32">op_BPF_ADD32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ADD32">op_BPF_ADD32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB32">op_BPF_SUB32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_SUB32">op_BPF_SUB32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL32">op_BPF_MUL32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MUL32">op_BPF_MUL32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV32">op_BPF_DIV32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_DIV32">op_BPF_DIV32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR32">op_BPF_OR32</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_OR32">op_BPF_OR32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND32">op_BPF_AND32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_AND32">op_BPF_AND32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH32">op_BPF_LSH32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LSH32">op_BPF_LSH32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH32">op_BPF_RSH32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RSH32">op_BPF_RSH32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG32">op_BPF_NEG32</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_NEG32">op_BPF_NEG32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD32">op_BPF_MOD32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOD32">op_BPF_MOD32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR32">op_BPF_XOR32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_XOR32">op_BPF_XOR32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV32">op_BPF_MOV32</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_MOV32">op_BPF_MOV32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH32">op_BPF_ARSH32</a></span>,<span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ARSH32">op_BPF_ARSH32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32_ILLEGAL_INS">op_BPF_ALU32_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32_ILLEGAL_INS">op_BPF_ALU32_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_branch_eqb">opcode_branch_eqb</a></span> (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_branch">opcode_branch</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JA">op_BPF_JA</a></span>,    <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JA">op_BPF_JA</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JEQ">op_BPF_JEQ</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JEQ">op_BPF_JEQ</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGT">op_BPF_JGT</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGT">op_BPF_JGT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGE">op_BPF_JGE</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JGE">op_BPF_JGE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLT">op_BPF_JLT</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLT">op_BPF_JLT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLE">op_BPF_JLE</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JLE">op_BPF_JLE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSET">op_BPF_JSET</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSET">op_BPF_JSET</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JNE">op_BPF_JNE</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JNE">op_BPF_JNE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGT">op_BPF_JSGT</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGT">op_BPF_JSGT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGE">op_BPF_JSGE</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSGE">op_BPF_JSGE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLT">op_BPF_JSLT</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLT">op_BPF_JSLT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLE">op_BPF_JSLE</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JSLE">op_BPF_JSLE</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_CALL">op_BPF_CALL</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_CALL">op_BPF_CALL</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RET">op_BPF_RET</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_RET">op_BPF_RET</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JMP_ILLEGAL_INS">op_BPF_JMP_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_JMP_ILLEGAL_INS">op_BPF_JMP_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_ld_imm_eqb">opcode_mem_ld_imm_eqb</a></span> (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_imm">opcode_mem_ld_imm</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_low">op_BPF_LDDW_low</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_low">op_BPF_LDDW_low</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_high">op_BPF_LDDW_high</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDDW_high">op_BPF_LDDW_high</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_IMM_ILLEGAL_INS">op_BPF_LDX_IMM_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_IMM_ILLEGAL_INS">op_BPF_LDX_IMM_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_ld_reg_eqb">opcode_mem_ld_reg_eqb</a></span> (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_ld_reg">opcode_mem_ld_reg</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXW">op_BPF_LDXW</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXW">op_BPF_LDXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXH">op_BPF_LDXH</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXH">op_BPF_LDXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXB">op_BPF_LDXB</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXB">op_BPF_LDXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXDW">op_BPF_LDXDW</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDXDW">op_BPF_LDXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_REG_ILLEGAL_INS">op_BPF_LDX_REG_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_LDX_REG_ILLEGAL_INS">op_BPF_LDX_REG_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_st_imm_eqb">opcode_mem_st_imm_eqb</a></span> (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_imm">opcode_mem_st_imm</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STW">op_BPF_STW</a></span>,    <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STW">op_BPF_STW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STH">op_BPF_STH</a></span>,    <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STH">op_BPF_STH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STB">op_BPF_STB</a></span>,    <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STB">op_BPF_STB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STDW">op_BPF_STDW</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STDW">op_BPF_STDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ST_ILLEGAL_INS">op_BPF_ST_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ST_ILLEGAL_INS">op_BPF_ST_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_mem_st_reg_eqb">opcode_mem_st_reg_eqb</a></span> (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode_mem_st_reg">opcode_mem_st_reg</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXW">op_BPF_STXW</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXW">op_BPF_STXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXH">op_BPF_STXH</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXH">op_BPF_STXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXB">op_BPF_STXB</a></span>,   <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXB">op_BPF_STXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXDW">op_BPF_STXDW</a></span>,  <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STXDW">op_BPF_STXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STX_ILLEGAL_INS">op_BPF_STX_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_STX_ILLEGAL_INS">op_BPF_STX_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_eqb">opcode_eqb</a></span> (<span class="id">o</span> <span class="id">o</span>' : <span class="id"><a href="bpf.monadicmodel.Opcode.html#opcode">opcode</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">o</span> , <span class="id">o</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64">op_BPF_ALU64</a></span>,      <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU64">op_BPF_ALU64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32">op_BPF_ALU32</a></span>,      <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ALU32">op_BPF_ALU32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Branch">op_BPF_Branch</a></span>,     <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Branch">op_BPF_Branch</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_imm">op_BPF_Mem_ld_imm</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_imm">op_BPF_Mem_ld_imm</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_reg">op_BPF_Mem_ld_reg</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_ld_reg">op_BPF_Mem_ld_reg</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_imm">op_BPF_Mem_st_imm</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_imm">op_BPF_Mem_st_imm</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_reg">op_BPF_Mem_st_reg</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_Mem_st_reg">op_BPF_Mem_st_reg</a></span><br/>
+<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ILLEGAL_INS">op_BPF_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.monadicmodel.Opcode.html#op_BPF_ILLEGAL_INS">op_BPF_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

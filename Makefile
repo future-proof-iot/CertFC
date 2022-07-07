@@ -38,6 +38,12 @@ all:
 	@$(MAKE) dxverifier
 	@$(MAKE) document
 
+DIRS := comm dxcomm model verifier isolation monadicmodel dxmodel clight clightlogic simulation equivalence
+
+COQINCLUDES := INSTALLDEFAULTROOT = comm "\n"
+COQINCLUDES += $(foreach d, $(DIRS),-R $(d) bpf.$(d) "\n")
+COQINCLUDES +=-R $(COMPCERTDIR) compcert
+
 COQVERIFIER =  $(addprefix verifier/, comm/state.v comm/monad.v synthesismodel/opcode_synthesis.v synthesismodel/verifier_synthesis.v dxmodel/Dxopcode.v dxmodel/Dxstate.v dxmodel/Dxmonad.v dxmodel/Dxverifier.v dxmodel/verifier_dx.v dxmodel/verifier_TestMain.v dxmodel/verifier_ExtrMain.v)
 
 COQVERIFIERCLIGHT= $(addprefix verifier/, clightmodel/verifier.v)
@@ -56,7 +62,7 @@ COQEQUIV =  $(addprefix equivalence/, equivalence1.v equivalence2.v)
 
 COQISOLATION = $(addprefix isolation/, CommonISOLib.v AlignChunk.v RegsInv.v MemInv.v VerifierOpcode.v VerifierInv.v CheckMem.v StateInv.v IsolationLemma.v Isolation1.v Isolation2.v)
 
-COQCOMM = $(addprefix comm/, Flag.v LemmaNat.v List64.v rBPFAST.v rBPFMemType.v rBPFValues.v MemRegion.v Regs.v BinrBPF.v State.v Monad.v rBPFMonadOp.v)
+COQCOMM = $(addprefix comm/, Flag.v LemmaNat.v LemmaInt.v List64.v rBPFAST.v rBPFMemType.v rBPFValues.v MemRegion.v Regs.v BinrBPF.v State.v Monad.v rBPFMonadOp.v)
 
 COQDXCOMM = $(addprefix dxcomm/, InfComp.v GenMatchable.v CoqIntegers.v DxIntegers.v DxValues.v DxList64.v DxBinrBPF.v DxNat.v)
 
@@ -164,13 +170,13 @@ CLIGHTLOGICDIR =  $(addprefix clightlogic/, clight_exec.v Clightlogic.v CommonLi
 
 clightlogic:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) $(COQEXTRAFLAGS)  -o CoqMakefilePrf
-	make -f CoqMakefilePrf
+	$(COQMAKEFILE) -f _CoqProject $(CLIGHTLOGICDIR) $(COQEXTRAFLAGS)  -o CoqMakefile
+	make -f CoqMakefile
 
 simulation:
 	@echo $@
-	$(COQMAKEFILE) -f _CoqProject $(PROOF) $(COQEXTRAFLAGS)  -o CoqMakefilePrf
-	make -f CoqMakefilePrf
+	$(COQMAKEFILE) -f _CoqProject $(PROOF) $(COQEXTRAFLAGS)  -o CoqMakefile
+	make -f CoqMakefile
 
 document:
 	@echo $@
@@ -209,6 +215,9 @@ document:
 	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/simulation/*.v
 	coq2html -external https://compcert.org/doc/html compcert -base bpf -short-names -d html html/glob/*.glob verifier/synthesismodel/*.v
 
+CoqProject:
+	@echo $(COQINCLUDES) > _CoqProject
+
 GITDIR=/home/shyuan/GitLab/rbpf-dx
 
 gitpush:
@@ -236,7 +245,7 @@ gitpush:
 	cp Makefile $(GITDIR)
 	cp *.md $(GITDIR)
 	cp LICENSE $(GITDIR)
-	cp _CoqProject $(GITDIR)
+	cp configure $(GITDIR)
 	cp Makefile.config $(GITDIR)
 	cp verifier/clightmodel/*.h $(GITDIR)/verifier/clightmodel
 	cp verifier/clightmodel/*.c $(GITDIR)/verifier/clightmodel
@@ -250,6 +259,9 @@ gitpush:
 	cp verifier/Makefile $(GITDIR)/verifier
 	cp verifier/Makefile.config $(GITDIR)/verifier
 	cp verifier/*.md $(GITDIR)/verifier
+	cp html/*.html $(GITDIR)/html
+	cp html/*.css $(GITDIR)/html
+	cp html/*.js $(GITDIR)/html
 
 gitpull:
 	@echo $@
@@ -291,7 +303,6 @@ gitpull:
 clean :
 	@echo $@
 	make -f CoqMakefile clean
-	make -f CoqMakefilePrf clean
 	find . -name "*\.vo" -exec rm {} \;
 	find . -name "*\.cmi" -exec rm {} \;
 	find . -name "*\.cmx" -exec rm {} \;

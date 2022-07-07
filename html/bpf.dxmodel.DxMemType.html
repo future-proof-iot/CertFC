@@ -1,0 +1,97 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxMemType</title>
+<meta name="description" content="Documentation of Coq module DxMemType" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxMemType</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html">Memtype</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Bool</span> <span class="id">Nat</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.rBPFMemType.html">rBPFMemType</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.GenMatchable.html">GenMatchable</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxValues.html">DxValues</a></span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<div class="doc">permission_eq_eq: permission_eq -&gt; permission_eq -&gt; bool
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="permissionCompilableType">permissionCompilableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#permission">permission</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="permissionMatchableType">permissionMatchableType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkMatchableType</span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionCompilableType">permissionCompilableType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">x</span> <span class="id">cases</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">cases</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">f</span>; <span class="id">w</span>; <span class="id">r</span>; <span class="id">n</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Sswitch">Csyntax.Sswitch</a></span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 3) <span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 2) <span class="id">w</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 1) <span class="id">r</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> 0) <span class="id">n</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LSnil">Csyntax.LSnil</a></span>))))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">Err</span> <span class="id">MatchEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[]; []; []; []]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[]; []; []; []]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">m</span> <span class="id">A</span> <span class="id">r</span> <span class="id">whenR0</span> <span class="id">whenR1</span> <span class="id">whenR2</span> <span class="id">whenR3</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Freeable">Freeable</a></span> =&gt; <span class="id">whenR0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Writable">Writable</a></span> =&gt; <span class="id">whenR1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Readable">Readable</a></span> =&gt; <span class="id">whenR2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Nonempty">Nonempty</a></span> =&gt; <span class="id">whenR3</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="permissionSymbolType">permissionSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionCompilableType">permissionCompilableType</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Freeable">Const_Freeable</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionSymbolType">permissionSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Freeable">Freeable</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_3">C_U32_3</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Writable">Const_Writable</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionSymbolType">permissionSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Writable">Writable</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_2">C_U32_2</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Readable">Const_Readable</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionSymbolType">permissionSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Readable">Readable</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_one">C_U32_one</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_Nonempty">Const_Nonempty</a></span> := <span class="id">constant</span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionSymbolType">permissionSymbolType</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Nonempty">Nonempty</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U32_zero">C_U32_zero</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="permissionTopermissionToboolSymbolType">permissionTopermissionToboolSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionCompilableType">permissionCompilableType</a></span>; <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionCompilableType">permissionCompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">boolCompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_perm_ge">Const_perm_ge</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionTopermissionToboolSymbolType">permissionTopermissionToboolSymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.rBPFMemType.html#perm_ge">perm_ge</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">f1</span>; <span class="id">f2</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oge">Cop.Oge</a></span> <span class="id">f1</span> <span class="id">f2</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U32">C_U32</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Exports">Exports</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.permissionMatchableType">permissionMatchableType</a></span> := <span class="id"><a href="bpf.dxmodel.DxMemType.html#permissionMatchableType">permissionMatchableType</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Freeable">Const_Freeable</a></span>          := <span class="id"><a href="bpf.dxmodel.DxMemType.html#Const_Freeable">Const_Freeable</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Writable">Const_Writable</a></span>          := <span class="id"><a href="bpf.dxmodel.DxMemType.html#Const_Writable">Const_Writable</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Readable">Const_Readable</a></span>          := <span class="id"><a href="bpf.dxmodel.DxMemType.html#Const_Readable">Const_Readable</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_Nonempty">Const_Nonempty</a></span>          := <span class="id"><a href="bpf.dxmodel.DxMemType.html#Const_Nonempty">Const_Nonempty</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_perm_ge">Const_perm_ge</a></span>           := <span class="id"><a href="bpf.dxmodel.DxMemType.html#Const_perm_ge">Const_perm_ge</a></span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.dxmodel.DxMemType.html#Exports">Exports</a></span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

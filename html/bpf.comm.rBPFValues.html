@@ -1,0 +1,202 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module rBPFValues</title>
+<meta name="description" content="Documentation of Coq module rBPFValues" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module rBPFValues</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.lib</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<div class="doc">Coq2C: Values.val -&gt; unsigned long long or unsigned int
+  </div>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="cmp_ptr32_null">cmp_ptr32_null</a></span> (<span class="id">m</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.mem">Mem.mem</a></span>) (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.cmpu_bool">Val.cmpu_bool</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_pointer">Mem.valid_pointer</a></span> <span class="id">m</span>) <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ceq">Ceq</a></span> <span class="id">v</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vnullptr">Vnullptr</a></span>.<br/>
+<br/>
+<br/>
+<div class="doc">Type signature: val -&gt; val -&gt; option val
+    we use `val32_divu` to replace `Val.divu`
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="val32_divu">val32_divu</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.divu">Val.divu</a></span> <span class="id">x</span> <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">res</span> =&gt; <span class="id">res</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Type signature: val -&gt; val -&gt; option val
+    we use `val32_modu` to replace `Val.modu`
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="val32_modu">val32_modu</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modu">Val.modu</a></span> <span class="id">x</span> <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">res</span> =&gt; <span class="id">res</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="comp_eq_32">comp_eq_32</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">n1</span> <span class="id">n2</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="comp_ne_32">comp_ne_32</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">n1</span> <span class="id">n2</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compu_lt_32">compu_lt_32</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">n1</span> <span class="id">n2</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compu_le_32">compu_le_32</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">n2</span> <span class="id">n1</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<div class="doc">Type signature: val -&gt; val -&gt; option val
+    we use `val64_divlu` to replace `Val.divlu`
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="val64_divlu">val64_divlu</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.divlu">Val.divlu</a></span> <span class="id">x</span> <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">res</span> =&gt; <span class="id">res</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Type signature: val -&gt; val -&gt; option val
+    we use `val32_modlu` to replace `Val.modlu`
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="val64_modlu">val64_modlu</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modlu">Val.modlu</a></span> <span class="id">x</span> <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">res</span> =&gt; <span class="id">res</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="doc">To avoid defining the matchableType of comparison in dx, we define unique comparison functions </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compl_eq">compl_eq</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.eq">Int64.eq</a></span> <span class="id">n1</span> <span class="id">n2</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compl_ne">compl_ne</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.eq">Int64.eq</a></span> <span class="id">n1</span> <span class="id">n2</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compl_lt">compl_lt</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.lt">Int64.lt</a></span> <span class="id">n1</span> <span class="id">n2</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compl_le">compl_le</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.lt">Int64.lt</a></span> <span class="id">n2</span> <span class="id">n1</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compl_gt">compl_gt</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.lt">Int64.lt</a></span> <span class="id">n2</span> <span class="id">n1</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="compl_ge">compl_ge</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.lt">Int64.lt</a></span> <span class="id">n1</span> <span class="id">n2</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="complu_lt">complu_lt</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.ltu">Int64.ltu</a></span> <span class="id">n1</span> <span class="id">n2</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="complu_le">complu_le</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.ltu">Int64.ltu</a></span> <span class="id">n2</span> <span class="id">n1</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="complu_gt">complu_gt</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.ltu">Int64.ltu</a></span> <span class="id">n2</span> <span class="id">n1</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="complu_ge">complu_ge</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.ltu">Int64.ltu</a></span> <span class="id">n1</span> <span class="id">n2</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="complu_set">complu_set</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n1</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n2</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.eq">Int64.eq</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span> <span class="id">n1</span> <span class="id">n2</span>) <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.zero">Int64.zero</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<div class="doc">sint16_to_vlong: sint16_t -&gt; Val
+    </div>
+ <br/>
+<br/>
+<div class="doc">_to_u32 : vlong_to_vint &lt;==&gt; val_intoflongu
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="val_intuoflongu">val_intuoflongu</a></span> (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span>    =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">n</span>))<br/>
+&nbsp;&nbsp;| <span class="id">_</span>          =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">_to_S32 : vlong_to_vint &lt;==&gt; val_intsoflongu
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="val_intsoflongu">val_intsoflongu</a></span> (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span>    =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">n</span>))<br/>
+&nbsp;&nbsp;| <span class="id">_</span>          =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vundef">Vundef</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="doc">sint32_to_vlong: sint32 -&gt; Vlong
+  </div>
+<span class="kwd">Definition</span> <span class="id"><a name="sint32_to_vint">sint32_to_vint</a></span> (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">v</span>.<br/>
+<div class="doc">int64_to_vlong: long -&gt; Vlong
+  </div>
+<span class="kwd">Definition</span> <span class="id"><a name="int64_to_vlong">int64_to_vlong</a></span> (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">v</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="int64_to_int8">int64_to_int8</a></span> (<span class="id">x</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#byte">byte</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Byte.repr">Byte.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">x</span>).<br/>
+<br/>
+<div class="doc">sint16_to_uint64: sint16_t -&gt; uint64_t
+  </div>
+ <br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="int64_to_offset16">int64_to_offset16</a></span> (<span class="id">i</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>) := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.sign_ext">Int.sign_ext</a></span> 16 (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">i</span>)).<br/>
+<br/>
+<div class="doc">int64_to_sint32: int64_t -&gt; sint32_t
+  </div>
+<span class="kwd">Definition</span> <span class="id"><a name="int64_to_sint32">int64_to_sint32</a></span> (<span class="id">x</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">x</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="sint32_to_uint32">sint32_to_uint32</a></span> (<span class="id">i</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span> := <span class="id">i</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Int_leu">Int_leu</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">y</span> <span class="id">x</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Int_le">Int_le</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.lt">Int.lt</a></span> <span class="id">y</span> <span class="id">x</span>).
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import State Monad rBPFMonadOp.
+From bpf.comm Require Import LemmaInt State Monad rBPFMonadOp.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.

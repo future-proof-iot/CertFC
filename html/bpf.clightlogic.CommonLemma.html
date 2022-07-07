@@ -1,0 +1,772 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CommonLemma</title>
+<meta name="description" content="Documentation of Coq module CommonLemma" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CommonLemma</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html">Clight</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.Monad.html">Monad</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.clightlogic</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html">Clightlogic</a></span> <span class="id">CommonLib</span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">build_app_aux</span> <span class="id">T</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">T</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| ?<span class="id">F</span> ?<span class="id">X</span> =&gt; <span class="kwd">let</span> <span class="id">ty</span> := <span class="id">type</span> <span class="id">of</span> <span class="id">X</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">r</span> := <span class="id">build_app_aux</span> <span class="id">F</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constr</span>:((<span class="id"><a href="bpf.clightlogic.Clightlogic.html#mk">mk</a></span> <span class="id">ty</span> <span class="id">X</span>) :: <span class="id">r</span>)<br/>
+&nbsp;&nbsp;| ?<span class="id">X</span>    =&gt; <span class="id">constr</span>:(@<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#dpair">dpair</a></span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">get_function</span> <span class="id">T</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">T</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| ?<span class="id">F</span> ?<span class="id">X</span> =&gt; <span class="id">get_function</span> <span class="id">F</span><br/>
+&nbsp;&nbsp;| ?<span class="id">X</span>    =&gt; <span class="id">X</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">build_app</span> <span class="id">T</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">a</span> := <span class="id">build_app_aux</span> <span class="id">T</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">v</span> := (<span class="tactic">eval</span> <span class="tactic">simpl</span> <span class="kwd">in</span> (<span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.of_list_dp">DList.of_list_dp</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev">List.rev</a></span> <span class="id">a</span>))) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">f</span> := <span class="id">get_function</span> <span class="id">T</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">type</span> <span class="id">of</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#DList.t">DList.t</a></span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">L</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">T</span> <span class="kwd">with</span> (<span class="id"><a href="bpf.clightlogic.Clightlogic.html#cl_app">cl_app</a></span> (<span class="id">f</span>: @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#arrow_type">arrow_type</a></span> <span class="id">L</span> <span class="id">_</span>) <span class="id">v</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">change_app_for_body</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;=&gt; <span class="id">build_app</span> <span class="id">F</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">change_app_for_statement</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement">correct_statement</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>  =&gt; <span class="id">build_app</span> <span class="id">F</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">prove_incl</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#incl">incl</a></span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">prove_in_inv</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">subst</span>; <span class="tactic">discriminate</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">Hdisj_false</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">H</span> := <span class="tactic">fresh</span> "<span class="id">H</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">K</span> := <span class="tactic">fresh</span> "<span class="id">K</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| |- ~(?<span class="id">X</span> \/ ?<span class="id">Y</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H</span>; <span class="id">Hdisj_false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H0</span>: ?<span class="id">X</span> \/ ?<span class="id">Y</span> |- <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H0</span> <span class="kwd">as</span> [<span class="id">K</span> | <span class="id">H0</span>]; [ <span class="tactic">inversion</span> <span class="id">K</span> | <span class="id">Hdisj_false</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H1</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span> |- <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assumption</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">correct_Forall</span> :=<br/>
+<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+| <span class="id">H</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="id"><a href="bpf.clightlogic.Clightlogic.html#match_elt">match_elt</a></span> ?<span class="id">st</span> ?<span class="id">m</span> ?<span class="id">le</span>) ?<span class="id">L</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="bpf.clightlogic.Clightlogic.html#match_temp_env">match_temp_env</a></span> <span class="id">L</span> <span class="id">le</span> <span class="id">st</span> <span class="id">m</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="id">cbn</span> <span class="kwd">in</span> <span class="id">H</span><br/>
+<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">my_reflex</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- ?<span class="id">X</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">x</span> := (<span class="tactic">eval</span> <span class="tactic">compute</span> <span class="kwd">in</span> <span class="id">X</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> <span class="id">X</span> <span class="kwd">with</span> <span class="id">x</span> <span class="tactic">by</span> <span class="tactic">reflexivity</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="list_no_repet_dec">list_no_repet_dec</a></span> : <span class="kwd">forall</span> {<span class="id">A</span>:<span class="kwd">Type</span>} <span class="id">eq_dec</span> (<span class="id">l</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id">A</span>) <span class="id">H</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#list_norepet_dec">list_norepet_dec</a></span> <span class="id">eq_dec</span> <span class="id">l</span> = <span class="tactic">left</span> <span class="id">H</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#list_norepet">list_norepet</a></span> <span class="id">l</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">list_disjoint</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#list_disjoint">Coqlib.list_disjoint</a></span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">subst</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">list_no_repet</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#list_no_repet_dec">list_no_repet_dec</a></span> <span class="kwd">with</span> (<span class="id">eq_dec</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.eq_dec">Pos.eq_dec</a></span>); <span class="tactic">reflexivity</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">correct_function_from_body</span> <span class="id">args</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">unfold</span> <span class="id">args</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;<span class="id">car_cdr</span>;<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_function_from_body">correct_function_from_body</a></span>;<br/>
+&nbsp;&nbsp;[<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_disjoint</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_no_repet</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_no_repet</span> | <span class="tactic">reflexivity</span> | <span class="tactic">reflexivity</span> |<span class="tactic">idtac</span>].<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">get_inv_from_list</span> <span class="id">VAR</span> <span class="id">L</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">L</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [] =&gt; <span class="tactic">fail</span> -1<br/>
+&nbsp;&nbsp;| (?<span class="id">V</span>,?<span class="id">T</span>,?<span class="id">P</span>) :: ?<span class="id">L</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">constr</span>:(<span class="id">VAR</span> = <span class="id">V</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| ?<span class="id">X</span> = ?<span class="id">X</span> =&gt; <span class="id">constr</span>:((<span class="id">T</span>,<span class="id">P</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|    <span class="id">_</span>    =&gt; <span class="id">get_inv_from_list</span> <span class="id">VAR</span> <span class="id">L</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">IN</span> <span class="id">T</span> :=<br/>
+&nbsp;&nbsp;<span class="id">lazymatch</span> <span class="id">T</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> ?<span class="id">X</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="tactic">fail</span> -1 "<span class="id">Fail</span> <span class="id">to</span> <span class="id">get</span> <span class="id">a</span> <span class="id">membership</span> <span class="id">proof</span>"<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> ?<span class="id">X</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#cons">cons</a></span> ?<span class="id">X</span> ?<span class="id">L</span>') =&gt; <span class="id">constr</span>:(@<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_eq">in_eq</a></span> <span class="id">_</span> <span class="id">X</span> <span class="id">L</span>')<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> ?<span class="id">X</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#cons">cons</a></span> ?<span class="id">Y</span> ?<span class="id">L</span>') =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">inr</span> := <span class="id">constr</span>:(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id">X</span> <span class="id">L</span>') <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">prf</span> := <span class="id">IN</span> <span class="id">inr</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">constr</span>:(@<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_cons">in_cons</a></span> <span class="id">_</span> <span class="id">Y</span> <span class="id">X</span> <span class="id">_</span> <span class="id">prf</span>)<br/>
+&nbsp;&nbsp;|  ?<span class="id">T</span>        =&gt; <span class="tactic">fail</span> -1 "<span class="id">list</span> <span class="kwd">is</span> <span class="id">not</span> <span class="id">of</span> <span class="id">the</span> <span class="id">form</span>  <span class="id">a1</span>::....::<span class="id">an</span>:<span class="id">nil</span>" <span class="id">T</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">get_invariant</span> <span class="id">VAR</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">E</span> := <span class="tactic">fresh</span> "<span class="id">ME</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">I</span> := <span class="tactic">fresh</span> "<span class="id">I</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">v</span> := <span class="tactic">fresh</span> "<span class="id">v</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">p</span> := <span class="tactic">fresh</span> "<span class="id">p</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">c</span> := <span class="tactic">fresh</span> "<span class="id">c</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">vc</span> := <span class="tactic">fresh</span> "<span class="id">vc</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">v1</span> := <span class="tactic">fresh</span> "<span class="id">v1</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id">lazymatch</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">H</span>:<span class="id"><a href="bpf.clightlogic.Clightlogic.html#match_temp_env">match_temp_env</a></span> ?<span class="id">L</span> ?<span class="id">LE</span> ?<span class="id">ST</span> ?<span class="id">M</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">tp</span> := <span class="id">get_inv_from_list</span> <span class="id">VAR</span> <span class="id">L</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">tp</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| (?<span class="id">T</span>, ?<span class="id">P</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">I</span> : <span class="tactic">exists</span> <span class="id">v</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.get">Maps.PTree.get</a></span> <span class="id">VAR</span> <span class="id">LE</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">v</span> /\ <span class="id"><a href="bpf.clightlogic.Clightlogic.html#eval_inv">eval_inv</a></span> <span class="id">P</span> <span class="id">v</span> <span class="id">ST</span> <span class="id">M</span> /\ <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#val_casted">Cop.val_casted</a></span> <span class="id">v</span> <span class="id">T</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#match_temp_env">match_temp_env</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall_forall">Forall_forall</a></span> <span class="kwd">in</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">E</span> : <span class="id"><a href="bpf.clightlogic.Clightlogic.html#match_elt">match_elt</a></span> <span class="id">ST</span> <span class="id">M</span> <span class="id">LE</span> (<span class="id">VAR</span>, <span class="id">T</span>, <span class="id">P</span>));<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ (<span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|- ?<span class="id">G</span> =&gt; <span class="kwd">let</span> <span class="id">prf</span> := <span class="id">IN</span> <span class="id">G</span> <span class="kwd">in</span> <span class="tactic">exact</span> <span class="id">prf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#match_elt">match_elt</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span>,<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="kwd">in</span> <span class="id">E</span>; <span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.get">Maps.PTree.get</a></span> <span class="id">VAR</span> <span class="id">LE</span>) <span class="kwd">as</span> [<span class="id">v1</span>|]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;; [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">v1</span> ; <span class="tactic">split</span> ;[<span class="tactic">reflexivity</span> | <span class="tactic">exact</span> <span class="id">E</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| (<span class="id">exfalso</span> ; <span class="tactic">assumption</span>) ]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="tactic">destruct</span> <span class="id">I</span> <span class="kwd">as</span> (<span class="id">v</span>, (<span class="id">p</span>, (<span class="id">c</span>, <span class="id">vc</span>))) ]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">correct_body</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">st</span> <span class="id">le</span> <span class="id">m</span>;<br/>
+  <span class="tactic">unfold</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#list_rel_arg">list_rel_arg</a></span>, <span class="id"><a href="bpf.clightlogic.Clightlogic.html#cl_app">cl_app</a></span>;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|- <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">B</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">INV</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">I</span> := <span class="tactic">fresh</span> "<span class="id">INV</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">I</span> := <span class="id">INV</span>) ; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">I</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">B1</span> := <span class="tactic">eval</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">B</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">B</span> <span class="kwd">with</span> <span class="id">B1</span>; <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#I">I</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">correct_forward</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hst</span> := <span class="tactic">fresh</span> "<span class="id">Hst</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">H</span> := <span class="tactic">fresh</span> "<span class="id">H</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Hcnd</span> := <span class="tactic">fresh</span> "<span class="id">Hcnd</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">EXPR</span> := <span class="tactic">fresh</span> "<span class="id">EXPR</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span> <span class="id">_</span>) <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sreturn">Sreturn</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span>)) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body_Sreturn_Some">correct_body_Sreturn_Some</a></span>; <span class="tactic">intros</span> <span class="id">Hst</span> <span class="id">H</span>; <span class="id">cbn</span> <span class="kwd">in</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| |- @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span> (<span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#tt">tt</a></span>) <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sreturn">Sreturn</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body_Sreturn_None">correct_body_Sreturn_None</a></span>; [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">Hst</span> <span class="id">H</span>; <span class="id">cbn</span> <span class="kwd">in</span> <span class="id">H</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+<br/>
+&nbsp;&nbsp;| |- @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="bpf.comm.Monad.html#bindM">bindM</a></span> ?<span class="id">F1</span> ?<span class="id">F2</span>)  <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ssequence">Ssequence</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ssequence">Ssequence</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Scall">Scall</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sset">Sset</a></span> ?<span class="id">V</span> ?<span class="id">T</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?<span class="id">R</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?<span class="id">MOD</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body">correct_statement_seq_body</a></span> <span class="kwd">with</span> (<span class="id">modifies2</span> := <span class="id">MOD</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="id">change_app_for_statement</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">b</span> := <span class="kwd">match</span> <span class="id">T</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ecast">Ecast</a></span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">constr</span>:(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>         =&gt; <span class="id">constr</span>:(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_call">correct_statement_call</a></span> <span class="kwd">with</span> (<span class="id">has_cast</span> := <span class="id">b</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="id">my_reflex</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typeclasses</span> <span class="tactic">eauto</span> |<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prove_in_inv</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prove_in_inv</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H</span>; <span class="id">correct_Forall</span> | ..]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| | <span class="tactic">try</span> <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;| |- @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="bpf.comm.Monad.html#bindM">bindM</a></span> ?<span class="id">F1</span> ?<span class="id">F2</span>)  <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ssequence">Ssequence</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Scall">Scall</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <span class="id">_</span> <span class="id">_</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_seq_body_unit">correct_statement_seq_body_unit</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="id">change_app_for_statement</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_call_none">correct_statement_call_none</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[ <span class="id">my_reflex</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typeclasses</span> <span class="tactic">eauto</span> |<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>  |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H</span>; <span class="id">correct_Forall</span> | ..]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| ]<br/>
+&nbsp;&nbsp;| |- @<span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_body">correct_body</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> (<span class="kwd">match</span>  ?<span class="id">x</span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> =&gt; <span class="id">_</span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> =&gt; <span class="id">_</span> <span class="kwd">end</span>) <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sifthenelse">Sifthenelse</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#correct_statement_if_body_expr">correct_statement_if_body_expr</a></span>;[<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">EXPR</span>; <span class="tactic">destruct</span> <span class="id">x</span> <span class="id">eqn</span>: <span class="id">Hcnd</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> | <span class="tactic">intros</span> <span class="id">Hst</span> <span class="id">H</span>; <span class="id">cbn</span> <span class="kwd">in</span> <span class="id">H</span>]<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">normalise_post_unit</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id">context</span>[<span class="id"><a href="bpf.clightlogic.Clightlogic.html#post_unit">post_unit</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">L</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id">L</span> <span class="kwd">with</span> (<span class="id"><a href="bpf.clightlogic.Clightlogic.html#inv_of_modifies">inv_of_modifies</a></span> <span class="id"><a href="bpf.clightlogic.Clightlogic.html#ModSomething">ModSomething</a></span> <span class="id">L</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">exec_seq_of_labeled_statement</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id">context</span>[<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#seq_of_labeled_statement">seq_of_labeled_statement</a></span> ?<span class="id">X</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">x</span> := (<span class="tactic">eval</span> <span class="tactic">simpl</span> <span class="kwd">in</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#seq_of_labeled_statement">seq_of_labeled_statement</a></span> <span class="id">X</span>)) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#seq_of_labeled_statement">seq_of_labeled_statement</a></span> <span class="id">X</span>) <span class="kwd">with</span> <span class="id">x</span>; <span class="tactic">try</span> <span class="tactic">simpl</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">deref_loc_tactic</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#deref_loc">deref_loc</a></span> ?<span class="id">t</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">r</span> := <span class="tactic">eval</span> <span class="tactic">compute</span> <span class="kwd">in</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#access_mode">access_mode</a></span> <span class="id">t</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#By_value">By_value</a></span> <span class="id">_</span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#deref_loc_value">deref_loc_value</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#By_reference">By_reference</a></span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#deref_loc_reference">deref_loc_reference</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#By_copy">By_copy</a></span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#deref_loc_copy">deref_loc_copy</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#By_nothing">By_nothing</a></span> =&gt; <span class="tactic">fail</span> "<span class="id">deref_loc</span> <span class="id">nothing</span> (<span class="id">this</span> <span class="id">tactic</span> <span class="id">only</span> <span class="id">works</span> <span class="id">on</span> <span class="id">coq</span>-<span class="id">compcert</span>-32)"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">assign_loc_tactic</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#assign_loc">assign_loc</a></span> <span class="id">_</span> ?<span class="id">t</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">r</span> := <span class="tactic">eval</span> <span class="tactic">compute</span> <span class="kwd">in</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#access_mode">access_mode</a></span> <span class="id">t</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#By_value">By_value</a></span> <span class="id">_</span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#assign_loc_value">assign_loc_value</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#By_copy">By_copy</a></span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#assign_loc_copy">assign_loc_copy</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="tactic">fail</span> "<span class="id">assign_loc</span> <span class="id">error</span> (<span class="id">this</span> <span class="id">tactic</span> <span class="id">only</span> <span class="id">works</span> <span class="id">on</span> <span class="id">coq</span>-<span class="id">compcert</span>-32)"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">forward_eval_expr</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_lvalue">eval_lvalue</a></span>  <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">e</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">e</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Evar">Evar</a></span> ?<span class="id">id</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">r</span> := <span class="tactic">eval</span> <span class="tactic">compute</span> <span class="kwd">in</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.get">Maps.PTree.get</a></span> <span class="id">id</span> <span class="id">e</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Evar_local">eval_Evar_local</a></span>; (<span class="tactic">reflexivity</span> || <span class="tactic">fail</span> "<span class="id">Please</span> <span class="id">use</span> `<span class="tactic">eapply</span> <span class="id">eval_Evar_local</span>` <span class="id">to</span> <span class="tactic">debug</span>")<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Evar_global">eval_Evar_global</a></span>; [<span class="tactic">reflexivity</span> | <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ederef">Ederef</a></span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Ederef">eval_Ederef</a></span>; <span class="id">forward_eval_expr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Efield">Efield</a></span> ?<span class="id">a</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">r</span> := <span class="tactic">eval</span> <span class="tactic">compute</span> <span class="kwd">in</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#typeof">typeof</a></span> <span class="id">a</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Tstruct">Tstruct</a></span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Efield_struct">eval_Efield_struct</a></span>; [<span class="id">forward_eval_expr</span> | <span class="tactic">reflexivity</span> | <span class="tactic">reflexivity</span> | <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Tunion">Tunion</a></span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Efield_union">eval_Efield_union</a></span>; [<span class="id">forward_eval_expr</span> | <span class="tactic">reflexivity</span> | <span class="tactic">reflexivity</span> | <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="tactic">fail</span> "<span class="id">eval_lvalue</span> <span class="id">fails</span>"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_expr">eval_expr</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">e</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">e</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Econst_int">Econst_int</a></span> <span class="id">_</span> <span class="id">_</span>    =&gt; <span class="tactic">econstructor</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Econst_float">Econst_float</a></span> <span class="id">_</span> <span class="id">_</span>  =&gt; <span class="tactic">econstructor</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Econst_single">Econst_single</a></span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="tactic">econstructor</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Econst_long">Econst_long</a></span> <span class="id">_</span> <span class="id">_</span>   =&gt; <span class="tactic">econstructor</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Etempvar">Etempvar</a></span> <span class="id">_</span> <span class="id">_</span>      =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Etempvar">eval_Etempvar</a></span>; <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Eaddrof">Eaddrof</a></span> <span class="id">_</span> <span class="id">_</span>       =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Eaddrof">eval_Eaddrof</a></span>; <span class="id">forward_eval_expr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Eunop">Eunop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>       =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Eunop">eval_Eunop</a></span>; [<span class="id">forward_eval_expr</span> | <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_unary_operation">Cop.sem_unary_operation</a></span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ebinop">Ebinop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>    =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Ebinop">eval_Ebinop</a></span>; [<span class="id">forward_eval_expr</span> | <span class="id">forward_eval_expr</span> | <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_binary_operation">Cop.sem_binary_operation</a></span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ecast">Ecast</a></span> <span class="id">_</span> <span class="id">_</span>         =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Ecast">eval_Ecast</a></span>; [<span class="id">forward_eval_expr</span> | <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#sem_cast">Cop.sem_cast</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#classify_cast">Cop.classify_cast</a></span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Esizeof">Esizeof</a></span> <span class="id">_</span> <span class="id">_</span>       =&gt; <span class="tactic">econstructor</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ealignof">Ealignof</a></span> <span class="id">_</span> <span class="id">_</span>      =&gt; <span class="tactic">econstructor</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>                 =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_Elvalue">eval_Elvalue</a></span>; [<span class="tactic">idtac</span> | <span class="id">deref_loc_tactic</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">forward_expr</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#eval_expr">eval_expr</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">econstructor</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">deref_loc_tactic</span>); <span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">forward_smallstep</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+<div class="doc">forward_return_some </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sreturn">Sreturn</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span>)) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_return_1">step_return_1</a></span>;[<br/>
+<div class="doc">eval_expr e le m a v  </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_expr</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+<div class="doc">forward_return_none </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sreturn">Sreturn</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_return_0">step_return_0</a></span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+<div class="doc">assign </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sassign">Sassign</a></span> <span class="id">_</span> <span class="id">_</span> ) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">econstructor</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">deref_loc_tactic</span>)<br/>
+<div class="doc">set </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sset">Sset</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_set">step_set</a></span>; <span class="id">forward_expr</span><br/>
+<div class="doc">seq </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ssequence">Ssequence</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_seq">step_seq</a></span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sskip">Sskip</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Kseq">Kseq</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_skip_seq">step_skip_seq</a></span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sifthenelse">Sifthenelse</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_ifthenelse">step_ifthenelse</a></span>;[<br/>
+<div class="doc">eval_expr e le m a v1 </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_expr</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+<div class="doc">bool_val v1 (typeof a) m = Some b </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+<div class="doc">switch </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sswitch">Sswitch</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_switch">step_switch</a></span>; [<br/>
+<div class="doc">eval_expr e le m a v </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_expr</span> |<br/>
+<div class="doc">sem_switch_arg v (typeof a) = Some n </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]; <span class="tactic">try</span> <span class="id">exec_seq_of_labeled_statement</span><br/>
+<br/>
+<div class="doc">call </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Scall">Scall</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_call">step_call</a></span>; [<br/>
+<div class="doc">classify_fun (typeof a) = fun_case_f tyargs tyres cconv </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> |<br/>
+<div class="doc">eval_expr e le m a vf </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">idtac</span>  |<br/>
+<div class="doc"> eval_exprlist e le m al tyargs vargs </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">idtac</span>  |<br/>
+<div class="doc">Genv.find_funct ge vf = Some fd </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> <span class="docright">(* or `econstructor; eauto`, which one is better  *)</span> |<br/>
+<div class="doc">type_of_fundef fd = Tfunction tyargs tyres cconv </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">forward_clight</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+<div class="doc">forward_return_some </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sreturn">Sreturn</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span>)) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_return_1">step_return_1</a></span>;[<br/>
+<div class="doc">eval_expr e le m a v  </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_expr</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+<div class="doc">forward_return_none </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sreturn">Sreturn</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_return_0">step_return_0</a></span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+<div class="doc">assign </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sassign">Sassign</a></span> <span class="id">_</span> <span class="id">_</span> ) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">econstructor</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">deref_loc_tactic</span>)<br/>
+<div class="doc">set </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sset">Sset</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_set">step_set</a></span>; <span class="id">forward_expr</span><br/>
+<div class="doc">seq </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Ssequence">Ssequence</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_seq">step_seq</a></span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sskip">Sskip</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Kseq">Kseq</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> ) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_skip_seq">step_skip_seq</a></span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sifthenelse">Sifthenelse</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_ifthenelse">step_ifthenelse</a></span>;[<br/>
+<div class="doc">eval_expr e le m a v1 </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_expr</span> |<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+<div class="doc">bool_val v1 (typeof a) m = Some b </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+<div class="doc">switch </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Sswitch">Sswitch</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_switch">step_switch</a></span>; [<br/>
+<div class="doc">eval_expr e le m a v </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_expr</span> |<br/>
+<div class="doc">sem_switch_arg v (typeof a) = Some n </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]; <span class="tactic">try</span> <span class="id">exec_seq_of_labeled_statement</span><br/>
+<br/>
+<div class="doc">call </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#State">State</a></span> <span class="id">_</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Scall">Scall</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step_call">step_call</a></span>; [<br/>
+<div class="doc">classify_fun (typeof a) = fun_case_f tyargs tyres cconv </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> |<br/>
+<div class="doc">eval_expr e le m a vf </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">idtac</span>  |<br/>
+<div class="doc"> eval_exprlist e le m al tyargs vargs </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">idtac</span>  |<br/>
+<div class="doc">Genv.find_funct ge vf = Some fd </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span> <span class="docright">(* or `econstructor; eauto`, which one is better  *)</span> |<br/>
+<div class="doc">type_of_fundef fd = Tfunction tyargs tyres cconv </div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_eq_one_zero">Int_eq_one_zero</a></span> :<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.one">Int.one</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">simpl_if_one_zero</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id">context</span>[<span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.one">Int.one</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>) <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span><br/>
+&nbsp;&nbsp;| |- <span class="id">context</span>[<span class="kwd">if</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.one">Int.one</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_eq_one_zero">Int_eq_one_zero</a></span><br/>
+&nbsp;&nbsp;| |- <span class="id">context</span>[<span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>) <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span><br/>
+&nbsp;&nbsp;| |- <span class="id">context</span>[(<span class="kwd">if</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>)] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">forward_star</span>' :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+<div class="doc">Inductive star (ge: genv): state -&gt; trace -&gt; state -&gt; Prop :=
+  | star_refl: forall s,
+      star ge s E0 s </div>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#star">Smallstep.star</a></span> <span class="id">_</span>  <span class="id">_</span> ?<span class="id">s1</span> <span class="id">_</span> ?<span class="id">s2</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">res1</span> := (<span class="tactic">eval</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">s1</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">res2</span> := (<span class="tactic">eval</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">s2</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">res1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Returnstate">Returnstate</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">res2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#Returnstate">Returnstate</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#star_refl">Smallstep.star_refl</a></span> || <span class="tactic">fail</span> "<span class="tactic">debug</span> `<span class="tactic">eapply</span> <span class="id">Smallstep.star_refl</span>`")<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#star_step">Smallstep.star_step</a></span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#star_step">Smallstep.star_step</a></span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#E0">Events.E0</a></span> = <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#Eapp">Events.Eapp</a></span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">forward_step</span>' :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Smallstep.html#step">Smallstep.step</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_smallstep</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Clight.html#step">step</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forward_clight</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#E0">Events.E0</a></span> = <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Events.html#Eapp">Events.Eapp</a></span> <span class="id">_</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">post_process</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| |- <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.get">Maps.PTree.get</a></span> ?<span class="id">X</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.set">Maps.PTree.set</a></span> ?<span class="id">X</span> <span class="id">_</span> <span class="id">_</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.gss">Maps.PTree.gss</a></span><br/>
+&nbsp;&nbsp;| <span class="id">H</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.get">Maps.PTree.get</a></span> ?<span class="id">X</span> <span class="id">_</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span> |- <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.get">Maps.PTree.get</a></span> ?<span class="id">X</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.set">Maps.PTree.set</a></span> ?<span class="id">Y</span> <span class="id">_</span> <span class="id">_</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Heq</span> := <span class="tactic">fresh</span> "<span class="id">Heq</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#PTree.gso">Maps.PTree.gso</a></span>; <span class="tactic">try</span> (<span class="tactic">apply</span> <span class="id">H</span>); <span class="tactic">try</span> (<span class="tactic">unfold</span> <span class="id">X</span>, <span class="id">Y</span>; <span class="tactic">intro</span> <span class="id">Heq</span>; <span class="tactic">inversion</span> <span class="id">Heq</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>; <span class="tactic">try</span> <span class="id">simpl_if_one_zero</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">forward_star</span> := <span class="tactic">try</span> <span class="id">simpl_if_one_zero</span>; <span class="tactic">try</span> <span class="id">forward_star</span>'; <span class="tactic">repeat</span> <span class="id">forward_step</span>'; <span class="tactic">try</span> <span class="id">post_process</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="eval_upd_regmap_same">eval_upd_regmap_same</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span> <span class="id">regs</span> <span class="id">v</span>, <span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span> <span class="id">r</span> (<span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span> <span class="id">r</span> <span class="id">v</span> <span class="id">regs</span>) = <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
+<div class="proofscript" id="proof3">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span>, <span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="eval_upd_regmap_other">eval_upd_regmap_other</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r0</span> <span class="id">r1</span> <span class="id">regs</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">r0</span> &lt;&gt; <span class="id">r1</span> -&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span> <span class="id">r0</span> (<span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span> <span class="id">r1</span> <span class="id">v</span> <span class="id">regs</span>) = <span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span> <span class="id">r0</span> <span class="id">regs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
+<div class="proofscript" id="proof4">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span>, <span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r0</span>; <span class="tactic">destruct</span> <span class="id">r1</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">exfalso</span>; <span class="tactic">apply</span> <span class="id">H</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<div class="doc">Integer.max_unsigned </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_max_unsigned_eq64">Int_max_unsigned_eq64</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> = 4294967295%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
+<div class="proofscript" id="proof5">
+&nbsp;&nbsp;<span class="kwd">Transparent</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.x86_32.Archi.html#ptr64">Archi.ptr64</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modulus">Int.modulus</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.wordsize">Int.wordsize</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Wordsize_32.wordsize">Wordsize_32.wordsize</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Ptrofs_max_unsigned_eq32">Ptrofs_max_unsigned_eq32</a></span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.max_unsigned">Ptrofs.max_unsigned</a></span> = 4294967295.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
+<div class="proofscript" id="proof6">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.max_unsigned">Ptrofs.max_unsigned</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.modulus">Ptrofs.modulus</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.wordsize">Ptrofs.wordsize</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Wordsize_Ptrofs.wordsize">Wordsize_Ptrofs.wordsize</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Transparent</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.x86_32.Archi.html#ptr64">Archi.ptr64</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_unsigned_ge_zero">Int_unsigned_ge_zero</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">i</span> &gt;= 0.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
+<div class="proofscript" id="proof7">
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hrange</span>: 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">i</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>). { <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_range_2">Int.unsigned_range_2</a></span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hrange</span>.<br/>
+&nbsp;&nbsp;<span class="comment">(**r&nbsp;Search&nbsp;(_&nbsp;&lt;=&nbsp;_).&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_ge">Z.le_ge</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Ptrofs_unsigned_ge_zero">Ptrofs_unsigned_ge_zero</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> <span class="id">i</span> &gt;= 0.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
+<div class="proofscript" id="proof8">
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hrange</span>: 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> <span class="id">i</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.max_unsigned">Ptrofs.max_unsigned</a></span>). { <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned_range_2">Ptrofs.unsigned_range_2</a></span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hrange</span>.<br/>
+&nbsp;&nbsp;<span class="comment">(**r&nbsp;Search&nbsp;(_&nbsp;&lt;=&nbsp;_).&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_ge">Z.le_ge</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Ptrofs_unsigned_repr_n">Ptrofs_unsigned_repr_n</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;0 &lt;= <span class="id">n</span> &lt;= 4294967295 -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span> <span class="id">n</span>) = <span class="id">n</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof9')">Proof.</div>
+<div class="proofscript" id="proof9">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned_repr">Ptrofs.unsigned_repr</a></span>; [<span class="tactic">reflexivity</span> | <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Ptrofs_max_unsigned_eq32">Ptrofs_max_unsigned_eq32</a></span>; <span class="id">lia</span>].<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_unsigned_repr_n">Int_unsigned_repr_n</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;0 &lt;= <span class="id">n</span> &lt;= 4294967295 -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> <span class="id">n</span>) = <span class="id">n</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof10')">Proof.</div>
+<div class="proofscript" id="proof10">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span>; [<span class="tactic">reflexivity</span> | <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Int_max_unsigned_eq64">Int_max_unsigned_eq64</a></span>; <span class="id">lia</span>].<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Ptrofs_unsigned_repr_id_of_reg">Ptrofs_unsigned_repr_id_of_reg</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span> (8 * <span class="id">id_of_reg</span> <span class="id">r</span>)) = 8 * <span class="id">id_of_reg</span> <span class="id">r</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof11')">Proof.</div>
+<div class="proofscript" id="proof11">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">id_of_reg</span>; <span class="tactic">destruct</span> <span class="id">r</span>;<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned_repr">Ptrofs.unsigned_repr</a></span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Ptrofs_max_unsigned_eq32">Ptrofs_max_unsigned_eq32</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Ptrofs_unsigned_repr_id_of_reg_8">Ptrofs_unsigned_repr_id_of_reg_8</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;0 &lt;= (8 + 8 * <span class="id">id_of_reg</span> <span class="id">r</span>) &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.max_unsigned">Ptrofs.max_unsigned</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof12')">Proof.</div>
+<div class="proofscript" id="proof12">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">id_of_reg</span>; <span class="tactic">destruct</span> <span class="id">r</span>;<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Ptrofs_max_unsigned_eq32">Ptrofs_max_unsigned_eq32</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hreg_eq">Hreg_eq</a></span>: <br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>, (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span> 8) +<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span> (8 * <span class="id">id_of_reg</span> <span class="id">r</span>))))) = (8 + 8 * <span class="id">id_of_reg</span> <span class="id">r</span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof13')">Proof.</div>
+<div class="proofscript" id="proof13">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned_repr">Ptrofs.unsigned_repr</a></span>; <span class="tactic">try</span> (<span class="tactic">rewrite</span> <span class="id"><a href="bpf.clightlogic.CommonLemma.html#Ptrofs_max_unsigned_eq32">Ptrofs_max_unsigned_eq32</a></span>; <span class="tactic">unfold</span> <span class="id">id_of_reg</span>; <span class="tactic">destruct</span> <span class="id">r</span>; <span class="id">lia</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nth_error_some_length">nth_error_some_length</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">A</span> <span class="id">n</span> <span class="id">l</span> (<span class="id">m</span>:<span class="id">A</span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#nth_error">nth_error</a></span> <span class="id">l</span> <span class="id">n</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">m</span> -&gt; (0 &lt;= <span class="id">n</span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">List.length</a></span> <span class="id">l</span>)%<span class="id">nat</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof14')">Proof.</div>
+<div class="proofscript" id="proof14">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#nth_error_Some">nth_error_Some</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">n</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H0</span>; <span class="tactic">inversion</span> <span class="id">H0</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="valid_access_chunk_implies">valid_access_chunk_implies</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">chunk</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">p</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="id">m</span> <span class="id">chunk</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">p</span> -&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="id">m</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">p</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof15')">Proof.</div>
+<div class="proofscript" id="proof15">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">chunk</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">Hrange</span> &amp; <span class="id">Halign</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="kwd">in</span> *; <span class="tactic">intros</span>; <span class="tactic">apply</span> <span class="id">Hrange</span>; <span class="id">lia</span> | <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#align_chunk">align_chunk</a></span>; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.divide_1_l">Z.divide_1_l</a></span>].<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hint_unsigned_int64">Hint_unsigned_int64</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span>, (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">i</span>))) = (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">i</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof16')">Proof.</div>
+<div class="proofscript" id="proof16">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned_repr">Int64.unsigned_repr</a></span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hrange</span>: 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">i</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>). { <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_range_2">Int.unsigned_range_2</a></span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> <span class="kwd">with</span> 4294967295 <span class="kwd">in</span> <span class="id">Hrange</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.max_unsigned">Int64.max_unsigned</a></span> <span class="kwd">with</span> 18446744073709551615.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hzeq_neq_intro">Hzeq_neq_intro</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span>:<span class="kwd">Type</span>) <span class="id">a</span> <span class="id">n</span> (<span class="id">b</span> <span class="id">c</span>: <span class="id">A</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">a</span> &lt;&gt; <span class="id">n</span>)%<span class="id">nat</span> -&gt; (<span class="kwd">if</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zeq">Coqlib.zeq</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">a</span>) <span class="kwd">then</span> <span class="id">b</span> <span class="kwd">else</span> <span class="id">c</span>) = <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof17')">Proof.</div>
+<div class="proofscript" id="proof17">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zeq_false">zeq_false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Znat.html#Nat2Z.inj">Nat2Z.inj</a></span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_repr_eq">Int_repr_eq</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ha_range</span>: 0 &lt;= <span class="id">a</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hb_range</span>: 0 &lt;= <span class="id">b</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Heq</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> <span class="id">a</span> = <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> <span class="id">b</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> = <span class="id">b</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof18')">Proof.</div>
+<div class="proofscript" id="proof18">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Transparent</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> <span class="kwd">in</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">do</span> 2 <span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.Z_mod_modulus_eq">Int.Z_mod_modulus_eq</a></span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.modulus">Int.modulus</a></span> <span class="kwd">with</span> 4294967296 <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> <span class="kwd">with</span> 4294967295 <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mod_small">Z.mod_small</a></span> <span class="kwd">in</span> <span class="id">H0</span>; [ | <span class="id">lia</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mod_small">Z.mod_small</a></span> <span class="kwd">in</span> <span class="id">H0</span>; [ | <span class="id">lia</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Clt_Zlt_signed">Clt_Zlt_signed</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.lt">Int.lt</a></span> <span class="id">ofs</span> <span class="id">hi</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.signed">Int.signed</a></span> <span class="id">ofs</span> &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.signed">Int.signed</a></span> <span class="id">hi</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof19')">Proof.</div>
+<div class="proofscript" id="proof19">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.lt">Int.lt</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">Coqlib.zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Cle_Zle_signed">Cle_Zle_signed</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">lo</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.lt">Int.lt</a></span> <span class="id">ofs</span> <span class="id">lo</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.signed">Int.signed</a></span> <span class="id">lo</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.signed">Int.signed</a></span> <span class="id">ofs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof20')">Proof.</div>
+<div class="proofscript" id="proof20">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">negb_true_iff</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.lt">Int.lt</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">Coqlib.zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Clt_Zlt_unsigned">Clt_Zlt_unsigned</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">ofs</span> <span class="id">hi</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">hi</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof21')">Proof.</div>
+<div class="proofscript" id="proof21">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">Coqlib.zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Cle_Zle_unsigned">Cle_Zle_unsigned</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">lo</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">ofs</span> <span class="id">lo</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">lo</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof22')">Proof.</div>
+<div class="proofscript" id="proof22">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">negb_true_iff</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">Coqlib.zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">context_destruct_if_inversion</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">Heq</span> := <span class="tactic">fresh</span> "<span class="id">Hcond</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>) = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span> <span class="id">eqn</span>: <span class="id">Hcond</span>; <span class="tactic">inversion</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

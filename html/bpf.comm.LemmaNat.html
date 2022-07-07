@@ -1,0 +1,991 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module LemmaNat</title>
+<meta name="description" content="Documentation of Coq module LemmaNat" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module LemmaNat</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Zbits.html">Zbits</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">simpl_nat</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">H</span>: ?<span class="id">X</span> &lt;&gt; ?<span class="id">Y</span> |- <span class="id">context</span> [<span class="kwd">if</span> (?<span class="id">X</span> =? ?<span class="id">Y</span>) <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">X</span> =? <span class="id">Y</span>) <span class="id">eqn</span>: <span class="id">Ht</span>; [<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.eqb_eq">Nat.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Ht</span>; <span class="tactic">intuition</span> | <span class="tactic">try</span> <span class="tactic">reflexivity</span>]; <span class="tactic">clear</span> <span class="id">Ht</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="Forall_exec">Forall_exec</a></span> (<span class="id">P</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">n</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>)  : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">n</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span> =&gt; <span class="id">P</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">n</span>' =&gt; <span class="id">P</span> <span class="id">n</span> &amp;&amp; <span class="id">Forall_exec</span> <span class="id">P</span> <span class="id">n</span>'<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Forall_exec_spec">Forall_exec_spec</a></span> : <span class="kwd">forall</span> <span class="id">P</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.LemmaNat.html#Forall_exec">Forall_exec</a></span> <span class="id">P</span> <span class="id">b</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>, (<span class="id">n</span> &lt;= <span class="id">b</span>)%<span class="id">nat</span> -&gt; <span class="id">P</span> <span class="id">n</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">n</span>=0%<span class="id">nat</span>) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">simpl</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> ( <span class="id">n</span> &lt;= <span class="id">b</span> \/ <span class="id">n</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">b</span>)%<span class="id">nat</span> <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H1</span> ; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHb</span>; <span class="tactic">auto</span>. <span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="odd_of_nat">odd_of_nat</a></span> : <span class="kwd">forall</span> (<span class="id">n</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.odd">Z.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>:<span class="id">NO</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_spec">Nat.odd_spec</a></span> <span class="kwd">in</span> <span class="id">NO</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.Odd">Nat.Odd</a></span> <span class="kwd">in</span> <span class="id">NO</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">NO</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Znat.html#Nat2Z.inj_add">Nat2Z.inj_add</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Znat.html#Nat2Z.inj_mul">Nat2Z.inj_mul</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_comm">Z.add_comm</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.odd_add_mul_2">Z.odd_add_mul_2</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.odd">Z.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>)) <span class="id">eqn</span>:<span class="id">ZO</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.odd_spec">Z.odd_spec</a></span> <span class="kwd">in</span> <span class="id">ZO</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ZO</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 1 + 2 * <span class="id">m</span>)%<span class="id">nat</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> <span class="id">x</span>). <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add_mul_2">Nat.odd_add_mul_2</a></span> <span class="kwd">in</span> <span class="id">NO</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="testbit_of_nat">testbit_of_nat</a></span> : <span class="kwd">forall</span> <span class="id">m</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.testbit">Z.testbit</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">m</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.testbit">Nat.testbit</a></span> <span class="id">n</span> <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
+<div class="proofscript" id="proof3">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">m</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#odd_of_nat">odd_of_nat</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Znat.html#Nat2Z.inj_succ">Nat2Z.inj_succ</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">IHm</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Zbits.html#Ztestbit_succ">Ztestbit_succ</a></span> <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2_div">Nat.div2_div</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#div_Zdiv">div_Zdiv</a></span> <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="testbit_of_nat_ext">testbit_of_nat_ext</a></span> : <span class="kwd">forall</span> <span class="id">i</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.testbit">Z.testbit</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>) <span class="id">i</span> = <span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.leb">Z.leb</a></span> 0 <span class="id">i</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.testbit">Nat.testbit</a></span> <span class="id">n</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> <span class="id">i</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
+<div class="proofscript" id="proof4">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (0 &lt;=? <span class="id">i</span>) <span class="id">eqn</span>:<span class="id">LE</span>.<br/>
+&nbsp;&nbsp;-<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool_imp_le">Zle_bool_imp_le</a></span>  <span class="kwd">in</span> <span class="id">LE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="tactic">exists</span> <span class="id">m</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">m</span> = <span class="id">i</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> <span class="id">i</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">EQ</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">EQ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">m</span>) = <span class="id">m</span>) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#testbit_of_nat">testbit_of_nat</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">assert</span> (<span class="id">i</span> &lt; 0) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="land_land">land_land</a></span> : <span class="kwd">forall</span> <span class="id">n</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.land">Z.land</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">m</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> <span class="id">m</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
+<div class="proofscript" id="proof5">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.bits_inj">Z.bits_inj</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqf">Z.eqf</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.comm.LemmaNat.html#testbit_of_nat_ext">testbit_of_nat_ext</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (0 &lt;=? <span class="id">n0</span>) <span class="id">eqn</span>:<span class="id">NO</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="tactic">exists</span> <span class="id">i</span>, <span class="id">n0</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">i</span>).<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> <span class="id">n0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>. <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">x</span>) = <span class="id">x</span>) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span>  <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.land_spec">Z.land_spec</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_spec">Nat.land_spec</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> !<span class="id"><a href="bpf.comm.LemmaNat.html#testbit_of_nat">testbit_of_nat</a></span>. <span class="docright">(* ? (without natural) performs the rewrite as many times as possible (possibly zero times). This form never fails. ! (without natural) performs the rewrite as many times as possible and at least once. The tactic fails if the requested number of rewrites can't be performed.  *)</span><br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.land_spec">Z.land_spec</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span>! <span class="id"><a href="bpf.comm.LemmaNat.html#testbit_of_nat_ext">testbit_of_nat_ext</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span>(0 &lt;=? <span class="id">n0</span>) ; <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="land_bound">land_bound</a></span> : <span class="kwd">forall</span> <span class="id">n</span> <span class="id">x</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> <span class="id">x</span> &lt;= <span class="id">n</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
+<div class="proofscript" id="proof6">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">n</span> <span class="id">x</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="kwd">forall</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>, <span class="id">a</span> &lt;= <span class="id">n</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.bitwise">Nat.bitwise</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span> &lt;= <span class="id">a</span>).<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">simpl</span>. <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.bitwise">Nat.bitwise</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span> <span class="id">n</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">a</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">b</span>) &lt;= (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">a</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHn</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2_decr">Nat.div2_decr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.bitwise">Nat.bitwise</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span> <span class="id">n</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">a</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">b</span>)) <span class="kwd">as</span> <span class="id">n1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2_div">Nat.div2_div</a></span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div_mod">Nat.div_mod</a></span> <span class="id">a</span> 2) <span class="tactic">at</span> 2 <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">a</span> <span class="id">mod</span> 2 = <span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">a</span> <span class="kwd">then</span> 1 <span class="kwd">else</span> 0).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">a</span>) <span class="id">eqn</span>:<span class="id">O</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_spec">Nat.odd_spec</a></span> <span class="kwd">in</span> <span class="id">O</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.Odd">Nat.Odd</a></span> <span class="kwd">in</span> <span class="id">O</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">O</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">E</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> (2 * <span class="id">m</span> + 1) <span class="kwd">with</span> (1 + <span class="id">m</span> * 2) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.mod_add">Nat.mod_add</a></span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">a</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">O</span>; <span class="tactic">reflexivity</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_odd">Nat.negb_odd</a></span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_spec">Nat.even_spec</a></span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H1</span> <span class="kwd">as</span> (<span class="id">x</span> &amp; <span class="id">EQ</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Mult.html#mult_comm">mult_comm</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.mod_mul">Nat.mod_mul</a></span>. <span class="tactic">reflexivity</span>. <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span>  (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">a</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">b</span>) ; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>. <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Nat_land_0xff">Nat_land_0xff</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">c</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hc_le</span> : <span class="id">c</span> &lt;= 255),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">c</span> 255 = <span class="id">c</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
+<div class="proofscript" id="proof7">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hc</span>: <span class="id">c</span> &lt; 256) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hc_le</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">do</span> 255 (<span class="tactic">destruct</span> <span class="id">c</span>; [<span class="tactic">reflexivity</span> |]).<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c</span>; [<span class="tactic">reflexivity</span> |].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">c</span>;  <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Heven_spec">Heven_spec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> <span class="id">n</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 2*<span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
+<div class="proofscript" id="proof8">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_spec">Nat.even_spec</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Even.html#even_equiv">Even.even_equiv</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#even_2n">Div2.even_2n</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">p</span> &amp; <span class="id">Hdouble</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.double_twice">Nat.double_twice</a></span> <span class="kwd">in</span> <span class="id">Hdouble</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">p</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Hodd_spec">Hodd_spec</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 2*<span class="id">m</span>+1.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof9')">Proof.</div>
+<div class="proofscript" id="proof9">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_spec">Nat.odd_spec</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Even.html#odd_equiv">Even.odd_equiv</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#odd_S2n">Div2.odd_S2n</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">p</span> &amp; <span class="id">Hdouble</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.double_twice">Nat.double_twice</a></span> <span class="kwd">in</span> <span class="id">Hdouble</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">Hdouble</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">p</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_0_intro">nat_land_7_eq_0_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 0 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 0 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof10')">Proof.</div>
+<div class="proofscript" id="proof10">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m0</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>; <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_0_elim">nat_land_7_eq_0_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 0 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 0.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof11')">Proof.</div>
+<div class="proofscript" id="proof11">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 0) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: 8 * <span class="id">m</span> = 2 * (4 * <span class="id">m</span>)) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: 4 * <span class="id">m</span> = 2 * (2 * <span class="id">m</span>)) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_0">nat_land_7_eq_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 0 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 0 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof12')">Proof.</div>
+<div class="proofscript" id="proof12">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_0_intro">nat_land_7_eq_0_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_0_elim">nat_land_7_eq_0_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_2_intro">nat_land_7_eq_2_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 2 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 2 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof13')">Proof.</div>
+<div class="proofscript" id="proof13">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hoddm</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">_</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span>; <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_2_elim">nat_land_7_eq_2_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 2 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 2.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof14')">Proof.</div>
+<div class="proofscript" id="proof14">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (2 + 8 * <span class="id">m</span>) = 2 * (1 + 4 * <span class="id">m</span>)) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: 1 + 4 * <span class="id">m</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * (2 * <span class="id">m</span>))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_succ">Nat.odd_succ</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_mul">Nat.even_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> 4) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#orb">orb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_2">nat_land_7_eq_2</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 2 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 2 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof15')">Proof.</div>
+<div class="proofscript" id="proof15">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_2_intro">nat_land_7_eq_2_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_2_elim">nat_land_7_eq_2_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_4_intro">nat_land_7_eq_4_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 4 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 4 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof16')">Proof.</div>
+<div class="proofscript" id="proof16">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m0</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_4_elim">nat_land_7_eq_4_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 4 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 4.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof17')">Proof.</div>
+<div class="proofscript" id="proof17">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 4) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (4 + 8 * <span class="id">m</span>) = 2 * (2 + 4 * <span class="id">m</span>)) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: 2 + 4 * <span class="id">m</span> = 2 * (1 + 2 * <span class="id">m</span>)) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (1 + 2 * <span class="id">m</span>) = (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2*<span class="id">m</span>))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_succ">Nat.odd_succ</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_mul">Nat.even_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#orb">orb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_4">nat_land_7_eq_4</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 4 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 4 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof18')">Proof.</div>
+<div class="proofscript" id="proof18">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_4_intro">nat_land_7_eq_4_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_4_elim">nat_land_7_eq_4_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_6_intro">nat_land_7_eq_6_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 6 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 6 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof19')">Proof.</div>
+<div class="proofscript" id="proof19">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">_</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">m</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_6_elim">nat_land_7_eq_6_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 6 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 6.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof20')">Proof.</div>
+<div class="proofscript" id="proof20">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 6) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (6 + 8 * <span class="id">m</span>) = 2 * (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * ( <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * <span class="id">m</span>))))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_succ">Nat.odd_succ</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_mul">Nat.even_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#orb">orb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_succ">Nat.odd_succ</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_mul">Nat.even_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#orb">orb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_6">nat_land_7_eq_6</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 6 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 6 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof21')">Proof.</div>
+<div class="proofscript" id="proof21">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_6_intro">nat_land_7_eq_6_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_6_elim">nat_land_7_eq_6_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_1_intro">nat_land_7_eq_1_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 1 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 1 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof22')">Proof.</div>
+<div class="proofscript" id="proof22">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">eqn</span>:<span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_1_elim">nat_land_7_eq_1_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 1 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 1.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof23')">Proof.</div>
+<div class="proofscript" id="proof23">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 1) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (1 + 8 * <span class="id">m</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * (2 * (2 * <span class="id">m</span>)))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_1">nat_land_7_eq_1</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 1 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 1 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof24')">Proof.</div>
+<div class="proofscript" id="proof24">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_1_intro">nat_land_7_eq_1_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_1_elim">nat_land_7_eq_1_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_3_intro">nat_land_7_eq_3_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 3 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 3 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof25')">Proof.</div>
+<div class="proofscript" id="proof25">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">_</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">eqn</span>:<span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_3_elim">nat_land_7_eq_3_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 3 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 3.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof26')">Proof.</div>
+<div class="proofscript" id="proof26">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 3) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (3 + 8 * <span class="id">m</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * (2 * <span class="id">m</span>))))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_succ">Nat.odd_succ</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_mul">Nat.even_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#orb">orb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_3">nat_land_7_eq_3</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 3 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 3 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof27')">Proof.</div>
+<div class="proofscript" id="proof27">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_3_intro">nat_land_7_eq_3_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_3_elim">nat_land_7_eq_3_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_5_intro">nat_land_7_eq_5_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 5 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 5 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof28')">Proof.</div>
+<div class="proofscript" id="proof28">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">_</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">eqn</span>:<span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>; <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>; <span class="tactic">clear</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_5_elim">nat_land_7_eq_5_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 5 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 5.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof29')">Proof.</div>
+<div class="proofscript" id="proof29">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 5) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (5 + 8 * <span class="id">m</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * (2 * (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 * <span class="id">m</span>))))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_succ">Nat.odd_succ</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even_mul">Nat.even_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.even">Nat.even</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#orb">orb</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_5">nat_land_7_eq_5</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 5 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 5 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof30')">Proof.</div>
+<div class="proofscript" id="proof30">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_5_intro">nat_land_7_eq_5_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_5_elim">nat_land_7_eq_5_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_7_intro">nat_land_7_eq_7_intro</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 7 -&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 7 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof31')">Proof.</div>
+<div class="proofscript" id="proof31">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">n</span>) <span class="id">eqn</span>: <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hoddm</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hoddm</span> <span class="kwd">as</span> <span class="id">Hm_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hm_eq</span> <span class="kwd">as</span> (<span class="id">m0</span> &amp; <span class="id">Hm_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_1_r">Nat.add_1_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m0</span>) <span class="id">eqn</span>: <span class="id">Hoddm0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Hodd_spec">Hodd_spec</a></span> <span class="kwd">in</span> <span class="id">Hoddm0</span> <span class="kwd">as</span> <span class="id">Hm0_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hm0_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hm_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">m</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_l">Nat.add_0_l</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.add_0_r">Nat.add_0_r</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.negb_even">Nat.negb_even</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_false_iff">Bool.negb_false_iff</a></span> <span class="kwd">in</span> <span class="id">Hodd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#Heven_spec">Heven_spec</a></span> <span class="kwd">in</span> <span class="id">Hodd</span> <span class="kwd">as</span> <span class="id">Hn_eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hn_eq</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">Hn_eq</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double">Div2.div2_double</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> <span class="id">m</span>) <span class="id">eqn</span>: <span class="id">Hoddm</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.div2">Nat.div2</a></span> <span class="id">_</span>)); <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_7_elim">nat_land_7_eq_7_elim</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;(<span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 7 + 8 * <span class="id">m</span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 7.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof32')">Proof.</div>
+<div class="proofscript" id="proof32">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">m</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 7) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 8) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (7 + 8 * <span class="id">m</span>) = (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 *(3+4*<span class="id">m</span>)))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 3) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 4) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (3 + 4 * <span class="id">m</span>) = (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (2 *(1+2*<span class="id">m</span>)))) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Div2.html#div2_double_plus_one">Div2.div2_double_plus_one</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_add">Nat.odd_add</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 1) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd_mul">Nat.odd_mul</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.odd">Nat.odd</a></span> 2) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#xorb">xorb</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq_7">nat_land_7_eq_7</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = 7 &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = 7 + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof33')">Proof.</div>
+<div class="proofscript" id="proof33">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_7_intro">nat_land_7_eq_7_intro</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_7_elim">nat_land_7_eq_7_elim</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="nat_land_7_eq">nat_land_7_eq</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">k</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hrange</span>: <span class="id">k</span> &lt;= 7),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> <span class="id">n</span> 7 = <span class="id">k</span> &lt;-&gt; <span class="tactic">exists</span> <span class="id">m</span>, <span class="id">n</span> = <span class="id">k</span> + 8 * <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof34')">Proof.</div>
+<div class="proofscript" id="proof34">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_0">nat_land_7_eq_0</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_1">nat_land_7_eq_1</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_2">nat_land_7_eq_2</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_3">nat_land_7_eq_3</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_4">nat_land_7_eq_4</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_5">nat_land_7_eq_5</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_6">nat_land_7_eq_6</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">k</span>; [<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.LemmaNat.html#nat_land_7_eq_7">nat_land_7_eq_7</a></span> | ].<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

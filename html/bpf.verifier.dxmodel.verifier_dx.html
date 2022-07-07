@@ -1,0 +1,80 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module verifier_dx</title>
+<meta name="description" content="Documentation of Coq module verifier_dx" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module verifier_dx</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html">BinNums</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.Ascii.html">Ascii</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Nat.html">Nat</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.AltBinNotations.html">Numbers.AltBinNotations</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">List.ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Errors.html">Errors</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.lib</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+&nbsp;<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span> <span class="id">CoqIR</span> <span class="id">IRtoC</span> <span class="id">DXModule</span> <span class="id">DumpAsC</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="id">Bool</span> <span class="id">Nat</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxList64.html">DxList64</a></span> <span class="id">DxNat</span> <span class="id"><a href="bpf.dxcomm.DxBinrBPF.html">DxBinrBPF</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.verifier.dxmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.verifier.dxmodel.Dxopcode.html">Dxopcode</a></span> <span class="id"><a href="bpf.verifier.dxmodel.Dxstate.html">Dxstate</a></span> <span class="id"><a href="bpf.verifier.dxmodel.Dxmonad.html">Dxmonad</a></span> <span class="id"><a href="bpf.verifier.dxmodel.Dxverifier.html">Dxverifier</a></span>.<br/>
+<br/>
+<br/>
+<span class="id">GenerateIntermediateRepresentation</span> <span class="id">SymbolIRs</span><br/>
+&nbsp;&nbsp;<span class="id">M</span> <span class="id">bindM</span> <span class="id">returnM</span><br/>
+&nbsp;&nbsp;<span class="id">Bool.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">Nat.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">DxIntegers.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">DxList64.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">DxNat.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">DxBinrBPF.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">Dxopcode.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">Dxstate.Exports</span><br/>
+&nbsp;&nbsp;<span class="id">eval_ins_len</span><br/>
+&nbsp;&nbsp;<span class="id">eval_ins</span><br/>
+&nbsp;&nbsp;<span class="id">__</span><br/>
+&nbsp;&nbsp;<span class="id">is_dst_R0</span><br/>
+&nbsp;&nbsp;<span class="id">is_well_dst</span><br/>
+&nbsp;&nbsp;<span class="id">is_well_src</span><br/>
+&nbsp;&nbsp;<span class="id">is_well_jump</span><br/>
+&nbsp;&nbsp;<span class="id">is_not_div_by_zero</span><br/>
+&nbsp;&nbsp;<span class="id">is_not_div_by_zero64</span><br/>
+&nbsp;&nbsp;<span class="id">is_shift_range</span><br/>
+&nbsp;&nbsp;<span class="id">is_shift_range64</span><br/>
+&nbsp;&nbsp;<span class="id">get_opcode</span><br/>
+&nbsp;&nbsp;<span class="id">get_offset</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_alu32_imm</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_alu32_reg</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_alu64_imm</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_alu64_reg</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_branch_imm</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_branch_reg</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_load_imm</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_load_reg</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_store_imm</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_opcode_store_reg</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_aux2</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier_aux</span><br/>
+&nbsp;&nbsp;<span class="id">bpf_verifier</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">string</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="dxModuleTest">dxModuleTest</a></span> := <span class="id">makeDXModuleWithUserIds</span><br/>
+&nbsp;&nbsp;[ <span class="id"><a href="bpf.verifier.dxmodel.Dxstate.html#state_struct_def">state_struct_def</a></span> ]<br/>
+&nbsp;&nbsp;[ "<span class="id">verifier_state</span>"; "<span class="id">ins_len</span>"; "<span class="id">ins</span>" ] <span class="id"><a href="bpf.verifier.dxmodel.verifier_dx.html#SymbolIRs">SymbolIRs</a></span>.<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">string</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

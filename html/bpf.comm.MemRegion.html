@@ -1,0 +1,63 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MemRegion</title>
+<meta name="description" content="Documentation of Coq module MemRegion" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MemRegion</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html">Memtype</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.rBPFMemType.html">rBPFMemType</a></span>.<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="memory_region">memory_region</a></span> : <span class="kwd">Type</span> := <span class="id"><a name="mkmr">mkmr</a></span>{<br/>
+&nbsp;&nbsp;<span class="id"><a name="start_addr">start_addr</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="block_size">block_size</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>;   <span class="docright">(* should those be val32_t?  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="block_perm">block_perm</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#permission">permission</a></span>; <span class="docright">(* let's say it should be u32  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="block_ptr">block_ptr</a></span>  : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="default_memory_region">default_memory_region</a></span> := {|<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.MemRegion.html#start_addr">start_addr</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vnullptr">Vnullptr</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.MemRegion.html#block_size">block_size</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vzero">Vzero</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.MemRegion.html#block_perm">block_perm</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Nonempty">Nonempty</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.MemRegion.html#block_ptr">block_ptr</a></span>  := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vnullptr">Vnullptr</a></span>;<br/>
+|}.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Memory_regions">Memory_regions</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Memory_regions.t">t</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="bpf.comm.MemRegion.html#memory_region">memory_region</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Memory_regions.index_nat">index_nat</a></span> (<span class="id">l</span>: <span class="id"><a href="bpf.comm.MemRegion.html#Memory_regions.t">t</a></span>) (<span class="id">idx</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.comm.MemRegion.html#memory_region">memory_region</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#nth_error">List.nth_error</a></span> <span class="id">l</span> <span class="id">idx</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">mr</span> =&gt; <span class="id">mr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="bpf.comm.MemRegion.html#default_memory_region">default_memory_region</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.comm.MemRegion.html#Memory_regions">Memory_regions</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="MyMemRegionsType">MyMemRegionsType</a></span> := <span class="id"><a href="bpf.comm.MemRegion.html#t">Memory_regions.t</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="MyMemRegionsIndexnat">MyMemRegionsIndexnat</a></span> := <span class="id"><a href="bpf.comm.MemRegion.html#index_nat">Memory_regions.index_nat</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="default_memory_regions">default_memory_regions</a></span>: <span class="id"><a href="bpf.comm.MemRegion.html#MyMemRegionsType">MyMemRegionsType</a></span> :=  [].<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="MyMemRegionsAdd">MyMemRegionsAdd</a></span> (<span class="id">mr</span>: <span class="id"><a href="bpf.comm.MemRegion.html#memory_region">memory_region</a></span>) (<span class="id">l</span>: <span class="id"><a href="bpf.comm.MemRegion.html#MyMemRegionsType">MyMemRegionsType</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">l</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [] =&gt; [<span class="id">mr</span>]<br/>
+&nbsp;&nbsp;| <span class="id">hd</span> :: <span class="id">tl</span> =&gt; <span class="id">hd</span> :: <span class="id">MyMemRegionsAdd</span> <span class="id">mr</span> <span class="id">tl</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

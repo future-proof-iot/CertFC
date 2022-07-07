@@ -1,0 +1,127 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module GenMatchable</title>
+<meta name="description" content="Documentation of Coq module GenMatchable" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module GenMatchable</h1>
+<div class="coq">
+<br/>
+<div class="doc">Provide a simpler way to construct a Matchable type
+    - the inductive type needs to be a simple enumeration type
+    - the match is compiled into a switch
+    The difficulty is that the <span class="bracket"><span class="id">matchInterp</span></span> field of the MatchableType record is dependently typed.
+    The good news is that, this is almost the type of the eliminator.
+*</div>
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">switch_list</span> [<span class="id">z1</span>;...;<span class="id">zn</span>] <span class="id">generates</span> <span class="id">the</span> <span class="id">body</span> <span class="id">of</span> <span class="id">a</span> <span class="id">switch</span> <span class="id">statement</span>
+    <span class="kwd">fun</span> [<span class="id">e1</span>;....;<span class="id">en</span>;<span class="id">def</span>] =&gt; (<span class="id">z1</span>: <span class="id">e1</span>) ; (<span class="id">z2</span>:<span class="id">e2</span>) ; .... ; (<span class="id">zn</span>: <span class="id">en</span>) *)
+<span class="kwd">Fixpoint</span> <span class="id"><a name="switch_list">switch_list</a></span> (<span class="id">l</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>)  : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#statement">Csyntax.statement</a></span> -&gt; <span class="id">Result</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#labeled_statements">Csyntax.labeled_statements</a></span> :=
+  <span class="kwd">match</span> <span class="id">l</span> <span class="kwd">with</span>
+  | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; (<span class="kwd">fun</span> <span class="id">cases</span> =&gt; <span class="kwd">match</span> <span class="id">cases</span> <span class="kwd">with</span>
+                         | <span class="id">do_def</span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt;
+                           <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <span class="id">do_def</span>
+                                           <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LSnil">Csyntax.LSnil</a></span>)
+                         |   <span class="id">_</span>     =&gt; <span class="id">Err</span> <span class="id">MatchEncodingFailed</span>
+                         <span class="kwd">end</span>)
+
+  | <span class="id">e</span>::<span class="id">l</span>' =&gt; (<span class="kwd">fun</span> <span class="id">cases</span> =&gt;
+              <span class="kwd">match</span> <span class="id">cases</span> <span class="kwd">with</span>
+              | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id">Err</span> <span class="id">MatchEncodingFailed</span>
+              | <span class="id">c1</span>:: <span class="id">cases</span> =&gt;
+                <span class="kwd">match</span> <span class="id">switch_list</span> <span class="id">l</span>' <span class="id">cases</span> <span class="kwd">with</span>
+                | <span class="id">Err</span> <span class="id">x</span> =&gt; <span class="id">Err</span> <span class="id">x</span>
+                | <span class="id">Ok</span> <span class="id">lcase</span>  =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#LScons">Csyntax.LScons</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">e</span>) <span class="id">c1</span> <span class="id">lcase</span>)
+                <span class="kwd">end</span>
+              <span class="kwd">end</span>)
+<span class="kwd">end</span>.
+
+(* [<span class="id">fold_type</span> [<span class="id">x1</span>;...;<span class="id">xn</span>] <span class="id">A</span>]  <span class="id">returns</span> <span class="id">x1</span> -&gt; ... -&gt; <span class="id">xn</span> -&gt; <span class="id">A</span> *)
+<span class="kwd">Definition</span> <span class="id"><a name="fold_type">fold_type</a></span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span>) (<span class="id">A</span>: <span class="kwd">Type</span>) :=
+  <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">fold_right</a></span> (<span class="kwd">fun</span> <span class="id">X</span> <span class="id">Y</span> : <span class="kwd">Type</span> =&gt; <span class="id">X</span> -&gt; <span class="id">Y</span>) <span class="id">A</span> <span class="id">l</span>.
+
+(* <span class="id">last_arg_first</span> <span class="id">A</span> <span class="id">B</span> [<span class="id">x1</span> ; ...; <span class="id">xn</span>] (<span class="id">f</span> : <span class="id">x1</span> -&gt; .... -&gt; <span class="id">xn</span> -&gt; <span class="id">A</span> -&gt; <span class="id">B</span>) <span class="id">returns</span>
+   <span class="id">the</span> <span class="id">function</span> <span class="id">A</span> -&gt; <span class="id">x1</span> -&gt; ... -&gt; <span class="id">xn</span> -&gt; <span class="id">B</span> *)
+
+<span class="kwd">Fixpoint</span> <span class="id"><a name="last_arg_first">last_arg_first</a></span>  (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span>) (<span class="id">A</span> <span class="id">B</span>:<span class="kwd">Type</span>)
+                           (<span class="id">f</span> : <span class="id"><a href="bpf.dxcomm.GenMatchable.html#fold_type">fold_type</a></span> <span class="id">l</span> (<span class="id">A</span> -&gt; <span class="id">B</span>)) :
+  <span class="id">A</span> -&gt; <span class="id"><a href="bpf.dxcomm.GenMatchable.html#fold_type">fold_type</a></span> <span class="id">l</span> <span class="id">B</span> :=
+  <span class="kwd">match</span>  <span class="id">l</span> <span class="kwd">as</span> <span class="id">l0</span>  <span class="kwd">return</span> <span class="id"><a href="bpf.dxcomm.GenMatchable.html#fold_type">fold_type</a></span> <span class="id">l0</span> (<span class="id">A</span> -&gt; <span class="id">B</span>) -&gt; <span class="id">A</span> -&gt; <span class="id"><a href="bpf.dxcomm.GenMatchable.html#fold_type">fold_type</a></span> <span class="id">l0</span> <span class="id">B</span>
+  <span class="kwd">with</span>
+  | [] =&gt; <span class="kwd">fun</span> <span class="id">f0</span> =&gt; <span class="id">f0</span>
+  | <span class="id">T</span> :: <span class="id">l0</span> =&gt;
+      <span class="kwd">fun</span> <span class="id">f0</span> (<span class="id">x</span> : <span class="id">A</span>) (<span class="id">a1</span> : <span class="id">T</span>) =&gt; <span class="id">last_arg_first</span> <span class="id">l0</span> <span class="id">A</span> <span class="id">B</span> (<span class="id">f0</span> <span class="id">a1</span>) <span class="id">x</span>
+  <span class="kwd">end</span> <span class="id">f</span>.
+
+(* [<span class="id">listn</span> <span class="id">v</span> <span class="id">n</span>] <span class="id">returns</span> <span class="id">n</span> <span class="id">copies</span> <span class="id">of</span> <span class="id">v</span> <span class="id">i.e</span>. [<span class="id">v</span>;...;<span class="id">v</span>] *)
+<span class="kwd">Fixpoint</span> <span class="id"><a name="listn">listn</a></span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">v</span>:<span class="id">A</span>) (<span class="id">n</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) :=
+  <span class="kwd">match</span> <span class="id">n</span> <span class="kwd">with</span>
+  | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>
+  | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">n</span> =&gt; <span class="id">v</span> :: <span class="id">listn</span> <span class="id">v</span> <span class="id">n</span>
+  <span class="kwd">end</span>.
+
+(** [<span class="id">mkEnumMatchableType</span> <span class="id">t</span> <span class="id">eq</span> <span class="id">l</span> <span class="id">def</span> <span class="tactic">elim</span>] <span class="id">returns</span> <span class="id">a</span> <span class="id">MatchableType</span> <span class="kwd">for</span> (<span class="id">coqType</span> <span class="id">t</span>) <span class="kwd">where</span>
+    - [<span class="id">eqb</span>] <span class="kwd">is</span> <span class="id">the</span> <span class="id">equality</span> <span class="id">test</span> <span class="kwd">for</span> (<span class="id">coqType</span> <span class="id">t</span>)
+    - [<span class="id">l</span>] <span class="id">returns</span> <span class="kwd">for</span> <span class="id">each</span> <span class="id">element</span> <span class="id">of</span> <span class="id">the</span> <span class="id">enumeration</span> <span class="id">the</span> <span class="id">value</span> <span class="kwd">for</span> <span class="id">the</span> <span class="id">switch</span>
+    - [<span class="id">def</span>] <span class="kwd">is</span> <span class="id">the</span> <span class="id">element</span> <span class="id">of</span> <span class="id">the</span> <span class="id">enumeration</span> <span class="id">used</span> <span class="kwd">for</span> <span class="id">the</span> <span class="id">default</span> <span class="tactic">case</span> <span class="id">of</span> <span class="id">the</span> <span class="id">switch</span>
+    - [<span class="tactic">elim</span>] <span class="kwd">is</span> <span class="id">almost</span> <span class="id">the</span> <span class="id">recursor</span> <span class="kwd">for</span> <span class="id">the</span> (<span class="id">coqType</span> <span class="id">t</span>)
+ *)
+
+<span class="kwd">Definition</span> <span class="id"><a name="mkEnumMatchableType">mkEnumMatchableType</a></span> (<span class="id">t</span>: <span class="id">CompilableType</span>)
+           (<span class="id">eqb</span> : <span class="id">coqType</span> <span class="id">t</span> -&gt; <span class="id">coqType</span> <span class="id">t</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id">coqType</span> <span class="id">t</span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>)) (<span class="id">def</span> : <span class="id">coqType</span> <span class="id">t</span>)
+           (<span class="tactic">elim</span> : <span class="kwd">forall</span> (<span class="id">m</span> : <span class="id">Monad</span>) (<span class="id">A</span> : <span class="kwd">Type</span>),
+               <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">fold_right</a></span> (<span class="kwd">fun</span> <span class="id">X</span> <span class="id">Y</span> : <span class="kwd">Type</span> =&gt; <span class="id">X</span> -&gt; <span class="id">Y</span>) (<span class="id">coqType</span> <span class="id">t</span> -&gt; (<span class="id">m</span> <span class="id">A</span>))
+                          (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">fold_right</a></span> (<span class="kwd">fun</span> <span class="id">X</span> <span class="id">Y</span> : <span class="kwd">Type</span> =&gt; <span class="id">X</span> -&gt; <span class="id">Y</span>) (<span class="id">m</span> <span class="id">A</span>))
+                               (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id">coqType</span>) (<span class="id"><a href="bpf.dxcomm.GenMatchable.html#listn">listn</a></span> [] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> <span class="id">l</span>))))))   : <span class="id">MatchableType</span> :=
+  {| <span class="id">compilableType</span> := <span class="id">t</span>;
+     <span class="id">encodeMatch</span>  := (<span class="kwd">let</span> <span class="id">cases</span> := <span class="id"><a href="bpf.dxcomm.GenMatchable.html#switch_list">switch_list</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">l</span>) <span class="kwd">in</span>
+                      <span class="kwd">fun</span> <span class="id">x</span> <span class="id">lcases</span> =&gt;
+                        <span class="kwd">match</span> <span class="id">cases</span> <span class="id">lcases</span> <span class="kwd">with</span>
+                        | <span class="id">Err</span> <span class="id">x</span> =&gt; <span class="id">Err</span> <span class="id">x</span>
+                        | <span class="id">Ok</span> <span class="id">l</span>'  =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Sswitch">Csyntax.Sswitch</a></span> <span class="id">x</span> <span class="id">l</span>')
+                        <span class="kwd">end</span>);
+            <span class="id">matchProjectors</span>  := <span class="id"><a href="bpf.dxcomm.GenMatchable.html#listn">listn</a></span> [] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">List.length</a></span> <span class="id">l</span>));
+            <span class="id">matchInterpTypes</span> := <span class="id"><a href="bpf.dxcomm.GenMatchable.html#listn">listn</a></span> [] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">List.length</a></span> <span class="id">l</span>));
+            <span class="id">matchInterp</span> :=  <span class="kwd">fun</span> (<span class="id">m</span> : <span class="id">Monad</span>) (<span class="id">A</span> : <span class="kwd">Type</span>) (<span class="id">X</span> : <span class="id">coqType</span> <span class="id">t</span>) =&gt;
+                              <span class="id"><a href="bpf.dxcomm.GenMatchable.html#last_arg_first">last_arg_first</a></span>
+                                (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">fold_right</a></span> (<span class="kwd">fun</span> <span class="id">X0</span> <span class="id">Y</span> : <span class="kwd">Type</span> =&gt; <span class="id">X0</span> -&gt; <span class="id">Y</span>) (<span class="id">m</span> <span class="id">A</span>))
+                                     (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id">coqType</span>) (<span class="id"><a href="bpf.dxcomm.GenMatchable.html#listn">listn</a></span> [] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#length">length</a></span> <span class="id">l</span>)))))
+                                (<span class="id">coqType</span> <span class="id">t</span>) (<span class="id">m</span> <span class="id">A</span>) (<span class="tactic">elim</span> <span class="id">m</span> <span class="id">A</span>) <span class="id">X</span>
+  |}.
+
+<span class="kwd">Inductive</span> <span class="id"><a name="enum">enum</a></span> := <span class="id"><a name="A">A</a></span> | <span class="id"><a name="B">B</a></span> | <span class="id"><a name="C">C</a></span>.
+
+<span class="kwd">Definition</span> <span class="id"><a name="enumCompilableType">enumCompilableType</a></span> := {| <span class="id">coqType</span> := <span class="id"><a href="bpf.dxcomm.GenMatchable.html#enum">enum</a></span> ; <span class="id">cType</span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Tint">Ctypes.Tint</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#I16">Ctypes.I16</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Unsigned">Ctypes.Unsigned</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#noattr">Ctypes.noattr</a></span> |}.
+
+<span class="kwd">Definition</span> <span class="id"><a name="enum_eqb">enum_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.dxcomm.GenMatchable.html#enum">enum</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=
+  <span class="kwd">match</span> <span class="id">x</span> , <span class="id">y</span> <span class="kwd">with</span>
+  | <span class="id"><a href="bpf.dxcomm.GenMatchable.html#A">A</a></span> , <span class="id"><a href="bpf.dxcomm.GenMatchable.html#A">A</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>
+  | <span class="id"><a href="bpf.dxcomm.GenMatchable.html#B">B</a></span> , <span class="id"><a href="bpf.dxcomm.GenMatchable.html#B">B</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>
+  | <span class="id"><a href="bpf.dxcomm.GenMatchable.html#C">C</a></span> , <span class="id"><a href="bpf.dxcomm.GenMatchable.html#C">C</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>
+  | <span class="id">_</span>, <span class="id">_</span>  =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>
+  <span class="kwd">end</span>.
+
+<span class="kwd">Definition</span> <span class="id"><a name="enumMatchableType">enumMatchableType</a></span> : <span class="id">MatchableType</span> :=
+  <span class="kwd">Eval</span> <span class="tactic">compute</span> <span class="kwd">in</span>
+  <span class="id"><a href="bpf.dxcomm.GenMatchable.html#mkEnumMatchableType">mkEnumMatchableType</a></span>  <span class="id"><a href="bpf.dxcomm.GenMatchable.html#enumCompilableType">enumCompilableType</a></span> <span class="id"><a href="bpf.dxcomm.GenMatchable.html#enum_eqb">enum_eqb</a></span>
+                       ((<span class="id"><a href="bpf.dxcomm.GenMatchable.html#A">A</a></span>, 0<span class="id">x10</span>%<span class="id">Z</span>) ::(<span class="id"><a href="bpf.dxcomm.GenMatchable.html#B">B</a></span>,0<span class="id">x50</span>%<span class="id">Z</span>) ::<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>) <span class="id"><a href="bpf.dxcomm.GenMatchable.html#C">C</a></span> (<span class="kwd">fun</span> <span class="id">m</span> <span class="id">x</span> =&gt; <span class="id"><a href="bpf.dxcomm.GenMatchable.html#enum_rect">enum_rect</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">m</span> <span class="id">x</span>)).
+</span></div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

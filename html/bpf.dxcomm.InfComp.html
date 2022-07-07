@@ -1,0 +1,49 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module InfComp</title>
+<meta name="description" content="Documentation of Coq module InfComp" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module InfComp</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span> <span class="id">CoqIR</span> <span class="id">IRtoC</span> <span class="id">DXModule</span> <span class="id">DumpAsC</span>.<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id"><a name="CType">CType</a></span> (<span class="id">coqType</span>: <span class="kwd">Type</span>) := <span class="id"><a name="mkCType">mkCType</a></span> {<span class="id"><a name="cType_i">cType_i</a></span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#type">Ctypes.type</a></span>}.<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id"><a name="CTypeL">CTypeL</a></span> (<span class="id">coqType</span>:<span class="kwd">Type</span>) := <span class="id"><a name="mkCTypeL">mkCTypeL</a></span> {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="symtyp">symtyp</a></span> : <span class="id">CompilableSymbolType</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="mkCmpType">mkCmpType</a></span> (<span class="id">T</span>: <span class="kwd">Type</span>) (<span class="id">I</span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id">T</span>) : <span class="id">CompilableType</span> :=<br/>
+&nbsp;&nbsp;{|<span class="id">coqType</span> := <span class="id">T</span> ; <span class="id">cType</span> := @<span class="id"><a href="bpf.dxcomm.InfComp.html#cType_i">cType_i</a></span> <span class="id">T</span> <span class="id">I</span>|}.<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="mkCP">mkCP</a></span> (<span class="id">T</span>: <span class="kwd">Type</span>) {<span class="id">CTA</span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id">T</span>} : <span class="id"><a href="bpf.dxcomm.InfComp.html#CTypeL">CTypeL</a></span> <span class="id">T</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.dxcomm.InfComp.html#mkCTypeL">mkCTypeL</a></span> <span class="id">T</span> (<span class="id">MkCompilableSymbolType</span>  <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="bpf.dxcomm.InfComp.html#mkCmpType">mkCmpType</a></span> <span class="id">T</span> <span class="id">CTA</span>))).<br/>
+<br/>
+<span class="kwd">Instance</span> <span class="id"><a name="mkArr">mkArr</a></span> (<span class="id">A</span> : <span class="kwd">Type</span>) {<span class="id">CTA</span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CType">CType</a></span> <span class="id">A</span>} (<span class="id">R</span> : <span class="kwd">Type</span>) {<span class="id">CTL</span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CTypeL">CTypeL</a></span> <span class="id">R</span>} : <span class="id"><a href="bpf.dxcomm.InfComp.html#CTypeL">CTypeL</a></span> (<span class="id">A</span> -&gt; <span class="id">R</span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.dxcomm.InfComp.html#mkCTypeL">mkCTypeL</a></span> (<span class="id">A</span> -&gt; <span class="id">R</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MkCompilableSymbolType</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id"><a href="bpf.dxcomm.InfComp.html#mkCmpType">mkCmpType</a></span> <span class="id">A</span> <span class="id">CTA</span>) :: (<span class="id">compilableSymbolArgTypes</span> (@<span class="id"><a href="bpf.dxcomm.InfComp.html#symtyp">symtyp</a></span> <span class="id">_</span> <span class="id">CTL</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">compilableSymbolResType</span> (@<span class="id"><a href="bpf.dxcomm.InfComp.html#symtyp">symtyp</a></span> <span class="id">_</span> <span class="id">CTL</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="iST">iST</a></span> (<span class="id">T</span> : <span class="kwd">Type</span>) {<span class="id">CTL</span> : <span class="id"><a href="bpf.dxcomm.InfComp.html#CTypeL">CTypeL</a></span> <span class="id">T</span>} : <span class="id">CompilableSymbolType</span> :=<br/>
+&nbsp;&nbsp;@<span class="id"><a href="bpf.dxcomm.InfComp.html#symtyp">symtyp</a></span> <span class="id">_</span> <span class="id">CTL</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">mkprimitive</span> <span class="id">Op</span> <span class="id">E</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">t</span> := <span class="id">type</span> <span class="id">of</span> <span class="id">Op</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">v</span> := <span class="tactic">eval</span> <span class="tactic">compute</span> <span class="kwd">in</span> (@<span class="id"><a href="bpf.dxcomm.InfComp.html#iST">iST</a></span> <span class="id">t</span> <span class="id">_</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exact</span> (<span class="id">MkPrimitive</span> <span class="id">v</span> <span class="id">Op</span> <span class="id">E</span>).<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

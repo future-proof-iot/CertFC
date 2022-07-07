@@ -579,7 +579,7 @@ static __attribute__((always_inline)) inline void step_opcode_mem_ld_reg(struct 
   }
 }
 
-static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct bpf_state* st, int imm, unsigned int addr, unsigned int dst, unsigned char op)
+static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct bpf_state* st, int imm, unsigned int addr, unsigned char op)
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
@@ -633,7 +633,7 @@ static __attribute__((always_inline)) inline void step_opcode_mem_st_imm(struct 
   }
 }
 
-static __attribute__((always_inline)) inline void step_opcode_mem_st_reg(struct bpf_state* st, unsigned long long src64, unsigned int addr, unsigned int dst, unsigned char op)
+static __attribute__((always_inline)) inline void step_opcode_mem_st_reg(struct bpf_state* st, unsigned long long src64, unsigned int addr, unsigned char op)
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
@@ -743,7 +743,7 @@ static __attribute__((always_inline)) inline void step(struct bpf_state* st)
       ofs = get_offset(ins);
       imm = get_immediate(ins);
       addr = get_addr_ofs(dst64, ofs);
-      step_opcode_mem_st_imm(st, imm, addr, dst, op);
+      step_opcode_mem_st_imm(st, imm, addr, op);
       return;
     case 3:
       dst64 = eval_reg(st, dst);
@@ -751,7 +751,7 @@ static __attribute__((always_inline)) inline void step(struct bpf_state* st)
       src64 = eval_reg(st, src);
       ofs = get_offset(ins);
       addr = get_addr_ofs(dst64, ofs);
-      step_opcode_mem_st_reg(st, src64, addr, dst, op);
+      step_opcode_mem_st_reg(st, src64, addr, op);
       return;
     default:
       upd_flag(st, -1);

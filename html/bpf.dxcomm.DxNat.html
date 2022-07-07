@@ -1,0 +1,201 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxNat</title>
+<meta name="description" content="Documentation of Coq module DxNat" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxNat</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id">Csyntax</span> <span class="id">Ctypes</span> <span class="id">Cop</span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span> <span class="id">Values</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Bool</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqIntegers</span> <span class="id">DxIntegers</span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ZArith</span> <span class="id">Number</span> <span class="id">Decimal</span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">nat_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8</span> := <span class="id">nat</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_1</span> := 1.<br/>
+<span class="kwd">Definition</span> <span class="id">nat32_1</span> := 1.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_536870911</span> := <span class="id">Init.Nat.of_num_uint</span> (<span class="id">UIntDecimal</span> (<span class="id">D5</span> (<span class="id">D3</span> (<span class="id">D6</span> (<span class="id">D8</span> (<span class="id">D7</span> (<span class="id">D0</span> (<span class="id">D9</span> (<span class="id">D1</span> (<span class="id">D1</span> <span class="id">Nil</span>)))))))))).<br/>
+<br/>
+<div class="doc">masking operation </div>
+<span class="kwd">Definition</span> <span class="id">nat8_0xf0</span> := 0<span class="id">xf0</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0x07</span> := 0<span class="id">x07</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0xff</span> := 0<span class="id">xff</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0x08</span> := 0<span class="id">x08</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_zero</span> := 0<span class="id">x00</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0x05</span> := 0<span class="id">x05</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0x84</span> := 0<span class="id">x84</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0x87</span> := 0<span class="id">x87</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0x85</span> := 0<span class="id">x85</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">nat8_0x95</span> := 0<span class="id">x95</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8CompilableType</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableType</span> <span class="id">nat8</span> <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_1</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_1</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT32_1</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat32_1</span>))) <span class="id">C_U32</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0xf0</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0xf0</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x07</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0x07</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0xff</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0xff</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x08</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0x08</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x00</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_zero</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x05</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0x05</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x84</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0x84</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x87</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0x87</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x85</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0x85</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_0x95</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_0x95</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_536870911</span>: <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Eval</span> (<span class="id">Vint</span> (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">nat8_536870911</span>))) <span class="id">C_U8</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8SymbolType</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> <span class="id">nil</span> (<span class="id">Some</span> <span class="id">nat8CompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_1</span>    := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_1</span>    <span class="id">C_NAT8_1</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat32_1</span>   := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat32_1</span>   <span class="id">C_NAT32_1</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0xf0</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0xf0</span> <span class="id">C_NAT8_0xf0</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0x07</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0x07</span> <span class="id">C_NAT8_0x07</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0xff</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0xff</span> <span class="id">C_NAT8_0xff</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0x08</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0x08</span> <span class="id">C_NAT8_0x08</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_zero</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_zero</span> <span class="id">C_NAT8_0x00</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0x05</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0x05</span> <span class="id">C_NAT8_0x05</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0x84</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0x84</span> <span class="id">C_NAT8_0x84</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0x87</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0x87</span> <span class="id">C_NAT8_0x87</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0x85</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0x85</span> <span class="id">C_NAT8_0x85</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_0x95</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_0x95</span> <span class="id">C_NAT8_0x95</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_536870911</span> := <span class="id">constant</span> <span class="id">nat8SymbolType</span> <span class="id">nat8_536870911</span> <span class="id">C_NAT8_536870911</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8Tonat8ToboolSymbolType</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>; <span class="id">nat8CompilableType</span>] (<span class="id">Some</span> <span class="id">boolCompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_eq</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id">Csyntax.expr</span>): <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Ebinop</span> <span class="id">Cop.Oeq</span> <span class="id">x</span> <span class="id">y</span> <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_eq</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id">nat8Tonat8ToboolSymbolType</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Nat.eqb</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>;<span class="id">e2</span>] =&gt; <span class="id">Ok</span> (<span class="id">C_NAT8_eq</span> <span class="id">e1</span> <span class="id">e2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_le</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id">Csyntax.expr</span>): <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Ebinop</span> <span class="id">Cop.Ole</span> <span class="id">x</span> <span class="id">y</span> <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_le</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id">nat8Tonat8ToboolSymbolType</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Nat.leb</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>;<span class="id">e2</span>] =&gt; <span class="id">Ok</span> (<span class="id">C_NAT8_le</span> <span class="id">e1</span> <span class="id">e2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8Tonat8Tonat8SymbolType</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>; <span class="id">nat8CompilableType</span>] (<span class="id">Some</span> <span class="id">nat8CompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_and</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id">Csyntax.expr</span>): <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Ebinop</span> <span class="id">Cop.Oand</span> <span class="id">x</span> <span class="id">y</span> <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_and</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id">nat8Tonat8Tonat8SymbolType</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Nat.land</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>;<span class="id">e2</span>] =&gt; <span class="id">Ok</span> (<span class="id">C_NAT8_and</span> <span class="id">e1</span> <span class="id">e2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">C_NAT8_sub</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id">Csyntax.expr</span>): <span class="id">Csyntax.expr</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Csyntax.Ebinop</span> <span class="id">Cop.Osub</span> <span class="id">x</span> <span class="id">y</span> <span class="id">C_U8</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat8_sub</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id">nat8Tonat8Tonat8SymbolType</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Nat.sub</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>;<span class="id">e2</span>] =&gt; <span class="id">Ok</span> (<span class="id">C_NAT8_sub</span> <span class="id">e1</span> <span class="id">e2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat2int</span> (<span class="id">n</span>:<span class="id">nat</span>) := (<span class="id">Int.repr</span> (<span class="id">Z.of_nat</span> <span class="id">n</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nat8Touint32SymbolType</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id">nat8CompilableType</span>] (<span class="id">Some</span> <span class="id">uint32CompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">Const_nat2int</span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id">nat8Touint32SymbolType</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">nat2int</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id">e1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Exports</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">nat8CompilableType</span> := <span class="id">nat8CompilableType</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_1</span>       := <span class="id">Const_nat8_1</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat32_1</span>      := <span class="id">Const_nat32_1</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0xf0</span>    := <span class="id">Const_nat8_0xf0</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0x07</span>    := <span class="id">Const_nat8_0x07</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0xff</span>    := <span class="id">Const_nat8_0xff</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0x08</span>    := <span class="id">Const_nat8_0x08</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0x05</span>    := <span class="id">Const_nat8_0x05</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0x84</span>    := <span class="id">Const_nat8_0x84</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0x87</span>    := <span class="id">Const_nat8_0x87</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0x85</span>    := <span class="id">Const_nat8_0x85</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_0x95</span>    := <span class="id">Const_nat8_0x95</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_zero</span>    := <span class="id">Const_nat8_zero</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_eq</span>      := <span class="id">Const_nat8_eq</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_le</span>      := <span class="id">Const_nat8_le</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_and</span>     := <span class="id">Const_nat8_and</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_sub</span>     := <span class="id">Const_nat8_sub</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat2int</span>      := <span class="id">Const_nat2int</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">Const_nat8_536870911</span> := <span class="id">Const_nat8_536870911</span>.<br/>
+<span class="kwd">End</span> <span class="id">Exports</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

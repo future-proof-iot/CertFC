@@ -1,0 +1,215 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CommonISOLib</title>
+<meta name="description" content="Documentation of Coq module CommonISOLib" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CommonISOLib</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.x86_32.Archi.html">Archi</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_chunk_gt_zero">size_chunk_gt_zero</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span>, 0 &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_chunk_int_range">size_chunk_int_range</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span>, 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> <span class="kwd">with</span> 4294967295.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int64_unsigned_ge_0">Int64_unsigned_ge_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>, 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
+<div class="proofscript" id="proof3">
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">v</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hrange</span>: 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">v</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.max_unsigned">Int64.max_unsigned</a></span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned_range_2">Int64.unsigned_range_2</a></span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hrange</span> <span class="kwd">as</span> [<span class="id">Ha</span> <span class="id">Hb</span>]; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_unsigned_ge_0">Int_unsigned_ge_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>, 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
+<div class="proofscript" id="proof4">
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">v</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hrange</span>: 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">v</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_range_2">Int.unsigned_range_2</a></span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hrange</span> <span class="kwd">as</span> [<span class="id">Ha</span> <span class="id">Hb</span>]; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_repr_zero">Int_repr_zero</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>, 0&lt;=<span class="id">v</span>&lt;=<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> -&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> <span class="id">v</span>) = <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>) -&gt; <span class="id">v</span> = 0.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
+<div class="proofscript" id="proof5">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span> <span class="id">v</span> <span class="id">H</span>) <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_zero">Int.unsigned_zero</a></span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Ptrofs_of_int_unsigned">Ptrofs_of_int_unsigned</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.of_int">Ptrofs.of_int</a></span> <span class="id">v</span>) = <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
+<div class="proofscript" id="proof6">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">H1</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.agree32">Ptrofs.agree32</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.of_int">Ptrofs.of_int</a></span> <span class="id">v</span>) <span class="id">v</span>). { <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.agree32_of_int">Ptrofs.agree32_of_int</a></span>. <span class="tactic">reflexivity</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H1</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="ptrofs_unsigned_ge_0">ptrofs_unsigned_ge_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>, 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
+<div class="proofscript" id="proof7">
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">v</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hrange</span>: 0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned">Ptrofs.unsigned</a></span> <span class="id">v</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.max_unsigned">Ptrofs.max_unsigned</a></span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Ptrofs.unsigned_range_2">Ptrofs.unsigned_range_2</a></span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hrange</span> <span class="kwd">as</span> [<span class="id">Ha</span> <span class="id">Hb</span>]; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Cle_Zle_iff">Cle_Zle_iff</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">lo</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">ofs</span> <span class="id">lo</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> &lt;-&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">lo</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
+<div class="proofscript" id="proof8">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">negb_true_iff</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">negb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt_false">zlt_false</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Clt_Zlt_iff">Clt_Zlt_iff</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="id">ofs</span> <span class="id">hi</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> &lt;-&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">hi</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof9')">Proof.</div>
+<div class="proofscript" id="proof9">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt_true">zlt_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int64_unsigned_size_chunk_ge_0">Int64_unsigned_size_chunk_ge_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">chunk</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof10')">Proof.</div>
+<div class="proofscript" id="proof10">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hchunk_lo</span>: 0 &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#size_chunk_gt_zero">size_chunk_gt_zero</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hofs_lo</span>: 0&lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">ofs</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#Int64_unsigned_ge_0">Int64_unsigned_ge_0</a></span>. <br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span>; <span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_comm">Z.add_comm</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_unsigned_size_chunk_ge_0">Int_unsigned_size_chunk_ge_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">chunk</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof11')">Proof.</div>
+<div class="proofscript" id="proof11">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hchunk_lo</span>: 0 &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#size_chunk_gt_zero">size_chunk_gt_zero</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hofs_lo</span>: 0&lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#Int_unsigned_ge_0">Int_unsigned_ge_0</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span>; <span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_comm">Z.add_comm</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int64_unsigned_ofs_size_chunk_ge_0">Int64_unsigned_ofs_size_chunk_ge_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">chunk</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">ofs</span> &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof12')">Proof.</div>
+<div class="proofscript" id="proof12">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hchunk_lo</span>: 0 &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#size_chunk_gt_zero">size_chunk_gt_zero</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hofs_lo</span>: 0&lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">ofs</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#Int64_unsigned_ge_0">Int64_unsigned_ge_0</a></span>. <br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_unsigned_ofs_size_chunk_ge_0">Int_unsigned_ofs_size_chunk_ge_0</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">chunk</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof13')">Proof.</div>
+<div class="proofscript" id="proof13">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hchunk_lo</span>: 0 &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#size_chunk_gt_zero">size_chunk_gt_zero</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hofs_lo</span>: 0&lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span>). <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#Int_unsigned_ge_0">Int_unsigned_ge_0</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="hi_ofs_max_unsigned">hi_ofs_max_unsigned</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">chunk</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>-(<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>))) <span class="id">ofs</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span> &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof14')">Proof.</div>
+<div class="proofscript" id="proof14">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">ofs</span> <span class="id">chunk</span> <span class="id">Hcmp</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> <span class="kwd">with</span> 4294967295 <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">remember</span> ((<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (4294967295 - <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>))) <span class="id">ofs</span>) <span class="kwd">as</span> <span class="id">k</span> <span class="id">eqn</span>: <span class="id">Hk</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hk</span> <span class="kwd">in</span> <span class="id">Hcmp</span>; <span class="tactic">clear</span> <span class="id">Hk</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">negb_true_iff</a></span> <span class="kwd">in</span> <span class="id">Hcmp</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> <span class="kwd">in</span> <span class="id">Hcmp</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">Hcmp</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">inversion</span> <span class="id">Hcmp</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">clear</span> <span class="id">Hcmp</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq_max</span>: 0 &lt;= 4294967295 - <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span> &lt;= 4294967295). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span>; <span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span> <span class="id">_</span> <span class="id">Heq_max</span>) <span class="kwd">in</span> <span class="id">g</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#Int_unsigned_size_chunk_ge_0">Int_unsigned_size_chunk_ge_0</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Clt_implies_Zlt_add">Clt_implies_Zlt_add</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">chunk</span> <span class="id">hi</span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.add">Int.add</a></span> <span class="id">ofs</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>))) <span class="id">hi</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>) &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.max_unsigned">Int.max_unsigned</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> + (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>) &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">hi</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof15')">Proof.</div>
+<div class="proofscript" id="proof15">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#Int_unsigned_size_chunk_ge_0">Int_unsigned_size_chunk_ge_0</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.ltu">Int.ltu</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.add">Int.add</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">H5</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>)) = <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>). { <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span>; <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html#size_chunk_int_range">size_chunk_int_range</a></span>; <span class="tactic">assumption</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H5</span> <span class="kwd">in</span> <span class="id">l</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">H6</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>)) = <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned">Int.unsigned</a></span> <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span>)). { <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.unsigned_repr">Int.unsigned_repr</a></span>; <span class="tactic">assumption</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H6</span> <span class="kwd">in</span> <span class="id">l</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

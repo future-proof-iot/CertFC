@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import rBPFAST State Monad.
+From bpf.comm Require Import LemmaInt rBPFAST State Monad.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From dx.Type Require Import Bool.
 From dx Require Import IR.

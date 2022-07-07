@@ -1,0 +1,61 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DxBinrBPF</title>
+<meta name="description" content="Documentation of Coq module DxBinrBPF" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DxBinrBPF</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ResultMonad</span> <span class="id">IR</span>.<br/>
+<span class="kwd">From</span> <span class="id">dx.Type</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Nat</span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.BinrBPF.html">BinrBPF</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.dxcomm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html">CoqIntegers</a></span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html">DxIntegers</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="int64TonatSymbolType">int64TonatSymbolType</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkCompilableSymbolType</span> [<span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64CompilableType">int64CompilableType</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">natCompilableType</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_int64_to_opcode">Const_int64_to_opcode</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxcomm.DxBinrBPF.html#int64TonatSymbolType">int64TonatSymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.BinrBPF.html#get_opcode">get_opcode</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oand">Cop.Oand</a></span> <span class="id">e1</span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U64_0xff">C_U64_0xff</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U8">C_U8</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_int64_to_offset">Const_int64_to_offset</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64Tosint32SymbolType">int64Tosint32SymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.BinrBPF.html#get_offset">get_offset</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oshr">Cop.Oshr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oshl">Cop.Oshl</a></span> <span class="id">e1</span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U64_32">C_U64_32</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>) <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U64_48">C_U64_48</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_S16">C_S16</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_S32">C_S32</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Const_int64_to_immediate">Const_int64_to_immediate</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id">MkPrimitive</span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64Tosint32SymbolType">int64Tosint32SymbolType</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.BinrBPF.html#get_immediate">get_immediate</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">es</span> =&gt; <span class="kwd">match</span> <span class="id">es</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">e1</span>] =&gt; <span class="id">Ok</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ecast">Csyntax.Ecast</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html#Ebinop">Csyntax.Ebinop</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html#Oshr">Cop.Oshr</a></span> <span class="id">e1</span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#C_U64_32">C_U64_32</a></span> <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_U64">C_U64</a></span>) <span class="id"><a href="bpf.dxcomm.CoqIntegers.html#C_S32">C_S32</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>       =&gt; <span class="id">Err</span> <span class="id">PrimitiveEncodingFailed</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Exports">Exports</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_int64_to_opcode">Const_int64_to_opcode</a></span>  := <span class="id"><a href="bpf.dxcomm.DxBinrBPF.html#Const_int64_to_opcode">Const_int64_to_opcode</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_int64_to_offset">Const_int64_to_offset</a></span>  := <span class="id"><a href="bpf.dxcomm.DxBinrBPF.html#Const_int64_to_offset">Const_int64_to_offset</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Exports.Const_int64_to_immediate">Const_int64_to_immediate</a></span> := <span class="id"><a href="bpf.dxcomm.DxBinrBPF.html#Const_int64_to_immediate">Const_int64_to_immediate</a></span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="bpf.dxcomm.DxBinrBPF.html#Exports">Exports</a></span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

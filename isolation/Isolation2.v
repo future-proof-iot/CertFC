@@ -17,7 +17,7 @@
 (**************************************************************************)
 
 From compcert Require Import Integers Values AST Memory Memtype.
-From bpf.comm Require Import BinrBPF State Monad rBPFMonadOp.
+From bpf.comm Require Import BinrBPF State Monad rBPFMonadOp rBPFAST.
 From bpf.model Require Import Syntax Semantics.
 From bpf.isolation Require Import CommonISOLib AlignChunk RegsInv MemInv VerifierOpcode VerifierInv CheckMem StateInv IsolationLemma Isolation1.
 
@@ -203,7 +203,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -249,7 +249,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -295,7 +295,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -341,7 +341,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -408,7 +408,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -452,7 +452,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -496,7 +496,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -540,7 +540,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -615,7 +615,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -658,7 +658,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -701,7 +701,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -744,7 +744,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.

@@ -35,7 +35,7 @@ apt install opam
 # install ocaml/coq/compcert etc by opam
 opam init
 # install ocaml
-opam switch create bpf ocaml.4.11.1
+opam switch create bpf ocaml-base-compiler.4.11.1
 
 eval $(opam env)
 
@@ -83,15 +83,13 @@ cd ..
 git clone --branch CAV22-AE https://gitlab.inria.fr/syuan/rbpf-dx.git
 cd rbpf-dx
 
-# modify _CoqProject and Makefile.config according to your platform
-
-# modify the file `_CoqProject`, e.g.:
+# modify the file `_CoqProject`:
 # -R /home/shyuan/.opam/4.11.1/lib/coq-variant/compcert32/compcert compcert
 # ===>
 # -R /home/cav/.opam/bpf/lib/coq-variant/compcert32/compcert compcert
 vim _CoqProject
 
-# modify the file `Makefile.config` and `verifier/Makefile.config`,  e.g.:
+# modify the file `Makefile.config` and `verifier/Makefile.config`:
 # OPAMPREFIX := /home/shyuan/.opam/4.11.1
 # ===>
 # OPAMPREFIX := /home/cav/.opam/bpf
@@ -99,6 +97,29 @@ vim Makefile.config
 vim verifier/Makefile.config
 
 make all
+```
+# Test CertrBPF 
+```shell
+# current folder: /home/cav/CertrBPF/rbpf-dx
+# Here, we only test the native board (*You could reproduce the same result in the paper if you have the same physical boards: Nordic nRF52840 development kit, the Espressif WROOM-32 board, and the Sipeed Longan Nano GD32VF103CBT6 development board*)
+
+# test bench_bpf_coq_incr
+# compile CertBPF
+make -C benchmark_data/bench_bpf_coq_incr/bpf
+make -C benchmark_data/bench_bpf_coq_incr
+# run on a native board using CertBPF
+make -C benchmark_data/bench_bpf_coq_incr term
+# complie original rBPF: Vanilla-rBPF
+make -C benchmark_data/bench_bpf_coq_incr BPF_COQ=0 BPF_USE_JUMPTABLE=0
+make -C benchmark_data/bench_bpf_coq_incr BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
+
+# test bench_bpf_coq_unit
+# compile CertBPF
+make -C benchmark_data/bench_bpf_coq_unit
+make -C benchmark_data/bench_bpf_coq_unit term
+# complie original rBPF: Vanilla-rBPF
+make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0
+make -C benchmark_data/bench_bpf_coq_unit BPF_COQ=0 BPF_USE_JUMPTABLE=0 term
 ```
 
 Please don't hesitate to contact [me](https://shenghaoyuan.github.io/)

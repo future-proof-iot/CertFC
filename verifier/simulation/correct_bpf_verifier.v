@@ -20,7 +20,7 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.comm Require Import LemmaNat Monad.
+From bpf.comm Require Import LemmaInt LemmaNat Monad.
 From bpf.clightlogic Require Import CommonLemma CommonLib Clightlogic CorrectRel.
 From bpf.verifier.comm Require Import monad.
 

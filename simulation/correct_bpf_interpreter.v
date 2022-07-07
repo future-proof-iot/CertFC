@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import MemRegion State Monad rBPFMonadOp.
+From bpf.comm Require Import Flag MemRegion State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From Coq Require Import List ZArith.
@@ -213,7 +213,7 @@ Section Bpf_interpreter.
     unfold eval_inv, correct_eval_flag.match_res, flag_correct in c0.
     rewrite p0.
     rewrite c0.
-    unfold Val.of_bool, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+    unfold Val.of_bool, int_of_flag, Z_of_flag.
     destruct x4; reflexivity.
 Qed.
 

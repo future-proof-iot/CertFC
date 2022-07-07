@@ -1,0 +1,174 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module RegsInv</title>
+<meta name="description" content="Documentation of Coq module RegsInv" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module RegsInv</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.State.html">State</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="is_vlong">is_vlong</a></span> (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="register_inv">register_inv</a></span> (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r0_val">r0_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r1_val">r1_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r2_val">r2_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r3_val">r3_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r4_val">r4_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r5_val">r5_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r6_val">r6_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r7_val">r7_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r8_val">r8_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r9_val">r9_val</a></span>  (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)) /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> (<span class="id"><a href="bpf.comm.Regs.html#r10_val">r10_val</a></span> (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>)).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="is_vlong_iff">is_vlong_iff</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span> <span class="id">v</span> &lt;-&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">vl</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> = <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">vl</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong">is_vlong</a></span>; <span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">v</span>; <span class="tactic">try</span> <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">i</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">vl</span> &amp; <span class="id">H</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_init">reg_inv_init</a></span>: <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id"><a href="bpf.comm.State.html#init_state">init_state</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>, <span class="id"><a href="bpf.comm.State.html#init_state">init_state</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">split</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_eval_reg">reg_inv_eval_reg</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st</span> <span class="id">r</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg_inv</span>: <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exists</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#eval_reg">eval_reg</a></span> <span class="id">r</span> <span class="id">st</span> = <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">i</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
+<div class="proofscript" id="proof3">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="kwd">in</span> <span class="id">Hreg_inv</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.RegsInv.html#is_vlong_iff">is_vlong_iff</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#eval_reg">eval_reg</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_upd_reg">reg_inv_upd_reg</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">r</span> <span class="id">n</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg_inv</span>: <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Halu</span>: <span class="id"><a href="bpf.comm.State.html#upd_reg">upd_reg</a></span> <span class="id">r</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span>) <span class="id">st1</span> = <span class="id">st2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
+<div class="proofscript" id="proof4">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_reg">upd_reg</a></span>, <span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">Halu</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r</span>; <span class="tactic">simpl</span>; <span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_upd_flag">reg_inv_upd_flag</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg_inv</span>: <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hflag</span>: <span class="id"><a href="bpf.comm.State.html#upd_flag">upd_flag</a></span> <span class="id">f</span> <span class="id">st1</span> = <span class="id">st2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
+<div class="proofscript" id="proof5">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_flag">upd_flag</a></span>, <span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">Hflag</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_upd_mem">reg_inv_upd_mem</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg_inv</span>: <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hmem</span>: <span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span> <span class="id">m</span> <span class="id">st1</span> = <span class="id">st2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
+<div class="proofscript" id="proof6">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">Hmem</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_upd_pc">reg_inv_upd_pc</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg_inv</span>: <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hpc</span>: <span class="id"><a href="bpf.comm.State.html#upd_pc">upd_pc</a></span> <span class="id">p</span> <span class="id">st1</span> = <span class="id">st2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
+<div class="proofscript" id="proof7">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">Hpc</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#upd_pc">upd_pc</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_upd_pc_incr">reg_inv_upd_pc_incr</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg_inv</span>: <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hpc</span>: <span class="id"><a href="bpf.comm.State.html#upd_pc_incr">upd_pc_incr</a></span> <span class="id">st1</span> = <span class="id">st2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
+<div class="proofscript" id="proof8">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">Hpc</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#upd_pc">upd_pc</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_store_reg">reg_inv_store_reg</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg</span> : <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hstore</span>: <span class="id"><a href="bpf.comm.State.html#store_mem_reg">store_mem_reg</a></span> <span class="id">addr</span> <span class="id">chunk</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">src</span>) <span class="id">st1</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">st2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof9')">Proof.</div>
+<div class="proofscript" id="proof9">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#store_mem_reg">store_mem_reg</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_flag">upd_flag</a></span>, <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>;<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">inversion</span> <span class="id">Hstore</span>; <span class="tactic">try</span> <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Memory.Mem.storev</a></span>; <span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="reg_inv_store_imm">reg_inv_store_imm</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg</span> : <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hstore</span>: <span class="id"><a href="bpf.comm.State.html#store_mem_imm">store_mem_imm</a></span> <span class="id">addr</span> <span class="id">chunk</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">src</span>) <span class="id">st1</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">st2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof10')">Proof.</div>
+<div class="proofscript" id="proof10">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#store_mem_imm">store_mem_imm</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_flag">upd_flag</a></span>, <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span>;<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">inversion</span> <span class="id">Hstore</span>; <span class="tactic">try</span> <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Memory.Mem.storev</a></span>; <span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

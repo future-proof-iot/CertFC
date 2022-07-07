@@ -1,0 +1,159 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module State</title>
+<meta name="description" content="Documentation of Coq module State" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module State</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert.lib</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.List64.html">List64</a></span> <span class="id"><a href="bpf.comm.Flag.html">Flag</a></span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.MemRegion.html">MemRegion</a></span> <span class="id"><a href="bpf.comm.rBPFAST.html">rBPFAST</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="state">state</a></span> := <span class="id"><a name="mkst">mkst</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="pc_loc">pc_loc</a></span>  : <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>;  <span class="docright">(* should pc_loc be u32 or s32: because ofs is s16, res = pc_loc+ofs may be negative! we should test res before calculating  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="flag">flag</a></span>    : <span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="regs_st">regs_st</a></span> : <span class="id"><a href="bpf.comm.Regs.html#regmap">regmap</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="mrs_num">mrs_num</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>;  <span class="docright">(* number of memory regions, put it here to guarantee align  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a name="bpf_mrs">bpf_mrs</a></span> : <span class="id"><a href="bpf.comm.MemRegion.html#MyMemRegionsType">MyMemRegionsType</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="ins_len">ins_len</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="ins">ins</a></span>     : <span class="id"><a href="bpf.comm.List64.html#MyListType">MyListType</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="bpf_m">bpf_m</a></span>   : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#mem">Memory.mem</a></span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="init_mem">init_mem</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#mem">mem</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.empty">Mem.empty</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="init_state">init_state</a></span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span> := {|<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span>  := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.zero">Int.zero</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#flag">flag</a></span>    := <span class="id"><a href="bpf.comm.Flag.html#BPF_OK">BPF_OK</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> := <span class="id"><a href="bpf.comm.Regs.html#init_regmap">init_regmap</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> := 0;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> := <span class="id"><a href="bpf.comm.MemRegion.html#default_memory_regions">default_memory_regions</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> := 0;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     := <span class="id"><a href="bpf.comm.List64.html#default_list">default_list</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span>   := <span class="id"><a href="bpf.comm.State.html#init_mem">init_mem</a></span>;<br/>
+&nbsp;|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_pc">eval_pc</a></span> (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span> := <span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span> <span class="id">st</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="upd_pc">upd_pc</a></span> (<span class="id">p</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>) (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="bpf.comm.State.html#state">state</a></span> := {|<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span>  := <span class="id">p</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#flag">flag</a></span>    := <span class="id"><a href="bpf.comm.State.html#flag">flag</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> := <span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> := <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> := <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> := <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     := <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span>   := <span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>;<br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="upd_pc_incr">upd_pc_incr</a></span> (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="bpf.comm.State.html#state">state</a></span> := {|<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span>  := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.add">Int.add</a></span> (<span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span> <span class="id">st</span>) <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.one">Int.one</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#flag">flag</a></span>    := <span class="id"><a href="bpf.comm.State.html#flag">flag</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> := <span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> := <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> := <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> := <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     := <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span>   := <span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>;<br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_flag">eval_flag</a></span> (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span> := <span class="id"><a href="bpf.comm.State.html#flag">flag</a></span> <span class="id">st</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="upd_flag">upd_flag</a></span> (<span class="id">f</span>: <span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span>) (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="bpf.comm.State.html#state">state</a></span> := {|<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span>  := <span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#flag">flag</a></span>    := <span class="id">f</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> := <span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> := <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> := <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> := <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     := <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span>   := <span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>;<br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_mem_num">eval_mem_num</a></span> (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span> := (<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st</span>). <span class="docright">(* uint32_t -&gt; nat *)</span><br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_reg">eval_reg</a></span> (<span class="id">r</span>: <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span>) (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.Regs.html#eval_regmap">eval_regmap</a></span> <span class="id">r</span> (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="upd_reg">upd_reg</a></span> (<span class="id">r</span>:<span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span>) (<span class="id">v</span>:<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>) (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="bpf.comm.State.html#state">state</a></span> := {|<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span>  := <span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#flag">flag</a></span>    := <span class="id"><a href="bpf.comm.State.html#flag">flag</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> := <span class="id"><a href="bpf.comm.Regs.html#upd_regmap">upd_regmap</a></span> <span class="id">r</span> <span class="id">v</span> (<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>);<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> := <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> := <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> := <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     := <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span>   := <span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>;<br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_mem_regions">eval_mem_regions</a></span> (<span class="id">st</span>:<span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="bpf.comm.MemRegion.html#MyMemRegionsType">MyMemRegionsType</a></span> := <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_mem">eval_mem</a></span> (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>):<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.mem">Mem.mem</a></span> := <span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="upd_mem">upd_mem</a></span> (<span class="id">m</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.mem">Mem.mem</a></span>) (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="bpf.comm.State.html#state">state</a></span> := {| <span class="docright">(* never be used I guess  *)</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span>  := <span class="id"><a href="bpf.comm.State.html#pc_loc">pc_loc</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#flag">flag</a></span>    := <span class="id"><a href="bpf.comm.State.html#flag">flag</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> := <span class="id"><a href="bpf.comm.State.html#regs_st">regs_st</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> := <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> := <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> := <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     := <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span> <span class="id">st</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span>   := <span class="id">m</span>;<br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="load_mem">load_mem</a></span> (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">ptr</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>) (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.loadv">Mem.loadv</a></span> <span class="id">chunk</span> (<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>) <span class="id">ptr</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">res</span> =&gt; <span class="id"><a href="bpf.comm.rBPFAST.html#_to_vlong">_to_vlong</a></span> <span class="id">res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.loadv">Mem.loadv</a></span> <span class="id">chunk</span> (<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>) <span class="id">ptr</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="store_mem_imm">store_mem_imm</a></span> (<span class="id">ptr</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>) (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>) (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="bpf.comm.State.html#state">state</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">src</span> := <span class="id"><a href="bpf.comm.rBPFAST.html#vint_to_vint_or_vlong">vint_to_vint_or_vlong</a></span> <span class="id">chunk</span> <span class="id">v</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Mem.storev</a></span> <span class="id">chunk</span> (<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>) <span class="id">ptr</span> <span class="id">src</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">m</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span> <span class="id">m</span> <span class="id">st</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="store_mem_reg">store_mem_reg</a></span> (<span class="id">ptr</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>) (<span class="id">chunk</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">v</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>) (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="bpf.comm.State.html#state">state</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">chunk</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint8unsigned">Mint8unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint16unsigned">Mint16unsigned</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint32">Mint32</a></span> | <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#Mint64">Mint64</a></span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">src</span> := <span class="id"><a href="bpf.comm.rBPFAST.html#vlong_to_vint_or_vlong">vlong_to_vint_or_vlong</a></span> <span class="id">chunk</span> <span class="id">v</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Mem.storev</a></span> <span class="id">chunk</span> (<span class="id"><a href="bpf.comm.State.html#bpf_m">bpf_m</a></span> <span class="id">st</span>) <span class="id">ptr</span> <span class="id">src</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">m</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span> <span class="id">m</span> <span class="id">st</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_ins_len">eval_ins_len</a></span> (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st</span>)).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eval_ins">eval_ins</a></span> (<span class="id">idx</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>) (<span class="id">st</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span> := <span class="id"><a href="bpf.comm.List64.html#MyListIndexs32">MyListIndexs32</a></span> (<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span> <span class="id">st</span>) <span class="id">idx</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

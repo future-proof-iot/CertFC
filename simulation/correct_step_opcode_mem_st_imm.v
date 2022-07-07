@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad LemmaNat rBPFMonadOp.
+From bpf.comm Require Import Flag Regs State Monad LemmaNat rBPFMonadOp.
 From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
@@ -46,7 +46,7 @@ Section Step_opcode_mem_st_imm.
 
   (* [Args,Res] provides the mapping between the Coq and the C types *)
   (* Definition Args : list CompilableType := [stateCompilableType].*)
-  Definition args : list Type := [(val:Type); (val:Type); (reg:Type); (nat:Type)].
+  Definition args : list Type := [(val:Type); (val:Type); (nat:Type)].
   Definition res : Type := unit.
 
   (* [f] is a Coq Monadic function with the right type *)
@@ -60,9 +60,8 @@ Section Step_opcode_mem_st_imm.
   (dcons (fun _ => StateLess _ is_state_handle)
     (dcons (stateless val32_correct)
       (dcons (stateless val32_correct)
-        (dcons (stateless reg_correct)
-          (dcons (stateless opcode_correct)
-                (DList.DNil _)))))).
+        (dcons (stateless opcode_correct)
+              (DList.DNil _))))).
 
   (* [match_res] relates the Coq result and the C result *)
   Definition match_res : res -> Inv State.state:= fun x => StateLess _ (eq Vundef).
@@ -112,7 +111,7 @@ Section Step_opcode_mem_st_imm.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -128,7 +127,7 @@ Section Step_opcode_mem_st_imm.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -156,14 +155,14 @@ Section Step_opcode_mem_st_imm.
 
         get_invariant _is_null.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c3.
-        unfold match_bool in c3. subst. destruct x1;reflexivity.
+        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c2.
+        unfold match_bool in c2. subst. destruct x1;reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_st.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c3.
-        unfold opcode_mem_st_reg_correct in c3.
+        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c2.
+        unfold opcode_mem_st_reg_correct in c2.
         subst. reflexivity.
       + compute ; intuition congruence.
 
@@ -193,7 +192,7 @@ Section Step_opcode_mem_st_imm.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -210,7 +209,7 @@ Section Step_opcode_mem_st_imm.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -238,14 +237,14 @@ Section Step_opcode_mem_st_imm.
 
         get_invariant _is_null.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c3.
-        unfold match_bool in c3. subst. destruct x1;reflexivity.
+        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c2.
+        unfold match_bool in c2. subst. destruct x1;reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_st.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c3.
-        unfold opcode_mem_st_reg_correct in c3.
+        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c2.
+        unfold opcode_mem_st_reg_correct in c2.
         subst. reflexivity.
       + compute ; intuition congruence.
 
@@ -277,7 +276,7 @@ Section Step_opcode_mem_st_imm.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -294,7 +293,7 @@ Section Step_opcode_mem_st_imm.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -322,14 +321,14 @@ Section Step_opcode_mem_st_imm.
 
         get_invariant _is_null.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c3.
-        unfold match_bool in c3. subst. destruct x1;reflexivity.
+        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c2.
+        unfold match_bool in c2. subst. destruct x1;reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_st.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c3.
-        unfold opcode_mem_st_reg_correct in c3.
+        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c2.
+        unfold opcode_mem_st_reg_correct in c2.
         subst. reflexivity.
       + compute ; intuition congruence.
 
@@ -362,7 +361,7 @@ Section Step_opcode_mem_st_imm.
         reflexivity.
         intros; simpl.
         unfold val_ptr_correct.
-        unfold correct_check_mem.match_res, val_ptr_correct in c4.
+        unfold correct_check_mem.match_res, val_ptr_correct in c3.
         intuition eauto.
 
         intros.
@@ -379,7 +378,7 @@ Section Step_opcode_mem_st_imm.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -408,14 +407,14 @@ Section Step_opcode_mem_st_imm.
 
         get_invariant _is_null.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c3.
-        unfold match_bool in c3. subst. destruct x1;reflexivity.
+        unfold eval_inv, correct_cmp_ptr32_nullM.match_res in c2.
+        unfold match_bool in c2. subst. destruct x1;reflexivity.
       + reflexivity.
       + intros.
         get_invariant _opcode_st.
         unfold exec_expr. rewrite p0.
-        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c3.
-        unfold opcode_mem_st_reg_correct in c3.
+        unfold eval_inv, correct_get_opcode_mem_st_imm.match_res,opcode_mem_st_imm_correct  in c2.
+        unfold opcode_mem_st_reg_correct in c2.
         subst. reflexivity.
       + compute ; intuition congruence.
 
@@ -435,7 +434,7 @@ Section Step_opcode_mem_st_imm.
           get_invariant _opcode_st.
           unfold correct_get_opcode_mem_st_imm.match_res in c2.
           exists v.
-          assert (c4':=c3).
+          assert (c4':=c2).
           unfold opcode_mem_st_imm_correct in c4'.
           destruct c4' as (i & V & ILL & RANGE).
           exists i.

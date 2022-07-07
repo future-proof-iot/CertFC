@@ -19,7 +19,7 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues.
+From bpf.comm Require Import LemmaInt MemRegion Regs State Monad rBPFAST rBPFValues.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values Clight Memory Integers.

@@ -1,0 +1,67 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Flag</title>
+<meta name="description" content="Documentation of Coq module Flag" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Flag</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="bpf_flag">bpf_flag</a></span>: <span class="kwd">Type</span> := <br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_SUCC_RETURN">BPF_SUCC_RETURN</a></span>         <span class="docright">(* =  1,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_OK">BPF_OK</a></span>                  <span class="docright">(* =  0,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_INSTRUCTION">BPF_ILLEGAL_INSTRUCTION</a></span> <span class="docright">(* = -1,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_MEM">BPF_ILLEGAL_MEM</a></span>         <span class="docright">(* = -2,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_JUMP">BPF_ILLEGAL_JUMP</a></span>        <span class="docright">(* = -3,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_CALL">BPF_ILLEGAL_CALL</a></span>        <span class="docright">(* = -4,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_LEN">BPF_ILLEGAL_LEN</a></span>         <span class="docright">(* = -5,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_REGISTER">BPF_ILLEGAL_REGISTER</a></span>    <span class="docright">(* = -6   *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_NO_RETURN">BPF_NO_RETURN</a></span>           <span class="docright">(* = -7,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_OUT_OF_BRANCHES">BPF_OUT_OF_BRANCHES</a></span>     <span class="docright">(* = -8,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_DIV">BPF_ILLEGAL_DIV</a></span>         <span class="docright">(* = -9,  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_SHIFT">BPF_ILLEGAL_SHIFT</a></span>       <span class="docright">(* = -10, *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ILLEGAL_ALU">BPF_ILLEGAL_ALU</a></span>         <span class="docright">(* = -11, *)</span><br/>
+.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="bpf_flag_eq">bpf_flag_eq</a></span>: <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span>), {<span class="id">x</span>=<span class="id">y</span>} + {<span class="id">x</span>&lt;&gt;<span class="id">y</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+<span class="id">decide</span> <span class="id">equality</span>. Defined.</div>
+<br/>
+<div class="doc">flag_eq: flag -&gt; flag -&gt; bool
+  </div>
+<span class="kwd">Definition</span> <span class="id"><a name="flag_eq">flag_eq</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> := <span class="kwd">if</span> <span class="id"><a href="bpf.comm.Flag.html#bpf_flag_eq">bpf_flag_eq</a></span> <span class="id">x</span> <span class="id">y</span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Z_of_flag">Z_of_flag</a></span> (<span class="id">f</span>:<span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">f</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_SUCC_RETURN">BPF_SUCC_RETURN</a></span>  =&gt; 1<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_OK">BPF_OK</a></span>  =&gt; 0<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_INSTRUCTION">BPF_ILLEGAL_INSTRUCTION</a></span> =&gt; -1<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_MEM">BPF_ILLEGAL_MEM</a></span> =&gt; -2<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_JUMP">BPF_ILLEGAL_JUMP</a></span> =&gt; -3<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_CALL">BPF_ILLEGAL_CALL</a></span> =&gt; -4<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_LEN">BPF_ILLEGAL_LEN</a></span>  =&gt; -5<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_REGISTER">BPF_ILLEGAL_REGISTER</a></span> =&gt; -6<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_NO_RETURN">BPF_NO_RETURN</a></span> =&gt; -7<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_OUT_OF_BRANCHES">BPF_OUT_OF_BRANCHES</a></span> =&gt; -8<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_DIV">BPF_ILLEGAL_DIV</a></span> =&gt; -9<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_SHIFT">BPF_ILLEGAL_SHIFT</a></span> =&gt; -10<br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.comm.Flag.html#BPF_ILLEGAL_ALU">BPF_ILLEGAL_ALU</a></span> =&gt; -11<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="int_of_flag">int_of_flag</a></span> (<span class="id">f</span>:<span class="id"><a href="bpf.comm.Flag.html#bpf_flag">bpf_flag</a></span>)  :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="bpf.comm.Flag.html#Z_of_flag">Z_of_flag</a></span> <span class="id">f</span>).
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

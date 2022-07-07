@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad LemmaNat rBPFMonadOp.
+From bpf.comm Require Import Flag Regs State Monad LemmaNat rBPFMonadOp.
 From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
@@ -242,7 +242,7 @@ Section Step_opcode_mem_ld_imm.
         split.
         reflexivity.
         intros.
-        unfold stateless, flag_correct, CommonLib.int_of_flag; simpl.
+        unfold stateless, flag_correct, int_of_flag; simpl.
         split; auto.
         intros.
 

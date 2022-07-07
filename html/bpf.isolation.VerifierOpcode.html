@@ -1,0 +1,177 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module VerifierOpcode</title>
+<meta name="description" content="Documentation of Coq module VerifierOpcode" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module VerifierOpcode</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode">opcode</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU64">ALU64</a></span>  <span class="docright">(* 0xX7 / 0xXf  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU32">ALU32</a></span>  <span class="docright">(* 0xX4 / 0xXc  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="Branch">Branch</a></span> <span class="docright">(* 0xX5 / 0xXd  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_IMM">LD_IMM</a></span> <span class="docright">(* 0xX8  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_REG">LD_REG</a></span> <span class="docright">(* 0xX1/0xX9  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_IMM">ST_IMM</a></span> <span class="docright">(* 0xX2/0xXa  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_REG">ST_REG</a></span> <span class="docright">(* 0xX3/0xXb  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ILLEGAL">ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_eqb">opcode_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode">opcode</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU64">ALU64</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU64">ALU64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU32">ALU32</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU32">ALU32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#Branch">Branch</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#Branch">Branch</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM">LD_IMM</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM">LD_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG">LD_REG</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG">LD_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM">ST_IMM</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM">ST_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG">ST_REG</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG">ST_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ILLEGAL">ILLEGAL</a></span>,<span class="id"><a href="bpf.isolation.VerifierOpcode.html#ILLEGAL">ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode">nat_to_opcode</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode">opcode</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opc</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Nat.html#land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">x07</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x07</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU64">ALU64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x04</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU32">ALU32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x05</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#Branch">Branch</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x00</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM">LD_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x01</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG">LD_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x02</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM">ST_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x03</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG">ST_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ILLEGAL">ILLEGAL</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_alu">opcode_alu</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU_DIV">ALU_DIV</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU_SHIFT">ALU_SHIFT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU_IMM_Normal">ALU_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU_REG_Normal">ALU_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU_ILLEGAL">ALU_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu_eqb">opcode_alu_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_alu">opcode_alu</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_DIV">ALU_DIV</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_DIV">ALU_DIV</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_SHIFT">ALU_SHIFT</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_SHIFT">ALU_SHIFT</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_IMM_Normal">ALU_IMM_Normal</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_IMM_Normal">ALU_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_REG_Normal">ALU_REG_Normal</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_REG_Normal">ALU_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_ILLEGAL">ALU_ILLEGAL</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_ILLEGAL">ALU_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_alu">nat_to_opcode_alu</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_alu">opcode_alu</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x37</span> | 0<span class="id">x97</span> | 0<span class="id">x34</span> | 0<span class="id">x94</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_DIV">ALU_DIV</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x67</span> | 0<span class="id">x77</span> | 0<span class="id">xc7</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x64</span> | 0<span class="id">x74</span> | 0<span class="id">xc4</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_SHIFT">ALU_SHIFT</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x07</span> | 0<span class="id">x17</span> | 0<span class="id">x27</span> | 0<span class="id">x47</span> | 0<span class="id">x57</span> | 0<span class="id">x87</span> | 0<span class="id">xa7</span> | 0<span class="id">xb7</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x04</span> | 0<span class="id">x14</span> | 0<span class="id">x24</span> | 0<span class="id">x44</span> | 0<span class="id">x54</span> | 0<span class="id">x84</span> | 0<span class="id">xa4</span> | 0<span class="id">xb4</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_IMM_Normal">ALU_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x0f</span> | 0<span class="id">x1f</span> | 0<span class="id">x2f</span> | 0<span class="id">x3f</span> | 0<span class="id">x4f</span> | 0<span class="id">x5f</span> | 0<span class="id">x6f</span> | 0<span class="id">x7f</span> | 0<span class="id">x9f</span> | 0<span class="id">xaf</span> | 0<span class="id">xbf</span> | 0<span class="id">xcf</span> <br/>
+&nbsp;&nbsp;| 0<span class="id">x0c</span> | 0<span class="id">x1c</span> | 0<span class="id">x2c</span> | 0<span class="id">x3c</span> | 0<span class="id">x4c</span> | 0<span class="id">x5c</span> | 0<span class="id">x6c</span> | 0<span class="id">x7c</span> | 0<span class="id">x9c</span> | 0<span class="id">xac</span> | 0<span class="id">xbc</span> | 0<span class="id">xcc</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_REG_Normal">ALU_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ALU_ILLEGAL">ALU_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_branch">opcode_branch</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="JMP_IMM">JMP_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JMP_REG">JMP_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JMP_SP">JMP_SP</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JMP_ILLEGAL">JMP_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_branch_eqb">opcode_branch_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_branch">opcode_branch</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_IMM">JMP_IMM</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_IMM">JMP_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_REG">JMP_REG</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_REG">JMP_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_SP">JMP_SP</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_SP">JMP_SP</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_ILLEGAL">JMP_ILLEGAL</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_ILLEGAL">JMP_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_branch">nat_to_opcode_branch</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_branch">opcode_branch</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x05</span> | 0<span class="id">x15</span> | 0<span class="id">x25</span> | 0<span class="id">x35</span> | 0<span class="id">xa5</span> | 0<span class="id">xb5</span> | 0<span class="id">x45</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x55</span> | 0<span class="id">x65</span> | 0<span class="id">x75</span> | 0<span class="id">xc5</span> | 0<span class="id">xd5</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_IMM">JMP_IMM</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x1d</span> | 0<span class="id">x2d</span> | 0<span class="id">x3d</span> | 0<span class="id">xad</span> | 0<span class="id">xbd</span> | 0<span class="id">x4d</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x5d</span> | 0<span class="id">x6d</span> | 0<span class="id">x7d</span> | 0<span class="id">xcd</span> | 0<span class="id">xdd</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_REG">JMP_REG</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x85</span> | 0<span class="id">x95</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_SP">JMP_SP</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#JMP_ILLEGAL">JMP_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_load_imm">opcode_load_imm</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_IMM_Normal">LD_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_IMM_ILLEGAL">LD_IMM_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_load_imm_eqb">opcode_load_imm_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_load_imm">opcode_load_imm</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM_Normal">LD_IMM_Normal</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM_Normal">LD_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM_ILLEGAL">LD_IMM_ILLEGAL</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM_ILLEGAL">LD_IMM_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_load_imm">nat_to_opcode_load_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_load_imm">opcode_load_imm</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x18</span> | 0<span class="id">x10</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM_Normal">LD_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_IMM_ILLEGAL">LD_IMM_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_load_reg">opcode_load_reg</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_REG_Normal">LD_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_REG_ILLEGAL">LD_REG_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_load_reg_eqb">opcode_load_reg_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_load_reg">opcode_load_reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG_Normal">LD_REG_Normal</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG_Normal">LD_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG_ILLEGAL">LD_REG_ILLEGAL</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG_ILLEGAL">LD_REG_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_load_reg">nat_to_opcode_load_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_load_reg">opcode_load_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x61</span> | 0<span class="id">x69</span> | 0<span class="id">x71</span> | 0<span class="id">x79</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG_Normal">LD_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#LD_REG_ILLEGAL">LD_REG_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_store_imm">opcode_store_imm</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_IMM_Normal">ST_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_IMM_ILLEGAL">ST_IMM_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_store_imm_eqb">opcode_store_imm_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_store_imm">opcode_store_imm</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM_Normal">ST_IMM_Normal</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM_Normal">ST_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM_ILLEGAL">ST_IMM_ILLEGAL</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM_ILLEGAL">ST_IMM_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_store_imm">nat_to_opcode_store_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_store_imm">opcode_store_imm</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x62</span> | 0<span class="id">x6a</span> | 0<span class="id">x72</span> | 0<span class="id">x7a</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM_Normal">ST_IMM_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_IMM_ILLEGAL">ST_IMM_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_store_reg">opcode_store_reg</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_REG_Normal">ST_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_REG_ILLEGAL">ST_REG_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_store_reg_eqb">opcode_store_reg_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_store_reg">opcode_store_reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG_Normal">ST_REG_Normal</a></span>, <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG_Normal">ST_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG_ILLEGAL">ST_REG_ILLEGAL</a></span>,  <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG_ILLEGAL">ST_REG_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_store_reg">nat_to_opcode_store_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.isolation.VerifierOpcode.html#opcode_store_reg">opcode_store_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x63</span> | 0<span class="id">x6b</span> | 0<span class="id">x73</span> | 0<span class="id">x7b</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG_Normal">ST_REG_Normal</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="bpf.isolation.VerifierOpcode.html#ST_REG_ILLEGAL">ST_REG_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

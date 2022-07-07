@@ -1,0 +1,320 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Syntax</title>
+<meta name="description" content="Documentation of Coq module Syntax" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Syntax</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.rBPFAST.html">rBPFAST</a></span>.<br/>
+<br/>
+<div class="doc">For use to distinguish ALU32 and ALU64 </div>
+<span class="kwd">Inductive</span> <span class="id"><a name="arch">arch</a></span> := <span class="id"><a name="A32">A32</a></span> | <span class="id"><a name="A64">A64</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="arch_eq">arch_eq</a></span>: <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.model.Syntax.html#arch">arch</a></span>), {<span class="id">x</span>=<span class="id">y</span>} + {<span class="id">x</span>&lt;&gt;<span class="id">y</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="id">decide</span> <span class="id">equality</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="arch_eqb">arch_eqb</a></span> (<span class="id">a0</span> <span class="id">a1</span>: <span class="id"><a href="bpf.model.Syntax.html#arch">arch</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">a0</span>, <span class="id">a1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#A32">A32</a></span>, <span class="id"><a href="bpf.model.Syntax.html#A32">A32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#A64">A64</a></span>, <span class="id"><a href="bpf.model.Syntax.html#A64">A64</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="arch_eqb_true">arch_eqb_true</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#arch_eqb">arch_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="arch_eqb_false">arch_eqb_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt;&gt; <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#arch_eqb">arch_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
+<div class="proofscript" id="proof3">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="arch2Z">arch2Z</a></span> (<span class="id">a</span>: <span class="id"><a href="bpf.model.Syntax.html#arch">arch</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">a</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#A32">A32</a></span> =&gt; 32%<span class="id">Z</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#A64">A64</a></span> =&gt; 64%<span class="id">Z</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">For condition flags </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="cond">cond</a></span> := <br/>
+&nbsp;&nbsp;<span class="id"><a name="Eq">Eq</a></span> <br/>
+| <span class="id"><a name="Gt">Gt</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#signedness">signedness</a></span> -&gt; <span class="id">cond</span> <br/>
+| <span class="id"><a name="Ge">Ge</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#signedness">signedness</a></span> -&gt; <span class="id">cond</span><br/>
+| <span class="id"><a name="Lt">Lt</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#signedness">signedness</a></span> -&gt; <span class="id">cond</span><br/>
+| <span class="id"><a name="Le">Le</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#signedness">signedness</a></span> -&gt; <span class="id">cond</span><br/>
+| <span class="id"><a name="SEt">SEt</a></span> <br/>
+| <span class="id"><a name="Ne">Ne</a></span><br/>
+.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="signedness_eq32">signedness_eq32</a></span>: <span class="kwd">forall</span> (<span class="id">s1</span> <span class="id">s2</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#signedness">signedness</a></span>), {<span class="id">s1</span>=<span class="id">s2</span>} + {<span class="id">s1</span>&lt;&gt;<span class="id">s2</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
+<div class="proofscript" id="proof4">
+&nbsp;&nbsp;<span class="id">decide</span> <span class="id">equality</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="signedness_eqb">signedness_eqb</a></span> (<span class="id">s1</span> <span class="id">s2</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#signedness">signedness</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">s1</span>, <span class="id">s2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Signed">Signed</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Signed">Signed</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Unsigned">Unsigned</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html#Unsigned">Unsigned</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="signedness_eqb_true">signedness_eqb_true</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#signedness_eqb">signedness_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
+<div class="proofscript" id="proof5">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="signedness_eqb_false">signedness_eqb_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt;&gt; <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#signedness_eqb">signedness_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
+<div class="proofscript" id="proof6">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="cond_eq">cond_eq</a></span>: <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.model.Syntax.html#cond">cond</a></span>), {<span class="id">x</span>=<span class="id">y</span>} + {<span class="id">x</span>&lt;&gt;<span class="id">y</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
+<div class="proofscript" id="proof7">
+&nbsp;&nbsp;<span class="id">decide</span> <span class="id">equality</span>. <span class="id">all</span>: <span class="tactic">apply</span> <span class="id"><a href="bpf.model.Syntax.html#signedness_eq32">signedness_eq32</a></span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="cond_eqb">cond_eqb</a></span> (<span class="id">c0</span> <span class="id">c1</span>: <span class="id"><a href="bpf.model.Syntax.html#cond">cond</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">c0</span>, <span class="id">c1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#Eq">Eq</a></span>, <span class="id"><a href="bpf.model.Syntax.html#Eq">Eq</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#SEt">SEt</a></span>, <span class="id"><a href="bpf.model.Syntax.html#SEt">SEt</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#Ne">Ne</a></span>, <span class="id"><a href="bpf.model.Syntax.html#Ne">Ne</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#Gt">Gt</a></span> <span class="id">s0</span>, <span class="id"><a href="bpf.model.Syntax.html#Gt">Gt</a></span> <span class="id">s1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#Ge">Ge</a></span> <span class="id">s0</span>, <span class="id"><a href="bpf.model.Syntax.html#Ge">Ge</a></span> <span class="id">s1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#Lt">Lt</a></span> <span class="id">s0</span>, <span class="id"><a href="bpf.model.Syntax.html#Lt">Lt</a></span> <span class="id">s1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#Le">Le</a></span> <span class="id">s0</span>, <span class="id"><a href="bpf.model.Syntax.html#Le">Le</a></span> <span class="id">s1</span> =&gt; <span class="id"><a href="bpf.model.Syntax.html#signedness_eqb">signedness_eqb</a></span> <span class="id">s0</span> <span class="id">s1</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="cond_eqb_true">cond_eqb_true</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#cond_eqb">cond_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
+<div class="proofscript" id="proof8">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Syntax.html#cond_eqb">cond_eqb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> (<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#signedness_eqb_true">signedness_eqb_true</a></span>); <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="cond_eqb_false">cond_eqb_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt;&gt; <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#cond_eqb">cond_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof9')">Proof.</div>
+<div class="proofscript" id="proof9">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Syntax.html#cond_eqb">cond_eqb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">try</span> (<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#signedness_eqb_false">signedness_eqb_false</a></span>); <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="off">off</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="imm">imm</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="binOp">binOp</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a name="BPF_ADD">BPF_ADD</a></span> | <span class="id"><a name="BPF_SUB">BPF_SUB</a></span> | <span class="id"><a name="BPF_MUL">BPF_MUL</a></span> | <span class="id"><a name="BPF_DIV">BPF_DIV</a></span> | <span class="id"><a name="BPF_OR">BPF_OR</a></span> | <span class="id"><a name="BPF_AND">BPF_AND</a></span><br/>
+| <span class="id"><a name="BPF_LSH">BPF_LSH</a></span> | <span class="id"><a name="BPF_RSH">BPF_RSH</a></span> | <span class="id"><a name="BPF_MOD">BPF_MOD</a></span> | <span class="id"><a name="BPF_XOR">BPF_XOR</a></span> | <span class="id"><a name="BPF_MOV">BPF_MOV</a></span>| <span class="id"><a name="BPF_ARSH">BPF_ARSH</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="binOp_eq">binOp_eq</a></span>: <span class="kwd">forall</span> (<span class="id">b1</span> <span class="id">b2</span>: <span class="id"><a href="bpf.model.Syntax.html#binOp">binOp</a></span>), {<span class="id">b1</span>=<span class="id">b2</span>} + {<span class="id">b1</span>&lt;&gt;<span class="id">b2</span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof10')">Proof.</div>
+<div class="proofscript" id="proof10">
+&nbsp;&nbsp;<span class="id">decide</span> <span class="id">equality</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="binOp_eqb">binOp_eqb</a></span> (<span class="id">b0</span> <span class="id">b1</span>: <span class="id"><a href="bpf.model.Syntax.html#binOp">binOp</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">b0</span>, <span class="id">b1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_ADD">BPF_ADD</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_ADD">BPF_ADD</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_SUB">BPF_SUB</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_SUB">BPF_SUB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_MUL">BPF_MUL</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_MUL">BPF_MUL</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_DIV">BPF_DIV</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_DIV">BPF_DIV</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_OR">BPF_OR</a></span>,  <span class="id"><a href="bpf.model.Syntax.html#BPF_OR">BPF_OR</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_AND">BPF_AND</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_AND">BPF_AND</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_LSH">BPF_LSH</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_LSH">BPF_LSH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_RSH">BPF_RSH</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_RSH">BPF_RSH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_MOD">BPF_MOD</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_MOD">BPF_MOD</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_XOR">BPF_XOR</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_XOR">BPF_XOR</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_MOV">BPF_MOV</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_MOV">BPF_MOV</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_ARSH">BPF_ARSH</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_ARSH">BPF_ARSH</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="binOp_eqb_true">binOp_eqb_true</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#binOp_eqb">binOp_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof11')">Proof.</div>
+<div class="proofscript" id="proof11">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="binOp_eqb_false">binOp_eqb_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt;&gt; <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#binOp_eqb">binOp_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof12')">Proof.</div>
+<div class="proofscript" id="proof12">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="instruction">instruction</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_NEG">BPF_NEG</a></span>    : <span class="id"><a href="bpf.model.Syntax.html#arch">arch</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_BINARY">BPF_BINARY</a></span> : <span class="id"><a href="bpf.model.Syntax.html#arch">arch</a></span> -&gt; <span class="id"><a href="bpf.model.Syntax.html#binOp">binOp</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span>+<span class="id"><a href="bpf.model.Syntax.html#imm">imm</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_JA">BPF_JA</a></span>   : <span class="id"><a href="bpf.model.Syntax.html#off">off</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_JUMP">BPF_JUMP</a></span> : <span class="id"><a href="bpf.model.Syntax.html#cond">cond</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span>+<span class="id"><a href="bpf.model.Syntax.html#imm">imm</a></span> -&gt; <span class="id"><a href="bpf.model.Syntax.html#off">off</a></span> -&gt; <span class="id">instruction</span><br/>
+<br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_LDDW_low">BPF_LDDW_low</a></span> : <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id"><a href="bpf.model.Syntax.html#imm">imm</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_LDDW_high">BPF_LDDW_high</a></span> : <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id"><a href="bpf.model.Syntax.html#imm">imm</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_LDX">BPF_LDX</a></span>  : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id"><a href="bpf.model.Syntax.html#off">off</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ST">BPF_ST</a></span>   : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> -&gt; <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span>+<span class="id"><a href="bpf.model.Syntax.html#imm">imm</a></span> -&gt; <span class="id"><a href="bpf.model.Syntax.html#off">off</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_CALL">BPF_CALL</a></span> : <span class="id"><a href="bpf.model.Syntax.html#imm">imm</a></span> -&gt; <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_RET">BPF_RET</a></span>  : <span class="id">instruction</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="BPF_ERR">BPF_ERR</a></span>  : <span class="id">instruction</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="sum_eqb">sum_eqb</a></span> {<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>} (<span class="id">eq1</span> : <span class="id">A</span> -&gt; <span class="id">A</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">eq2</span> : <span class="id">B</span> -&gt; <span class="id">B</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#sum">sum</a></span> <span class="id">A</span> <span class="id">B</span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">r0</span>', <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">r1</span>' =&gt; <span class="id">eq1</span>  <span class="id">r0</span>' <span class="id">r1</span>'<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">i0</span>', <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">i1</span>' =&gt; <span class="id">eq2</span>  <span class="id">i0</span>' <span class="id">i1</span>'<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bpf_instruction_eqb">bpf_instruction_eqb</a></span> (<span class="id">a</span> <span class="id">b</span>: <span class="id"><a href="bpf.model.Syntax.html#instruction">instruction</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">a</span>, <span class="id">b</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_NEG">BPF_NEG</a></span> <span class="id">a0</span> <span class="id">r0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_NEG">BPF_NEG</a></span> <span class="id">a1</span> <span class="id">r1</span> =&gt; <span class="id"><a href="bpf.model.Syntax.html#arch_eqb">arch_eqb</a></span> <span class="id">a0</span> <span class="id">a1</span> &amp;&amp; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">r0</span> <span class="id">r1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_BINARY">BPF_BINARY</a></span> <span class="id">a0</span> <span class="id">b0</span> <span class="id">r0</span> <span class="id">ri0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_BINARY">BPF_BINARY</a></span> <span class="id">a1</span> <span class="id">b1</span> <span class="id">r1</span> <span class="id">ri1</span> =&gt; <span class="id"><a href="bpf.model.Syntax.html#arch_eqb">arch_eqb</a></span> <span class="id">a0</span> <span class="id">a1</span> &amp;&amp; <span class="id"><a href="bpf.model.Syntax.html#binOp_eqb">binOp_eqb</a></span> <span class="id">b0</span> <span class="id">b1</span> &amp;&amp; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">r0</span> <span class="id">r1</span> &amp;&amp; <span class="id"><a href="bpf.model.Syntax.html#sum_eqb">sum_eqb</a></span> <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">ri0</span> <span class="id">ri1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_JA">BPF_JA</a></span> <span class="id">ofs0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_JA">BPF_JA</a></span> <span class="id">ofs1</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">ofs0</span> <span class="id">ofs1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_JUMP">BPF_JUMP</a></span> <span class="id">c0</span> <span class="id">r0</span> <span class="id">ri0</span> <span class="id">ofs0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_JUMP">BPF_JUMP</a></span> <span class="id">c1</span> <span class="id">r1</span> <span class="id">ri1</span> <span class="id">ofs1</span> =&gt; <span class="id"><a href="bpf.model.Syntax.html#cond_eqb">cond_eqb</a></span> <span class="id">c0</span> <span class="id">c1</span> &amp;&amp; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">r0</span> <span class="id">r1</span> &amp;&amp; <span class="id"><a href="bpf.model.Syntax.html#sum_eqb">sum_eqb</a></span> <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">ri0</span> <span class="id">ri1</span>  &amp;&amp; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">ofs0</span> <span class="id">ofs1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_LDDW_low">BPF_LDDW_low</a></span> <span class="id">r0</span> <span class="id">i0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_LDDW_low">BPF_LDDW_low</a></span> <span class="id">r1</span> <span class="id">i1</span> =&gt; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">r0</span> <span class="id">r1</span> &amp;&amp; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">i0</span> <span class="id">i1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_LDDW_high">BPF_LDDW_high</a></span> <span class="id">r0</span> <span class="id">i0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_LDDW_high">BPF_LDDW_high</a></span> <span class="id">r1</span> <span class="id">i1</span> =&gt; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">r0</span> <span class="id">r1</span> &amp;&amp; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">i0</span> <span class="id">i1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_LDX">BPF_LDX</a></span> <span class="id">mc0</span> <span class="id">d0</span> <span class="id">s0</span> <span class="id">ofs0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_LDX">BPF_LDX</a></span> <span class="id">mc1</span> <span class="id">d1</span> <span class="id">s1</span> <span class="id">ofs1</span> =&gt; <span class="id"><a href="bpf.comm.rBPFAST.html#chunk_eqb">chunk_eqb</a></span> <span class="id">mc0</span> <span class="id">mc1</span> &amp;&amp; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">d0</span> <span class="id">d1</span> &amp;&amp; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">s0</span> <span class="id">s1</span> &amp;&amp; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">ofs0</span> <span class="id">ofs1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_ST">BPF_ST</a></span> <span class="id">mc0</span> <span class="id">r0</span> <span class="id">ri0</span> <span class="id">ofs0</span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_ST">BPF_ST</a></span> <span class="id">mc1</span> <span class="id">r1</span> <span class="id">ri1</span> <span class="id">ofs1</span> =&gt; <span class="id"><a href="bpf.comm.rBPFAST.html#chunk_eqb">chunk_eqb</a></span> <span class="id">mc0</span> <span class="id">mc1</span> &amp;&amp; <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id">r0</span> <span class="id">r1</span> &amp;&amp; <span class="id"><a href="bpf.model.Syntax.html#sum_eqb">sum_eqb</a></span> <span class="id"><a href="bpf.comm.Regs.html#reg_eqb">reg_eqb</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">ri0</span> <span class="id">ri1</span> &amp;&amp; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">ofs0</span> <span class="id">ofs1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_CALL">BPF_CALL</a></span> <span class="id">i0</span> , <span class="id"><a href="bpf.model.Syntax.html#BPF_CALL">BPF_CALL</a></span> <span class="id">i1</span> =&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">i0</span> <span class="id">i1</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_RET">BPF_RET</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_RET">BPF_RET</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.model.Syntax.html#BPF_ERR">BPF_ERR</a></span>, <span class="id"><a href="bpf.model.Syntax.html#BPF_ERR">BPF_ERR</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_eq_true">Int_eq_true</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> &lt;-&gt; <span class="id">x</span> = <span class="id">y</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof13')">Proof.</div>
+<div class="proofscript" id="proof13">
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.same_if_eq">Int.same_if_eq</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H</span>; <span class="tactic">rewrite</span> <span class="id">H</span>; <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_true">Int.eq_true</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Int_eq_false">Int_eq_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int">int</a></span>, <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> &lt;-&gt; <span class="id">x</span> &lt;&gt; <span class="id">y</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof14')">Proof.</div>
+<div class="proofscript" id="proof14">
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hspec</span>: <span class="kwd">if</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq">Int.eq</a></span> <span class="id">x</span> <span class="id">y</span> <span class="kwd">then</span> <span class="id">x</span> = <span class="id">y</span> <span class="kwd">else</span> <span class="id">x</span> &lt;&gt; <span class="id">y</span>) <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_spec">Int.eq_spec</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> <span class="id">Hspec</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.eq_false">Int.eq_false</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="sum_eqb_true">sum_eqb_true</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>} <span class="id">eq1</span> <span class="id">eq2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">eq1_ok</span> : <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id">eq1</span> <span class="id">x</span> <span class="id">y</span>  = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">eq2_ok</span> : <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id">eq2</span> <span class="id">x</span> <span class="id">y</span>  = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#sum">sum</a></span> <span class="id">A</span> <span class="id">B</span>),<br/>
+&nbsp;&nbsp;<span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#sum_eqb">sum_eqb</a></span> <span class="id">eq1</span> <span class="id">eq2</span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof15')">Proof.</div>
+<div class="proofscript" id="proof15">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>,<span class="id">y</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> &lt;- <span class="id">eq1_ok</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> &lt;- <span class="id">eq2_ok</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="bpf_instruction_eqb_true">bpf_instruction_eqb_true</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> = <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#bpf_instruction_eqb">bpf_instruction_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof16')">Proof.</div>
+<div class="proofscript" id="proof16">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Syntax.html#bpf_instruction_eqb">bpf_instruction_eqb</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">try</span> <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#arch_eqb_true">arch_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#arch_eqb_true">arch_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#sum_eqb_true">sum_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#binOp_eqb_true">binOp_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>. <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span>! <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#cond_eqb_true">cond_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#sum_eqb_true">sum_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span>! <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span>! <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span>! <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- !<span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.rBPFAST.html#chunk_eqb_true">chunk_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span>! <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.rBPFAST.html#chunk_eqb_true">chunk_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="bpf.model.Syntax.html#sum_eqb_true">sum_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.comm.Regs.html#reg_eqb_true">reg_eqb_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;-     <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="bpf.model.Syntax.html#Int_eq_true">Int_eq_true</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="bpf_instruction_eqb_false">bpf_instruction_eqb_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt;&gt; <span class="id">y</span> &lt;-&gt; <span class="id"><a href="bpf.model.Syntax.html#bpf_instruction_eqb">bpf_instruction_eqb</a></span> <span class="id">x</span> <span class="id">y</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof17')">Proof.</div>
+<div class="proofscript" id="proof17">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="bpf.model.Syntax.html#bpf_instruction_eqb_true">bpf_instruction_eqb_true</a></span> <span class="id">x</span> <span class="id">y</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="bpf.model.Syntax.html#bpf_instruction_eqb">bpf_instruction_eqb</a></span> <span class="id">x</span> <span class="id">y</span>); <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

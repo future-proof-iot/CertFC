@@ -1,0 +1,185 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module rBPFMemType</title>
+<meta name="description" content="Documentation of Coq module rBPFMemType" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module rBPFMemType</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.cfrontend</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html">Memtype</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<div class="doc">permission_eq_eq: permission_eq -&gt; permission_eq -&gt; bool
+  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="perm_ge">perm_ge</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#permission">permission</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> := <span class="kwd">if</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_order_dec">Mem.perm_order_dec</a></span> <span class="id">x</span> <span class="id">y</span>) <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<br/>
+<h1> Some extra  CompCert Coqlib lemmas </h1>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="proj_sumbool_false">proj_sumbool_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">P</span> <span class="id">Q</span>: <span class="kwd">Prop</span>) (<span class="id">a</span>: {<span class="id">P</span>}+{<span class="id">Q</span>}), <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#proj_sumbool">Coqlib.proj_sumbool</a></span> <span class="id">a</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> -&gt; <span class="id">Q</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="proj_sumbool_is_false">proj_sumbool_is_false</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">P</span> <span class="id">Q</span>: <span class="kwd">Prop</span>) (<span class="id">a</span>: {<span class="id">P</span>}+{~<span class="id">P</span>}), ~<span class="id">P</span> -&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#proj_sumbool">Coqlib.proj_sumbool</a></span> <span class="id">a</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Coqlib.html#proj_sumbool">Coqlib.proj_sumbool</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<h1> Some extra CompCert Memory lemmas </h1>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="store_perm_iff">store_perm_iff</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">addr</span> <span class="id">b0</span> <span class="id">ofs0</span> <span class="id">k</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;(<span class="id">Hstore</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.store">Mem.store</a></span> <span class="id">chunk</span> <span class="id">m1</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">addr</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">m2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm">Mem.perm</a></span> <span class="id">m1</span> <span class="id">b0</span> <span class="id">ofs0</span> <span class="id">k</span> <span class="id">p</span> &lt;-&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm">Mem.perm</a></span> <span class="id">m2</span> <span class="id">b0</span> <span class="id">ofs0</span> <span class="id">k</span> <span class="id">p</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
+<div class="proofscript" id="proof3">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_store_1">Mem.perm_store_1</a></span> <span class="kwd">with</span> (<span class="id">k</span>:=<span class="id">k</span>) (<span class="id">p</span>:=<span class="id">p</span>) <span class="kwd">in</span> <span class="id">Hstore</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_store_2">Mem.perm_store_2</a></span> <span class="kwd">with</span> (<span class="id">k</span>:=<span class="id">k</span>) (<span class="id">p</span>:=<span class="id">p</span>) <span class="kwd">in</span> <span class="id">Hstore</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="mem_get_in">mem_get_in</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span> (<span class="id">n</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) <span class="id">q</span> <span class="id">c</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Peano.html#lt">lt</a></span> <span class="id">n</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">List.length</a></span> <span class="id">l</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#ZMap.get">Maps.ZMap.get</a></span> (<span class="id">q</span> + (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>)) (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.setN">Mem.setN</a></span> <span class="id">l</span> <span class="id">q</span> <span class="id">c</span>) = (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#nth_default">nth_default</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#Undef">Memdata.Undef</a></span> <span class="id">l</span> <span class="id">n</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
+<div class="proofscript" id="proof4">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#nth_default">nth_default</a></span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.setN_outside">Mem.setN_outside</a></span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_0_r">Z.add_0_r</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#ZMap.gss">Maps.ZMap.gss</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">assert</span> (<span class="id">Heq</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#nth_default">nth_default</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#Undef">Memdata.Undef</a></span> (<span class="id">a</span>::<span class="id">l</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">n</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#nth_default">nth_default</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#Undef">Memdata.Undef</a></span> <span class="id">l</span> <span class="id">n</span>) <span class="tactic">by</span> <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">IHl</span> <span class="kwd">with</span> (<span class="id">q</span> := <span class="id">q</span>+1) (<span class="id">c</span>:=<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Maps.html#ZMap.set">Maps.ZMap.set</a></span> <span class="id">q</span> <span class="id">a</span> <span class="id">c</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: <span class="id">q</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos">Z.pos</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.of_succ_nat">Pos.of_succ_nat</a></span> <span class="id">n</span>) = <span class="id">q</span> + 1 + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> <span class="id">n</span>) <span class="tactic">by</span> <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="store_range_perm">store_range_perm</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">b0</span> <span class="id">b1</span> <span class="id">ofs</span> <span class="id">addr</span> <span class="id">low</span> <span class="id">high</span> <span class="id">k</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hblk_neq</span>: <span class="id">b0</span> &lt;&gt; <span class="id">b1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hstore</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.store">Mem.store</a></span> <span class="id">chunk</span> <span class="id">m1</span> <span class="id">b0</span> <span class="id">ofs</span> <span class="id">addr</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">m2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hrange_perm</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="id">m1</span> <span class="id">b1</span> <span class="id">low</span> <span class="id">high</span> <span class="id">k</span> <span class="id">p</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="id">m2</span> <span class="id">b1</span> <span class="id">low</span> <span class="id">high</span> <span class="id">k</span> <span class="id">p</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
+<div class="proofscript" id="proof5">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">specialize</span> (<span class="id">Hrange_perm</span> <span class="id">ofs0</span> <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_store_1">Mem.perm_store_1</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="store_valid_access_None">store_valid_access_None</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.store">Mem.store</a></span> <span class="id">chunk</span> <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">v</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> &lt;-&gt; ~ <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="id">m</span> <span class="id">chunk</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memtype.html#Writable">Writable</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
+<div class="proofscript" id="proof6">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Global</span> <span class="kwd">Transparent</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.store">Mem.store</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.store">Mem.store</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access_dec">Mem.valid_access_dec</a></span> <span class="id">eqn</span>: <span class="id">Hdec</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="unchanged_on_store_None">unchanged_on_store_None</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">m0</span> <span class="id">m1</span> <span class="id">chunk</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">v</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hunchanged_on</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.unchanged_on">Mem.unchanged_on</a></span> <span class="id">P</span> <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hvalid_block_implies</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_block">Mem.valid_block</a></span> <span class="id">m1</span> <span class="id">b</span> -&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_block">Mem.valid_block</a></span> <span class="id">m0</span> <span class="id">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hprop</span>: <span class="kwd">forall</span> <span class="id">i</span>, <span class="id">ofs</span> &lt;= <span class="id">i</span> &lt; <span class="id">ofs</span> + <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id">chunk</span> -&gt; <span class="id">P</span> <span class="id">b</span> <span class="id">i</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.store">Mem.store</a></span> <span class="id">chunk</span> <span class="id">m0</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">v</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> &lt;-&gt; <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.store">Mem.store</a></span> <span class="id">chunk</span> <span class="id">m1</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">v</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
+<div class="proofscript" id="proof7">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="bpf.comm.rBPFMemType.html#store_valid_access_None">store_valid_access_None</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intros</span> <span class="id">Hinvalid</span> <span class="id">HF</span>; <span class="tactic">apply</span> <span class="id">Hinvalid</span>; <span class="tactic">clear</span> <span class="id">Hinvalid</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="kwd">in</span> *; <span class="tactic">destruct</span> <span class="id">HF</span> <span class="kwd">as</span> (<span class="id">Hrange</span> &amp; <span class="id">HF</span>).<br/>
+&nbsp;&nbsp;- <span class="tactic">split</span>; [<span class="tactic">clear</span> <span class="id">HF</span> | <span class="tactic">assumption</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">specialize</span> (<span class="id">Hrange</span> <span class="id">ofs0</span> <span class="id">H</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_unchanged_on_2">Mem.perm_unchanged_on_2</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Hvalid_block_implies</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_valid_block">Mem.perm_valid_block</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">split</span>; [<span class="tactic">clear</span> <span class="id">HF</span> | <span class="tactic">assumption</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">specialize</span> (<span class="id">Hrange</span> <span class="id">ofs0</span> <span class="id">H</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_unchanged_on">Mem.perm_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="unchanged_on_valid_pointer">unchanged_on_valid_pointer</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span> <span class="id">m0</span> <span class="id">m1</span> <span class="id">b</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hunchanged_on</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.unchanged_on">Mem.unchanged_on</a></span> <span class="id">P</span> <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hvalid</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_block">Mem.valid_block</a></span> <span class="id">m0</span> <span class="id">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hprop</span>: <span class="kwd">forall</span> <span class="id">i</span>, <span class="id">ofs</span> &lt;= <span class="id">i</span> &lt; <span class="id">ofs</span> + 1 -&gt; <span class="id">P</span> <span class="id">b</span> <span class="id">i</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_pointer">Mem.valid_pointer</a></span> <span class="id">m0</span> <span class="id">b</span> <span class="id">ofs</span> =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_pointer">Mem.valid_pointer</a></span> <span class="id">m1</span> <span class="id">b</span> <span class="id">ofs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
+<div class="proofscript" id="proof8">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_pointer">Mem.valid_pointer</a></span> <span class="id">eqn</span>: <span class="id">Hvptr</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">symmetry</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_pointer_valid_access">Mem.valid_pointer_valid_access</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">specialize</span> (<span class="id">H</span> <span class="id">ofs0</span> <span class="id">H0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_unchanged_on">Mem.perm_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">symmetry</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#not_true_iff_false">Bool.not_true_iff_false</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">Hf</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Hvptr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_pointer_valid_access">Mem.valid_pointer_valid_access</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">H0</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.range_perm">Mem.range_perm</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">specialize</span> (<span class="id">H</span> <span class="id">ofs0</span> <span class="id">H0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.perm_unchanged_on_2">Mem.perm_unchanged_on_2</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

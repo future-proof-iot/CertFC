@@ -1,0 +1,48 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module equivalence</title>
+<meta name="description" content="Documentation of Coq module equivalence" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module equivalence</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.cfrontend.Ctypes.html">Ctypes</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.BinrBPF.html">BinrBPF</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.verifier.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.verifier.comm.state.html">state</a></span> <span class="id"><a href="bpf.verifier.comm.monad.html">monad</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.verifier.dxmodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.verifier.dxmodel.Dxverifier.html">Dxverifier</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.verifier.synthesismodel</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html">opcode_synthesis</a></span> <span class="id"><a href="bpf.verifier.synthesismodel.verifier_synthesis.html">verifier_synthesis</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="bpf_verifier_equilence_dx_synthesis">bpf_verifier_equilence_dx_synthesis</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.verifier.dxmodel.Dxverifier.html#bpf_verifier">Dxverifier.bpf_verifier</a></span> <span class="id">st</span> = <span class="id"><a href="bpf.verifier.synthesismodel.verifier_synthesis.html#bpf_verifier">bpf_verifier</a></span> <span class="id">st</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.verifier.dxmodel.Dxverifier.html#bpf_verifier">Dxverifier.bpf_verifier</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.verifier_synthesis.html#bpf_verifier">bpf_verifier</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.verifier.dxmodel.Dxmonad.html#bindM">Dxmonad.bindM</a></span>, <span class="id"><a href="bpf.verifier.dxmodel.Dxmonad.html#returnM">Dxmonad.returnM</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.verifier.dxmodel.Dxmonad.html#eval_ins_len">Dxmonad.eval_ins_len</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#Int_leu">rBPFValues.Int_leu</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">DxNat.nat2int</span>, <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int32_1">DxIntegers.int32_1</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int32_max_unsigned">DxIntegers.int32_max_unsigned</a></span>, <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int32_8">DxIntegers.int32_8</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.verifier.dxmodel.Dxmonad.html#eval_ins">Dxmonad.eval_ins</a></span>, <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64_t">DxIntegers.int64_t</a></span>, <span class="id">DxNat.nat32_1</span>, <span class="id"><a href="bpf.dxcomm.DxIntegers.html#int64_0x95">DxIntegers.int64_0x95</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">f_equal</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

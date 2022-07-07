@@ -1,0 +1,468 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module opcode_synthesis</title>
+<meta name="description" content="Documentation of Coq module opcode_synthesis" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module opcode_synthesis</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode">opcode</a></span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU64">ALU64</a></span>  <span class="docright">(* 0xX7 / 0xXf  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU32">ALU32</a></span>  <span class="docright">(* 0xX4 / 0xXc  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="Branch">Branch</a></span> <span class="docright">(* 0xX5 / 0xXd  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_IMM">LD_IMM</a></span> <span class="docright">(* 0xX8  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LD_REG">LD_REG</a></span> <span class="docright">(* 0xX1/0xX9  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_IMM">ST_IMM</a></span> <span class="docright">(* 0xX2/0xXa  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_REG">ST_REG</a></span> <span class="docright">(* 0xX3/0xXb  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ILLEGAL">ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_eqb">opcode_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode">opcode</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64">ALU64</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64">ALU64</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32">ALU32</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32">ALU32</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#Branch">Branch</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#Branch">Branch</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LD_IMM">LD_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LD_IMM">LD_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LD_REG">LD_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LD_REG">LD_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_IMM">ST_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_IMM">ST_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_REG">ST_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_REG">ST_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ILLEGAL">ILLEGAL</a></span>,<span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ILLEGAL">ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode">nat_to_opcode</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode">opcode</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">opc</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Nat.html#land">Nat.land</a></span> <span class="id">op</span> 0<span class="id">x07</span> <span class="kwd">in</span> <span class="docright">(* masking operation  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">opc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x07</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64">ALU64</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x04</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32">ALU32</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x05</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#Branch">Branch</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x00</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LD_IMM">LD_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x01</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LD_REG">LD_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x02</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_IMM">ST_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x03</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_REG">ST_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ILLEGAL">ILLEGAL</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_alu64_imm">opcode_alu64_imm</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xX7  *)</span><br/>
+<div class="doc">ALU64_imm:13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="ADD64_IMM">ADD64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="SUB64_IMM">SUB64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MUL64_IMM">MUL64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="DIV64_IMM">DIV64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="OR64_IMM">OR64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="AND64_IMM">AND64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LSH64_IMM">LSH64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="RSH64_IMM">RSH64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="NEG64_IMM">NEG64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOD64_IMM">MOD64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="XOR64_IMM">XOR64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOV64_IMM">MOV64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ARSH64_IMM">ARSH64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU64_IMM_ILLEGAL">ALU64_IMM_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu64_imm_eqb">opcode_alu64_imm_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu64_imm">opcode_alu64_imm</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD64_IMM">ADD64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD64_IMM">ADD64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB64_IMM">SUB64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB64_IMM">SUB64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL64_IMM">MUL64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL64_IMM">MUL64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV64_IMM">DIV64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV64_IMM">DIV64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR64_IMM">OR64_IMM</a></span>,   <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR64_IMM">OR64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND64_IMM">AND64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND64_IMM">AND64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH64_IMM">LSH64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH64_IMM">LSH64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH64_IMM">RSH64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH64_IMM">RSH64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#NEG64_IMM">NEG64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#NEG64_IMM">NEG64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD64_IMM">MOD64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD64_IMM">MOD64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR64_IMM">XOR64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR64_IMM">XOR64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV64_IMM">MOV64_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV64_IMM">MOV64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH64_IMM">ARSH64_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH64_IMM">ARSH64_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64_IMM_ILLEGAL">ALU64_IMM_ILLEGAL</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64_IMM_ILLEGAL">ALU64_IMM_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_alu64_imm">nat_to_opcode_alu64_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu64_imm">opcode_alu64_imm</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x07</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD64_IMM">ADD64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x17</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB64_IMM">SUB64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x27</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL64_IMM">MUL64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x37</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV64_IMM">DIV64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x47</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR64_IMM">OR64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x57</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND64_IMM">AND64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x67</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH64_IMM">LSH64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x77</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH64_IMM">RSH64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x87</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#NEG64_IMM">NEG64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x97</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD64_IMM">MOD64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xa7</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR64_IMM">XOR64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xb7</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV64_IMM">MOV64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xc7</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH64_IMM">ARSH64_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64_IMM_ILLEGAL">ALU64_IMM_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_alu64_reg">opcode_alu64_reg</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xXf  *)</span><br/>
+<div class="doc">ALU64_reg:13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="ADD64_REG">ADD64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="SUB64_REG">SUB64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MUL64_REG">MUL64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="DIV64_REG">DIV64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="OR64_REG">OR64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="AND64_REG">AND64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LSH64_REG">LSH64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="RSH64_REG">RSH64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOD64_REG">MOD64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="XOR64_REG">XOR64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOV64_REG">MOV64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ARSH64_REG">ARSH64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU64_REG_ILLEGAL">ALU64_REG_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu64_reg_eqb">opcode_alu64_reg_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu64_reg">opcode_alu64_reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD64_REG">ADD64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD64_REG">ADD64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB64_REG">SUB64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB64_REG">SUB64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL64_REG">MUL64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL64_REG">MUL64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV64_REG">DIV64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV64_REG">DIV64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR64_REG">OR64_REG</a></span>,   <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR64_REG">OR64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND64_REG">AND64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND64_REG">AND64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH64_REG">LSH64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH64_REG">LSH64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH64_REG">RSH64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH64_REG">RSH64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD64_REG">MOD64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD64_REG">MOD64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR64_REG">XOR64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR64_REG">XOR64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV64_REG">MOV64_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV64_REG">MOV64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH64_REG">ARSH64_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH64_REG">ARSH64_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64_REG_ILLEGAL">ALU64_REG_ILLEGAL</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64_REG_ILLEGAL">ALU64_REG_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_alu64_reg">nat_to_opcode_alu64_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu64_reg">opcode_alu64_reg</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x0f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD64_REG">ADD64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x1f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB64_REG">SUB64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x2f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL64_REG">MUL64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x3f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV64_REG">DIV64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x4f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR64_REG">OR64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x5f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND64_REG">AND64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x6f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH64_REG">LSH64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x7f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH64_REG">RSH64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x9f</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD64_REG">MOD64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xaf</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR64_REG">XOR64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xbf</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV64_REG">MOV64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xcf</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH64_REG">ARSH64_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU64_REG_ILLEGAL">ALU64_REG_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_alu32_imm">opcode_alu32_imm</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xX7  *)</span><br/>
+<div class="doc">ALU32_imm:13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="ADD32_IMM">ADD32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="SUB32_IMM">SUB32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MUL32_IMM">MUL32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="DIV32_IMM">DIV32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="OR32_IMM">OR32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="AND32_IMM">AND32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LSH32_IMM">LSH32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="RSH32_IMM">RSH32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="NEG32_IMM">NEG32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOD32_IMM">MOD32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="XOR32_IMM">XOR32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOV32_IMM">MOV32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ARSH32_IMM">ARSH32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU32_IMM_ILLEGAL">ALU32_IMM_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu32_imm_eqb">opcode_alu32_imm_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu32_imm">opcode_alu32_imm</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD32_IMM">ADD32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD32_IMM">ADD32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB32_IMM">SUB32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB32_IMM">SUB32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL32_IMM">MUL32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL32_IMM">MUL32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV32_IMM">DIV32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV32_IMM">DIV32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR32_IMM">OR32_IMM</a></span>,   <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR32_IMM">OR32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND32_IMM">AND32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND32_IMM">AND32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH32_IMM">LSH32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH32_IMM">LSH32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH32_IMM">RSH32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH32_IMM">RSH32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#NEG32_IMM">NEG32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#NEG32_IMM">NEG32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD32_IMM">MOD32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD32_IMM">MOD32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR32_IMM">XOR32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR32_IMM">XOR32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV32_IMM">MOV32_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV32_IMM">MOV32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH32_IMM">ARSH32_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH32_IMM">ARSH32_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32_IMM_ILLEGAL">ALU32_IMM_ILLEGAL</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32_IMM_ILLEGAL">ALU32_IMM_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_alu32_imm">nat_to_opcode_alu32_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu32_imm">opcode_alu32_imm</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x04</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD32_IMM">ADD32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x14</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB32_IMM">SUB32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x24</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL32_IMM">MUL32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x34</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV32_IMM">DIV32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x44</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR32_IMM">OR32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x54</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND32_IMM">AND32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x64</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH32_IMM">LSH32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x74</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH32_IMM">RSH32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x84</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#NEG32_IMM">NEG32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x94</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD32_IMM">MOD32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xa4</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR32_IMM">XOR32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xb4</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV32_IMM">MOV32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xc4</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH32_IMM">ARSH32_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32_IMM_ILLEGAL">ALU32_IMM_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_alu32_reg">opcode_alu32_reg</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xXf  *)</span><br/>
+<div class="doc">ALU32_reg:13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="ADD32_REG">ADD32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="SUB32_REG">SUB32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MUL32_REG">MUL32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="DIV32_REG">DIV32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="OR32_REG">OR32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="AND32_REG">AND32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LSH32_REG">LSH32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="RSH32_REG">RSH32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOD32_REG">MOD32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="XOR32_REG">XOR32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="MOV32_REG">MOV32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ARSH32_REG">ARSH32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ALU32_REG_ILLEGAL">ALU32_REG_ILLEGAL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_alu32_reg_eqb">opcode_alu32_reg_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu32_reg">opcode_alu32_reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD32_REG">ADD32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD32_REG">ADD32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB32_REG">SUB32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB32_REG">SUB32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL32_REG">MUL32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL32_REG">MUL32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV32_REG">DIV32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV32_REG">DIV32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR32_REG">OR32_REG</a></span>,   <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR32_REG">OR32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND32_REG">AND32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND32_REG">AND32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH32_REG">LSH32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH32_REG">LSH32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH32_REG">RSH32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH32_REG">RSH32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD32_REG">MOD32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD32_REG">MOD32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR32_REG">XOR32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR32_REG">XOR32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV32_REG">MOV32_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV32_REG">MOV32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH32_REG">ARSH32_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH32_REG">ARSH32_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32_REG_ILLEGAL">ALU32_REG_ILLEGAL</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32_REG_ILLEGAL">ALU32_REG_ILLEGAL</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_alu32_reg">nat_to_opcode_alu32_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_alu32_reg">opcode_alu32_reg</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x0c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ADD32_REG">ADD32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x1c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#SUB32_REG">SUB32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x2c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MUL32_REG">MUL32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x3c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#DIV32_REG">DIV32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x4c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#OR32_REG">OR32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x5c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#AND32_REG">AND32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x6c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LSH32_REG">LSH32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x7c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RSH32_REG">RSH32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x9c</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOD32_REG">MOD32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xac</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#XOR32_REG">XOR32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xbc</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#MOV32_REG">MOV32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xcc</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ARSH32_REG">ARSH32_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ALU32_REG_ILLEGAL">ALU32_REG_ILLEGAL</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_branch_imm">opcode_branch_imm</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xX5  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JA_IMM">JA_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JEQ_IMM">JEQ_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JGT_IMM">JGT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JGE_IMM">JGE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JLT_IMM">JLT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JLE_IMM">JLE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSET_IMM">JSET_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JNE_IMM">JNE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSGT_IMM">JSGT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSGE_IMM">JSGE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSLT_IMM">JSLT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSLE_IMM">JSLE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="CALL_IMM">CALL_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="RET_IMM">RET_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JMP_IMM_ILLEGAL_INS">JMP_IMM_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_branch_imm_eqb">opcode_branch_imm_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_branch_imm">opcode_branch_imm</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JA_IMM">JA_IMM</a></span>,   <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JA_IMM">JA_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JEQ_IMM">JEQ_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JEQ_IMM">JEQ_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGT_IMM">JGT_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGT_IMM">JGT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGE_IMM">JGE_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGE_IMM">JGE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLT_IMM">JLT_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLT_IMM">JLT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLE_IMM">JLE_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLE_IMM">JLE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSET_IMM">JSET_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSET_IMM">JSET_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JNE_IMM">JNE_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JNE_IMM">JNE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGT_IMM">JSGT_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGT_IMM">JSGT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGE_IMM">JSGE_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGE_IMM">JSGE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLT_IMM">JSLT_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLT_IMM">JSLT_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLE_IMM">JSLE_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLE_IMM">JSLE_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#CALL_IMM">CALL_IMM</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#CALL_IMM">CALL_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RET_IMM">RET_IMM</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RET_IMM">RET_IMM</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JMP_IMM_ILLEGAL_INS">JMP_IMM_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JMP_IMM_ILLEGAL_INS">JMP_IMM_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_branch_imm">nat_to_opcode_branch_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_branch_imm">opcode_branch_imm</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x05</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JA_IMM">JA_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x15</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JEQ_IMM">JEQ_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x25</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGT_IMM">JGT_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x35</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGE_IMM">JGE_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xa5</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLT_IMM">JLT_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xb5</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLE_IMM">JLE_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x45</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSET_IMM">JSET_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x55</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JNE_IMM">JNE_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x65</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGT_IMM">JSGT_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x75</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGE_IMM">JSGE_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xc5</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLT_IMM">JSLT_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xd5</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLE_IMM">JSLE_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x85</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#CALL_IMM">CALL_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x95</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#RET_IMM">RET_IMM</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JMP_IMM_ILLEGAL_INS">JMP_IMM_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_branch_reg">opcode_branch_reg</a></span>: <span class="kwd">Type</span> := <span class="docright">(* 0xXd  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JEQ_REG">JEQ_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JGT_REG">JGT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JGE_REG">JGE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JLT_REG">JLT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JLE_REG">JLE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSET_REG">JSET_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JNE_REG">JNE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSGT_REG">JSGT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSGE_REG">JSGE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSLT_REG">JSLT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JSLE_REG">JSLE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="JMP_REG_ILLEGAL_INS">JMP_REG_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_branch_reg_eqb">opcode_branch_reg_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_branch_reg">opcode_branch_reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JEQ_REG">JEQ_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JEQ_REG">JEQ_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGT_REG">JGT_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGT_REG">JGT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGE_REG">JGE_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGE_REG">JGE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLT_REG">JLT_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLT_REG">JLT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLE_REG">JLE_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLE_REG">JLE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSET_REG">JSET_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSET_REG">JSET_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JNE_REG">JNE_REG</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JNE_REG">JNE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGT_REG">JSGT_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGT_REG">JSGT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGE_REG">JSGE_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGE_REG">JSGE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLT_REG">JSLT_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLT_REG">JSLT_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLE_REG">JSLE_REG</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLE_REG">JSLE_REG</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JMP_REG_ILLEGAL_INS">JMP_REG_ILLEGAL_INS</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JMP_REG_ILLEGAL_INS">JMP_REG_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_branch_reg">nat_to_opcode_branch_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_branch_reg">opcode_branch_reg</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x1d</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JEQ_REG">JEQ_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x2d</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGT_REG">JGT_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x3d</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JGE_REG">JGE_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xad</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLT_REG">JLT_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xbd</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JLE_REG">JLE_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x4d</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSET_REG">JSET_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x5d</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JNE_REG">JNE_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x6d</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGT_REG">JSGT_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x7d</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSGE_REG">JSGE_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xcd</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLT_REG">JSLT_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">xdd</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JSLE_REG">JSLE_REG</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#JMP_REG_ILLEGAL_INS">JMP_REG_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_load_imm">opcode_load_imm</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX8  *)</span><br/>
+<div class="doc">Load/Store: 13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="LDDW_low">LDDW_low</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LDDW_high">LDDW_high</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LDX_IMM_ILLEGAL_INS">LDX_IMM_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_load_imm">nat_to_opcode_load_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_load_imm">opcode_load_imm</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x18</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDDW_low">LDDW_low</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x10</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDDW_high">LDDW_high</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDX_IMM_ILLEGAL_INS">LDX_IMM_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_load_imm_eqb">opcode_load_imm_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_load_imm">opcode_load_imm</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDDW_low">LDDW_low</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDDW_low">LDDW_low</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDDW_high">LDDW_high</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDDW_high">LDDW_high</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDX_IMM_ILLEGAL_INS">LDX_IMM_ILLEGAL_INS</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDX_IMM_ILLEGAL_INS">LDX_IMM_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_load_reg">opcode_load_reg</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX1/0xX9  *)</span><br/>
+<div class="doc">Load/Store: 13 </div>
+&nbsp;&nbsp;| <span class="id"><a name="LDXW">LDXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LDXH">LDXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LDXB">LDXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LDXDW">LDXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="LDX_REG_ILLEGAL_INS">LDX_REG_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_load_reg">nat_to_opcode_load_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_load_reg">opcode_load_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x61</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXW">LDXW</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x69</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXH">LDXH</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x71</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXB">LDXB</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x79</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXDW">LDXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDX_REG_ILLEGAL_INS">LDX_REG_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_load_reg_eqb">opcode_load_reg_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_load_reg">opcode_load_reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXW">LDXW</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXW">LDXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXH">LDXH</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXH">LDXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXB">LDXB</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXB">LDXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXDW">LDXDW</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDXDW">LDXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDX_REG_ILLEGAL_INS">LDX_REG_ILLEGAL_INS</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#LDX_REG_ILLEGAL_INS">LDX_REG_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_store_imm">opcode_store_imm</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX2/0xXa  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STW">STW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STH">STH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STB">STB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STDW">STDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="ST_ILLEGAL_INS">ST_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_store_imm">nat_to_opcode_store_imm</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_store_imm">opcode_store_imm</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x62</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STW">STW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x6a</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STH">STH</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x72</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STB">STB</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| 0<span class="id">x7a</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STDW">STDW</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_ILLEGAL_INS">ST_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_store_imm_eqb">opcode_store_imm_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_store_imm">opcode_store_imm</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STW">STW</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STW">STW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STH">STH</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STH">STH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STB">STB</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STB">STB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STDW">STDW</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STDW">STDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_ILLEGAL_INS">ST_ILLEGAL_INS</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#ST_ILLEGAL_INS">ST_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="opcode_store_reg">opcode_store_reg</a></span>: <span class="kwd">Type</span> :=  <span class="docright">(* 0xX3/0xXb  *)</span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STXW">STXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STXH">STXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STXB">STXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STXDW">STXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="STX_ILLEGAL_INS">STX_ILLEGAL_INS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nat_to_opcode_store_reg">nat_to_opcode_store_reg</a></span> (<span class="id">op</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>): <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_store_reg">opcode_store_reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">op</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| 0<span class="id">x63</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXW">STXW</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x6b</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXH">STXH</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x73</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXB">STXB</a></span><br/>
+&nbsp;&nbsp;| 0<span class="id">x7b</span> =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXDW">STXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>    =&gt; <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STX_ILLEGAL_INS">STX_ILLEGAL_INS</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="opcode_store_reg_eqb">opcode_store_reg_eqb</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#opcode_store_reg">opcode_store_reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXW">STXW</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXW">STXW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXH">STXH</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXH">STXH</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXB">STXB</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXB">STXB</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXDW">STXDW</a></span>, <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STXDW">STXDW</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STX_ILLEGAL_INS">STX_ILLEGAL_INS</a></span>,  <span class="id"><a href="bpf.verifier.synthesismodel.opcode_synthesis.html#STX_ILLEGAL_INS">STX_ILLEGAL_INS</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

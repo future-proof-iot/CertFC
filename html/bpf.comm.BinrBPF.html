@@ -1,0 +1,104 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module BinrBPF</title>
+<meta name="description" content="Documentation of Coq module BinrBPF" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module BinrBPF</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.Regs.html">Regs</a></span> <span class="id"><a href="bpf.comm.rBPFValues.html">rBPFValues</a></span> <span class="id"><a href="bpf.comm.LemmaNat.html">LemmaNat</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="z_to_reg">z_to_reg</a></span> (<span class="id">z</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 0) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R0">R0</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 1) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R1">R1</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 2) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R2">R2</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 3) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R3">R3</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 4) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R4">R4</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 5) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R5">R5</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 6) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R6">R6</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 7) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R7">R7</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 8) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R8">R8</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 9) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R9">R9</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">z</span> 10) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="bpf.comm.Regs.html#R10">R10</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="docright">(* TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable  *)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="get_dst">get_dst</a></span> (<span class="id">i</span>:<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>):<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shru">Int64.shru</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span> <span class="id">i</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 0<span class="id">xfff</span>)) (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 8)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="get_src">get_src</a></span> (<span class="id">i</span>:<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>):<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shru">Int64.shru</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span> <span class="id">i</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 0<span class="id">xffff</span>)) (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 12)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">int64_to_dst_reg</span>' (<span class="id">ins</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> := <span class="id"><a href="bpf.comm.BinrBPF.html#z_to_reg">z_to_reg</a></span> (<span class="id"><a href="bpf.comm.BinrBPF.html#get_dst">get_dst</a></span> <span class="id">ins</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">int64_to_src_reg</span>' (<span class="id">ins</span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="bpf.comm.Regs.html#reg">reg</a></span> := <span class="id"><a href="bpf.comm.BinrBPF.html#z_to_reg">z_to_reg</a></span> (<span class="id"><a href="bpf.comm.BinrBPF.html#get_src">get_src</a></span> <span class="id">ins</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="get_opcode">get_opcode</a></span> (<span class="id">ins</span>:<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span> <span class="id">ins</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 0<span class="id">xff</span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="get_offset">get_offset</a></span> (<span class="id">i</span>:<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>) := <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.sign_ext">Int.sign_ext</a></span> 16 (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shru">Int64.shru</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shl">Int64.shl</a></span> <span class="id">i</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 32)) (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 48)))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="get_immediate">get_immediate</a></span> (<span class="id">i1</span>:<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>) := <span class="id"><a href="bpf.comm.rBPFValues.html#int64_to_sint32">int64_to_sint32</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.shru">Int64.shru</a></span> <span class="id">i1</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 32)).<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="get_opcode_le_255">get_opcode_le_255</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;0&lt;= <span class="id"><a href="bpf.comm.BinrBPF.html#get_opcode">get_opcode</a></span> <span class="id">i</span> &lt;= 255.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.BinrBPF.html#get_opcode">get_opcode</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; [<span class="id">lia</span> |].<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.and">Int64.and</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">change</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.repr">Int64.repr</a></span> 255)) <span class="kwd">with</span> 255%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hc_le</span>: (0 &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.land">Z.land</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">i</span>) 255 &lt;= 255)%<span class="id">Z</span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Heq</span>: (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">i</span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span>(<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">i</span>))). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Znat.html#Z2Nat.id">Z2Nat.id</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">Hrange</span>: (0 &lt;= <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">i</span> &lt; <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.modulus">Int64.modulus</a></span>)%<span class="id">Z</span>) <span class="tactic">by</span> <span class="tactic">apply</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned_range">Int64.unsigned_range</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq</span>; <span class="tactic">clear</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">change</span> 255%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> 255%<span class="id">Z</span>)) <span class="tactic">at</span> 1 2.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.comm.LemmaNat.html#land_land">land_land</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">H</span>: ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land">Nat.land</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned">Int64.unsigned</a></span> <span class="id">i</span>)) (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> 255)) &lt;= 255)%<span class="id">nat</span>). {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.land_comm">Nat.land_comm</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="bpf.comm.LemmaNat.html#land_bound">land_bound</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.unsigned_repr">Int64.unsigned_repr</a></span>; [ | <span class="tactic">change</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int64.max_unsigned">Int64.max_unsigned</a></span> <span class="kwd">with</span> 18446744073709551615%<span class="id">Z</span>; <span class="id">lia</span>].<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">lia</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

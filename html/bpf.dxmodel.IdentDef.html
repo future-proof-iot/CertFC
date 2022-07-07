@@ -1,0 +1,44 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module IdentDef</title>
+<meta name="description" content="Documentation of Coq module IdentDef" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module IdentDef</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert.common</span> <span class="kwd">Require</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">dx</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IRtoC</span>.<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">UserIdentNotations</span>.<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">string</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="state_id">state_id</a></span>:      <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">bpf_state</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="pc_id">pc_id</a></span>:         <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">state_pc</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regmaps_id">regmaps_id</a></span>:    <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">regsmap</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="flag_id">flag_id</a></span>:       <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">bpf_flag</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="mem_num_id">mem_num_id</a></span>:    <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">mrs_num</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="mem_regs_id">mem_regs_id</a></span>:   <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">mrs</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="mem_region_id">mem_region_id</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">memory_region</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="ins_len_id">ins_len_id</a></span>:    <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">ins_len</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="ins_id">ins_id</a></span>:        <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">ins</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="start_addr_id">start_addr_id</a></span>: <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">start_addr</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="size_id">size_id</a></span>:       <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">block_size</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="perm_id">perm_id</a></span>:       <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">block_perm</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="block_ptr_id">block_ptr_id</a></span>:  <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">block_ptr</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="mem_regions_id">mem_regions_id</a></span>:<span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">memory_regions</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bpf_ctx_id">bpf_ctx_id</a></span>:    <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">bpf_ctx</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bpf_stk_id">bpf_stk_id</a></span>:    <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">bpf_stk</span>".<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="content_id">content_id</a></span>:    <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#ident">AST.ident</a></span> := $"<span class="id">content</span>".<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">string</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>

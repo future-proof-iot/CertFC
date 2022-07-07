@@ -1,0 +1,335 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module StateInv</title>
+<meta name="description" content="Documentation of Coq module StateInv" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module StateInv</h1>
+<div class="coq">
+<br/>
+<span class="kwd">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html">Values</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.State.html">State</a></span> <span class="id"><a href="bpf.comm.Monad.html">Monad</a></span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html">rBPFMonadOp</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.comm.MemRegion.html">MemRegion</a></span> <span class="id"><a href="bpf.comm.rBPFMemType.html">rBPFMemType</a></span> <span class="id"><a href="bpf.comm.rBPFAST.html">rBPFAST</a></span> <span class="id"><a href="bpf.comm.rBPFValues.html">rBPFValues</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.model</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span> <span class="id"><a href="bpf.model.Semantics.html">Semantics</a></span>.<br/>
+<span class="kwd">From</span> <span class="id">bpf.isolation</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.isolation.CommonISOLib.html">CommonISOLib</a></span> <span class="id"><a href="bpf.isolation.AlignChunk.html">AlignChunk</a></span> <span class="id"><a href="bpf.isolation.RegsInv.html">RegsInv</a></span> <span class="id"><a href="bpf.isolation.MemInv.html">MemInv</a></span> <span class="id"><a href="bpf.isolation.CheckMem.html">CheckMem</a></span>.<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.micromega.Lia.html">Lia</a></span>.<br/>
+<span class="kwd">Import</span> <span class="id">ListNotations</span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="state_inv">state_inv</a></span> (<span class="id">st1</span> <span class="id">st2</span>: <span class="id"><a href="bpf.comm.State.html#state">state</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st1</span> = <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span> <span class="id">st2</span> /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st1</span> = <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span> <span class="id">st2</span> /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st1</span> = <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st2</span> /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     <span class="id">st1</span> = <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>     <span class="id">st2</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="step_preserving_state_inv_alu">step_preserving_state_inv_alu</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">a</span> <span class="id">b</span> <span class="id">r</span> <span class="id">s</span> <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsem</span> : <span class="id"><a href="bpf.model.Semantics.html#step_alu_binary_operation">step_alu_binary_operation</a></span> <span class="id">a</span> <span class="id">b</span> <span class="id">r</span> <span class="id">s</span> <span class="id">st1</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">t</span>, <span class="id">st2</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span> <span class="id">st1</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1')">Proof.</div>
+<div class="proofscript" id="proof1">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Semantics.html#step_alu_binary_operation">step_alu_binary_operation</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Semantics.html#eval_src32">eval_src32</a></span>, <span class="id"><a href="bpf.model.Semantics.html#eval_reg32">eval_reg32</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_reg">eval_reg</a></span>, <span class="id"><a href="bpf.model.Semantics.html#eval_src">eval_src</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#upd_reg">upd_reg</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_reg">State.upd_reg</a></span>, <span class="id"><a href="bpf.comm.Monad.html#bindM">bindM</a></span>, <span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span>, <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span>, <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span>, <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span> ) <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; [ | <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: <span class="kwd">match</span> ?<span class="id">X</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.divu">Val.divu</a></span>; [<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.longofintu">Val.longofintu</a></span> | ];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modu">Val.modu</a></span>; [<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.longofintu">Val.longofintu</a></span> | ];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span> ) <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; [ | <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: <span class="kwd">match</span> ?<span class="id">X</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.divu">Val.divu</a></span>; [<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.longofintu">Val.longofintu</a></span> | ];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modu">Val.modu</a></span>; [<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.longofintu">Val.longofintu</a></span> | ];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_reg">eval_reg</a></span> <span class="kwd">in</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span> ) <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; [ | <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: <span class="kwd">match</span> ?<span class="id">X</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.divlu">Val.divlu</a></span>; [<span class="tactic">destruct</span> <span class="id">v</span>|]; <span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modlu">Val.modlu</a></span>; [<span class="tactic">destruct</span> <span class="id">v</span>|]; <span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span> ) <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; [ | <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: <span class="kwd">match</span> ?<span class="id">X</span> <span class="kwd">with</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.divlu">Val.divlu</a></span>; [<span class="tactic">destruct</span> <span class="id">v</span>|]; <span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Val.modlu">Val.modlu</a></span>; [<span class="tactic">destruct</span> <span class="id">v</span>|]; <span class="tactic">inversion</span> <span class="id">Hsem</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="step_preserving_state_inv_branch">step_preserving_state_inv_branch</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">c</span> <span class="id">r</span> <span class="id">s</span> <span class="id">o</span> <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsem</span> : <span class="kwd">match</span> <span class="id"><a href="bpf.model.Semantics.html#step_branch_cond">step_branch_cond</a></span> <span class="id">c</span> <span class="id">r</span> <span class="id">s</span> <span class="id">st1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">x</span>', <span class="id">st</span>') =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">if</span> <span class="id">x</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">st</span> : <span class="id"><a href="bpf.comm.State.html#state">state</a></span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.cmpu">Int.cmpu</a></span> <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Clt">Clt</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.add">Int.add</a></span> (<span class="id"><a href="bpf.comm.State.html#eval_pc">State.eval_pc</a></span> <span class="id">st1</span>) <span class="id">o</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.repr">Int.repr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span> <span class="id">st</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#tt">tt</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_pc">State.upd_pc</a></span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#Int.add">Int.add</a></span> (<span class="id"><a href="bpf.comm.State.html#eval_pc">State.eval_pc</a></span> <span class="id">st1</span>) <span class="id">o</span>) <span class="id">st</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">fun</span> <span class="id">st</span> : <span class="id"><a href="bpf.comm.State.html#state">state</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#tt">tt</a></span>, <span class="id">st</span>)) <span class="id">st</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">t</span>, <span class="id">st2</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span> <span class="id">st1</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2')">Proof.</div>
+<div class="proofscript" id="proof2">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Semantics.html#step_branch_cond">step_branch_cond</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Semantics.html#eval_src">eval_src</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_reg">eval_reg</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_pc">State.upd_pc</a></span>, <span class="id"><a href="bpf.comm.Monad.html#bindM">bindM</a></span>, <span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span>, <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span>, <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span>, <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span> <span class="tactic">destruct</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>) <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; [| <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>) = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">c</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span> <span class="tactic">destruct</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>) <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; [| <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">H</span>: (<span class="kwd">if</span> ?<span class="id">X</span> <span class="kwd">then</span> <span class="id">_</span> <span class="kwd">else</span> <span class="id">_</span>) = <span class="id">_</span> |- <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="step_preserving_state_inv_ld">step_preserving_state_inv_ld</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">m</span> <span class="id">r</span> <span class="id">r0</span> <span class="id">o</span> <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg</span> : <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hmem</span> : <span class="id"><a href="bpf.isolation.MemInv.html#memory_inv">memory_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsem</span> : <span class="id"><a href="bpf.model.Semantics.html#step_load_x_operation">step_load_x_operation</a></span> <span class="id">m</span> <span class="id">r</span> <span class="id">r0</span> <span class="id">o</span> <span class="id">st1</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">t</span>, <span class="id">st2</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span> <span class="id">st1</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3')">Proof.</div>
+<div class="proofscript" id="proof3">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Semantics.html#step_load_x_operation">step_load_x_operation</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_mem">eval_mem</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_mem_regions">eval_mem_regions</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_reg">eval_reg</a></span>, <span class="id"><a href="bpf.model.Semantics.html#get_addr_ofs">get_addr_ofs</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#cmp_ptr32_nullM">cmp_ptr32_nullM</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#upd_flag">upd_flag</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#load_mem">load_mem</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#upd_reg">upd_reg</a></span>, <span class="id"><a href="bpf.comm.Monad.html#bindM">bindM</a></span>, <span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="bpf.model.Semantics.html#check_mem">check_mem</a></span> <span class="id">eqn</span>: <span class="id">Hcheck</span>; [| <span class="tactic">inversion</span> <span class="id">Hsem</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.RegsInv.html#reg_inv_eval_reg">reg_inv_eval_reg</a></span> <span class="kwd">with</span> (<span class="id">r</span>:= <span class="id">r0</span>) <span class="kwd">in</span> <span class="id">Hreg</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hreg</span> <span class="kwd">as</span> (<span class="id">i</span> &amp; <span class="id">Hreg</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hreg</span> <span class="kwd">in</span> <span class="id">Hcheck</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#sint32_to_vint">sint32_to_vint</a></span> <span class="kwd">in</span> <span class="id">Hcheck</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Hcheck</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="bpf.isolation.CheckMem.html#check_memM_P">check_memM_P</a></span> <span class="kwd">in</span> <span class="id">Hcheck</span>; [| <span class="tactic">constructor</span>| <span class="tactic">assumption</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hcheck</span>; <span class="tactic">subst</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hcheck</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="bpf.comm.rBPFValues.html#cmp_ptr32_null">cmp_ptr32_null</a></span>; [| <span class="tactic">inversion</span> <span class="id">Hsem</span>].<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span>, <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span>, <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span>, <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="bpf.comm.State.html#load_mem">State.load_mem</a></span>; <span class="tactic">inversion</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">v0</span>; <span class="tactic">inversion</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="step_preserving_inv_st">step_preserving_inv_st</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> <span class="id">st2</span> <span class="id">m</span> <span class="id">r</span> <span class="id">s</span> <span class="id">o</span> <span class="id">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hreg_inv</span> : <span class="id"><a href="bpf.isolation.RegsInv.html#register_inv">register_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hmem_inv</span> : <span class="id"><a href="bpf.isolation.MemInv.html#memory_inv">memory_inv</a></span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Hsem</span> : <span class="id"><a href="bpf.model.Semantics.html#step_store_operation">step_store_operation</a></span> <span class="id">m</span> <span class="id">r</span> <span class="id">s</span> <span class="id">o</span> <span class="id">st1</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id">t</span>, <span class="id">st2</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span> <span class="id">st1</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4')">Proof.</div>
+<div class="proofscript" id="proof4">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.model.Semantics.html#step_store_operation">step_store_operation</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_mem">eval_mem</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_mem_regions">eval_mem_regions</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#eval_reg">eval_reg</a></span>, <span class="id"><a href="bpf.model.Semantics.html#get_addr_ofs">get_addr_ofs</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#cmp_ptr32_nullM">cmp_ptr32_nullM</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#upd_flag">upd_flag</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#load_mem">load_mem</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#upd_reg">upd_reg</a></span>, <span class="id"><a href="bpf.comm.Monad.html#bindM">bindM</a></span>, <span class="id"><a href="bpf.comm.Monad.html#returnM">returnM</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_inv">state_inv</a></span>, <span class="id"><a href="bpf.comm.State.html#mrs_num">mrs_num</a></span>, <span class="id"><a href="bpf.comm.State.html#bpf_mrs">bpf_mrs</a></span>, <span class="id"><a href="bpf.comm.State.html#ins_len">ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">ins</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.RegsInv.html#reg_inv_eval_reg">reg_inv_eval_reg</a></span> <span class="kwd">with</span> (<span class="id">r</span>:= <span class="id">r</span>) <span class="kwd">in</span> <span class="id">Hreg_inv</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hreg_inv</span> <span class="kwd">as</span> (<span class="id">i</span> &amp; <span class="id">Hreg</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hreg</span> <span class="kwd">in</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#sint32_to_vint">sint32_to_vint</a></span> <span class="kwd">in</span> <span class="id">Hsem</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="bpf.model.Semantics.html#check_mem">check_mem</a></span> <span class="id">eqn</span>: <span class="id">Hcheck</span>; [| <span class="tactic">inversion</span> <span class="id">Hsem</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="bpf.isolation.CheckMem.html#check_memM_P">check_memM_P</a></span> <span class="kwd">in</span> <span class="id">Hcheck</span>; [| <span class="tactic">constructor</span>| <span class="tactic">assumption</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hcheck</span>; <span class="tactic">subst</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hcheck</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="bpf.comm.rBPFValues.html#cmp_ptr32_null">cmp_ptr32_null</a></span>; [| <span class="tactic">inversion</span> <span class="id">Hsem</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html#store_mem_reg">store_mem_reg</a></span>, <span class="id"><a href="bpf.comm.State.html#store_mem_reg">State.store_mem_reg</a></span> <span class="kwd">in</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">m</span>; <span class="tactic">inversion</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Mem.storev</a></span>; <span class="tactic">inversion</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="bpf.isolation.RegsInv.html#reg_inv_eval_reg">reg_inv_eval_reg</a></span> <span class="kwd">with</span> (<span class="id">r</span>:= <span class="id">r</span>) <span class="kwd">in</span> <span class="id">Hreg_inv</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">Hreg_inv</span> <span class="kwd">as</span> (<span class="id">ri</span> &amp; <span class="id">Hreg</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Hreg</span> <span class="kwd">in</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFValues.html#sint32_to_vint">sint32_to_vint</a></span> <span class="kwd">in</span> <span class="id">Hsem</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="bpf.model.Semantics.html#check_mem">check_mem</a></span> <span class="id">eqn</span>: <span class="id">Hcheck</span>; [| <span class="tactic">inversion</span> <span class="id">Hsem</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id"><a href="bpf.isolation.CheckMem.html#check_memM_P">check_memM_P</a></span> <span class="kwd">in</span> <span class="id">Hcheck</span>; [| <span class="tactic">constructor</span>| <span class="tactic">assumption</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">Hcheck</span>; <span class="tactic">subst</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">Hcheck</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id"><a href="bpf.comm.rBPFValues.html#cmp_ptr32_null">cmp_ptr32_null</a></span>; [| <span class="tactic">inversion</span> <span class="id">Hsem</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html#store_mem_imm">store_mem_imm</a></span>, <span class="id"><a href="bpf.comm.State.html#store_mem_imm">State.store_mem_imm</a></span> <span class="kwd">in</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">m</span>; <span class="tactic">inversion</span> <span class="id">Hsem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Mem.storev</a></span>; <span class="tactic">inversion</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">repeat</span> <span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<span class="kwd">From</span> <span class="id">bpf.verifier.comm</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="bpf.verifier.comm.state.html">state</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="state_include">state_include</a></span> (<span class="id">st</span>: <span class="id"><a href="bpf.verifier.comm.state.html#state">state.state</a></span>) (<span class="id">ST</span>: <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="bpf.verifier.comm.state.html#ins_len">state.ins_len</a></span> <span class="id">st</span> = <span class="id"><a href="bpf.comm.State.html#ins_len">State.ins_len</a></span> <span class="id">ST</span> /\ <span class="id"><a href="bpf.verifier.comm.state.html#ins">state.ins</a></span> <span class="id">st</span> = <span class="id"><a href="bpf.comm.State.html#ins">State.ins</a></span> <span class="id">ST</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="state_include_upd_pc">state_include_upd_pc</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">st</span>: <span class="id"><a href="bpf.verifier.comm.state.html#state">state.state</a></span>) (<span class="id">st1</span> <span class="id">st2</span>: <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>) <span class="id">p</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#upd_pc">State.upd_pc</a></span> <span class="id">p</span> <span class="id">st1</span> = <span class="id">st2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5')">Proof.</div>
+<div class="proofscript" id="proof5">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#upd_pc">State.upd_pc</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>, <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#ins_len">State.ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">State.ins</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="state_include_upd_pc_incr">state_include_upd_pc_incr</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">st</span>: <span class="id"><a href="bpf.verifier.comm.state.html#state">state.state</a></span>) (<span class="id">st1</span> <span class="id">st2</span>: <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#upd_pc_incr">State.upd_pc_incr</a></span> <span class="id">st1</span> = <span class="id">st2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6')">Proof.</div>
+<div class="proofscript" id="proof6">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#upd_pc_incr">State.upd_pc_incr</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>, <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#ins_len">State.ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">State.ins</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="state_include_upd_reg">state_include_upd_reg</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">st</span>: <span class="id"><a href="bpf.verifier.comm.state.html#state">state.state</a></span>) (<span class="id">st1</span> <span class="id">st2</span>: <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>) (<span class="id">r</span> : <span class="id"><a href="bpf.comm.Regs.html#reg">Regs.reg</a></span>) (<span class="id">n</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#upd_reg">State.upd_reg</a></span> <span class="id">r</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">n</span>) <span class="id">st1</span> = <span class="id">st2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7')">Proof.</div>
+<div class="proofscript" id="proof7">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#upd_reg">State.upd_reg</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>, <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#ins_len">State.ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">State.ins</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="state_include_upd_flag">state_include_upd_flag</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">st</span>: <span class="id"><a href="bpf.verifier.comm.state.html#state">state.state</a></span>) (<span class="id">st1</span> <span class="id">st2</span>: <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>) (<span class="id">f</span> : <span class="id"><a href="bpf.comm.Flag.html#bpf_flag">Flag.bpf_flag</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#upd_flag">State.upd_flag</a></span> <span class="id">f</span> <span class="id">st1</span> = <span class="id">st2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof8')">Proof.</div>
+<div class="proofscript" id="proof8">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#upd_flag">State.upd_flag</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span>, <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.State.html#ins_len">State.ins_len</a></span>, <span class="id"><a href="bpf.comm.State.html#ins">State.ins</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="state_include_store_reg">state_include_store_reg</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">st</span>: <span class="id"><a href="bpf.verifier.comm.state.html#state">state.state</a></span>) (<span class="id">st1</span> <span class="id">st2</span> : <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>) (<span class="id">chunk</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">addr</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#val">val</a></span>) (<span class="id">src</span> : <span class="id"><a href="https://compcert.org/doc/html/compcert.lib.Integers.html#int64">int64</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.AlignChunk.html#is_well_chunk">is_well_chunk</a></span> <span class="id">chunk</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#store_mem_reg">State.store_mem_reg</a></span> <span class="id">addr</span> <span class="id">chunk</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vlong">Vlong</a></span> <span class="id">src</span>) <span class="id">st1</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">st2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof9')">Proof.</div>
+<div class="proofscript" id="proof9">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html#store_mem_reg">store_mem_reg</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#upd_flag">upd_flag</a></span>, <span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span>;<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">inversion</span> <span class="id">H1</span>; <span class="tactic">try</span> <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Mem.storev</a></span>; <span class="tactic">inversion</span> <span class="id">H3</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="state_include_store_imm">state_include_store_imm</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">st</span>: <span class="id"><a href="bpf.verifier.comm.state.html#state">state.state</a></span>) (<span class="id">st1</span> <span class="id">st2</span> : <span class="id"><a href="bpf.comm.State.html#state">State.state</a></span>) <span class="id">chunk</span> <span class="id">addr</span> <span class="id">src</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.comm.State.html#store_mem_imm">State.store_mem_imm</a></span> <span class="id">addr</span> <span class="id">chunk</span> (<span class="id"><a href="https://compcert.org/doc/html/compcert.common.Values.html#Vint">Vint</a></span> <span class="id">src</span>) <span class="id">st1</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">st2</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span> <span class="id">st</span> <span class="id">st2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof10')">Proof.</div>
+<div class="proofscript" id="proof10">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="bpf.comm.rBPFMonadOp.html#store_mem_imm">store_mem_imm</a></span>, <span class="id"><a href="bpf.comm.State.html#upd_mem">upd_mem</a></span>, <span class="id"><a href="bpf.comm.rBPFMonadOp.html#upd_flag">upd_flag</a></span>, <span class="id"><a href="bpf.isolation.StateInv.html#state_include">state_include</a></span>;<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">chunk</span>; <span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">try</span> <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">destruct</span> <span class="id"><a href="https://compcert.org/doc/html/compcert.common.Memory.html#Mem.storev">Mem.storev</a></span>; <span class="tactic">inversion</span> <span class="id">H2</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</a></div>
+</body>
+</html>
