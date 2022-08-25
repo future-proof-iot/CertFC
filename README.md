@@ -1,6 +1,6 @@
 # Overview
 
-_NB: The latest stable version is in the branch `CAV22-AE`_
+_NB: This branch is used for the MIDDLEWARE22 artifact_
 
 `CertrBPF` is a formally verified rBPF verifier + interpreter obtained by refinement of a Coq specification. ([rBPF](https://github.com/future-proof-iot/Femto-Container) is a register-based virtual machine of eBPF)
 
