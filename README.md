@@ -1,7 +1,5 @@
 # Overview
 
-_NB: The latest stable version is in the branch `CAV22-AE`_
-
 `CertrBPF` is a formally verified rBPF verifier + interpreter obtained by refinement of a Coq specification. ([rBPF](https://github.com/future-proof-iot/Femto-Container) is a register-based virtual machine of eBPF)
 
 `CertrBPF` includes a verified C verifier and interpreter. The
