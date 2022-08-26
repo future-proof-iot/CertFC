@@ -186,6 +186,7 @@ Inductive instruction: Type :=
   | BPF_ERR  : instruction
 .
 
+(*
 Definition sum_eqb {A B: Type} (eq1 : A -> A -> bool) (eq2 : B -> B -> bool) (x y : sum A B) : bool :=
   match x, y with
   | inl r0', inl r1' => eq1  r0' r1'
@@ -209,6 +210,7 @@ Definition bpf_instruction_eqb (a b: instruction) : bool :=
   | BPF_ERR, BPF_ERR => true
   | _, _ => false
   end.
+*)
 
 Lemma Int_eq_true:
   forall x y : int, Int.eq x y = true <-> x = y.
@@ -228,7 +230,7 @@ Proof.
   assumption.
   apply Int.eq_false.
 Qed.
-
+(*
 Lemma sum_eqb_true :
   forall {A B: Type} eq1 eq2
          (eq1_ok : forall x y, x = y <-> eq1 x y  = true)
@@ -306,3 +308,4 @@ Proof.
   generalize (bpf_instruction_eqb_true x y).
   destruct (bpf_instruction_eqb x y); intuition congruence.
 Qed.
+*)

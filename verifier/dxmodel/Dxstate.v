@@ -41,7 +41,7 @@ Close Scope string.
 Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noattr.
 
 Definition state_struct_def: Ctypes.composite_definition := 
-  Ctypes.Composite state_id Ctypes.Struct [(ins_len_id, C_U32); (ins_id, C_U64_pointer)] Ctypes.noattr.
+  Ctypes.Composite state_id Ctypes.Struct [Ctypes.Member_plain ins_len_id C_U32; Ctypes.Member_plain ins_id C_U64_pointer] Ctypes.noattr.
 
 Definition stateCompilableType := MkCompilableType state state_struct_type.
 

@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad rBPFMonadOp.
+From bpf.comm Require Import Flag Regs State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
@@ -253,8 +253,13 @@ Section Step_opcode_alu32.
         rewrite p0, p1, p2, p3.
         unfold Cop.sem_binary_operation, typeof.
         unfold Cop.sem_div, Cop.sem_binarith; simpl.
-        rewrite Hcnd.
         unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+          change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+          simpl
+        end.
+        rewrite Hcnd.
         split; [reflexivity | ].
         intros; simpl.
         intuition.
@@ -645,6 +650,12 @@ Section Step_opcode_alu32.
         rewrite Nat.eqb_neq in Hc2_eq.
         simpl.
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+          change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+          simpl
+        end.
         assert (Hneq: Int.eq (Int.repr (Z.of_nat c2)) (Int.repr 132) = false). {
           apply Int.eq_false.
           apply nat8_neq_k; auto; lia.
@@ -689,6 +700,12 @@ Section Step_opcode_alu32.
         rewrite p0, p1, p2, p3.
         unfold Cop.sem_binary_operation, typeof.
         unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+          change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+          simpl
+        end.
         rewrite Hcnd.
         unfold Cop.sem_cast; simpl.
         split; [reflexivity | ].
@@ -931,7 +948,7 @@ Section Step_opcode_alu32.
           n = Vint (Int.repr (Z.of_nat (Nat.land i 240))) /\
           is_illegal_alu32_ins i /\
           exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le0 m0
-            (Etempvar _opcode_alu32 Clightdefs.tuchar) =
+            (Etempvar _opcode_alu32 Ctypesdefs.tuchar) =
               Some (Vint (Int.repr (Z.of_nat (Nat.land i 240))))).
         {
           get_invariant _opcode_alu32.

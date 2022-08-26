@@ -80,6 +80,7 @@ Section Eval_flag.
       repeat forward_star.
 
       unfold Coqlib.align; simpl.
+      change (32 / 8)%Z with 4%Z.
       rewrite Ptrofs.add_zero_l.
       rewrite mflags; reflexivity.
       econstructor; eauto.

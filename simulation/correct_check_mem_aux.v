@@ -176,6 +176,12 @@ Qed.
         rewrite p1.
         unfold Cop.sem_binary_operation, Cop.sem_sub; simpl.
         unfold Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+          change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+          simpl
+        end.
         unfold Int.sub.
         fold Int.one; rewrite Int.unsigned_one.
         rewrite Zpos_P_of_succ_nat.
@@ -279,6 +285,7 @@ Qed.
     reflexivity.
     unfold INV; intro H.
     correct_Forall; simpl in H.
+
     get_invariant _st.
     get_invariant _n.
     get_invariant _perm.
@@ -308,6 +315,12 @@ Qed.
     simpl.
     rewrite <- Hv_eq.
     unfold Cop.sem_cmp, Cop.sem_binarith, Val.of_bool, Vfalse; simpl.
+    unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+      change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+      simpl
+    end.
     unfold Int.eq.
     change (Int.unsigned (Int.repr 0)) with 0.
     get_invariant _st.

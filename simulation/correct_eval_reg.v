@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad rBPFMonadOp.
+From bpf.comm Require Import LemmaInt Regs State Monad rBPFMonadOp.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -90,6 +90,7 @@ Section Eval_reg.
 
       rewrite Ptrofs.add_zero_l.
       unfold Coqlib.align; simpl.
+      change (64 / 8)%Z with 8%Z.
       unfold Mem.loadv in Hreg_load.
       assert (Heq: Ptrofs.repr (8 * id_of_reg c) = Ptrofs.mul (Ptrofs.repr 8) (Ptrofs.of_intu (Int.repr (id_of_reg c)))). {
         unfold Ptrofs.mul, Ptrofs.of_intu.

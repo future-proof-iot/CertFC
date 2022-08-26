@@ -17,7 +17,7 @@
 (**************************************************************************)
 
 From compcert Require Import Coqlib Clight Integers Values Ctypes Memory AST.
-From bpf.comm Require Import Regs Monad.
+From bpf.comm Require Import Regs Monad LemmaInt.
 From bpf.clightlogic Require Import Clightlogic CommonLib.
 From Coq Require Import List Lia ZArith.
 Import ListNotations.
@@ -135,6 +135,13 @@ Ltac IN T :=
   |  ?T        => fail -1 "list is not of the form  a1::....::an:nil" T
   end.
 
+Ltac or_repeat :=
+  match goal with
+  | |- ?X = ?Y \/ _ =>
+    try (left; reflexivity); try (right; repeat or_repeat)
+  | |- _ => fail -1 "Fail to prove X \/ Y"
+  end.
+
 Ltac get_invariant VAR :=
   let E := fresh "ME" in
   let I := fresh "I" in
@@ -152,10 +159,10 @@ Ltac get_invariant VAR :=
             assert (I : exists v, Maps.PTree.get VAR LE = Some v /\ eval_inv P v ST M /\ Cop.val_casted v T);
              [ unfold match_temp_env in H; rewrite Forall_forall in H;
                assert (E : match_elt ST M LE (VAR, T, P));
-                [ (apply H; unfold AST.ident;
-                   match goal with
+                [ (apply H; unfold AST.ident, In; or_repeat
+                   (*match goal with
                          |- ?G => let prf := IN G in exact prf
-                   end)  |
+                   end *))  |
                unfold match_elt, fst,snd in E; destruct (Maps.PTree.get VAR LE) as [v1|]
                ; [
                  exists v1 ; split ;[reflexivity | exact E]
@@ -269,7 +276,7 @@ Ltac exec_seq_of_labeled_statement :=
 
 Ltac deref_loc_tactic :=
   match goal with
-  | |- deref_loc ?t _ _ _ _ =>
+  | |- deref_loc ?t _ _ _ _ _ =>
     let r := eval compute in (access_mode t) in
       match r with
       | By_value _ => eapply deref_loc_value
@@ -281,7 +288,7 @@ Ltac deref_loc_tactic :=
 
 Ltac assign_loc_tactic :=
   match goal with
-  | |- assign_loc _ ?t _ _ _ _ _ =>
+  | |- assign_loc _ ?t _ _ _ _ _ _ =>
     let r := eval compute in (access_mode t) in
     match r with
     | By_value _ => eapply assign_loc_value
@@ -290,9 +297,10 @@ Ltac assign_loc_tactic :=
     end
   end.
 
+(*
 Ltac forward_eval_expr :=
   match goal with
-  | |- eval_lvalue  _ _ _ _ ?e _ _ =>
+  | |- eval_lvalue  _ _ _ _ ?e _ _ _ =>
     match e with
     | Evar ?id _ =>
       let r := eval compute in (Maps.PTree.get id e) in
@@ -328,6 +336,7 @@ Ltac forward_eval_expr :=
     | _                 => eapply eval_Elvalue; [idtac | deref_loc_tactic]
     end
   end.
+*)
 
 Ltac forward_expr :=
   match goal with
@@ -604,65 +613,6 @@ Proof.
   Locate Z.eq_dec.
 Qed. *)
 
-(** Integer.max_unsigned *)
-
-Lemma Int_max_unsigned_eq64:
-  Int.max_unsigned = 4294967295%Z.
-Proof.
-  Transparent Archi.ptr64.
-  unfold Int.max_unsigned, Int.modulus, Int.wordsize, Wordsize_32.wordsize.
-  reflexivity.
-Qed.
-
-Lemma Ptrofs_max_unsigned_eq32:
-  Ptrofs.max_unsigned = 4294967295.
-Proof.
-  unfold Ptrofs.max_unsigned, Ptrofs.modulus, Ptrofs.wordsize, Wordsize_Ptrofs.wordsize.
-  Transparent Archi.ptr64.
-  reflexivity.
-Qed.
-
-Lemma Int_unsigned_ge_zero :
-  forall i,
-    Int.unsigned i >= 0.
-Proof.
-  intro.
-  assert (Hrange: 0 <= Int.unsigned i <= Int.max_unsigned). { apply Int.unsigned_range_2. }
-  destruct Hrange.
-  (**r Search (_ <= _). *)
-  apply Z.le_ge in H.
-  assumption.
-Qed.
-
-Lemma Ptrofs_unsigned_ge_zero :
-  forall i,
-    Ptrofs.unsigned i >= 0.
-Proof.
-  intro.
-  assert (Hrange: 0 <= Ptrofs.unsigned i <= Ptrofs.max_unsigned). { apply Ptrofs.unsigned_range_2. }
-  destruct Hrange.
-  (**r Search (_ <= _). *)
-  apply Z.le_ge in H.
-  assumption.
-Qed.
-
-Lemma Ptrofs_unsigned_repr_n:
-  forall n,
-  0 <= n <= 4294967295 ->
-  Ptrofs.unsigned (Ptrofs.repr n) = n.
-Proof.
-  intros.
-  rewrite Ptrofs.unsigned_repr; [reflexivity | rewrite Ptrofs_max_unsigned_eq32; lia].
-Qed.
-
-Lemma Int_unsigned_repr_n:
-  forall n,
-  0 <= n <= 4294967295 ->
-  Int.unsigned (Int.repr n) = n.
-Proof.
-  intros.
-  rewrite Int.unsigned_repr; [reflexivity | rewrite Int_max_unsigned_eq64; lia].
-Qed.
 
 Lemma Ptrofs_unsigned_repr_id_of_reg:
   forall r,
@@ -724,92 +674,6 @@ Proof.
     split; [unfold size_chunk, Mem.range_perm in *; intros; apply Hrange; lia | unfold align_chunk; apply Z.divide_1_l].
 Qed.
 
-Lemma Hint_unsigned_int64:
-    forall i, (Int64.unsigned (Int64.repr (Int.unsigned i))) = (Int.unsigned i).
-Proof.
-    intro.
-    rewrite Int64.unsigned_repr; [reflexivity |].
-    assert (Hrange: 0 <= Int.unsigned i <= Int.max_unsigned). { apply Int.unsigned_range_2. }
-    change Int.max_unsigned with 4294967295 in Hrange.
-    change Int64.max_unsigned with 18446744073709551615.
-    lia.
-Qed.
-
-Lemma Hzeq_neq_intro:
-    forall (A:Type) a n (b c: A),
-      (a <> n)%nat -> (if Coqlib.zeq (Z.of_nat n) (Z.of_nat a) then b else c) = c.
-Proof.
-  intros.
-  apply zeq_false.
-  intro.
-  apply Nat2Z.inj in H0.
-  lia.
-Qed.
-
-Lemma Int_repr_eq:
-  forall a b
-    (Ha_range: 0 <= a <= Int.max_unsigned)
-    (Hb_range: 0 <= b <= Int.max_unsigned)
-    (Heq: Int.repr a = Int.repr b),
-      a = b.
-Proof.
-  intros.
-  Transparent Int.repr.
-  unfold Int.repr in Heq.
-  inversion Heq.
-  do 2 rewrite Int.Z_mod_modulus_eq in H0.
-  change Int.modulus with 4294967296 in H0.
-  change Int.max_unsigned with 4294967295 in *.
-  rewrite Z.mod_small in H0; [ | lia].
-  rewrite Z.mod_small in H0; [ | lia].
-  assumption.
-Qed.
-
-Lemma Clt_Zlt_signed:
-  forall ofs hi,
-    Int.lt ofs hi = true ->
-      Int.signed ofs < Int.signed hi.
-Proof.
-  intros.
-  unfold Int.lt in H.
-  destruct (Coqlib.zlt _ _) in H; try inversion H.
-  assumption.
-Qed.
-
-Lemma Cle_Zle_signed:
-  forall lo ofs,
-    negb (Int.lt ofs lo) = true ->
-      Int.signed lo <= Int.signed ofs.
-Proof.
-  intros.
-  rewrite negb_true_iff in H.
-  unfold Int.lt in H.
-  destruct (Coqlib.zlt _ _) in H; try inversion H.
-  lia.
-Qed.
-
-Lemma Clt_Zlt_unsigned:
-  forall ofs hi,
-    Int.ltu ofs hi = true ->
-      Int.unsigned ofs < Int.unsigned hi.
-Proof.
-  intros.
-  unfold Int.ltu in H.
-  destruct (Coqlib.zlt _ _) in H; try inversion H.
-  assumption.
-Qed.
-
-Lemma Cle_Zle_unsigned:
-  forall lo ofs,
-    negb (Int.ltu ofs lo) = true ->
-      Int.unsigned lo <= Int.unsigned ofs.
-Proof.
-  intros.
-  rewrite negb_true_iff in H.
-  unfold Int.ltu in H.
-  destruct (Coqlib.zlt _ _) in H; try inversion H.
-  lia.
-Qed.
 
 
 Ltac context_destruct_if_inversion :=

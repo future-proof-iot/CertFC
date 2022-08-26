@@ -16,36 +16,48 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From compcert.cfrontend Require Csyntax Ctypes Cop.
-From compcert.common Require Import Values Memory AST.
-From compcert.lib Require Import Integers.
-
-From dx Require Import ResultMonad IR.
-From dx.Type Require Bool Nat.
-
-From bpf.comm Require Import State.
-From bpf.dxcomm Require Import CoqIntegers DxIntegers DxValues DxListAsArray.
-From bpf.dxmodel Require Import IdentDef DxFlag DxRegs DxMemRegion.
-
 From Coq Require Import List ZArith.
 Import ListNotations.
 
+From compcert.cfrontend Require Csyntax Ctypes Cop.
+From compcert.common Require Values.
+From compcert.lib Require Integers.
+
+From dx Require Import ResultMonad IR.
+From dx.Type Require Import Nat.
+
+From bpf.comm Require Import ListAsArray.
+From bpf.dxcomm Require Import CoqIntegers DxIntegers.
+
 (******************** Dx Related *******************)
 
-(** Coq2C: state -> 
-            struct state {
-              unsigned int pc;
-              unsigned long long regmap[11];
-            };
-  *)
+(** "Mapping relations from Coq to C":
+  Coq:          -> C:
+  l:list state  -> uint64_t *l
+  get l idx     -> *(l+idx)
+ *)
 
-Definition state_struct_type: Ctypes.type := Ctypes.Tstruct state_id Ctypes.noattr.
+Definition get_index (x idx: Csyntax.expr): Csyntax.expr :=
+  Csyntax.Eindex x idx C_U64.
 
-Definition state_struct_def: Ctypes.composite_definition := 
-  Ctypes.Composite state_id Ctypes.Struct [Ctypes.Member_plain pc_id C_U32; Ctypes.Member_plain flag_id C_S32; Ctypes.Member_plain regmaps_id C_regmap; Ctypes.Member_plain mem_num_id C_U32; Ctypes.Member_plain mem_regs_id mem_region_type; Ctypes.Member_plain ins_len_id C_U32; Ctypes.Member_plain ins_id C_U64_pointer] Ctypes.noattr.
+(** Coq2C: l:list u64_t  -> uint64_t *l *)
+Definition MyListCompilableType :=
+  MkCompilableType List64AsArray.t C_U64_pointer.
 
-Definition stateCompilableType := MkCompilableType state state_struct_type.
+(** Type for MyList.t -> u64_t -> u64_t *)
+Definition MyListToStateToStateCompilableSymbolType :=
+  MkCompilableSymbolType [MyListCompilableType; sint32CompilableType] (Some int64CompilableType).
+
+(** Coq2C: get l idx -> *(l+idx) *)
+Definition myListIndexs32Primitive := 
+  MkPrimitive MyListToStateToStateCompilableSymbolType 
+              List64AsArray.index
+              (fun es => match es with
+                         | [e1; e2] => Ok (get_index e1 e2)
+                         | _   => Err PrimitiveEncodingFailed
+                         end).
 
 Module Exports.
-  Definition stateCompilableType := stateCompilableType.
+  Definition MyListCompilableType    := MyListCompilableType.
+  Definition myListIndexs32Primitive := myListIndexs32Primitive.
 End Exports.

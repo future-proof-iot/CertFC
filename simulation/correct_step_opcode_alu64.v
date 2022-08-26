@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad rBPFMonadOp.
+From bpf.comm Require Import LemmaInt Flag Regs State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
@@ -69,7 +69,7 @@ Section Step_opcode_alu64.
 
   Lemma Cop_add : forall vl1 vl2 m,
        Cop.sem_binary_operation (globalenv p) Cop.Oadd
-                                (Vlong vl1) Clightdefs.tulong (Vlong vl2) Clightdefs.tulong m =
+                                (Vlong vl1) Ctypesdefs.tulong (Vlong vl2) Ctypesdefs.tulong m =
          Some (Vlong (Int64.add vl1 vl2)).
   Proof.
     reflexivity.
@@ -695,6 +695,12 @@ Section Step_opcode_alu64.
         rewrite Nat.eqb_neq in Hc2_eq.
         simpl.
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+          change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+          simpl
+        end.
         assert (Hneq: Int.eq (Int.repr (Z.of_nat c2)) (Int.repr 135) = false). {
           apply Int.eq_false.
           apply nat8_neq_k; auto; lia.
@@ -1011,7 +1017,7 @@ Section Step_opcode_alu64.
           n = Vint (Int.repr (Z.of_nat (Nat.land i 240))) /\
           is_illegal_alu64_ins i /\
           exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le0 m0
-            (Etempvar _opcode_alu64 Clightdefs.tuchar) =
+            (Etempvar _opcode_alu64 Ctypesdefs.tuchar) =
               Some (Vint (Int.repr (Z.of_nat (Nat.land i 240))))).
         {
           get_invariant _opcode_alu64.

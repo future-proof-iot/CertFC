@@ -393,10 +393,6 @@ Fixpoint bpf_interpreter_aux (fuel: nat) {struct fuel}: M state unit :=
   end.
 
 Definition bpf_interpreter (fuel: nat): M state val :=
-  do mrs      <- eval_mem_regions;
-  do bpf_ctx  <- get_mem_region 0 mrs;
-  do start  <- get_start_addr bpf_ctx;
-  do _        <- upd_reg R1 (Val.longofintu start); (**r let's say the ctx memory region is also be the first one *)
   do _        <- bpf_interpreter_aux fuel;
   do f        <- eval_flag;
     if flag_eq f BPF_SUCC_RETURN then

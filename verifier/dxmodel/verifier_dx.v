@@ -28,7 +28,7 @@ From compcert.lib Require Import Integers.
 From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
 
-From bpf.dxcomm Require Import CoqIntegers DxIntegers DxList64 DxNat DxBinrBPF.
+From bpf.dxcomm Require Import CoqIntegers DxIntegers DxListAsArray DxNat DxBinrBPF.
 From bpf.verifier.dxmodel Require Import Dxopcode Dxstate Dxmonad Dxverifier.
 
 (***************************************)
@@ -38,7 +38,7 @@ GenerateIntermediateRepresentation SymbolIRs
   Bool.Exports
   Nat.Exports
   DxIntegers.Exports
-  DxList64.Exports
+  DxListAsArray.Exports
   DxNat.Exports
   DxBinrBPF.Exports
   Dxopcode.Exports

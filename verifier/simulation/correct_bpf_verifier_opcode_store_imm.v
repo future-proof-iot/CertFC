@@ -167,7 +167,7 @@ Section Bpf_verifier_opcode_store_imm.
         unfold eval_inv, match_res, bool_correct, Int.one.
         split; [reflexivity|].
         split. unfold Cop.sem_cast; simpl.
-        fold Int.one; rewrite Int_eq_one_zero; reflexivity.
+        fold Int.one; reflexivity.
         intros.
         constructor.
         reflexivity.
@@ -204,7 +204,7 @@ Section Bpf_verifier_opcode_store_imm.
         unfold eval_inv, match_res, bool_correct, Int.one.
         split; [reflexivity|].
         split. unfold Cop.sem_cast; simpl.
-        fold Int.one; rewrite Int_eq_one_zero; reflexivity.
+        fold Int.one; reflexivity.
         intros.
         constructor.
         reflexivity.
@@ -241,7 +241,7 @@ Section Bpf_verifier_opcode_store_imm.
         unfold eval_inv, match_res, bool_correct, Int.one.
         split; [reflexivity|].
         split. unfold Cop.sem_cast; simpl.
-        fold Int.one; rewrite Int_eq_one_zero; reflexivity.
+        fold Int.one; reflexivity.
         intros.
         constructor.
         reflexivity.
@@ -278,7 +278,7 @@ Section Bpf_verifier_opcode_store_imm.
         unfold eval_inv, match_res, bool_correct, Int.one.
         split; [reflexivity|].
         split. unfold Cop.sem_cast; simpl.
-        fold Int.one; rewrite Int_eq_one_zero; reflexivity.
+        fold Int.one; reflexivity.
         intros.
         constructor.
         reflexivity.

@@ -28,8 +28,7 @@ From bpf.comm Require Import Monad.
 From compcert Require Import Integers.
 From compcert Require Import Memory.
 From compcert Require Import Smallstep.
-From compcert Require Import Clightdefs.
-Import Clightdefs.ClightNotations.
+From compcert Require Import Ctypesdefs.
 
 From bpf.clightlogic Require Import clight_exec.
 Open Scope type_scope.
@@ -186,7 +185,7 @@ Module DList.
       refine(
       match dl in (t l0) return match l0 with nil => nil = e::l  -> False | e :: l => F e end with
       | DNil => _
-      | DCons e0 v l0 _ => _
+      | DCons v _ => _
       end).
       apply nil_not_cons.
       apply v.
@@ -195,7 +194,7 @@ Module DList.
     Definition cdr {e: A} {l: list A} (dl : t  (e::l)) : t l.
       refine (match dl in (t l0) return match l0 with nil => (nil = e :: l -> False) | e :: l => t l end with
       | DNil => _
-      | DCons e0 _ l0 dl0 => dl0
+      | DCons _ dl0 => dl0
       end).
       apply nil_not_cons.
     Defined.
@@ -356,8 +355,8 @@ Module DList.
 
     Fixpoint to_list {l:list A} (dl: t F l) : list B :=
       match dl with
-      | DNil => nil
-      | DCons e v l dl' => G e v :: (to_list  dl')
+      | DNil _ => nil
+      | DCons _ v dl' => G _ v :: (to_list  dl')
       end.
 
     Lemma length_to_list : forall l (dl: t F l),
@@ -543,20 +542,20 @@ Proof.
 Qed.
 
 
-Inductive Inv (St:Type) :=
+Polymorphic Inductive Inv (St:Type) :=
 | StateLess (SL : val -> Prop) : Inv St
 | StateFull (SF : val -> St -> Memory.Mem.mem -> Prop) : Inv St.
 
 Definition is_stateless {St:Type} (i : Inv St) :=
 match i with
-| StateLess _ => true
-| StateFull _ => false
+| StateLess _ _ => true
+| StateFull _ _ => false
 end.
 
 Definition eval_inv {St: Type} (i : Inv St) (v: val) (st: St) (m: Memory.Mem.mem) :=
 match i with
-| StateLess sl => sl v
-| StateFull sf => sf v st m
+| StateLess _ sl => sl v
+| StateFull _ sf => sf v st m
 end.
 
 
@@ -1098,8 +1097,7 @@ Proof.
     simpl. right;eauto.
 Qed.
 
-
-Definition  exec_deref_loc (ty : Ctypes.type) (m : Memory.Mem.mem) (b : block) (ofs : ptrofs) : option val :=
+Definition  exec_deref_loc (ty : Ctypes.type) (m : Memory.Mem.mem) (b : block) (ofs : ptrofs): option val :=
   match Ctypes.access_mode ty with
   | Ctypes.By_value chk => Memory.Mem.loadv chk m (Vptr b ofs)
   | Ctypes.By_reference => Some (Vptr b ofs)
@@ -1140,7 +1138,7 @@ Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr
                          | None => None
                          | Some v => Cop.sem_unary_operation o v (typeof e) m
                          end
-  | Ebinop o e1 e2 t    => match exec_expr ge ev le m e1 , exec_expr ge ev le m e2 with
+  | Ebinop o e1 e2 t    => match exec_expr ge ev le m e1, exec_expr ge ev le m e2 with
                            | Some v1 , Some v2 => Cop.sem_binary_operation ge o v1 (typeof e1) v2 (typeof e2) m
                            | _ , _ => None
                            end
@@ -1152,11 +1150,15 @@ Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr
                         | Some (Vptr l ofs) =>
                             match typeof e with
                               | Ctypes.Tstruct id _  =>
-                                  match Maps.PTree.get id ge.(genv_cenv) with
+                                  match Maps.PTree.get id (genv_cenv ge) with
                                   | Some co =>
                                       match Ctypes.field_offset ge i (Ctypes.co_members co) with
-                                      | Errors.OK(delta) =>
-                                          exec_deref_loc ty m l (Ptrofs.add ofs (Ptrofs.repr delta))
+                                      | Errors.OK (delta, bf') =>
+                                          match bf' with
+                                          | Ctypes.Full =>
+                                            exec_deref_loc ty m l (Ptrofs.add ofs (Ptrofs.repr delta))
+                                          | _ => None
+                                          end
                                       |  _  => None
                                       end
                                   | _   => None
@@ -1171,7 +1173,7 @@ Fixpoint exec_expr (ge:genv) (ev:env) (le: temp_env) (m:Memory.Mem.mem) (e: expr
 
 Lemma deref_loc_var : forall t m b v ofs,
     exec_deref_loc t m b ofs = Some v -> (**r ysh: zero -> ofs *)
-    deref_loc t m b ofs v.
+    deref_loc t m b ofs Ctypes.Full v.
 Proof.
   intros.
   unfold exec_deref_loc in H.
@@ -1246,6 +1248,8 @@ Proof.
     destruct (typeof e) eqn:TO ; try discriminate.
     destruct (@Maps.PTree.get Ctypes.composite i1 (genv_cenv ge)) eqn:GET ; try discriminate.
     destruct (Ctypes.field_offset ge i (Ctypes.co_members c)) eqn:OF; try discriminate.
+    destruct p.
+    destruct b0; try discriminate.
     econstructor.
     econstructor; eauto.
     eapply deref_loc_var; auto.
@@ -1409,13 +1413,13 @@ Definition vc_binary_operation_casted (o: Cop.binary_operation) (t1 t2: Ctypes.t
             (Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t1 &&
               Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) t2 &&
                Ctypes.type_eq (binarith_type (classify_binarith t1 t2)) r )
-            || (Ctypes.type_eq t1 Clightdefs.tuchar  &&
-                  Ctypes.type_eq t2 Clightdefs.tint &&
-                  Ctypes.type_eq r Clightdefs.tint
+            || (Ctypes.type_eq t1 Ctypesdefs.tuchar  &&
+                  Ctypes.type_eq t2 Ctypesdefs.tint &&
+                  Ctypes.type_eq r Ctypesdefs.tint
                )
-            || (Ctypes.type_eq t2 Clightdefs.tuchar &&
-                  Ctypes.type_eq t1 Clightdefs.tint &&
-                  Ctypes.type_eq r Clightdefs.tint
+            || (Ctypes.type_eq t2 Ctypesdefs.tuchar &&
+                  Ctypes.type_eq t1 Ctypesdefs.tint &&
+                  Ctypes.type_eq r Ctypesdefs.tint
                )
 
 
@@ -3168,14 +3172,14 @@ Section S.
            (modifies : modifies_spec)
            (var_inv  : list (positive * Ctypes.type * Inv St))
       st le m
-      (IN : In (vr, Clightdefs.tbool, (StateLess St (match_bool x))) var_inv)
+      (IN : In (vr, Ctypesdefs.tbool, (StateLess St (match_bool x))) var_inv)
       (C1 : correct_body St p res (if x then f1 else f2) fn (if x then s1 else s2)
                          modifies match_state  var_inv match_res st
                          le m)
     ,
 
       correct_body St p res (if x then f1 else f2) fn
-                          (Sifthenelse (Etempvar vr Clightdefs.tbool)
+                          (Sifthenelse (Etempvar vr Ctypesdefs.tbool)
                                        s1 s2) modifies match_state var_inv match_res st le m.
   Proof.
     intros.

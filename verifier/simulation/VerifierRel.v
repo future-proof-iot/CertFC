@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import rBPFAST List64 MemRegion Regs Flag.
+From bpf.comm Require Import rBPFAST ListAsArray MemRegion Regs Flag.
 
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory AST.

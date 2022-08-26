@@ -19,7 +19,7 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Regs State Monad rBPFAST rBPFValues.
+From bpf.comm Require Import LemmaInt MemRegion Regs State Monad rBPFAST rBPFValues.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values Clight Memory Integers.
@@ -225,10 +225,7 @@ Ltac destruct_if Hname :=
           simpl.
           rewrite Hltu.
           simpl.
-          unfold Cop.bool_val, Vtrue; simpl.
-          rewrite Int_eq_one_zero.
-          unfold negb.
-          reflexivity.
+          unfold Cop.bool_val, Vtrue; simpl. reflexivity.
           simpl.
           unfold step2; forward_star.
           simpl.
@@ -238,26 +235,34 @@ Ltac destruct_if Hname :=
           rewrite Hle.
           simpl.
           unfold Cop.bool_val, Vtrue; simpl.
-          rewrite Int_eq_one_zero.
-          unfold negb.
           reflexivity.
           simpl.
           unfold step2; forward_star.
           forward_star.
           simpl.
           unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+          unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+            change (if Ctypes.intsize_eq X X then Y else Z) with Y
+          end. simpl.
           rewrite Hchunk_ne_zero.
           reflexivity.
           simpl.
           unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
           fold Int.zero.
+          unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+            change (if Ctypes.intsize_eq X X then Y else Z) with Y
+          end. simpl.
+
           rewrite Hmod.
           simpl.
           unfold Vtrue.
           reflexivity.
           simpl.
           unfold Cop.sem_cast; simpl.
-          rewrite Int_eq_one_zero.
           reflexivity.
           do 4 forward_star. forward_star.
           post_process.
@@ -265,11 +270,15 @@ Ltac destruct_if Hname :=
           simpl.
           unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
           unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+            change (if Ctypes.intsize_eq X X then Y else Z) with Y
+          end. simpl.
+
           unfold rBPFMemType.perm_ge in Hcond.
           destruct c0 eqn: Hc0_eq; destruct x1 eqn: Hx1_eq; inversion Hcond; rewrite c7, c8; unfold Int.ltu; repeat rewrite Int_unsigned_repr_n; try reflexivity; try lia; simpl in Hcond; inversion Hcond.
           simpl.
           unfold Cop.sem_cast, Vfalse; simpl.
-          rewrite Int.eq_true.
           reflexivity.
           do 4 forward_star. forward_star.
         }
@@ -278,8 +287,7 @@ Ltac destruct_if Hname :=
         simpl.
         rewrite Hltu.
         unfold Cop.bool_val, Val.of_bool; simpl.
-        rewrite Int_eq_one_zero.
-        unfold negb; reflexivity.
+        reflexivity.
         simpl.
         unfold step2; forward_star.
         simpl.
@@ -289,26 +297,35 @@ Ltac destruct_if Hname :=
         rewrite Hle.
         simpl.
         unfold Cop.bool_val, Vtrue; simpl.
-        rewrite Int_eq_one_zero.
-        unfold negb.
         reflexivity.
         simpl.
         unfold step2; forward_star.
         forward_star.
         simpl.
         unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+            change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+            simpl
+          end.
         rewrite Hchunk_ne_zero.
         reflexivity.
         simpl.
         unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
         fold Int.zero.
+        unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+            change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+            simpl
+          end.
         rewrite Hmod.
         simpl.
         unfold Vtrue.
         reflexivity.
         simpl.
         unfold Cop.sem_cast, Vfalse; simpl.
-        rewrite Int.eq_true.
         reflexivity.
         do 4 forward_star.
         do 4 forward_star.
@@ -319,8 +336,7 @@ Ltac destruct_if Hname :=
         simpl.
         rewrite Hltu.
         unfold Cop.bool_val, Val.of_bool; simpl.
-        rewrite Int_eq_one_zero.
-        unfold negb; reflexivity.
+        reflexivity.
         simpl.
         unfold step2; forward_star.
         simpl.
@@ -330,8 +346,6 @@ Ltac destruct_if Hname :=
         rewrite Hle.
         simpl.
         unfold Cop.bool_val, Vfalse; simpl.
-        rewrite Int.eq_true.
-        unfold negb.
         reflexivity.
         simpl.
         unfold step2; forward_star.
@@ -344,8 +358,7 @@ Ltac destruct_if Hname :=
         simpl.
         rewrite Hltu.
         unfold Cop.bool_val, Val.of_bool; simpl.
-        rewrite Int.eq_true.
-        unfold negb; reflexivity.
+        reflexivity.
         simpl.
         unfold step2; forward_star.
         do 4 forward_star.
@@ -437,8 +450,6 @@ Ltac destruct_if Hname :=
     rewrite Hltu.
     unfold Val.of_bool.
     unfold Cop.bool_val, Vtrue; simpl.
-    rewrite Int_eq_one_zero.
-    unfold negb.
     reflexivity.
     simpl.
     unfold step2; forward_star.
@@ -451,26 +462,36 @@ Ltac destruct_if Hname :=
     rewrite Hle.
     simpl.
     unfold Cop.bool_val, Vtrue; simpl.
-    rewrite Int_eq_one_zero.
-    unfold negb.
     reflexivity.
     simpl.
     unfold step2; forward_star.
     forward_star.
     simpl.
     unfold Cop.sem_mod, Cop.sem_binarith; simpl.
+    unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+      change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+      simpl
+    end.
+
     rewrite Hchunk_ne_zero.
     reflexivity.
     simpl.
     unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
     fold Int.zero.
+    unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+      change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+      simpl
+    end.
     rewrite Hmod.
     simpl.
     unfold Vtrue.
     reflexivity.
     simpl.
     unfold Cop.sem_cast; simpl.
-    rewrite Int_eq_one_zero.
     reflexivity.
     do 4 forward_star.
     forward_star.
@@ -481,11 +502,10 @@ Ltac destruct_if Hname :=
     unfold rBPFMemType.perm_ge in Hperm.
     destruct c0, x1; unfold Int.ltu; rewrite c7, c8; repeat rewrite Int_unsigned_repr_n; try reflexivity; try lia; simpl in Hperm; inversion Hperm.
     unfold Cop.sem_cast; simpl.
-    rewrite Int_eq_one_zero.
     reflexivity.
     do 4 forward_star.
     post_process.
-    unfold align, Ctypes.alignof; simpl.
+    unfold align, Ctypes.alignof; simpl. change (96 / 8)%Z with 12%Z.
     apply Hblock_ptr.
     try post_process.
     reflexivity.

@@ -17,7 +17,7 @@
 (**************************************************************************)
 
 (** Definition of matching relation between Coq and C representation *)
-From bpf.comm Require Import MemRegion Regs Flag List64.
+From bpf.comm Require Import MemRegion Regs Flag ListAsArray.
 From compcert Require Import Coqlib Integers Values AST Clight Memory Memtype.
 
 From bpf.clightlogic Require Import Clightlogic.

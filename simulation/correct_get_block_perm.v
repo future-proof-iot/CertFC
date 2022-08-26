@@ -89,11 +89,10 @@ Section Get_block_perm.
     split_and; unfold step2.
     -
       repeat forward_star.
-      unfold align, Ctypes.alignof; simpl.
+      unfold align, Ctypes.alignof; simpl. change (64 / 8)%Z with 8%Z.
       unfold Mem.loadv in Hperm_load.
       rewrite Hperm_load; reflexivity.
 
-      Transparent Archi.ptr64.
       reflexivity.
     - unfold eval_inv,match_res. simpl. unfold correct_perm in Hinj. unfold perm_correct.
       destruct (block_perm c); rewrite Hinj; reflexivity.

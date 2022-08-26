@@ -20,7 +20,7 @@ From compcert.cfrontend Require Csyntax Ctypes Cop.
 From compcert.common Require Import Values Memory AST.
 From compcert.lib Require Import Integers.
 
-From bpf.comm Require Import List64 Flag Regs MemRegion.
+From bpf.comm Require Import ListAsArray Flag Regs MemRegion rBPFAST.
 
 From Coq Require Import List ZArith.
 Import ListNotations.
@@ -33,7 +33,7 @@ Record state := mkst {
   mrs_num : nat;  (**r number of memory regions, put it here to guarantee align *)
   bpf_mrs : MyMemRegionsType;
   ins_len : nat;
-  ins     : MyListType;
+  ins     : List64AsArray.t;
   bpf_m   : Memory.mem;
 }.
 
@@ -46,7 +46,7 @@ Definition init_state: state := {|
   mrs_num := 0;
   bpf_mrs := default_memory_regions;
   ins_len := 0;
-  ins     := default_list;
+  ins     := [];
   bpf_m   := init_mem;
  |}.
 
@@ -118,54 +118,6 @@ Definition upd_mem (m: Mem.mem) (st: state): state := {| (**r never be used I gu
   bpf_m   := m;
 |}.
 
-Definition is_well_chunkb (chunk: memory_chunk) : bool :=
-  match chunk with
-  | Mint8unsigned | Mint16unsigned | Mint32 | Mint64 => true
-  | _ => false
-  end.
-
-Definition is_vint_or_vlong_chunk (chunk: memory_chunk) (v: val): bool :=
-  match chunk, v with
-  | Mint8unsigned, Vint _
-  | Mint16unsigned, Vint _
-  | Mint32, Vint _
-  | Mint64, Vlong _  => true
-  | _, _ => false
-  end.
-
-Definition _to_vlong (v: val): option val :=
-  match v with
-  | Vlong n => Some (Vlong n) (**r Mint64 *)
-  | Vint  n => Some (Vlong (Int64.repr (Int.unsigned n))) (**r Mint8unsigned, Mint16unsigned, Mint32 *) (* (u64) v *)
-  | _       => None
-  end.
-
-Definition vlong_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
-  match v with
-  | Vlong n =>
-    match chunk with
-    | Mint8unsigned => Vint (Int.zero_ext 8 (Int.repr (Int64.unsigned n)))
-    | Mint16unsigned => Vint (Int.zero_ext 16 (Int.repr (Int64.unsigned n)))
-    | Mint32 => Vint (Int.repr (Int64.unsigned n))
-    | Mint64 => Vlong n
-    | _      => Vundef
-    end
-  | _       => Vundef
-  end.
-
-Definition vint_to_vint_or_vlong (chunk: memory_chunk) (v: val): val :=
-  match v with
-  | Vint n =>
-    match chunk with
-    | Mint8unsigned => (Vint (Int.zero_ext 8 n))
-    | Mint16unsigned => (Vint (Int.zero_ext 16 n))
-    | Mint32 => Vint n
-    | Mint64 => (Vlong (Int64.repr (Int.signed n)))
-    | _      => Vundef
-    end
-  | _       => Vundef
-  end.
-
 Definition load_mem (chunk: memory_chunk) (ptr: val) (st: state): option val :=
   match chunk with
   | Mint8unsigned | Mint16unsigned | Mint32 =>
@@ -202,4 +154,4 @@ Definition store_mem_reg (ptr: val) (chunk: memory_chunk) (v: val) (st: state): 
   end.
 
 Definition eval_ins_len (st: state): int := Int.repr (Z.of_nat (ins_len st)).
-Definition eval_ins (idx: int) (st: state): int64 := MyListIndexs32 (ins st) idx.
+Definition eval_ins (idx: int) (st: state): int64 := List64AsArray.index (ins st) idx.

@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad rBPFMonadOp.
+From bpf.comm Require Import Flag Regs State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import List Lia ZArith.
@@ -695,8 +695,8 @@ Section Step.
         intros.
 
         assert (Heq:
-              step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x3 x1 =
-              bindM (step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x3 x1) (fun _ : unit => returnM tt)). {
+              step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x1 =
+              bindM (step_opcode_mem_st_imm (rBPFValues.sint32_to_vint x6) x7 x1) (fun _ : unit => returnM tt)). {
           clear.
           unfold step_opcode_mem_st_imm, get_opcode_mem_st_imm.
           unfold bindM, returnM.
@@ -718,12 +718,11 @@ Section Step.
         get_invariant _st.
         get_invariant _imm.
         get_invariant _addr.
-        get_invariant _dst.
         get_invariant _op.
-        exists (v::v0::v1::v2::v3::nil).
+        exists (v::v0::v1::v2::nil).
         unfold eval_inv, correct_get_immediate.match_res, sint32_correct in c0.
         split.
-        unfold map_opt, exec_expr. rewrite p0,p1,p2,p3,p4; reflexivity.
+        unfold map_opt, exec_expr. rewrite p0,p1,p2,p3; reflexivity.
         intros; simpl.
         intuition eauto.
         unfold stateless, val32_correct, rBPFValues.sint32_to_vint.
@@ -812,8 +811,8 @@ Section Step.
         intros.
 
         assert (Heq:
-              step_opcode_mem_st_reg x6 x8 x3 x1 =
-              bindM (step_opcode_mem_st_reg x6 x8 x3 x1) (fun _ : unit => returnM tt)). {
+              step_opcode_mem_st_reg x6 x8 x1 =
+              bindM (step_opcode_mem_st_reg x6 x8 x1) (fun _ : unit => returnM tt)). {
           clear.
           unfold step_opcode_mem_st_reg, get_opcode_mem_st_reg.
           unfold bindM, returnM.
@@ -835,11 +834,10 @@ Section Step.
         get_invariant _st.
         get_invariant _src64.
         get_invariant _addr.
-        get_invariant _dst.
         get_invariant _op.
-        exists (v ::v0::v1::v2 ::v3:: nil).
+        exists (v ::v0::v1::v2:: nil).
         unfold map_opt, exec_expr.
-        rewrite p0, p1, p2, p3, p4.
+        rewrite p0, p1, p2, p3.
         split.
         reflexivity.
         intros; simpl.
@@ -870,7 +868,7 @@ Section Step.
           (i <> 0x00 /\ i <> 0x01 /\ i <> 0x02 /\ i <> 0x03 /\ i <> 0x04 /\ i <> 0x05 /\ i <> 0x07)%nat /\
           (i <= 255)%nat /\
           exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le4 m4
-            (Etempvar _opc Clightdefs.tuchar) =
+            (Etempvar _opc Ctypesdefs.tuchar) =
               Some (Vint (Int.repr (Z.of_nat i)))).
         { simpl in H0.
           get_invariant _opc.

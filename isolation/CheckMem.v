@@ -100,8 +100,10 @@ Lemma mem_inv_check_mem_aux2P_valid_pointer:
     (Hmem : memory_inv st)
     (Hin_mem_regions: In mr (bpf_mrs st))
     (Hcheck_mem_aux2P: check_mem_aux2P mr p (Vint c) v = v'),
-      (exists b ofs, v' = Vptr b ofs /\ (Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs)
-    || Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs - 1))%bool = true)
+      (exists b ofs, v' = Vptr b ofs /\
+        (Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs)
+          || Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs - 1))%bool = true /\
+        Mem.valid_block (bpf_m st) b)
         \/ v' = Vnullptr.
 Proof.
   intros.
@@ -133,6 +135,7 @@ Proof.
   all: try (intro H; inversion H; right; reflexivity).
   all: left;
     eexists; eexists; split; [ reflexivity |];
+    split; [| assumption];
     rewrite Bool.orb_true_iff; left;
     rewrite Mem.valid_pointer_nonempty_perm;
     apply Mem.perm_implies with (p1 := MemRegion.block_perm mr); [ | constructor];
@@ -216,7 +219,7 @@ Proof.
       apply List.nth_error_In in Hnth_error.
       eapply mem_inv_check_mem_aux2P_valid_pointer with (p:= perm) (c:= addr) (v:= chunk) in Hnth_error; eauto.
       destruct Hnth_error as [ Hnth_0 | Hnth_1].
-      + destruct Hnth_0 as (b & ofs & Hcheck_mem_aux2P & Hvalid).
+      + destruct Hnth_0 as (b & ofs & Hcheck_mem_aux2P & Hvalid & _).
         rewrite Hcheck_mem_aux2P.
         unfold cmp_ptr32_null; simpl.
         rewrite Hvalid.
@@ -288,7 +291,10 @@ Lemma mem_inv_check_mem_auxP_valid_pointer:
     (Hperm: perm_order perm Readable)
     (Hmem : memory_inv st)
     (Hcheck_mem_auxP: check_mem_auxP st (mrs_num st) perm chunk (Vint addr) (bpf_mrs st) = v),
-      (exists b ofs, v = Vptr b ofs /\ (Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs) || Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs - 1) = true)%bool)
+      (exists b ofs, v = Vptr b ofs /\
+        (Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs)
+          || Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs - 1) = true)%bool /\
+        Mem.valid_block (bpf_m st) b)
         \/ v = Vnullptr.
 Proof.
   intros.
@@ -325,9 +331,23 @@ Proof.
       * left.
         exists b0, i.
         split; [reflexivity | ].
+        split.
         rewrite Int.eq_true in H0.
         rewrite Bool.andb_true_l in H0.
         destruct (Mem.valid_pointer _ _ _ || Mem.valid_pointer _ _ _)%bool eqn: Hvalid; [reflexivity| inversion H0].
+
+        clear - Hcmp.
+        change (Int.eq Int.zero Int.zero) with true in Hcmp.
+        unfold andb in Hcmp.
+        match goal with
+        | H: (if ?X then _ else _) = _ |- _ =>
+          destruct X eqn: HX; [| inversion H]
+        end.
+        rewrite Bool.orb_true_iff in HX.
+        destruct HX as [HX | HX];
+          rewrite Mem.valid_pointer_valid_access in HX;
+          apply Mem.valid_access_valid_block in HX;
+          assumption.
     - unfold cmp_ptr32_null, Val.cmpu_bool, Vnullptr in Hcmp; simpl in Hcmp.
       rewrite Hcheck_mem_auxP in Hcmp.
       assert (Hcheck_mem_auxP' := Hcheck_mem_auxP).
@@ -336,8 +356,7 @@ Proof.
       unfold MyMemRegionsIndexnat, Memory_regions.index_nat in Hcheck_mem_auxP, Hcheck_mem_auxP'.
       unfold check_mem_aux2P in Hcheck_mem_auxP.
       destruct v; try inversion Hcmp;
-      change Vnullptr with (Vint Int.zero) in *. (*
-      all: destruct is_well_chunk_boolP; [| inversion Hcheck_mem_auxP]. *)
+      change Vnullptr with (Vint Int.zero) in *.
       all: match goal with
            | H: (if ?X then _ else _) = _ |- _ =>
               destruct X; [| inversion H]
@@ -387,7 +406,8 @@ Proof.
   symmetry in Heqres.
   eapply mem_inv_check_mem_auxP_valid_pointer in Heqres; eauto.
   destruct Heqres as [(b & ofs & Hptr & Hvalid) | Hnull]; subst; unfold cmp_ptr32_null, Val.cmpu_bool; change Vnullptr with (Vint Int.zero) in *; simpl; rewrite Int.eq_true.
-  - rewrite Hvalid; simpl; reflexivity.
+  - destruct Hvalid as (Hvalid & _).
+    rewrite Hvalid; simpl; reflexivity.
   - reflexivity.
 Qed.
 
@@ -489,7 +509,10 @@ Lemma mem_inv_check_mem_valid_pointer:
     (Hperm: perm_order perm Readable)
     (Hmem : memory_inv st)
     (Hcheck_memP: check_memP perm chunk (Vint addr) st = v),
-      (exists b ofs, v = Vptr b ofs /\ (Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs) || Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs - 1) = true)%bool)
+      (exists b ofs, v = Vptr b ofs /\
+        (Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs)
+          || Mem.valid_pointer (bpf_m st) b (Ptrofs.unsigned ofs - 1) = true)%bool /\
+        Mem.valid_block (bpf_m st) b)
         \/ v = Vnullptr.
 Proof.
   unfold check_memP; intros.
@@ -507,6 +530,6 @@ Proof.
   all: rewrite Int.eq_true in Hcheck_memP; try rewrite Bool.andb_true_l in Hcheck_memP.
   all: try (right; symmetry; assumption).
   all: left; exists b, ofs.
-  all: rewrite Hvalid in Hcheck_memP.
+  all: destruct Hvalid as (Hvalid & Hvalid_blk); rewrite Hvalid in Hcheck_memP.
   all: auto.
 Qed.

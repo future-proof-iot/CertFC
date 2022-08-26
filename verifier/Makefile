@@ -1,4 +1,4 @@
-include Makefile.config
+include ../Makefile.config
 
 SED := sed
 CAT := cat
@@ -37,11 +37,11 @@ verifier-extract:
 	            }' > compcertsrc-I	
 	$(COMPCERTSRCDIR)/tools/modorder $(COMPCERTSRCDIR)/.depend.extr cfrontend/PrintCsyntax.cmx | \
 	    $(AWK) 'BEGIN { RS=" " } /cmx/ { gsub(".*/","") ; print }' > compcertcprinter-cmx-args
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I dxmodel dxmodel/verifier_TestMain.mli	
-	$(OCAMLOPT) -args compcertsrc-I -I $(DXDIR)/extr -I $(DXDIR)/src -I dxmodel -c dxmodel/verifier_TestMain.ml
+	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel dxmodel/verifier_TestMain.mli	
+	$(OCAMLOPT) -args $(DXDIR)/cprinter-inc-args -I dxmodel -c dxmodel/verifier_TestMain.ml
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.cmxa
 	$(OCAMLOPT) -args compcertsrc-I -a -args compcertcprinter-cmx-args -o compcertcprinter.a
-	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/extr/ResultMonad.cmx $(DXDIR)/extr/DXModule.cmx $(DXDIR)/extr/DumpAsC.cmx dxmodel/verifier_TestMain.cmx -o dxmodel/main
+	$(OCAMLOPT) -args compcertsrc-I str.cmxa unix.cmxa compcertcprinter.cmxa $(DXDIR)/ResultMonad.cmx $(DXDIR)/DXModule.cmx $(DXDIR)/DumpAsC.cmx dxmodel/verifier_TestMain.cmx -o dxmodel/main
 	ln -sf $(COMPCERTSRCDIR)/compcert.ini dxmodel/compcert.ini
 	cd dxmodel && ./main
 

@@ -20,7 +20,7 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.comm Require Import LemmaNat Monad.
+From bpf.comm Require Import LemmaInt LemmaNat Monad.
 From bpf.clightlogic Require Import CommonLemma CommonLib Clightlogic CorrectRel.
 From bpf.verifier.comm Require Import monad.
 
@@ -158,7 +158,6 @@ Section Bpf_verifier.
         fold Int.zero.
         split; [reflexivity |].
         unfold Cop.sem_cast; simpl.
-        rewrite Int.eq_true.
         split; [reflexivity |].
         intros.
         constructor.
@@ -183,7 +182,6 @@ Section Bpf_verifier.
       fold Int.zero.
       split; [reflexivity |].
       unfold Cop.sem_cast; simpl.
-      rewrite Int.eq_true.
       split; [reflexivity |].
       intros.
       constructor.
@@ -199,6 +197,11 @@ Section Bpf_verifier.
       unfold Cop.sem_div, Cop.sem_binarith; simpl.
       change (Int.eq (Int.repr 8) Int.zero) with false.
       unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+      unfold Cop.sem_cast; simpl.
+      match goal with
+      | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+        change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+      end.
       unfold Val.of_bool.
       change (Int.divu (Int.repr (-1)) (Int.repr 8)) with (Int.repr 536870911).
       change (Int.divu (Int.repr Int.max_unsigned) (Int.repr 8)) with (Int.repr 536870911).
@@ -223,7 +226,6 @@ Section Bpf_verifier.
       fold Int.zero.
       split; [reflexivity |].
       unfold Cop.sem_cast; simpl.
-      rewrite Int.eq_true.
       split; [reflexivity |].
       intros.
       constructor.
@@ -238,6 +240,11 @@ Section Bpf_verifier.
     rewrite <- c.
     unfold Cop.sem_binary_operation, typeof; simpl.
     unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+    unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+      change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+    end.
     unfold Val.of_bool.
 
     unfold Int.one.

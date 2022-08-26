@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import rBPFAST List64 MemRegion Regs Flag State.
+From bpf.comm Require Import rBPFAST ListAsArray MemRegion Regs Flag State.
 
 From bpf.monadicmodel Require Import Opcode.
 
