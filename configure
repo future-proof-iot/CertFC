@@ -1,0 +1,54 @@
+#!/bin/sh
+
+usage='Usage: ./configure [option] ...
+Use the option "--help" to list the available options.
+'
+
+help='Usage: ./configure [option] ...
+
+Available options:
+
+  --opamprefixdir=DIR         set the directory of your instaleed opam
+
+  --compcertdir=DIR           set the directory in which the compcert
+                              is installed
+
+  --help                      show this help
+'
+
+while : ; do
+    case "$1" in
+        --opamprefixdir=*)
+            opamprefixdir="${1#*=}" ;;
+        -opamprefixdir|--opamprefixdir)
+            opamprefixdir="$2" ; shift ;;
+        --compcertdir=*)
+            compcertdir="${1#*=}" ;;
+        -copmcertdir|--compcertdir)
+            compcertdir="$2" ; shift ;;
+        "")
+            # End of arguments
+            break ;;
+        -help|--help)
+            echo "$help" ; exit 0 ;;
+        -*)
+            echo "Unknown option: $1" ; echo "$usage" ; exit 1 ;;
+    esac
+    shift
+done
+
+# generate Makefile.config
+
+cat > Makefile.config << EOF
+DXDIR := $opamprefixdir/lib/dx
+COMPCERTDIR := $compcertdir
+CLIGHTGEN32DIR := $compcertdir
+COMPCERTSRCDIR := $compcertdir
+EOF
+
+# generate the CoqProject file
+make CoqProject
+
+echo "The following configuration was saved in Makefile.config:"
+echo
+cat Makefile.config

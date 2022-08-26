@@ -95,7 +95,6 @@ Section Get_start_addr.
       rewrite Ptrofs.add_zero.
       rewrite Haddr_load; reflexivity.
 
-      Transparent Archi.ptr64.
       reflexivity.
     - unfold eval_inv,match_res. simpl. unfold val32_correct. eauto.
     - simpl.

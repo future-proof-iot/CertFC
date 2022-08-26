@@ -19,7 +19,7 @@
 From compcert Require Import Integers Values AST Ctypes.
 From Coq Require Import ZArith Lia.
 
-From bpf.comm Require Import BinrBPF Monad LemmaNat.
+From bpf.comm Require Import BinrBPF Monad LemmaInt LemmaNat.
 From bpf.clightlogic Require Import CommonLemma.
 From bpf.verifier.comm Require Import state monad.
 From bpf.verifier.synthesismodel Require Import opcode_synthesis verifier_synthesis.
@@ -354,39 +354,31 @@ Ltac change_inversion_if Hi :=
     end.
 
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity |]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    do 10 (destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]).
     lia.
   }
 
@@ -403,11 +395,11 @@ Ltac change_inversion_if Hi :=
     unfold Int.cmpu in *.
     intro.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *. inversion Haux2. rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
 
 Ltac destruct_inversion_match_if :=
     match goal with
@@ -417,56 +409,56 @@ Ltac destruct_inversion_match_if :=
 
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *. change_inversion_if true. reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *. inversion Haux2. reflexivity.
+    destruct m. simpl in *. inversion Haux2.
 
-    destruct m. simpl in *; change_inversion_if true. reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2. reflexivity.
+    destruct m. simpl in *. inversion Haux2.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     destruct_inversion_match_if. rewrite Hdst, H1. reflexivity.
 
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
-    destruct m. simpl in *; change_inversion_if true; rewrite Hdst; reflexivity.
-    destruct m. simpl in *. change_inversion_if false.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
+    destruct m. simpl in *; inversion Haux2; rewrite Hdst; reflexivity.
+    destruct m. simpl in *. inversion Haux2.
     lia.
   }
 
@@ -491,39 +483,39 @@ Ltac destruct_inversion_match_if :=
     intro.
 
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
     destruct m; [ simpl in *; inversion Haux2; assumption |
-      destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|]].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if true; rewrite Hdst, H0; reflexivity|].
-    destruct m; [simpl in *; change_inversion_if false; rewrite Hdst, H0; reflexivity|].
+      destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|]].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
+    destruct m; [simpl in *; inversion Haux2; rewrite Hdst, H0; reflexivity|].
     lia.
   }
 

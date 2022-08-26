@@ -92,11 +92,10 @@ Section Get_block_size.
     split_and; unfold step2; auto.
     -
       repeat forward_star.
-      unfold align, Ctypes.alignof; simpl.
+      unfold align, Ctypes.alignof; simpl. change (32 / 8)%Z with 4%Z.
       unfold Mem.loadv in Hsize_load.
       rewrite Hsize_load; reflexivity.
 
-      Transparent Archi.ptr64.
       reflexivity.
     - unfold eval_inv,match_res. simpl. unfold val32_correct.
       eauto.

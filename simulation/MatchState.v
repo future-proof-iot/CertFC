@@ -17,25 +17,12 @@
 (**************************************************************************)
 
 (** Definition of matching relation between Coq and C representation *)
-From bpf.comm Require Import State MemRegion Regs Flag List64.
+From bpf.comm Require Import LemmaInt State MemRegion Regs Flag ListAsArray rBPFMemType.
 From compcert Require Import Coqlib Integers Values AST Clight Memory Memtype.
 
 From bpf.clightlogic Require Import CommonLemma CommonLib Clightlogic.
 From Coq Require Import ZArith.
 Open Scope Z_scope.
-
-(**r
-
-
-Definition mem_region_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_region_id Ctypes.Struct [
-    (start_addr_id, C_U32);
-    (size_id, C_U32);
-    (perm_id, C_U32);
-    (block_ptr_id, C_U32)
-  ] Ctypes.noattr.
-
-*)
 
 Global Transparent Archi.ptr64.
 
@@ -1133,17 +1120,6 @@ Proof.
   intuition congruence.
 Qed.
 
-Lemma store_perm_iff:
-  forall chunk m1 m2 b ofs addr b0 ofs0 k p
-  (Hstore : Mem.store chunk m1 b ofs addr = Some m2),
-      Mem.perm m1 b0 ofs0 k p <-> Mem.perm m2 b0 ofs0 k p.
-Proof.
-  intros.
-  split; intro.
-  - eapply Mem.perm_store_1 with (k:=k) (p:=p) in Hstore; eauto.
-  - eapply Mem.perm_store_2 with (k:=k) (p:=p) in Hstore; eauto.
-Qed.
-
 Lemma store_match_state_same:
   forall st1 m m1 m2 chunk b ofs addr
     (Hstore : Mem.store chunk (bpf_m st1) b ofs addr = Some m)
@@ -1170,28 +1146,6 @@ Proof.
     rewrite Mem.setN_other; [|intros; lia].
     repeat rewrite Maps.ZMap.gss.
     reflexivity.
-Qed.
-
-(**r the proof code comes from MisakaCenter (QQ), thx *)
-Lemma mem_get_in:
-  forall l (n:nat) q c,
-  lt n (List.length l) ->
-    Maps.ZMap.get (q + (Z.of_nat n)) (Mem.setN l q c) = (nth_default Memdata.Undef l n).
-Proof.
-  induction l; simpl in *; intros.
-  lia.
-  induction n; simpl.
-  - unfold nth_default; simpl.
-    rewrite Mem.setN_outside; try lia.
-    rewrite Z.add_0_r.
-    rewrite Maps.ZMap.gss; auto.
-  - assert (Heq: nth_default Memdata.Undef (a::l) (S n) = nth_default Memdata.Undef l n) by auto.
-    rewrite Heq; clear Heq.
-    rewrite <- IHl with (q := q+1) (c:=Maps.ZMap.set q a c).
-    assert (Heq: q + Z.pos (Pos.of_succ_nat n) = q + 1 + Z.of_nat n) by lia.
-    rewrite Heq; clear Heq.
-    reflexivity.
-    lia.
 Qed.
 
 Lemma store_match_state_same_other:
@@ -1273,20 +1227,6 @@ Proof.
         destruct chunk; lia.
   - repeat (rewrite Maps.PMap.gso; [| lia]).
     assumption.
-Qed.
-
-Lemma store_range_perm:
-  forall chunk m1 m2 b0 b1 ofs addr low high k p
-    (Hblk_neq: b0 <> b1)
-    (Hstore : Mem.store chunk m1 b0 ofs addr = Some m2)
-    (Hrange_perm : Mem.range_perm m1 b1 low high k p),
-      Mem.range_perm m2 b1 low high k p.
-Proof.
-  intros.
-  unfold Mem.range_perm in *.
-  intros.
-  specialize (Hrange_perm ofs0 H).
-  eapply Mem.perm_store_1; eauto.
 Qed.
 
 Lemma store_reg_preserive_match_state:

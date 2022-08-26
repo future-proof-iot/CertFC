@@ -187,6 +187,12 @@ Section Bpf_verifier_aux2.
           rewrite <- Hc3_eq.
           simpl.
           unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+          unfold Cop.sem_and, Cop.sem_binarith; simpl.
+          unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+            change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+          end.
           fold Int.zero.
           f_equal.
       + reflexivity.
@@ -199,6 +205,16 @@ Section Bpf_verifier_aux2.
         rewrite <- Hc3_eq.
         simpl.
         unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         unfold nat_to_opcode in Hopcode.
         unfold Int.and.
         change (Int.unsigned (Int.repr 7)) with (Z.of_nat 7%nat).
@@ -290,6 +306,12 @@ Section Bpf_verifier_aux2.
           rewrite <- Hc3_eq.
           simpl.
           unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+          unfold Cop.sem_and, Cop.sem_binarith; simpl.
+          unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+            change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+          end.
           fold Int.zero.
           f_equal.
       + reflexivity.
@@ -302,6 +324,16 @@ Section Bpf_verifier_aux2.
         rewrite <- Hc3_eq.
         simpl.
         unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         unfold nat_to_opcode in Hopcode.
         unfold Int.and.
         change (Int.unsigned (Int.repr 7)) with (Z.of_nat 7%nat).
@@ -397,6 +429,17 @@ Section Bpf_verifier_aux2.
           rewrite <- Hc3_eq.
           simpl.
           unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+          unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+            change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+          end.
+          unfold Cop.sem_and, Cop.sem_binarith; simpl.
+          unfold Cop.sem_cast; simpl.
+          match goal with
+          | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+            change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+          end.
           fold Int.zero.
           f_equal.
       + reflexivity.
@@ -409,6 +452,16 @@ Section Bpf_verifier_aux2.
         rewrite <- Hc3_eq.
         simpl.
         unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         unfold nat_to_opcode in Hopcode.
         unfold Int.and.
         change (Int.unsigned (Int.repr 7)) with (Z.of_nat 7%nat).
@@ -471,6 +524,16 @@ Section Bpf_verifier_aux2.
         rewrite <- Hc3_eq.
         simpl.
         unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         unfold nat_to_opcode in Hopcode.
         unfold Int.and.
         change (Int.unsigned (Int.repr 7)) with (Z.of_nat 7%nat).
@@ -533,6 +596,16 @@ Section Bpf_verifier_aux2.
         rewrite <- Hc3_eq.
         simpl.
         unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         unfold nat_to_opcode in Hopcode.
         unfold Int.and.
         change (Int.unsigned (Int.repr 7)) with (Z.of_nat 7%nat).
@@ -595,6 +668,16 @@ Section Bpf_verifier_aux2.
         rewrite <- Hc3_eq.
         simpl.
         unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         unfold nat_to_opcode in Hopcode.
         unfold Int.and.
         change (Int.unsigned (Int.repr 7)) with (Z.of_nat 7%nat).
@@ -657,6 +740,16 @@ Section Bpf_verifier_aux2.
         rewrite <- Hc3_eq.
         simpl.
         unfold Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         unfold nat_to_opcode in Hopcode.
         unfold Int.and.
         change (Int.unsigned (Int.repr 7)) with (Z.of_nat 7%nat).
@@ -686,6 +779,16 @@ Section Bpf_verifier_aux2.
         rewrite p0.
         rewrite <- c3.
         unfold Cop.sem_binary_operation, Cop.sem_cast; simpl.
+        unfold Cop.sem_and, Cop.sem_binarith; simpl.
+        unfold Cop.sem_cast; simpl.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+        end.
+        match goal with
+        | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+          change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+        end.
         rewrite Int.zero_ext_and.
         rewrite Int.and_assoc.
         change (two_p 8 - 1) with 255.

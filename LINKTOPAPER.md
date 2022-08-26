@@ -40,7 +40,7 @@ Record state := mkst {
   mrs_num : nat;
   bpf_mrs : MyMemRegionsType;
   ins_len : nat;
-  ins     : MyListType;
+  ins     : ListAsArray;
   bpf_m   : Memory.mem;
 }.
 ```
@@ -144,7 +144,7 @@ Definition bpf_interpreter (fuel: nat): M state val :=
 ...
 ```
 - dx configuration: see the last [coq file](https://gitlab.inria.fr/syuan/rbpf-dx/-/blob/CAV22-AE/dxmodel/DxInstructions.v) which relies on many dx configruation files e.g. 
-`DxIntegers DxValues DxList64 DxNat`
+`DxIntegers DxValues DxListAsArray DxNat`
 ```coq
 
 (**In the paper: step_mem_st_reg *)

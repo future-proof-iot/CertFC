@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad LemmaNat rBPFMonadOp.
+From bpf.comm Require Import Flag Regs State Monad LemmaNat rBPFMonadOp.
 From bpf.monadicmodel Require Import Opcode rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
@@ -133,7 +133,7 @@ Section Step_opcode_mem_ld_reg.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -242,7 +242,7 @@ Section Step_opcode_mem_ld_reg.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -353,7 +353,7 @@ Section Step_opcode_mem_ld_reg.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -467,7 +467,7 @@ Section Step_opcode_mem_ld_reg.
         unfold Cop.sem_unary_operation, typeof; simpl.
         split; [reflexivity |].
         intros; simpl.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+        unfold eval_inv, stateless, flag_correct, int_of_flag, Z_of_flag.
         unfold eval_inv, is_state_handle in c2.
         rewrite Int.neg_repr.
         tauto.
@@ -537,7 +537,7 @@ Section Step_opcode_mem_ld_reg.
           (i <> 0x61 /\ i <> 0x69 /\ i <> 0x71 /\ i <> 0x79)%nat /\
           (i <= 255)%nat /\
           exec_expr (Smallstep.globalenv (semantics2 p)) empty_env le0 m0
-            (Etempvar _opcode_ld Clightdefs.tuchar) =
+            (Etempvar _opcode_ld Ctypesdefs.tuchar) =
               Some (Vint (Int.repr (Z.of_nat i)))).
         {
           get_invariant _opcode_ld.
@@ -583,7 +583,7 @@ Section Step_opcode_mem_ld_reg.
         split.
         reflexivity.
         intros.
-        unfold eval_inv, stateless, flag_correct, CommonLib.int_of_flag; simpl.
+        unfold eval_inv, stateless, flag_correct, int_of_flag; simpl.
         split; auto.
         intros.
 

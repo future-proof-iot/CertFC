@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import State Monad rBPFMonadOp.
+From bpf.comm Require Import LemmaInt ListAsArray State Monad rBPFMonadOp.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
@@ -142,7 +142,7 @@ Section Eval_ins.
       unfold int64_correct.
       unfold eval_ins in Heval_ins.
       context_destruct_if_inversion.
-      unfold State.eval_ins, List64.MyListIndexs32, List64.MyList.index_s32.
+      unfold State.eval_ins, List64AsArray.index.
       f_equal.
       destruct nth_error eqn: Hnth.
       apply nth_error_nth with (d:= Int64.zero) in Hnth.

@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import Regs State Monad rBPFMonadOp.
+From bpf.comm Require Import LemmaInt Regs State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory Memdata.
@@ -102,6 +102,7 @@ Definition match_arg_list : DList.t (fun x => x -> Inv _) ((unit:Type) ::args) :
         unfold Ptrofs.add, Ptrofs.mul.
         unfold id_of_reg; destruct c; try unfold Ptrofs.of_intu, Ptrofs.of_int; repeat rewrite Ptrofs.unsigned_repr; try rewrite Int.unsigned_repr; try rewrite Int_max_unsigned_eq64; try rewrite Ptrofs_max_unsigned_eq32; try lia.
       }
+      change (64 / 8)%Z with 8%Z.
       rewrite <- Heq.
       rewrite <- Hstore; reflexivity.
     - split_and.

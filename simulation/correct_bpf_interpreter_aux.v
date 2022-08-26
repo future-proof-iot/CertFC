@@ -19,7 +19,7 @@
 From Coq Require Import List ZArith.
 Import ListNotations.
 From dx Require Import ResultMonad IR.
-From bpf.comm Require Import MemRegion Flag Regs State Monad rBPFAST rBPFValues rBPFMonadOp.
+From bpf.comm Require Import Flag MemRegion Flag Regs State Monad rBPFAST rBPFValues rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From compcert Require Import Coqlib Values AST Clight Memory Memtype Integers.
@@ -130,7 +130,7 @@ Qed.
       split.
       reflexivity.
       intros.
-      unfold stateless, flag_correct, CommonLib.int_of_flag; simpl.
+      unfold stateless, flag_correct, int_of_flag; simpl.
       intuition congruence.
       intros.
 
@@ -150,8 +150,12 @@ Qed.
       rewrite <- c.
       unfold Cop.sem_binary_operation, typeof; simpl.
       unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
-      unfold Val.of_bool.
-      rewrite Int.eq_true.
+      unfold Cop.sem_cast; simpl.
+      match goal with
+      | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+        change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+        simpl
+      end.
       reflexivity.
     }
 
@@ -177,6 +181,12 @@ Qed.
       rewrite p0.
       unfold Cop.sem_binary_operation, Cop.sem_sub; simpl.
       unfold Cop.sem_binarith; simpl.
+      unfold Cop.sem_cast; simpl.
+      match goal with
+      | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+        change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+        simpl
+      end.
       unfold Int.sub.
       fold Int.one; rewrite Int.unsigned_one.
       rewrite Zpos_P_of_succ_nat.
@@ -389,7 +399,7 @@ Qed.
             unfold map_opt, exec_expr.
             rewrite p0; reflexivity.
             simpl;intros.
-            unfold stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+            unfold stateless, flag_correct, int_of_flag, Z_of_flag.
             intuition eauto.
             intros.
 
@@ -423,7 +433,7 @@ Qed.
       rewrite c0.
       unfold Cop.sem_binary_operation.
       unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
-      unfold flag_eq, CommonLib.int_of_flag.
+      unfold flag_eq, int_of_flag.
       unfold Val.of_bool, Vtrue, Vfalse.
       destruct x2 eqn: Heq_x2; simpl; try reflexivity.
     }
@@ -436,7 +446,7 @@ Qed.
     unfold map_opt, exec_expr.
     rewrite p0; reflexivity.
     simpl;intros.
-    unfold stateless, flag_correct, CommonLib.int_of_flag, CommonLib.Z_of_flag.
+    unfold stateless, flag_correct, int_of_flag, Z_of_flag.
     intuition eauto.
     intros.
 
@@ -466,6 +476,12 @@ Qed.
     simpl.
     rewrite <- Hv_eq.
     unfold Cop.sem_cmp, Cop.sem_binarith, Val.of_bool, Vfalse; simpl.
+    unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[ if Ctypes.intsize_eq ?X ?X then ?Y else ?Z] =>
+      change (if Ctypes.intsize_eq X X then Y else Z) with Y;
+      simpl
+    end.
     unfold Int.eq.
     change (Int.unsigned (Int.repr 0)) with 0.
     rewrite Int.unsigned_repr;[ | lia].

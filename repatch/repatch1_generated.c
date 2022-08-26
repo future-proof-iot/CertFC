@@ -77,9 +77,9 @@ extern void step_opcode_mem_ld_imm(int, unsigned long long, unsigned int, unsign
 
 extern void step_opcode_mem_ld_reg(unsigned int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_st_imm(int, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_st_imm(int, unsigned int, unsigned char);
 
-extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, unsigned int, unsigned char);
+extern void step_opcode_mem_st_reg(unsigned long long, unsigned int, unsigned char);
 
 extern void step(void);
 
@@ -718,7 +718,7 @@ void step_opcode_mem_ld_reg(unsigned int addr, unsigned int dst, unsigned char o
   }
 }
 
-void step_opcode_mem_st_imm(int imm, unsigned int addr, unsigned int dst, unsigned char op)
+void step_opcode_mem_st_imm(int imm, unsigned int addr, unsigned char op)
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
@@ -778,7 +778,7 @@ void step_opcode_mem_st_imm(int imm, unsigned int addr, unsigned int dst, unsign
   }
 }
 
-void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, unsigned int dst, unsigned char op)
+void step_opcode_mem_st_reg(unsigned long long src64, unsigned int addr, unsigned char op)
 {
   unsigned char opcode_st;
   unsigned char *addr_ptr;
@@ -909,7 +909,7 @@ void step(void)
       ofs = get_offset(ins);
       imm = get_immediate(ins);
       addr = get_addr_ofs(dst64, ofs);
-      step_opcode_mem_st_imm(imm, addr, dst, op);
+      step_opcode_mem_st_imm(imm, addr, op);
       return;
     case 3:
       dst64 = eval_reg(dst);
@@ -917,7 +917,7 @@ void step(void)
       src64 = eval_reg(src);
       ofs = get_offset(ins);
       addr = get_addr_ofs(dst64, ofs);
-      step_opcode_mem_st_reg(src64, addr, dst, op);
+      step_opcode_mem_st_reg(src64, addr, op);
       return;
     default:
       upd_flag(-1);
@@ -967,15 +967,8 @@ void bpf_interpreter_aux(unsigned int fuel)
 
 unsigned long long bpf_interpreter(unsigned int fuel)
 {
-  struct memory_region *mrs;
-  struct memory_region *bpf_ctx;
-  unsigned int start;
   int f;
   unsigned long long res;
-  mrs = eval_mrs_regions();
-  bpf_ctx = get_mem_region(0U, mrs);
-  start = get_start_addr(bpf_ctx);
-  upd_reg(1U, (unsigned long long) start);
   bpf_interpreter_aux(fuel);
   f = eval_flag();
   if (f == 1) {

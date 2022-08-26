@@ -29,7 +29,7 @@ From dx Require Import ResultMonad IR CoqIR IRtoC DXModule DumpAsC.
 From dx.Type Require Bool Nat.
 
 From bpf.comm Require Import MemRegion rBPFValues rBPFAST rBPFMemType Flag Regs.
-From bpf.dxcomm Require Import DxIntegers DxList64 DxValues DxBinrBPF DxNat.
+From bpf.dxcomm Require Import DxIntegers DxListAsArray DxValues DxBinrBPF DxNat.
 From bpf.dxmodel Require Import DxRegs DxState DxOpcode DxFlag DxInstructions DxAST DxMemRegion DxMemType DxMonad.
 
 (***************************************)
@@ -40,7 +40,7 @@ GenerateIntermediateRepresentation SymbolIRs
   Bool.Exports
   Nat.Exports
   DxIntegers.Exports
-  DxList64.Exports
+  DxListAsArray.Exports
   DxValues.Exports
   DxRegs.Exports
   DxBinrBPF.Exports
@@ -89,8 +89,7 @@ GenerateIntermediateRepresentation SymbolIRs
   get_opcode
   get_add
   get_sub
-  get_addr_ofs (*
-  get_block_ptr (**r adding the four functions *)*)
+  get_addr_ofs
   get_start_addr
   get_block_size
   get_block_perm

@@ -121,7 +121,6 @@ Qed.
       fold Int.one.
       split; [reflexivity |].
       unfold Cop.sem_cast; simpl.
-      rewrite Int_eq_one_zero.
       split; [reflexivity |].
       intros.
       constructor.
@@ -137,8 +136,13 @@ Qed.
       rewrite <- c.
       unfold Cop.sem_binary_operation, typeof; simpl.
       unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+      unfold Cop.sem_and, Cop.sem_binarith; simpl.
+      unfold Cop.sem_cast; simpl.
+      match goal with
+      | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+        change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+      end.
       unfold Val.of_bool.
-      rewrite Int.eq_true.
       reflexivity.
     }
 
@@ -166,6 +170,11 @@ Qed.
       rewrite p0.
       unfold Cop.sem_binary_operation, Cop.sem_sub; simpl.
       unfold Cop.sem_binarith; simpl.
+      unfold Cop.sem_cast; simpl.
+      match goal with
+      | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+        change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+      end.
       unfold Int.sub.
       fold Int.one; rewrite Int.unsigned_one.
       rewrite Zpos_P_of_succ_nat.
@@ -280,7 +289,7 @@ Qed.
           reflexivity.
         - simpl.
           unfold Cop.sem_cast; simpl.
-          fold Int.zero; rewrite Int.eq_true; reflexivity.
+          fold Int.zero; reflexivity.
         - intros.
           constructor.
           reflexivity.
@@ -302,7 +311,7 @@ Qed.
         reflexivity.
       - simpl.
         unfold Cop.sem_cast; simpl.
-        fold Int.zero; rewrite Int.eq_true; reflexivity.
+        fold Int.zero; reflexivity.
       - intros.
         constructor.
         reflexivity.
@@ -323,6 +332,11 @@ Qed.
     rewrite <- c1.
     unfold Cop.sem_binary_operation; simpl.
     unfold Cop.sem_cmp, Cop.sem_binarith; simpl.
+    unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[ if Ctypes.intsize_eq ?X ?X then ?Z else ?W] =>
+      change (if Ctypes.intsize_eq X X then Z else W) with Z; simpl
+    end.
     unfold Val.of_bool, Vfalse.
     unfold Int.eq.
     change (Int.unsigned (Int.repr 0)) with 0.

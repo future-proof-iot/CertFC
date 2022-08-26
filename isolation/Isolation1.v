@@ -25,12 +25,31 @@ From Coq Require Import ZArith Lia.
 
 Open Scope Z_scope.
 
-Axiom call_inv: forall st st1 st2 b ofs res
+Axiom call_inv_0: forall st1 st2 b ofs res
+  (Hreg : register_inv st1)
+  (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
+    register_inv st2.
+
+Axiom call_inv_1: forall st1 st2 b ofs res
+  (Hmem : memory_inv st1)
+  (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
+    memory_inv st2.
+
+Axiom call_inv_2: forall st st1 st2 b ofs res
+  (Hst0 : state_include st st1)
+  (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
+    state_include st st2.
+
+Lemma call_inv: forall st st1 st2 b ofs res
   (Hreg : register_inv st1)
   (Hmem : memory_inv st1)
   (Hst0 : state_include st st1)
   (Hcall: exec_function (Vptr b ofs) st1 = Some (res, st2)),
     register_inv st2 /\ memory_inv st2 /\ state_include st st2.
+Proof.
+  intros.
+  split; [eapply call_inv_0; eauto | split; [eapply call_inv_1; eauto | eapply call_inv_2; eauto]].
+Qed.
 
 Lemma step_preserving_inv:
   forall st st1 st2 t
@@ -192,21 +211,15 @@ Theorem bpf_interpreter_preserving_inv:
 Proof.
   intros.
   unfold bpf_interpreter in Hsem.
-  unfold eval_mem_regions, get_mem_region, get_start_addr, upd_reg, eval_flag, eval_reg, bindM, returnM in Hsem.
-  destruct (0 <? mrs_num st1)%nat; [| inversion Hsem].
-  destruct List.nth_error; [| inversion Hsem].
-  destruct Val.longofintu; inversion Hsem.
+  unfold upd_reg, eval_flag, eval_reg, bindM, returnM in Hsem.
   destruct bpf_interpreter_aux eqn: Haux; [| inversion Hsem].
   destruct p.
   eapply bpf_interpreter_aux_preserving_inv in Haux; eauto.
-  - destruct Flag.flag_eq.
-    + inversion H0.
-      subst.
-      auto.
-    + inversion H0.
-      subst.
-      auto.
-  - destruct Flag.flag_eq.
-    + eapply reg_inv_upd_reg; eauto.
-    + eapply reg_inv_upd_reg; eauto.
+  destruct Flag.flag_eq.
+  - inversion Hsem.
+    subst.
+    auto.
+  - inversion Hsem.
+    subst.
+    auto.
 Qed.

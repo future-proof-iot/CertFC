@@ -17,9 +17,10 @@
 (**************************************************************************)
 
 From compcert Require Import Integers Values AST Ctypes.
-From Coq Require Import ZArith.
+From Coq Require Import ZArith List.
+Import ListNotations.
 
-From bpf.comm Require Import Flag Regs BinrBPF rBPFValues.
+From bpf.comm Require Import Flag Regs BinrBPF rBPFValues ListAsArray.
 From bpf.model Require Import Syntax.
 
 (** Overview:
@@ -221,5 +222,18 @@ Definition decode (ins: int64): option instruction :=
         | _    => Some BPF_ERR
         end
     end.
+
+Fixpoint decode_prog_aux (fuel pc: nat) (l: List64AsArray.t): list instruction :=
+  match fuel with
+  | O => []
+  | S n =>
+    match decode (List64AsArray.index l (Int.repr (Z.of_nat pc))) with
+    | Some ins => [ins] ++ (decode_prog_aux n (S pc) l)
+    | None => []
+    end
+  end.
+
+Definition decode_prog (l: List64AsArray.t): list instruction :=
+  decode_prog_aux (List.length l) 0 l.
 
 Close Scope nat_scope.

@@ -16,7 +16,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From compcert Require Import Coqlib Integers AST Values Memory Ctypes Archi.
+From compcert Require Import Coqlib Integers AST Values Memory Ctypes.
+From compcert.arm Require Import Archi.
 From Coq Require Import Lia ZArith.
 
 Open Scope Z_scope.

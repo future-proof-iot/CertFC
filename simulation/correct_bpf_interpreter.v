@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import MemRegion State Monad rBPFMonadOp.
+From bpf.comm Require Import Flag MemRegion State Monad rBPFMonadOp.
 From bpf.monadicmodel Require Import rBPFInterpreter.
 
 From Coq Require Import List ZArith.
@@ -73,75 +73,6 @@ Section Bpf_interpreter.
     unfold INV.
     unfold f, app.
     unfold bpf_interpreter.
-    correct_forward.
-
-    get_invariant _st.
-    exists (v::nil).
-    split.
-    unfold map_opt, exec_expr. rewrite p0; reflexivity.
-    intros; simpl.
-    intuition eauto.
-    intros.
-
-    correct_forward.
-
-    get_invariant _mrs.
-    exists ((Vint (Int.repr 0))::v::nil).
-    split.
-    unfold map_opt, exec_expr. rewrite p0; reflexivity.
-    intros; simpl.
-    unfold correct_eval_mrs_regions.match_res in c0.
-    unfold stateless, nat_correct.
-    intuition eauto.
-    change Int.max_unsigned with 4294967295%Z.
-    lia.
-    intros.
-
-
-    eapply correct_statement_seq_body with (modifies2:=ModSomething).
-    change_app_for_statement.
-    eapply correct_statement_call with (has_cast := false).
-    my_reflex.
-    reflexivity.
-    reflexivity.
-    apply correct_function_strengthen.
-    typeclasses eauto.
-
-    reflexivity.
-    reflexivity.
-    reflexivity.
-    prove_in_inv.
-    prove_in_inv.
-    reflexivity.
-    reflexivity.
-
-    intros H; correct_Forall.
-    get_invariant _bpf_ctx.
-    exists (v::nil).
-    split.
-    unfold map_opt, exec_expr. rewrite p0; reflexivity.
-    intros; simpl.
-    unfold eval_inv, correct_get_mem_region.match_res, mr_correct in c0.
-    intuition eauto.
-    intros.
-
-    correct_forward.
-
-    get_invariant _st.
-    get_invariant _start.
-    unfold correct_get_start_addr.match_res, val32_correct in c1.
-    destruct c1 as (c1 & vi & Hvi_eq).
-    subst.
-    exists (v::(Vint (Int.repr 1))::(Vlong (Int64.repr (Int.unsigned vi)))::nil).
-    split.
-    unfold map_opt, exec_expr. rewrite p0,p1.
-    simpl.
-    reflexivity.
-    intros; simpl.
-    unfold val64_correct, stateless, reg_correct.
-    intuition eauto.
-    intros.
-
     correct_forward.
 
     get_invariant _st.
@@ -206,15 +137,14 @@ Section Bpf_interpreter.
     reflexivity.
     intros.
     constructor.
-    all: try reflexivity.
 
     get_invariant _f.
     unfold exec_expr.
-    unfold eval_inv, correct_eval_flag.match_res, flag_correct in c0.
     rewrite p0.
+    unfold eval_inv, correct_eval_flag.match_res, flag_correct in c0.
     rewrite c0.
-    unfold Val.of_bool, CommonLib.int_of_flag, CommonLib.Z_of_flag.
-    destruct x4; reflexivity.
+    unfold Cop.sem_binary_operation, Val.of_bool, int_of_flag, Z_of_flag; simpl.
+    destruct x0; reflexivity.
 Qed.
 
 End Bpf_interpreter.

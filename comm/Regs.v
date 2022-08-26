@@ -266,3 +266,53 @@ Definition init_regmap: regmap := {|
   r9_val  := val64_zero;
   r10_val := val64_zero;
 |}.
+
+Definition id_of_reg (r:reg) : Z :=
+  match r with
+  | R0 => 0
+  | R1 => 1
+  | R2 => 2
+  | R3 => 3
+  | R4 => 4
+  | R5 => 5
+  | R6 => 6
+  | R7 => 7
+  | R8 => 8
+  | R9 => 9
+  | R10 => 10
+  end.
+
+Definition reg2nat (r: reg): nat :=
+  match r with
+  | R0 => 0
+  | R1 => 1
+  | R2 => 2
+  | R3 => 3
+  | R4 => 4
+  | R5 => 5
+  | R6 => 6
+  | R7 => 7
+  | R8 => 8
+  | R9 => 9
+  | R10 => 10
+  end.
+
+Lemma eval_upd_reg_same:
+  forall r v st,
+    eval_regmap r (upd_regmap r v st) = v.
+Proof.
+  intros.
+  unfold eval_regmap, upd_regmap.
+  destruct r; reflexivity.
+Qed.
+
+Lemma eval_upd_reg_other:
+  forall r r0 v st,
+    r <> r0 ->
+    eval_regmap r (upd_regmap r0 v st) = eval_regmap r st.
+Proof.
+  intros.
+  unfold eval_regmap, upd_regmap.
+  destruct r; destruct r0; try reflexivity.
+  all: exfalso; apply H; reflexivity.
+Qed.

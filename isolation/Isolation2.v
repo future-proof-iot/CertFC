@@ -17,7 +17,7 @@
 (**************************************************************************)
 
 From compcert Require Import Integers Values AST Memory Memtype.
-From bpf.comm Require Import BinrBPF State Monad rBPFMonadOp.
+From bpf.comm Require Import ListAsArray BinrBPF State Monad rBPFMonadOp rBPFAST.
 From bpf.model Require Import Syntax Semantics.
 From bpf.isolation Require Import CommonISOLib AlignChunk RegsInv MemInv VerifierOpcode VerifierInv CheckMem StateInv IsolationLemma Isolation1.
 
@@ -68,26 +68,12 @@ Proof.
   | H: (if ?X then _ else _) = _ |- _ =>
     destruct X eqn: Hlen_high;[ apply Cle_Zle_iff in Hlen_high | inversion H]
   end.
-  
-
-(*
-  assert (Hlen_max: (length (ins st) <= Z.to_nat Ptrofs.max_unsigned)%nat). {
-    clear - Hlen_high.
-    assert (Hle: Z.of_nat (length (ins st)) <= Z.of_nat (Z.to_nat Ptrofs.max_unsigned / 8)) by lia.
-    rewrite div_Zdiv in Hle; [| lia].
-    change (Z.of_nat 8) with 8 in Hle.
-    rewrite Z2Nat.id in Hle; [ | change Ptrofs.max_unsigned with 4294967295; lia].
-    apply Zmult_gt_0_le_compat_r with (p:=8) in Hle; [| lia].
-    change Ptrofs.max_unsigned with 4294967295 in *.
-    change (4294967295 / 8 * 8) with 4294967288 in Hle.
-    lia.
-  } *)
 
   assert (Hlen_maxZ: Z.of_nat (length (ins st)) <= Ptrofs.max_unsigned) by lia.
 
   unfold State.eval_pc in Hpc.
   unfold State.eval_pc.
-  unfold State.eval_ins, List64.MyListIndexs32, List64.MyList.index_s32.
+  unfold State.eval_ins, List64AsArray.index.
 
   remember (Z.to_nat (Int.unsigned (pc_loc st))) as pc.
 
@@ -119,8 +105,8 @@ Proof.
     rewrite Hst0, Hst1; reflexivity |
     rewrite Hst0; assumption |
     reflexivity |
-    unfold List64.MyListIndexs32, List64.MyList.index_s32;
-  rewrite Hst1, Int.unsigned_repr; [rewrite Nat2Z.id, Hnth; reflexivity | change Int.max_unsigned with Ptrofs.max_unsigned; lia]
+    unfold List64AsArray.index;
+    rewrite Hst1, Int.unsigned_repr; [rewrite Nat2Z.id, Hnth; reflexivity | change Int.max_unsigned with Ptrofs.max_unsigned; lia]
   ].
 
   unfold bpf_verifier_aux2, nat_to_opcode in Hverifier.
@@ -203,7 +189,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -249,7 +235,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -295,7 +281,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -341,7 +327,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -408,7 +394,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -452,7 +438,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -496,7 +482,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -540,7 +526,7 @@ Proof.
       symmetry in Heqres.
       unfold State.eval_mem.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -615,7 +601,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -658,7 +644,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -701,7 +687,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -744,7 +730,7 @@ Proof.
       unfold State.eval_mem.
       unfold store_mem_reg, State.store_mem_reg.
       eapply mem_inv_check_mem_valid_pointer in Heqres; eauto.
-      - destruct Heqres as [(b & ofs & Hptr & Hvalid)| Hptr]; subst.
+      - destruct Heqres as [(b & ofs & Hptr & Hvalid & Hvalid_blk)| Hptr]; subst.
         + simpl.
           rewrite Hvalid.
           rewrite Int.eq_true.
@@ -1991,66 +1977,17 @@ Theorem inv_avoid_bpf_interpreter_undef:
 Proof.
   intros.
   unfold bpf_interpreter.
-  unfold eval_mem_regions, get_mem_region, get_start_addr, upd_reg, eval_flag, eval_reg, bindM, returnM.
+  unfold eval_flag, eval_reg, bindM, returnM.
   set (Hmem' := Hmem).
   unfold memory_inv in Hmem'.
   destruct Hmem' as (Hlen_low & Hlen0 & _ & Hinv_memory_regions).
-  assert (Hlt: Nat.ltb 0 (mrs_num st) = true). {
-    rewrite Nat.ltb_lt.
-    lia.
-  }
-  rewrite Hlt. clear Hlt.
-  unfold State.eval_mem_regions.
-  assert (Hlt: (0 < length (bpf_mrs st))%nat). {
-    rewrite Hlen0.
-    lia.
-  }
-  set (Hneq := Hlt).
-  rewrite <- List.nth_error_Some in Hneq.
-  erewrite List.nth_error_nth' with (d:= MemRegion.default_memory_region); [| assumption].
-
-  apply List.nth_In with (d:= MemRegion.default_memory_region) in Hlt.
-  eapply In_inv_memory_regions in Hlt; eauto.
-  remember (List.nth 0 (bpf_mrs st) MemRegion.default_memory_region) as mr.
-  unfold inv_memory_region in Hlt.
-  destruct Hlt as (b & _ & _ & _ & (base & len & Hstart & _)).
-  rewrite Hstart.
-  simpl.
-
-  remember (State.upd_reg Regs.R1 (Vlong (Int64.repr (Int.unsigned base))) st) as st1.
-  assert (Hinv: register_inv st1 /\ memory_inv st1 /\ state_include st0 st1). {
-    subst.
-    split.
-    eapply reg_inv_upd_reg; eauto.
-    split.
-    eapply mem_inv_upd_reg; eauto.
-    eapply state_include_upd_reg; eauto.
-  }
-  clear - Hinv Hlen Hlen_max Hver Hst0.
-  destruct Hinv as (Hreg & Hmem & Hver').
 
   eapply inv_avoid_bpf_interpreter_aux_undef in Hmem; eauto.
 
-  destruct (bpf_interpreter_aux f st1) eqn: Haux.
+  destruct (bpf_interpreter_aux f st) eqn: Haux.
   destruct p.
   destruct Flag.flag_eq; intro Hfalse; inversion Hfalse.
   intro.
   apply Hmem.
   apply Haux.
-
-  unfold state_include in Hver'.
-  destruct Hver' as (Hver0' & Hver1').
-  rewrite <- Hver0'.
-  destruct Hst0 as (Hst0 & Hst1).
-  rewrite Hst0.
-  rewrite <- Hver1'.
-  rewrite Hst1.
-  assumption.
-
-  unfold state_include in Hver'.
-  destruct Hver' as (Hver0' & Hver1').
-  rewrite <- Hver1'.
-  destruct Hst0 as (Hst0 & Hst1).
-  rewrite Hst1.
-  assumption.
 Qed.

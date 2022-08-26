@@ -20,26 +20,26 @@ From compcert.cfrontend Require Csyntax Ctypes Cop.
 From compcert.common Require Import Values Memory AST.
 From compcert.lib Require Import Integers.
 
-From bpf.comm Require Import List64 BinrBPF.
+From bpf.comm Require Import ListAsArray BinrBPF.
 
 From Coq Require Import List ZArith.
 Import ListNotations.
 
 Record state := mkst {
   ins_len : nat;
-  ins     : MyListType;
+  ins     : List64AsArray.t;
   bpf_m   : Mem.mem;
 }.
 
 Definition init_state: state := {|
   ins_len := 0;
-  ins     := default_list;
+  ins     := [];
   bpf_m   := Mem.empty;
  |}.
 
 
 Definition eval_ins_len (st: state): nat := ins_len st.
-Definition eval_ins (idx: int) (st: state): int64 := MyListIndexs32 (ins st) idx.
+Definition eval_ins (idx: int) (st: state): int64 := List64AsArray.index (ins st) idx.
 
 Definition is_dst_R0' (i: int64) : bool := Int.cmpu Ceq (Int.repr (get_dst i)) (Int.repr 0).
 

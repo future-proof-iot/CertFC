@@ -118,7 +118,7 @@ int main(){
   struct bpf_state st = {
     .state_pc = 0,
     .bpf_flag = vBPF_OK,
-    .regsmap  = {0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
+    .regsmap  = {0LLU, (unsigned long long) (uintptr_t) &f32_ctx, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU, 0LLU},
     .mrs_num  = 2,
     .mrs      = my_memory_regions,
     .ins_len  = sizeof(bpf_fletcher32_bpf_simpl_bin)/8,

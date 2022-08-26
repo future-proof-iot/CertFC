@@ -41,7 +41,7 @@ Fixpoint MyMemRegionsAdd (mr: memory_region) (l: MyMemRegionsType) :=
 Definition mem_region_type: Ctypes.type := Ctypes.Tpointer (Ctypes.Tstruct mem_region_id Ctypes.noattr) Ctypes.noattr.
 
 Definition mem_region_def: Ctypes.composite_definition := 
-  Ctypes.Composite mem_region_id Ctypes.Struct [(start_addr_id, C_U32); (size_id, C_U32); (perm_id, C_U32); (block_ptr_id, C_U8_pointer)] Ctypes.noattr.
+  Ctypes.Composite mem_region_id Ctypes.Struct [Ctypes.Member_plain start_addr_id C_U32; Ctypes.Member_plain size_id C_U32; Ctypes.Member_plain perm_id C_U32; Ctypes.Member_plain block_ptr_id C_U8_pointer] Ctypes.noattr.
 
 Definition mem_regionCompilableType := MkCompilableType memory_region mem_region_type.
 

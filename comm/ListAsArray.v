@@ -16,27 +16,42 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import rBPFValues rBPFAST Regs Flag.
-From compcert Require Import Integers Values Memtype Memory AST Coqlib.
-From Coq Require Import List ZArith Lia.
-Open Scope Z_scope.
+From Coq Require Import List ZArith.
+Import ListNotations.
 
-(** common libs for clightlogic
+From compcert.cfrontend Require Csyntax Ctypes Cop.
+From compcert.common Require Values.
+From compcert.lib Require Import Integers.
 
-*)
+(** This module presents a generic List as a fix-sized array in C *)
 
-Definition inject_bl_state (bl_state b: block) :=
-  if Pos.eqb b bl_state then
-    None
-  else
-    Some (b, 0).
+Module List64AsArray.
 
-Definition correct_perm (p: permission) (n: int): Prop :=
-  match p with
-  | Freeable => n = Int.repr 3
-  | Writable => n = Int.repr 2
-  | Readable => n = Int.repr 1
-  | Nonempty => n = Int.repr 0
-  end.
+  Definition t := list int64.
+  Definition index (l: t) (idx: int): int64 := 
+    match List.nth_error l (Z.to_nat (Int.unsigned idx)) with
+    | Some i => i
+    | None => Int64.zero
+    end.
 
-Close Scope Z_scope.
+  Fixpoint assign' (l: t) (cur: nat) (v: int64): option t :=
+    match l with
+    | [] => None (**r it should be impossible *)
+    | hd :: tl =>
+      match cur with
+      | O => Some (v :: tl)
+      | S n =>
+        match assign' tl n v with
+        | Some nl => Some (hd :: nl)
+        | None => None
+        end
+      end
+    end.
+
+  Definition assign (l: t) (cur: nat) (v: int64): t :=
+    match assign' l cur v with
+    | Some nl => nl
+    | None    => []
+    end.
+
+End List64AsArray.

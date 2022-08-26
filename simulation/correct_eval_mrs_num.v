@@ -85,7 +85,7 @@ Section Eval_mrs_num.
     {
       repeat forward_star.
       rewrite Ptrofs.add_zero_l.
-      unfold Coqlib.align; simpl.
+      unfold Coqlib.align; simpl. change (832 / 8)%Z with 104%Z.
 
       destruct mmrs_num as (mmrs_num & _).
       unfold Mem.loadv in mmrs_num.

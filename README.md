@@ -1,7 +1,5 @@
 # Overview
 
-_NB: The latest stable version is in the branch `CAV22-AE`_
-
 `CertrBPF` is a formally verified rBPF verifier + interpreter obtained by refinement of a Coq specification. ([rBPF](https://github.com/future-proof-iot/Femto-Container) is a register-based virtual machine of eBPF)
 
 `CertrBPF` includes a verified C verifier and interpreter. The
@@ -81,12 +79,67 @@ make document
 We provide a [Virtual Machine (.ova)](https://zenodo.org/record/6525237#.YnVZr9pByUk) that the development environment is available.
 
 ## Manual Installation
+
+**Only for test branch**
+```shell
+# we will use compcert.3.11 and the main branch of dx (today: 20220707)
+
+# install Flocq.4.1.0 version by opam: see `https://flocq.gitlabpages.inria.fr/` NB: Flocq.4.0.0 causes dx's `Fatal error: exception Failure("AXIOM TO BE REALIZED")`
+$ opam repo add coq-released https://coq.inria.fr/opam/released
+$ opam install coq-flocq.4.1.0
+
+
+# before installing CompCertBin, making sure that the directory structure is `CompCertBin/compcert/HERE`, the string `compcert` is very important for setting up COQPATH
+# when installing CompCertBin, configure it with `-use-external-Flocq` and `-clightgen`
+# intall CompCertBin
+$ ./configure arm-linux -use-external-Flocq -clightgen
+$ make all
+
+# however, it fails to generate clightgen ...
+
+# Let's modify the export/ExportBase.ml
+# adding the following context (Line 194-195):
+#  | EF_exec_binary(n, sg, sz, pos) -> (* fix here *)
+#      fprintf p "(EF_exec_binary %ld %a %ld %a)" (Camlcoq.Nat.to_int32 n) signatur sg (Z.to_int32 sz) coqptrofs pos
+
+$ make clightgen
+
+# set up the `$COQPATH` environment variable to point to the directory where you installed compcert,
+# and make sure your COQPATH pointing to the directory including a folder named `compcert`!!!
+$ cd ~
+$ vim .bashrc
+# adding `export COQPATH=/home/shyuan/GitLab/CompCertBin`
+
+# install dx
+$ git clone https://gitlab.univ-lille.fr/2xs/dx.git
+$ cd dx
+
+
+$ ./configure --cprinterdir="$(opam var lib)/dx" --compcertdir=/home/shyuan/GitLab/CompCertBin --install-compcert-printer
+$ make all install
+
+
+# Now, dx is available!!!
+
+# Then, compile CertrBPF
+# go to the CertrBPF folder
+# currently, I use a clightgen from another opam switch. We will remove this when CompCertBin could extract clightgen
+
+$ ./configure --opamprefixdir=/home/shyuan/.opam/4.11.1 --compcertdir=/home/shyuan/GitLab/CompCertBin --clightgendir=/home/shyuan/.opam/bpf/variants/compcert32/bin
+
+# Now I receive an error when extracting C code
+```
+
+*below is out-of-date*
+
 see [install](INSTALL.md)
 
 ### Build of verified verifier and interpreter
 
 ```shell
 cd /home/cav/CertrBPF/rbpf-dx
+./configure --opamprefixdir=YOUR-OPAM-DIR --compcertbindir=YOUR-CompCertBin-DIR
+# e.g. `./configure --opamprefixdir=/home/shyuan/.opam/4.11.1 --compcertbindir=/home/shyuan/GitLab/CompCertBin`
 make all # you could always `make clean` firstly to get a clean environment
 ```
 

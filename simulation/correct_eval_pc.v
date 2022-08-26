@@ -16,7 +16,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-From bpf.comm Require Import State Monad rBPFMonadOp.
+From bpf.comm Require Import LemmaInt State Monad rBPFMonadOp.
 From Coq Require Import List Lia ZArith.
 From compcert Require Import Coqlib Integers Values Clight Memory.
 Import ListNotations.
@@ -69,7 +69,10 @@ Instance correct_function_eval_pc :
     eapply correct_body_Sreturn_Some.
     repeat intro.
     unfold INV in H0.
+
     get_invariant _st.
+
+
     exists (Vint (pc_loc st)).
     split_and.
     -

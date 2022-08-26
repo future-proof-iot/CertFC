@@ -51,6 +51,7 @@ Definition z_to_reg (z:Z): option reg :=
   else (**r TODO: bpf verifier / verifier-invariant should ensure this branch is unreachable *)
     None.
 
+(** * Decode: from int64 to rBPF fields *)
 
 Definition get_dst (i:int64):Z := Int64.unsigned (Int64.shru (Int64.and i (Int64.repr 0xfff)) (Int64.repr 8)).
 

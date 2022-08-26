@@ -20,7 +20,7 @@ From Coq Require Import List Lia ZArith.
 From compcert Require Import Integers Values Clight Memory.
 Import ListNotations.
 
-From bpf.comm Require Import Monad.
+From bpf.comm Require Import LemmaInt ListAsArray Monad.
 From bpf.clightlogic Require Import CommonLemma CommonLib Clightlogic CorrectRel.
 From bpf.verifier.comm Require Import monad.
 
@@ -143,7 +143,7 @@ Section Eval_ins.
       unfold int64_correct.
       unfold eval_ins in Heval_ins.
       context_destruct_if_inversion.
-      unfold state.eval_ins, List64.MyListIndexs32, List64.MyList.index_s32.
+      unfold state.eval_ins, List64AsArray.index.
       f_equal.
       destruct nth_error eqn: Hnth.
       apply nth_error_nth with (d:= Int64.zero) in Hnth.

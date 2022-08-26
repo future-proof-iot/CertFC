@@ -17,7 +17,7 @@
 (**************************************************************************)
 
 From compcert Require Import Integers Values.
-From bpf.comm Require Import Regs BinrBPF State LemmaNat.
+From bpf.comm Require Import ListAsArray Regs BinrBPF State LemmaNat.
 From bpf.model Require Import Semantics.
 From bpf.isolation Require Import AlignChunk CommonISOLib VerifierOpcode.
 From bpf.verifier.comm Require Import state.
@@ -127,26 +127,14 @@ Fixpoint bpf_verifier_aux (pc len: nat) (st: state.state): bool :=
     match pc with
     | O => true
     | S n =>
-      let i := List64.MyListIndexs32 (ins st) (Int.repr (Z.of_nat n)) in
+      let i := List64AsArray.index (ins st) (Int.repr (Z.of_nat n)) in
       let op := get_opcode i in
         if (bpf_verifier_aux2 n len op i) then
             bpf_verifier_aux n len st
           else
             false
     end.
-(*
-Fixpoint bpf_verifier_aux_rev (pc len: nat) (st: state.state): bool :=
-    match pc with
-    | O => true
-    | S n =>
-      let i := List64.MyListIndexs32 (ins st) (Int.repr (Z.of_nat (len - 1 - n))) in
-      let op := get_opcode i in
-        if (bpf_verifier_aux2 (len - 1 - n) len op i) then
-            bpf_verifier_aux_rev n len st
-          else
-            false
-    end.
-*)
+
 Definition bpf_verifier (st: state.state): bool :=
   let len := ins_len st in
   (**r (0, Int.max_unsigned/8): at least one instruction, and at most Int.max_unsigned/8 because of memory region *)
@@ -155,7 +143,7 @@ Definition bpf_verifier (st: state.state): bool :=
        (Int.ltu (Int.divu (Int.repr Int.max_unsigned) (Int.repr 8))
           (Int.repr (Z.of_nat len))) then
         if bpf_verifier_aux len len st then
-          let i := List64.MyListIndexs32 (ins st) (Int.repr (Z.of_nat  (len - 1))) in
+          let i := List64AsArray.index (ins st) (Int.repr (Z.of_nat  (len - 1))) in
             Int64.eq i (Int64.repr 0x95)
         else
           false
@@ -183,10 +171,10 @@ Lemma bpf_verifier_aux_implies:
     (Hlen: List.length (state.ins st) = ins_len st)
     (Hpc: pc < k)
     (Hop: op = get_opcode ins)
-    (Hins: ins = List64.MyListIndexs32 (state.ins st) (Int.repr (Z.of_nat pc))),
+    (Hins: ins = List64AsArray.index (state.ins st) (Int.repr (Z.of_nat pc))),
       bpf_verifier_aux2 pc (ins_len st) op ins = true.
 Proof.
-  unfold List64.MyListIndexs32, List64.MyList.index_s32.
+  unfold List64AsArray.index.
   intros.
 
   induction k.
@@ -194,7 +182,7 @@ Proof.
   - assert (Hpc_eq: pc = k \/ pc < k) by lia.
     destruct Hpc_eq as [Hpc_eq | Hpc_lt].
     + simpl in Hst.
-      unfold List64.MyListIndexs32, List64.MyList.index_s32 in Hst.
+      unfold List64AsArray.index in Hst.
       rewrite Hpc_eq in *.
       rewrite <- Hins in *.
       match goal with
@@ -232,7 +220,7 @@ Lemma bpf_verifier_aux_implies':
     (Hlen: List.length (state.ins st) = ins_len st)
     (Hpc: pc < k)
     (Hop: op = get_opcode ins)
-    (Hins: ins = List64.MyListIndexs32 (state.ins st) (Int.repr (Z.of_nat (k-1-pc)))),
+    (Hins: ins = List64AsArray.index (state.ins st) (Int.repr (Z.of_nat (k-1-pc)))),
       bpf_verifier_aux2 (k-1-pc) (ins_len st) op ins = true.
 Proof.
   intros.
@@ -256,7 +244,7 @@ Proof.
   - assert (Hpc_eq: pc = k \/ pc < k) by lia.
     destruct Hpc_eq as [Hpc_eq | Hpc_lt].
     + simpl in Hst.
-      unfold List64.MyListIndexs32, List64.MyList.index_s32 in Hst.
+      unfold List64AsArray.index in Hst.
       rewrite Hpc_eq in *.
       match goal with
       | H: (if ?X then _ else _) = _ |- _ =>
@@ -293,10 +281,10 @@ Lemma bpf_verifier_implies:
     (Hlen: List.length (state.ins st) = ins_len st)
     (Hpc: pc < ins_len st)
     (Hop: op = get_opcode ins)
-    (Hins: ins = List64.MyListIndexs32 (state.ins st) (Int.repr (Z.of_nat pc))),
+    (Hins: ins = List64AsArray.index (state.ins st) (Int.repr (Z.of_nat pc))),
       bpf_verifier_aux2 pc (ins_len st) op ins = true.
 Proof.
-  unfold bpf_verifier, List64.MyListIndexs32, List64.MyList.index_s32.
+  unfold bpf_verifier, List64AsArray.index.
   intros.
   match goal with
   | H: (if ?X then _ else _) = _ |- _ =>

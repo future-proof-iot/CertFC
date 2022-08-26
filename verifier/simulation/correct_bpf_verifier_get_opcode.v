@@ -129,6 +129,10 @@ Section Get_opcode.
     split; [reflexivity | lia].
 
     unfold Cop.sem_cast; simpl.
+    match goal with
+    | |- context[ if Ctypes.intsize_eq ?X ?Y then ?Z else ?W] =>
+      change (if Ctypes.intsize_eq X Y then Z else W) with W; simpl
+    end.
     rewrite Int.zero_ext_and; [| lia].
     change (two_p 8 - 1)%Z with 255%Z.
     unfold Int.and.

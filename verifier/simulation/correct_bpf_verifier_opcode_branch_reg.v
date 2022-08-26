@@ -249,7 +249,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -352,7 +352,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -455,7 +455,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -558,7 +558,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -661,7 +661,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -764,7 +764,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -867,7 +867,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -970,7 +970,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -1073,7 +1073,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -1176,7 +1176,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.
@@ -1279,7 +1279,7 @@ Section Bpf_verifier_opcode_branch_reg.
           split; [reflexivity|].
           split. unfold Cop.sem_cast; simpl.
           fold Int.zero.
-          rewrite Int.eq_true; reflexivity.
+          reflexivity.
           intros.
           constructor.
           reflexivity.

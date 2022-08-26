@@ -22,6 +22,8 @@ From bpf.monadicmodel Require Import Opcode.
 From Coq Require Import Lia ZArith List.
 Import ListNotations.
 
+Global Transparent Int.repr.
+
 Open Scope Z_scope.
 
 Lemma nat8_land_240_255_eq:
@@ -536,7 +538,6 @@ Lemma nat8_neq_k:
       Int.repr (Z.of_nat n) <> Int.repr k.
 Proof.
   repeat intro.
-  Transparent Int.repr.
   unfold Int.repr in *.
   inversion H.
   rewrite Int.Z_mod_modulus_eq in H1.
@@ -546,77 +547,6 @@ Proof.
   lia.
   all: change Int.modulus with 4294967296%Z; lia.
 Qed.
-
-(*
-Lemma nat8_neq_135:
-  forall n
-    (Hrange : n <= 255)
-    (Hc2_eq : n <> 135),
-      Int.repr (Z.of_nat n) <> Int.repr 135.
-Proof.
-  repeat intro.
-  Transparent Int.repr.
-  unfold Int.repr in *.
-  inversion H.
-  rewrite Int.Z_mod_modulus_eq in H1.
-  rewrite Zmod_small in H1.
-  lia.
-  change Int.modulus with 4294967296%Z.
-  lia.
-Qed.
-
-Lemma nat8_neq_5:
-  forall n
-    (Hrange : n <= 255)
-    (Hc2_eq : n <> 5),
-      Int.repr (Z.of_nat n) <> Int.repr 5.
-Proof.
-  repeat intro.
-  Transparent Int.repr.
-  unfold Int.repr in *.
-  inversion H.
-  rewrite Int.Z_mod_modulus_eq in H1.
-  rewrite Zmod_small in H1.
-  lia.
-  change Int.modulus with 4294967296%Z.
-  lia.
-Qed.
-
-
-Lemma nat8_neq_133:
-  forall n
-    (Hrange : n <= 255)
-    (Hc2_eq : n <> 133),
-      Int.repr (Z.of_nat n) <> Int.repr 133.
-Proof.
-  repeat intro.
-  Transparent Int.repr.
-  unfold Int.repr in *.
-  inversion H.
-  rewrite Int.Z_mod_modulus_eq in H1.
-  rewrite Zmod_small in H1.
-  lia.
-  change Int.modulus with 4294967296%Z.
-  lia.
-Qed.
-
-Lemma nat8_neq_149:
-  forall n
-    (Hrange : n <= 255)
-    (Hc2_eq : n <> 149),
-      Int.repr (Z.of_nat n) <> Int.repr 149.
-Proof.
-  repeat intro.
-  Transparent Int.repr.
-  unfold Int.repr in *.
-  inversion H.
-  rewrite Int.Z_mod_modulus_eq in H1.
-  rewrite Zmod_small in H1.
-  lia.
-  change Int.modulus with 4294967296%Z.
-  lia.
-Qed.
-*)
 
 Lemma nat_odd_S:
   forall n,

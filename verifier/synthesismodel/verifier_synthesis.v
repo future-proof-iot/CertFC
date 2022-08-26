@@ -27,6 +27,8 @@ From bpf.verifier.synthesismodel Require Import opcode_synthesis.
 Open Scope nat_scope.
 Open Scope monad_scope.
 
+(** TODO: we should add a rule to ensure lddw_high and lddw_low come in pairs and the latter is always after the former *)
+
 Definition is_dst_R0 (i: int64) : M state.state bool := returnM (is_dst_R0' i).
 
 Definition is_well_dst (i: int64) : M state.state bool := returnM (is_well_dst' i).
