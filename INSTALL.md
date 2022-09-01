@@ -65,8 +65,9 @@ cd YOUR_COMPCERT_DIR/compcert
 # install coq-flocq.4.1.0
 opam install coq-flocq.4.1.0
 # install 32-bit compcert
-./configure x86_32-linux -use-external-Flocq -clightgen
+./configure arm-linux -use-external-Flocq -clightgen
 make all
+make clightgen
 ```
 
 # Build coq2html and set path
@@ -84,6 +85,7 @@ apt-get install vim
 # 2); adding the line: `export PATH=$PATH:/home/middleware/.opam/bpf/bin:/home/middleware/CertrBPF/coq2html`
 # 3); adding the line `export COQPATH="$(opam var lib)/coq-variant/compcert32"` when selecting opam to install compcert
 #     adding the line `export COQPATH="YOUR_COMPCERT_DIR"` when selecting to install compcert from source code.
+#Important: if you recompile CompCert again, remember to comment COQPATH firstly!!!
 vim /home/middleware/.bashrc
 source /home/middleware/.bashrc
 ```
